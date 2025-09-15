@@ -1,6 +1,8 @@
+#include "bs_interpreter.h"
 #include <stdio.h>
 
 int main(int argc, char** argv) {
     printf("Hello BearScript\n");
-    return 0;
+    int exit_code = bs_interpreter_launch_cli(argc, argv);
+    return exit_code;
 }
