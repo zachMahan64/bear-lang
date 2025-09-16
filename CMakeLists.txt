@@ -16,3 +16,4 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
 
 add_executable(${EXECUTABLE} ${SRC})
 target_include_directories(${EXECUTABLE} PRIVATE src)
+target_include_directories(${EXECUTABLE} PUBLIC include)

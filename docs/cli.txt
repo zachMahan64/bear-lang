@@ -1,0 +1,8 @@
+usage:
+    bs <commands/flags> [filename]
+
+commands:
+    [-h] -> display help message
+    [-c] -> compile to byte code
+    [-v] -> display version information
+
