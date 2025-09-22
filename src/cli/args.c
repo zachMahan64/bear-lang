@@ -1,4 +1,5 @@
 #include "cli/args.h"
+#include <stdbool.h>
 #include <string.h>
 
 // LONG FLAG NAME MAP
@@ -18,11 +19,50 @@ cli_args parse_cli_args(int argc, char** argv) {
             args.flag = (cli_flag_e)argv[i][1];
         }
         // extract from a --<something> flag
-        // TODO, need to write the is_valid_cli_flag_long function
+        else if (is_valid_cli_flag_long(argv[i])) {
+            args.flag = search_cli_long_flags_for_valid_flag(argv[i]);
+        } else {
+            strcpy(args.file_name,
+                   argv[i]); // try to interpret as filename, deal with faulty filenames later
+        }
     }
     return args;
 }
 
-bool is_valid_cli_flag_short(char flag) {
+bool is_valid_cli_flag_short(const char flag) {
     return (flag == 'b' || flag == 'c' || flag == 'h' || flag == 'v');
+}
+
+bool is_valid_cli_flag_long(const char* flag) {
+    size_t FLAG_PREFIX_LENGTH = 2;
+
+    if (strlen(flag) < FLAG_PREFIX_LENGTH + 1) {
+        return false; // too short to be valid
+    }
+    if (flag[0] != '-' || flag[1] != '-') {
+        return false; // must start with --
+    }
+
+    const char* flag_long_name = flag + FLAG_PREFIX_LENGTH;
+
+    if (strlen(flag_long_name) >= CLI_ARGS_MAX_FLAG_LENGTH - 1) {
+        return false; // would overflow buffer if copied
+    }
+
+    for (int i = 0; i < CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES; i++) {
+        if (strcmp(cli_flag_long_map[i].name, flag_long_name) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag) {
+    size_t FLAG_PREFIX_LENGTH = 2;
+    for (int i = 0; i < CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES; i++) {
+        if (strcmp(cli_flag_long_map[i].name, (flag + FLAG_PREFIX_LENGTH)) == 0) {
+            return cli_flag_long_map[i].flag;
+        }
+    }
+    return ERROR;
 }

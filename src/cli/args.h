@@ -34,6 +34,6 @@ extern cli_flag_long_mapping cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAME
 // CLI LOGIC
 cli_args parse_cli_args(int argc, char** argv);
 bool is_valid_cli_flag_short(char flag);
-bool is_valid_cli_flag_long(char* flag_name);
-
+bool is_valid_cli_flag_long(const char* flag);
+cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag);
 #endif // !CLI_ARGS_H
