@@ -1,5 +1,6 @@
 #include "bearscript.h"
 #include "cli/args.h"
+#include "interpreter/file_io.h"
 #include "log.h"
 #include <stdio.h>
 #include <string.h>
@@ -21,10 +22,11 @@ cli_error_status do_cli_interpret_live(void);
 void do_cli_announce_error(cli_args* args);
 
 int bs_interpreter_launch_cli(int argc, char** argv) {
+    // parse and do preliminary validatation on args, convert to max 1 flag, 1 filename
     cli_args args = parse_cli_args(argc, argv);
 
-    cli_error_status error_status = {
-        0, ""}; // error that dispatched cli functions can return, default to inoffensive values
+    // error that dispatched cli functions can return, default to inoffensive values
+    cli_error_status error_status = {0, ""};
 
     LOG_STR_NNL("[DEBUG] File name: ");
     LOG_STR(args.file_name);
@@ -34,6 +36,7 @@ int bs_interpreter_launch_cli(int argc, char** argv) {
         do_cli_announce_error(&args);
         return -1;
     }
+    // TODO validate that file with file_name exists
     if (args.flag == HELP) {
         do_cli_help();
     } else if (args.flag == VERSION) {
