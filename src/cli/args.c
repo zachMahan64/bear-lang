@@ -1,5 +1,6 @@
 #include "cli/args.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 // LONG FLAG NAME MAP
@@ -22,8 +23,12 @@ cli_args parse_cli_args(int argc, char** argv) {
         else if (is_valid_cli_flag_long(argv[i])) {
             args.flag = search_cli_long_flags_for_valid_flag(argv[i]);
         } else {
-            strcpy(args.file_name,
-                   argv[i]); // try to interpret as filename, deal with faulty filenames later
+            if (strlen(argv[i]) >= 2 && argv[i][0] == '-') {
+                args.flag = ERROR; // invalid flag
+            } else {
+                // try to interpret as filename, deal with faulty filenames later
+                strcpy(args.file_name, argv[i]);
+            }
         }
     }
     return args;
