@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-bool file_exist(const char* file_name);
+bool file_exists(const char* file_name);
 
 #endif // !FILE_IO_H

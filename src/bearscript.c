@@ -36,7 +36,10 @@ int bs_interpreter_launch_cli(int argc, char** argv) {
         do_cli_announce_error(&args);
         return -1;
     }
-    // TODO validate that file with file_name exists
+    if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
+        printf("[ERROR] File does not exist: %s", args.file_name);
+        return -1;
+    }
     if (args.flag == HELP) {
         do_cli_help();
     } else if (args.flag == VERSION) {
