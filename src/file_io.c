@@ -14,46 +14,57 @@ bool file_exists(const char* file_name) {
 #include <stdio.h>
 #include <stdlib.h>
 
-char* file_read_to_buffer(const char* filename, size_t* out_size) {
-    FILE* file = fopen(filename, "rb");
+int read_file_to_char_buffer(char_buffer_from_file_t* buffer) {
+    FILE* file = fopen(buffer->file_name, "rb");
     if (!file) {
-        return NULL;
+        return -1;
     }
 
     // find file size
     if (fseek(file, 0, SEEK_END) != 0) {
         fclose(file);
-        return NULL;
+        return -1;
     }
     long size = ftell(file);
     if (size < 0) {
         fclose(file);
-        return NULL;
+        return -1;
     }
     if (fseek(file, 0, SEEK_SET) != 0) {
         fclose(file);
-        return NULL;
+        return -1;
     }
 
     // allocate buffer (+1 for null terminator in case treating as string)
-    char* buffer = malloc((size_t)size + 1);
-    if (!buffer) {
+    buffer->data = malloc((size_t)size + 1);
+    if (!buffer->data) {
         fclose(file);
-        return NULL;
+        return -1;
     }
 
     // read file into buffer
-    size_t read_size = fread(buffer, 1, (size_t)size, file);
+    size_t read_size = fread(buffer->data, 1, (size_t)size, file);
     fclose(file);
 
     if (read_size != (size_t)size) {
-        free(buffer);
-        return NULL;
+        free(buffer->data);
+        return -1;
     }
 
-    buffer[size] = '\0'; // safe even if binary, optional
-    if (out_size) {
-        *out_size = (size_t)size;
+    buffer->data[size] = '\0'; // safe even if binary, optional
+    if (buffer->size) {
+        buffer->size = (size_t)size;
+    }
+    return 0;
+}
+
+char_buffer_from_file_t create_char_buffer_from_file(const char* file_name) {
+    char_buffer_from_file_t buffer;
+    buffer.file_name = file_name;
+    if (read_file_to_char_buffer(&buffer) < 0) {
+        printf("[ERROR] Could not read file: %s", file_name);
     }
     return buffer;
 }
+
+void destroy_char_buffer_from_file(char_buffer_from_file_t* buffer) { free(buffer->data); }

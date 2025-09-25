@@ -1,5 +1,6 @@
 #include "bearscript.h"
 #include "cli_args.h"
+#include "compile.h"
 #include "file_io.h"
 #include "log.h"
 #include <stdio.h>
@@ -76,9 +77,10 @@ void do_cli_help(void) {
 void do_cli_version(void) { puts("BearScript v0.0.1"); }
 
 cli_error_status do_cli_compile(const cli_args* args) {
-    // TODO
+    // TODO, WIP
     puts("(compile) This feature is WIP.");
     cli_error_status error_status = {0, ""};
+    error_status.error_code = compile_file(args->file_name);
     return error_status;
 }
 cli_error_status do_cli_build(const cli_args* args) {
