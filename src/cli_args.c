@@ -1,4 +1,4 @@
-#include "cli/args.h"
+#include "cli_args.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-#include "interpreter/file_io.h"
+#include "file_io.h"
 #include <stdio.h>
 bool file_exists(const char* file_name) {
     FILE* file = fopen(file_name, "r");
