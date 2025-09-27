@@ -52,6 +52,12 @@ typedef enum {
     JMP,
     CALL,
     RET,
+    BLT,
+    BGT,
+    BLE,
+    BGE,
+    BEQ,
+    BNE,
 
 } bvm_opcode;
 
