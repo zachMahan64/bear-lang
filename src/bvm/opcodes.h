@@ -40,6 +40,9 @@ typedef enum {
     ALLOC,
     FREE,
 
+    // BUILT-IN
+    COUT, // for now, hook into printf
+
     // comparisons (push bool result)
     CMP_EQ, // push (lhs == rhs)
     CMP_NE, // push (lhs != rhs)

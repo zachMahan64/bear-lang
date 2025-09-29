@@ -12,7 +12,8 @@ typedef enum {
     KW_SPACE, // space
     // function
     KW_FN,
-
+    // stdou
+    KW_COUT, // example: cout <<- "Hello World";
     // types
     KW_BOX, // example: box::int
     KW_INT,
