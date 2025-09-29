@@ -1,0 +1,5 @@
+#ifndef COMPILER_LEXER
+
+#define COMPILER_LEXER
+
+#endif // !COMPILER_LEXER

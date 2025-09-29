@@ -5,11 +5,20 @@
 #include <stdint.h>
 
 typedef enum {
-    // keyword
+    // file
+    IMPORT,
+    // keywords
+    // function
+    KW_FN,
+
+    // types
+    KW_BOX,
     KW_INT,
     KW_CHAR,
     KW_FLOAT,
     KW_STRING,
+
+    // comparison
     KW_IF,
     KW_ELSE,
     KW_ELIF,
@@ -17,7 +26,13 @@ typedef enum {
     KW_FOR,
     KW_RETURN,
 
-    SYMBOL, // variable or function name
+    // structures (incorp after prodcedural is working)
+    KW_THIS,
+    KW_STRUCT,
+    KW_IMPL,
+
+    // variable or function name
+    SYMBOL,
 
     // built-in types
     CHAR_LIT,
@@ -38,22 +53,30 @@ typedef enum {
     SEMICOLON,
     DOT,
     COMMA,
-    RARROW,
+    RARROW,    // -> for return types
+    SCOPE_RES, // ..
+    TYPE_MOD,  // ::, for example, box:: (maybe different ones could be added later)
 
     // operators
-    // arith
+    // assign
     ASSIGN_EQ,     // =
     ASSIGN_LARROW, // <-
-    PLUS,          // +
-    MINUS,         // -
-    ASTERISK,      // *
-    DIVIDE,        // /
-    MOD,           // %
+    // stream
+    STREAM, // <<-
+    // arith
+    PLUS,     // +
+    MINUS,    // -
+    ASTERISK, // *
+    DIVIDE,   // /
+    MOD,      // %
     // bitwise
     BIT_OR,  // |
     BIT_AND, // &
     BIT_NOT, // ~
     BIT_XOR, // ^
+    LSH,     // <<
+    RSHL,    // >>
+    RSHA,    // >>>
     // bool
     BOOL_OR,  // ||
     BOOL_AND, // AND
@@ -75,10 +98,15 @@ typedef union {
 } token_value_u;
 
 typedef struct {
-    token_type_e sym;
+    size_t line, col;
+} token_loc_t;
+
+typedef struct {
+    token_type_e sym;    // type
     const char* start;   // pointer into source
     size_t length;       // len in source
     token_value_u value; // get value using sym, only valid for literals
+    token_loc_t loc;     // line & col, for error messages
 } token_t;
 
 #endif // !COMPILER_TOKEN_H

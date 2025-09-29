@@ -1,0 +1,6 @@
+BearScript Syntax (as of 20250929)
+
+- Mostly C-like
+- Deviations:
+- Functions: 
+    fn function_name(type_name arg) -> return_type;

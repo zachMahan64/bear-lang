@@ -12,6 +12,10 @@ int compile_file(const char* file_name) {
      */
     printf("File data:\n~~~~~\n%s\n~~~~~~\n", buffer.data);
 
+    /* TODO, at first, just output one unified bytecode file
+     * with original_file_name.bvm
+     */
+
     destroy_char_buffer_from_file(&buffer);
     return error_code;
 }
