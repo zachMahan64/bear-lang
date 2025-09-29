@@ -1,47 +1,84 @@
 #ifndef COMPILER_TOKEN_H
 #define COMPILER_TOKEN_H
 
-typedef enum {
-    // variable or function name
-    SYMBOL,
-    // built-in types
-    CHAR,
-    INT,
-    LONG,
-    FLOAT,
-    DOUBLE,
-    PTR,
+#include <stddef.h>
+#include <stdint.h>
 
-    // brackets
+typedef enum {
+    // keyword
+    KW_INT,
+    KW_CHAR,
+    KW_FLOAT,
+    KW_STRING,
+    KW_IF,
+    KW_ELSE,
+    KW_ELIF,
+    KW_WHILE,
+    KW_FOR,
+    KW_RETURN,
+
+    SYMBOL, // variable or function name
+
+    // built-in types
+    CHAR_LIT,
+    INT_LIT,
+    FLOAT_LIT,
+    STRING_LIT,
+
+    // delim
+    // brackets, etc
     LPAREN,
-    RPAREN,
+    RPAREN, // ()
     LBRACE,
-    RBRACE,
+    RBRACE, // {}
     LBRACK,
-    RBRACK,
+    RBRACK, // []
+
+    // punc
+    SEMICOLON,
+    DOT,
+    COMMA,
+    RARROW,
 
     // operators
     // arith
-    EQUALS,
-    PLUS,
-    MINUS,
-    ASTERISK,
-    DIVIDE,
-    MOD,
-    BIT_OR,
-    BIT_AND,
-    BIT_NOT,
-    BIT_XOR,
+    ASSIGN_EQ,     // =
+    ASSIGN_LARROW, // <-
+    PLUS,          // +
+    MINUS,         // -
+    ASTERISK,      // *
+    DIVIDE,        // /
+    MOD,           // %
+    // bitwise
+    BIT_OR,  // |
+    BIT_AND, // &
+    BIT_NOT, // ~
+    BIT_XOR, // ^
     // bool
-    BOOL_OR,
-    BOOL_AND,
-    BOOL_NOT,
-    BOOL_XOR,
+    BOOL_OR,  // ||
+    BOOL_AND, // AND
+    BOOL_NOT, // !
+    // comparison
+    GT,
+    LT,
+    GE,
+    LE,
+    EQ,
+    NE,
 
 } token_type_e;
 
-typedef struct {
+typedef union {
+    char character;
+    int64_t integer;
+    double floating;
+} token_value_u;
 
+typedef struct {
+    token_type_e sym;
+    const char* start;   // pointer into source
+    size_t length;       // len in source
+    token_value_u value; // get value using sym, only valid for literals
 } token_t;
 
 #endif // !COMPILER_TOKEN_H

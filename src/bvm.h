@@ -2,25 +2,15 @@
 #define BVM_H
 
 typedef enum {
-    // 32-BIT INT OPS
-    ADD_I,
-    SUB_I,
-    MULT_I,
-    DIV_I,
-    MOD_I,
-    UMULT_I,
-    UDIV_I,
-    UMOD_I,
-
-    // 64-BIT LONG OPS
-    ADD_L,
-    SUB_L,
-    MULT_L,
-    DIV_L,
-    MOD_L,
-    UMULT_L,
-    UDIV_L,
-    UMOD_L,
+    // INT OPS (64 BIT)
+    ADD,
+    SUB,
+    MULT,
+    DIV,
+    MOD,
+    UMULT,
+    UDIV,
+    UMOD,
 
     // BITWISE OPS (64 BIT)
     OR,
@@ -31,33 +21,43 @@ typedef enum {
     ARSH,
     LRSH,
 
-    // FLOAT OPS
-    ADD_F,
-    SUB_F,
-    MULT_F,
-    DIV_F,
+    // FLOAT OPS (64 BIT)
+    FADD,
+    FSUB,
+    FMUL,
+    FDIV,
+    FMOD,
 
-    // DOUBLE OPS
-    ADD_D,
-    SUB_D,
-    MULT_D,
-    DIV_D,
+    // CONVERSIONS
+    I2F,
+    F2I,
 
     // MEMORY OPS
-    MOV,
-    PUSH,
-    POP,
+    PUSHI,
+    LOAD,
+    STORE,
+    DUP,
+    ALLOC,
+    FREE,
 
-    // CTRL FULL OPS
+    // comparisons (push bool result)
+    CMP_EQ, // push (lhs == rhs)
+    CMP_NE, // push (lhs != rhs)
+    CMP_LT, // push (lhs < rhs)
+    CMP_LE, // push (lhs <= rhs)
+    CMP_GT, // push (lhs > rhs)
+    CMP_GE, // push (lhs >= rhs)
+
+    // conditional jumps
     JMP,
+    JMP_IF_TRUE,
+    JMP_IF_FALSE,
+
     CALL,
     RET,
-    BLT,
-    BGT,
-    BLE,
-    BGE,
-    BEQ,
-    BNE,
+
+    NOP,
+    HALT,
 
 } bvm_opcode;
 

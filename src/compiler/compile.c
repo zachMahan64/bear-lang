@@ -10,7 +10,7 @@ int compile_file(const char* file_name) {
      * TODO compile logic
      * output to a bytecode file eventually
      */
-    printf("File data: delim[\n%s\n]delim\n", buffer.data);
+    printf("File data:\n~~~~~\n%s\n~~~~~~\n", buffer.data);
 
     destroy_char_buffer_from_file(&buffer);
     return error_code;
