@@ -1,6 +1,6 @@
 #include "bearscript.h"
 #include "cli_args.h"
-#include "compile.h"
+#include "compiler/compile.h"
 #include "file_io.h"
 #include "log.h"
 #include <stdio.h>
