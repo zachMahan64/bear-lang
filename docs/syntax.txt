@@ -4,3 +4,7 @@ BearScript Syntax (as of 20250929)
 - Deviations:
 - Functions: 
     fn function_name(type_name arg) -> return_type;
+- Scope:
+    space my_space {...}
+    myspace..myfunction
+

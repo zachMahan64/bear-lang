@@ -8,11 +8,13 @@ typedef enum {
     // file
     IMPORT,
     // keywords
+    // namespace
+    KW_SPACE, // space
     // function
     KW_FN,
 
     // types
-    KW_BOX,
+    KW_BOX, // example: box::int
     KW_INT,
     KW_CHAR,
     KW_FLOAT,
