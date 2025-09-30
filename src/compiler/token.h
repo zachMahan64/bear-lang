@@ -15,7 +15,8 @@ typedef enum {
     // stdou
     KW_COUT, // example: cout <<- "Hello World";
     // types
-    KW_BOX, // example: box::int
+    KW_BOX,   // example: box::int
+    KW_CONST, // example const::int
     KW_INT,
     KW_CHAR,
     KW_FLOAT,
@@ -67,11 +68,13 @@ typedef enum {
     // stream
     STREAM, // <<-
     // arith
-    PLUS,     // +
-    MINUS,    // -
-    ASTERISK, // *
-    DIVIDE,   // /
-    MOD,      // %
+    PLUS,   // +
+    MINUS,  // -
+    MULT,   // *
+    DIVIDE, // /
+    MOD,    // %
+    INC,    // ++
+    DEC,    // --
     // bitwise
     BIT_OR,  // |
     BIT_AND, // &
