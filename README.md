@@ -1,1 +1,1 @@
-# BearScript
+# BearLang

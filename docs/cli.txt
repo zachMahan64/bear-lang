@@ -1,5 +1,5 @@
 usage:
-        bs <file_name> <flag> 
+        br <file_name> <flag> 
 flags:
         [--compile | -c]
         [--version | -v]

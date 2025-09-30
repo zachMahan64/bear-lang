@@ -1,4 +1,4 @@
-#include "bearscript.h"
+#include "bearlang.h"
 #include "cli_args.h"
 #include "compiler/compile.h"
 #include "file_io.h"
@@ -7,10 +7,10 @@
 #include <string.h>
 
 // private cli error struct
-#define BS_CLI_DO_FN_ERROR_MSG_LEN 64
+#define BR_CLI_DO_FN_ERROR_MSG_LEN 64
 typedef struct {
     int error_code;
-    char error_message[BS_CLI_DO_FN_ERROR_MSG_LEN];
+    char error_message[BR_CLI_DO_FN_ERROR_MSG_LEN];
 } cli_error_status;
 
 // private cli functions
@@ -22,7 +22,7 @@ cli_error_status do_cli_interpret_file(void);
 cli_error_status do_cli_interpret_live(void);
 void do_cli_announce_error(cli_args* args);
 
-int bs_interpreter_launch_cli(int argc, char** argv) {
+int br_interpreter_launch_cli(int argc, char** argv) {
     // parse and do preliminary validatation on args, convert to max 1 flag, 1 filename
     cli_args args = parse_cli_args(argc, argv);
 
@@ -63,7 +63,7 @@ int bs_interpreter_launch_cli(int argc, char** argv) {
 
 void do_cli_help(void) {
     const char* help_message = "usage:\n"
-                               "        bs <file_name> <flag> \n"
+                               "        br <file_name> <flag> \n"
                                "flags:\n"
                                "        [--compile | -c]\n"
                                "        [--version | -v]\n"
@@ -74,7 +74,7 @@ void do_cli_help(void) {
     printf("%s", help_message);
 }
 
-void do_cli_version(void) { puts("BearScript v0.0.1"); }
+void do_cli_version(void) { puts("BearLang v0.0.1"); }
 
 cli_error_status do_cli_compile(const cli_args* args) {
     // TODO, WIP

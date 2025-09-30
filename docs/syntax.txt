@@ -1,4 +1,4 @@
-BearScript Syntax (as of 20250929)
+BearLang Syntax (as of 20250929)
 
 - Mostly C-like
 - Deviations:
@@ -6,5 +6,3 @@ BearScript Syntax (as of 20250929)
     fn function_name(type_name arg) -> return_type;
 - Scope:
     space my_space {...}
-    myspace..myfunction
-
