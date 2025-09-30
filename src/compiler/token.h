@@ -16,7 +16,7 @@ typedef enum {
     KW_COUT, // example: cout <<- "Hello World";
     // types
     KW_BOX,   // example: box::int
-    KW_CONST, // example const::int
+    KW_CONST, // example const int
     KW_INT,
     KW_CHAR,
     KW_FLOAT,
