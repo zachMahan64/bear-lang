@@ -26,4 +26,5 @@ int strimap_at(strimap_t* map, char* key);
 
 // helper
 uint64_t hash_string(const char* str);
+void strimap_non_rehashing_insert(strimap_t* map, char* key, int val);
 #endif // ! CONTAINERS_STRIMAP_H
