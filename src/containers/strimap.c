@@ -8,14 +8,21 @@ strimap_t strimap_create(size_t size) {
     return map;
 }
 void strimap_destroy(strimap_t* map) {
+    if (!map || !map->buckets) {
+        return;
+    }
     for (int i = 0; i < map->size; i++) {
         strimap_entry_t* curr = map->buckets[i];
-        strimap_entry_t* next = curr->next;
-        while (next) {
+        while (curr) {
+            strimap_entry_t* next = curr->next;
+            free(curr->key); // since key was malloc'd
             free(curr);
             curr = next;
         }
     }
+    free((void*)map->buckets); // free buckets themselves
+    map->buckets = NULL;
+    map->size = 0;
 }
 
 // TODO finish impl
