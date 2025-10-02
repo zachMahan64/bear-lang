@@ -14,14 +14,14 @@ typedef struct strimap_entry_t {
 
 typedef struct {
     strimap_entry_t** buckets;
-    size_t bucket_count;
-    size_t entry_count;
+    size_t capacity;
+    size_t size;
 } strimap_t;
 
-strimap_t strimap_create(size_t starting_bucket_count);
+strimap_t strimap_create(size_t capacity);
 void strimap_destroy(strimap_t* map);
 void strimap_insert(strimap_t* map, char* key, int val);
-void strimap_rehash(strimap_t* map, size_t new_size);
+void strimap_rehash(strimap_t* map, size_t new_capacity);
 int strimap_at(strimap_t* map, char* key);
 
 // helper
