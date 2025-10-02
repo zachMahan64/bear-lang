@@ -3,12 +3,10 @@
 
 #include <stddef.h>
 
-struct strimap_entry;
-
-typedef struct {
+typedef struct strimap_entry_t {
     char* key;
     int val;
-    struct strimap* next;
+    struct strimap_entry_t* next;
 } strimap_entry_t;
 
 typedef struct {
