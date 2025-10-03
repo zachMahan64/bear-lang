@@ -11,11 +11,10 @@ typedef struct {
     size_t size;           // size of char buffer, in bytes/chars
 } src_buffer_t;
 
-src_buffer_t create_src_buffer_from_file(const char* file_name);
-void destroy_src_buffer(src_buffer_t* buffer);
+src_buffer_t src_buffer_from_file_create(const char* file_name);
+void src_buffer_destroy(src_buffer_t* buffer);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// helpers
+
 bool file_exists(const char* file_name);
-int read_file_to_src_buffer(src_buffer_t* buffer);
 
 #endif // !FILE_IO_H

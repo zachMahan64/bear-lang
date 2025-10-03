@@ -1,5 +1,8 @@
 #include "file_io.h"
 #include <stdio.h>
+#include <stdlib.h>
+
+// check that a file of a specified name exists
 bool file_exists(const char* file_name) {
     FILE* file = fopen(file_name, "r");
     if (file) {
@@ -11,9 +14,7 @@ bool file_exists(const char* file_name) {
     return false;
 }
 
-#include <stdio.h>
-#include <stdlib.h>
-
+// helper
 int read_file_to_src_buffer(src_buffer_t* buffer) {
     FILE* file = fopen(buffer->file_name, "rb");
     if (!file) {
@@ -58,7 +59,8 @@ int read_file_to_src_buffer(src_buffer_t* buffer) {
     return 0;
 }
 
-src_buffer_t create_src_buffer_from_file(const char* file_name) {
+// returns an src_buffer_t by value, which will need to be destructed by src_buffer_destroy
+src_buffer_t src_buffer_from_file_create(const char* file_name) {
     src_buffer_t buffer;
     buffer.file_name = file_name;
     if (read_file_to_src_buffer(&buffer) < 0) {
@@ -67,4 +69,5 @@ src_buffer_t create_src_buffer_from_file(const char* file_name) {
     return buffer;
 }
 
-void destroy_src_buffer(src_buffer_t* buffer) { free(buffer->data); }
+// destructs an src_buffer_t that was created by src_buffer_from_file_create
+void src_buffer_destroy(src_buffer_t* buffer) { free(buffer->data); }
