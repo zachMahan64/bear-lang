@@ -22,9 +22,8 @@ strimap_t strimap_create(size_t capacity);
 void strimap_destroy(strimap_t* map);
 void strimap_insert(strimap_t* map, char* key, int val);
 void strimap_rehash(strimap_t* map, size_t new_capacity);
-int strimap_at(strimap_t* map, char* key);
+int* strimap_at(strimap_t* map, char* key);
 
 // helper
 uint64_t hash_string(const char* str);
-void strimap_non_rehashing_insert(strimap_t* map, char* key, int val);
 #endif // ! CONTAINERS_STRIMAP_H

@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+// priv helper
+void strimap_helper_insert_when_rehashing(strimap_t* map, char* key, int val);
+void strimap_clean_when_rehashing(strimap_t* map);
+
 strimap_t strimap_create(size_t capacity) {
     strimap_t map;
     map.capacity = capacity;
@@ -40,13 +44,12 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
     for (size_t i = 0; i < map->capacity; i++) {
         strimap_entry_t* curr = map->buckets[i];
         while (curr) {
-            strimap_non_rehashing_insert(&temp, curr->key, curr->val);
-
+            strimap_helper_insert_when_rehashing(&temp, curr->key, curr->val);
             curr = curr->next;
-            // TODO finish
         }
     }
-    // TODO
+    strimap_clean_when_rehashing(map);
+    *map = temp;
 }
 
 // helpers
@@ -62,7 +65,7 @@ uint64_t hash_string(const char* str) {
     return hash;
 }
 
-void strimap_non_rehashing_insert(strimap_t* map, char* key, int val) {
+void strimap_helper_insert_when_rehashing(strimap_t* map, char* key, int val) {
     uint64_t raw_hash = hash_string(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
@@ -75,10 +78,7 @@ void strimap_non_rehashing_insert(strimap_t* map, char* key, int val) {
         }
         if (!curr->next) {
             strimap_entry_t* entry = malloc(sizeof(strimap_entry_t));
-            size_t key_size = strlen(key) + 1;
-            char* fresh_key = malloc(key_size);
-            memcpy(fresh_key, key, key_size);
-            entry->key = fresh_key;
+            entry->key = key;
             entry->val = val;
             entry->next = NULL;
             curr->next = entry;
@@ -88,13 +88,25 @@ void strimap_non_rehashing_insert(strimap_t* map, char* key, int val) {
     }
     // if we skipped traverse loop because curr bucket is null, just insert straight into the bucket
     strimap_entry_t* entry = malloc(sizeof(strimap_entry_t));
-    size_t key_size = strlen(key) + 1;
-    char* fresh_key = malloc(key_size);
-    memcpy(fresh_key, key, key_size);
-    entry->key = fresh_key;
+    entry->key = key;
     entry->val = val;
     entry->next = NULL;
     map->buckets[bucket_idx] = entry;
+}
+
+void strimap_clean_when_rehashing(strimap_t* map) {
+    if (!map || !map->buckets) {
+        return;
+    }
+    for (size_t i = 0; i < map->capacity; i++) {
+        strimap_entry_t* curr = map->buckets[i];
+        while (curr) {
+            strimap_entry_t* next = curr->next;
+            free(curr);
+            curr = next;
+        }
+    }
+    free((void*)map->buckets); // free buckets, but not keys since we want to reuse malloc'd strings
 }
 
 // TODO finish impl
