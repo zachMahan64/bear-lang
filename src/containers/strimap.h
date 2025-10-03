@@ -20,15 +20,28 @@ typedef struct {
     size_t size;
 } strimap_t;
 
+// strimap ctor/dtor
 strimap_t strimap_create(size_t capacity);
 void strimap_destroy(strimap_t* map);
+
+// mutators
 void strimap_insert(strimap_t* map, const char* key, int val);
+void strimap_remove(strimap_t* map, const char* key);
 void strimap_rehash(strimap_t* map, size_t new_capacity);
 int* strimap_at(strimap_t* map, const char* key);
+
+// viewers
 const int* strimap_view(const strimap_t* map, const char* key);
 bool strimap_contains(const strimap_t* map, const char* key);
 
-// TODO: add iterator, add remove
+// TODO impl iterator
+typedef struct {
+    strimap_t* map;
+    size_t bucket_idx;
+    strimap_entry_t* curr;
+} strimap_iter_t;
+strimap_iter_t strimap_create_iter(strimap_t* map);
+void strimap_iter_next(strimap_iter_t* iter, char* key, int* val);
 
 // helper
 uint64_t hash_string(const char* str);

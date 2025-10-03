@@ -61,6 +61,30 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
     ++map->size;
 }
 
+void strimap_remove(strimap_t* map, const char* key) {
+    uint64_t raw_hash = hash_string(key);
+    uint64_t bucket_idx = raw_hash % map->capacity;
+
+    strimap_entry_t* curr = map->buckets[bucket_idx];
+    strimap_entry_t* prev = NULL;
+    while (curr) {
+        if (strcmp(key, curr->key) == 0) {
+            if (prev) {
+                prev->next = curr->next; // stitch chain around removed node
+            } else {
+                map->buckets[bucket_idx] = curr->next; // update head
+            }
+            free(curr->key); // since key string was malloc'd
+            free(curr);
+            --map->size;
+            return; // if key already exists remove
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+    // if key not found, do nothing
+}
+
 int* strimap_at(strimap_t* map, const char* key) {
     uint64_t raw_hash = hash_string(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
