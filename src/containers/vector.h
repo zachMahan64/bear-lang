@@ -7,7 +7,7 @@ typedef struct {
     void* data;
     size_t size;
     size_t capacity;
-    size_t elem_size;
+    const size_t elem_size;
 } vector_t;
 
 // ctor

@@ -1,15 +1,13 @@
 #include "containers/vector.h"
 #include "log.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// ctors/dtors
+// returns a new vector by value, which will eventually need to be destructed by vector_destroy
 vector_t vector_create(size_t elem_size) {
-    vector_t vec;
-    vec.size = 0;
-    vec.capacity = 2;
-    vec.elem_size = elem_size;
+    vector_t vec = {.size = 0, .capacity = 2, .elem_size = elem_size};
     vec.data = malloc(elem_size * vec.capacity);
     if (!vec.data) {
         // if malloc fails
@@ -18,11 +16,9 @@ vector_t vector_create(size_t elem_size) {
     return vec;
 }
 
+// returns a new vector with specified capacity
 vector_t vector_create_and_reserve(size_t elem_size, size_t capacity) {
-    vector_t vec;
-    vec.size = 0;
-    vec.capacity = capacity;
-    vec.elem_size = elem_size;
+    vector_t vec = {.size = 0, .capacity = capacity, .elem_size = elem_size};
     vec.data = malloc(elem_size * vec.capacity);
     if (!vec.data) {
         // if malloc fails
@@ -31,11 +27,9 @@ vector_t vector_create_and_reserve(size_t elem_size, size_t capacity) {
     return vec;
 }
 
+// returns a vector with specified number of zero-initialized elements
 vector_t vector_create_and_init(size_t elem_size, size_t size) {
-    vector_t vec;
-    vec.size = size;
-    vec.capacity = size;
-    vec.elem_size = elem_size;
+    vector_t vec = {.size = 0, .capacity = size, .elem_size = elem_size};
     vec.data = calloc(vec.capacity, elem_size); // zero-init
     if (!vec.data) {
         vec.capacity = 0;
@@ -49,13 +43,15 @@ void vector_destroy(vector_t* vector) {
     vector->data = NULL;
     vector->size = 0;
     vector->capacity = 0;
-    vector->elem_size = 0;
 }
 
-// getters
+// get ptr to underlying data
 void* vector_get_data(const vector_t* vector) { return vector->data; }
+// get size of vector
 size_t vector_get_size(const vector_t* vector) { return vector->size; }
+// get capacity of vector
 size_t vector_get_capacity(const vector_t* vector) { return vector->capacity; }
+// get element size of vector
 size_t vector_get_elem_size(const vector_t* vector) { return vector->elem_size; }
 
 // idx
