@@ -1,4 +1,4 @@
-#include "bearlang.h"
+#include "bearlang/bearlang.h"
 #include "tests/test.h"
 #include <stdio.h>
 

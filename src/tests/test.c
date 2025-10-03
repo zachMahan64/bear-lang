@@ -30,9 +30,12 @@ void test_vector(void) {
 }
 
 void test_strimap(void) {
-    strimap_t map = *get_string_to_token_strimap();
-    for (strimap_iter_t iter = strimap_iter_begin(&map); iter.curr != NULL;
+    strimap_t str_to_tkn_map = *get_string_to_token_strimap();
+    const char* const* tkn_to_str_map = get_token_to_string_map();
+
+    for (strimap_iter_t iter = strimap_iter_begin(&str_to_tkn_map); iter.curr != NULL;
          strimap_iter_next(&iter)) {
-        printf("%s -> %d @ %zu\n", iter.curr->key, iter.curr->val, iter.bucket_idx);
+        printf("%-8s -> %-8d -> %-8s @ %-8zu\n", iter.curr->key, iter.curr->val,
+               tkn_to_str_map[iter.curr->val], iter.bucket_idx);
     }
 }

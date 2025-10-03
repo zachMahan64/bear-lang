@@ -1,4 +1,4 @@
-#include "bearlang.h"
+#include "bearlang/bearlang.h"
 #include "cli_args.h"
 #include "compiler/compile.h"
 #include "file_io.h"
