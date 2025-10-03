@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 typedef enum token_type {
+    INVALID = 0,
     // mono-char tokens
     // delim
     // brackets, etc
@@ -59,8 +60,8 @@ typedef enum token_type {
     KW_REF,   // ref
     KW_INT,
     KW_CHAR,
-    KW_FLOAT,
-    KW_STRING,
+    KW_FLT,
+    KW_STR,
 
     // comparison
     KW_IF,
