@@ -40,8 +40,9 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
     for (size_t i = 0; i < map->capacity; i++) {
         strimap_entry_t* curr = map->buckets[i];
         while (curr) {
-            strimap_entry_t* next = curr->next;
-            uint64_t curr_hash = hash_string(curr->key);
+            strimap_non_rehashing_insert(&temp, curr->key, curr->val);
+
+            curr = curr->next;
             // TODO finish
         }
     }
@@ -68,25 +69,32 @@ void strimap_non_rehashing_insert(strimap_t* map, char* key, int val) {
     strimap_entry_t* curr = map->buckets[bucket_idx];
 
     while (curr) {
-        strimap_entry_t* next = curr->next;
         if (strcmp(key, curr->key) == 0) {
             curr->val = val;
             return; // if key already exists, update val
         }
-        if (!next) {
-            next = malloc(sizeof(strimap_entry_t));
+        if (!curr->next) {
+            strimap_entry_t* entry = malloc(sizeof(strimap_entry_t));
             size_t key_size = strlen(key) + 1;
             char* fresh_key = malloc(key_size);
             memcpy(fresh_key, key, key_size);
-            next->key = fresh_key;
-            next->val = val;
-            next->next = NULL;
+            entry->key = fresh_key;
+            entry->val = val;
+            entry->next = NULL;
+            curr->next = entry;
             return; // add key to end of chain
         }
-        curr = next;
+        curr = curr->next;
     }
     // if we skipped traverse loop because curr bucket is null, just insert straight into the bucket
-    // TODO
+    strimap_entry_t* entry = malloc(sizeof(strimap_entry_t));
+    size_t key_size = strlen(key) + 1;
+    char* fresh_key = malloc(key_size);
+    memcpy(fresh_key, key, key_size);
+    entry->key = fresh_key;
+    entry->val = val;
+    entry->next = NULL;
+    map->buckets[bucket_idx] = entry;
 }
 
 // TODO finish impl
