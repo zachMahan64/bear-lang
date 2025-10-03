@@ -11,7 +11,7 @@
 #define TOKEN_STRING_TO_TOKEN_MAP_SIZE 128
 
 typedef enum token_type {
-    INVALID = 0,
+    INDETERMINATE = 0,
     // mono-char tokens
     // delim
     // brackets, etc
@@ -116,6 +116,9 @@ typedef enum token_type {
     EQ,
     NE,
 
+    // ERROR STATES
+    INVALID_LITERAL, // perhaps add more variations
+
 } token_type_e;
 
 typedef union {
@@ -129,11 +132,11 @@ typedef struct {
 } src_loc_t;
 
 typedef struct {
-    const char* start;   // NOT NULL TERMINATED; non-owning view into source buffer
-    size_t length;       // len in source
-    token_type_e sym;    // type
-    token_value_u value; // get value using sym, only valid for numeric literals
-    src_loc_t loc;       // line & col, for error messages
+    const char* start; // NOT NULL-TERMINATED; non-owning view into source buffer
+    size_t length;     // len in source
+    token_type_e sym;  // type
+    token_value_u val; // get value using sym, only valid for numeric literals
+    src_loc_t loc;     // line & col, for error messages
 } token_t;
 
 // token map functions

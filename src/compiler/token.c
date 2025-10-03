@@ -1,7 +1,10 @@
 #include "token.h"
 #include "containers/strimap.h"
+#include <ctype.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 // returns a view into statically allocated map of char -> token_type_e
@@ -116,7 +119,7 @@ const char* const* get_token_to_string_map(void) {
     static const char* map[TOKEN_TOKEN_TO_STRING_MAP_SIZE] = {0};
 
     if (!initialized) {
-        map[INVALID] = "INVALID";
+        map[INDETERMINATE] = "INDETERMINATE";
 
         // mono-char tokens
         map[LPAREN] = "(";
@@ -210,22 +213,142 @@ const char* const* get_token_to_string_map(void) {
 }
 
 // token struct functions
-token_type_e token_determine_token_type(const char* start, size_t length);
+token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length);
+void token_check_if_valid_literal_and_set_value(token_t* tkn);
 
+// Builds token according to a starting ptr and length into src as well as an src_loc_t that
+// indicates row/col number for debugging purposes. This function assumes that the lexer has already
+// correct determined the string that needs to be tokenized.
 token_t build_token(const char* start, size_t length, src_loc_t* loc) {
     token_t tkn;
+    // init provided values
     tkn.start = start;
     tkn.length = length;
     tkn.loc = *loc;
-    // determine tkn's sym and optional value later
+    // now determine most compilcated fields:
+    // keywords and reserved symbols
+
+    tkn.sym = token_determine_token_type_for_fixed_symbols(
+        start,
+        length); // will be set to INDETERMINATE if the token could not be resolved as a fixed
+                 // symbol
+
+    if (tkn.sym == INDETERMINATE) {
+        token_check_if_valid_literal_and_set_value(
+            &tkn); // will appropriately set literal symbol and values, but will leave sym as
+                   // INDETERMINATE if no pattern was matched
+    }
+
+    // TODO
+    return tkn;
 }
 
-// helper, just impls logic to use different look ups for optimization
-token_type_e token_determine_token_type(const char* start, size_t length) {
+// helper that looks up tokens for fixed symbols (i.e keywords and operators), impls basic logic
+// using different look ups for optimization
+token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length) {
     const int* char_to_token_map = get_char_to_token_map();
     if (length == 1) {
-        return char_to_token_map[start[0]]; // return token indexed at the mono-char literal
+        return char_to_token_map[start[0]]; // return token indexed at the mono-char literal, any
+                                            // invalid entry will be automatically '\0' since the
+                                            // map was statically initialized and token
+                                            // INDETERMINATE = 0
     }
     const strimap_t* string_to_token_map = get_string_to_token_strimap();
-    return (token_type_e)*strimap_view(string_to_token_map, start);
+    token_type_e* tkn_type_ptr_from_multi_char_map =
+        (token_type_e*)strimap_viewn(string_to_token_map, start, length);
+    if (tkn_type_ptr_from_multi_char_map != NULL) {
+        return *tkn_type_ptr_from_multi_char_map; // derefence and return because it was valid and
+                                                  // thus found
+    }
+    return INDETERMINATE; // because strimap_viewn return NULL, it was thus not found and
+                          // INDETERMINATE
+}
+
+void token_check_if_valid_literal_and_set_value(token_t* tkn) {
+    if (!tkn || tkn->length == 0) {
+        if (tkn) {
+            tkn->sym = INDETERMINATE;
+        }
+        return;
+    }
+
+    const char* str = tkn->start;
+    size_t len = tkn->length;
+
+    // ~~~ CHAR literal: 'a' or escapes like '\n' ~~~
+    if (str[0] == '\'' && str[len - 1] == '\'' && len >= 3) {
+        char c;
+        if (str[1] == '\\') { // escape sequence
+            switch (str[2]) {
+            case 'n':
+                c = '\n';
+                break;
+            case 't':
+                c = '\t';
+                break;
+            case '\\':
+                c = '\\';
+                break;
+            case '\'':
+                c = '\'';
+                break;
+            case '\"':
+                c = '\"';
+                break;
+            case '0':
+                c = '\0';
+                break;
+            default:
+                tkn->sym = INDETERMINATE;
+                return; // unsupported escape
+            }
+        } else if (len == 3) {
+            c = str[1];
+        } else {
+            tkn->sym = INDETERMINATE;
+            return; // multi-char literal invalid
+        }
+        tkn->sym = CHAR_LIT;
+        tkn->val.character = c;
+        return;
+    }
+
+    // ~~~ STRING literal: "..." ~~~
+    if (str[0] == '"' && str[len - 1] == '"') {
+        tkn->sym = STR_LIT;
+        // val unused; escapes resolved later
+        return;
+    }
+
+    // ~~~ INTEGER literal (decimal, hex 0x, octal 0, binary 0b) ~~~
+    errno = 0;
+    char* endptr = NULL;
+    long long int_val = strtoll(str, &endptr, 0); // base 0 auto-detects 0x / 0 prefix
+    if (endptr != str && errno == 0) {
+        while (isspace((unsigned char)*endptr)) {
+            endptr++;
+        }
+        if (*endptr == '\0') {
+            tkn->sym = INT_LIT;
+            tkn->val.integer = int_val;
+            return;
+        }
+    }
+
+    // ~~~ FLOAT literal (scientific notation handled) ~~~
+    errno = 0;
+    endptr = NULL;
+    double float_val = strtod(str, &endptr);
+    if (endptr != str && errno == 0) {
+        while (isspace((unsigned char)*endptr)) {
+            endptr++;
+        }
+        if (*endptr == '\0') {
+            tkn->sym = FLT_LIT;
+            tkn->val.floating = float_val;
+            return;
+        }
+    }
+
+    tkn->sym = INDETERMINATE; // fallback, ensure this
 }

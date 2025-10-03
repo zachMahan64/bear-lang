@@ -4,7 +4,9 @@ Checks: >
   performance-*,
   readability-*,
   portability-*,
-  -readability-magic-numbers
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none
