@@ -36,12 +36,12 @@ bool strimap_contains(const strimap_t* map, const char* key);
 
 // TODO impl iterator
 typedef struct {
-    strimap_t* map;
+    const strimap_t* map;
     size_t bucket_idx;
     strimap_entry_t* curr;
 } strimap_iter_t;
-strimap_iter_t strimap_create_iter(strimap_t* map);
-void strimap_iter_next(strimap_iter_t* iter, char* key, int* val);
+strimap_iter_t strimap_iter_begin(const strimap_t* map);
+strimap_entry_t* strimap_iter_next(strimap_iter_t* iter);
 
 // helper
 uint64_t hash_string(const char* str);

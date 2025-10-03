@@ -146,6 +146,69 @@ bool strimap_contains(const strimap_t* map, const char* key) {
     return strimap_view(map, key) != NULL;
 }
 
+// iterators
+
+/*
+ * Builds an iterator by value and initializes it to the first entry.
+ *
+ * Notes:
+ * - This iterator does not need to be destructed in any way.
+ * - `curr == NULL` means failure (empty map).
+ *
+ * Usage:
+ *   for (strimap_iter_t it = strimap_iter_begin(&map);
+ *        it.curr;
+ *        strimap_iter_next(&it)) {
+ *       printf("%s => %d\n", it.curr->key, it.curr->val);
+ *   }
+ */
+
+strimap_iter_t strimap_iter_begin(const strimap_t* map) {
+    strimap_iter_t iter = {.map = map, .bucket_idx = 0, .curr = NULL};
+
+    while (iter.bucket_idx < map->capacity && map->buckets[iter.bucket_idx] == NULL) {
+        ++iter.bucket_idx;
+    }
+
+    if (iter.bucket_idx < map->capacity) {
+        iter.curr = map->buckets[iter.bucket_idx];
+    }
+    return iter;
+}
+/*
+ * Increments an existing iterator
+ *
+ * Notes:
+ * - `curr == NULL` means the end has been reached.
+ *
+ * Usage:
+ *   for (strimap_iter_t it = strimap_iter_begin(&map);
+ *        it.curr;
+ *        strimap_iter_next(&it)) {
+ *       printf("%s => %d\n", it.curr->key, it.curr->val);
+ *   }
+ */
+strimap_entry_t* strimap_iter_next(strimap_iter_t* iter) {
+    if (!iter->curr) {
+        return iter->curr; // end
+    }
+    if (iter->curr->next) {
+        iter->curr = iter->curr->next;
+        return iter->curr; // next
+    }
+    ++iter->bucket_idx;
+    iter->curr = NULL;
+    while (iter->bucket_idx < iter->map->capacity && iter->map->buckets[iter->bucket_idx] == NULL) {
+        ++iter->bucket_idx;
+    }
+    if (iter->bucket_idx < iter->map->capacity) {
+        iter->curr = iter->map->buckets[iter->bucket_idx];
+        return iter->curr;
+    }
+    iter->curr = NULL;
+    return iter->curr;
+}
+
 // helpers
 uint64_t hash_string(const char* str) {
     uint64_t hash = 5381;
