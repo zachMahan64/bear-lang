@@ -2,7 +2,7 @@
 #include "containers/strimap.h"
 #include <stdbool.h>
 
-int* get_char_to_token_map(void) {
+const int* get_char_to_token_map(void) {
     static bool initialized = false;
     static int char_to_token_map[128]; // ASCII lookup
     if (!initialized) {
@@ -47,12 +47,12 @@ int* get_char_to_token_map(void) {
     return char_to_token_map;
 }
 
-strimap_t* get_string_to_token_strimap(void) {
+const strimap_t* get_string_to_token_strimap(void) {
     static bool initialized = false;
     static strimap_t map;
 
     if (!initialized) {
-        map = strimap_create(64);
+        map = strimap_create(128); // make large to reduce hash conflicts
 
         // file
         strimap_insert(&map, "import", IMPORT);

@@ -131,7 +131,7 @@ typedef struct {
     token_loc_t loc;     // line & col, for error messages
 } token_t;
 
-int* get_char_to_token_map(void);
-strimap_t* get_string_to_token_strimap(void);
+const int* get_char_to_token_map(void);
+const strimap_t* get_string_to_token_strimap(void);
 
 #endif // !COMPILER_TOKEN_H
