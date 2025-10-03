@@ -1,5 +1,6 @@
 #include "containers/vector.h"
 #include "log.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,16 +46,16 @@ void vector_destroy(vector_t* vector) {
     vector->capacity = 0;
 }
 
-// get ptr to underlying data
+// gets ptr to underlying data
 void* vector_get_data(const vector_t* vector) { return vector->data; }
-// get size of vector
+// gets size of vector
 size_t vector_get_size(const vector_t* vector) { return vector->size; }
-// get capacity of vector
+// gets capacity of vector
 size_t vector_get_capacity(const vector_t* vector) { return vector->capacity; }
-// get element size of vector
+// gets element size of vector
 size_t vector_get_elem_size(const vector_t* vector) { return vector->elem_size; }
 
-// idx
+// gets value at specified index
 void* vector_at(const vector_t* vector, size_t idx) {
     if (idx >= vector->size) {
         LOG_ERR("[ERROR] vector_t: out of range")
@@ -62,37 +63,48 @@ void* vector_at(const vector_t* vector, size_t idx) {
     }
     return (void*)((char*)vector->data + (idx * vector->elem_size));
 }
-
+// gets ptr to start of vector
 void* vector_start(const vector_t* vector) { return vector->data; }
+// gets ptr to end of vector
 void* vector_end(const vector_t* vector) {
     return (void*)((char*)vector->data + ((vector->size) * vector->elem_size));
 }
+// gets ptr to last element of vector (size - 1)
 void* vector_last(const vector_t* vector) {
     return (void*)((char*)vector->data + ((vector->size - 1) * vector->elem_size));
 }
 
 // modifiers
-void vector_push_back(vector_t* vector, const void* elem) {
+
+// pushes element to end of vector; invalidates iterators on resize
+// - returns true on resize and false otherwise
+bool vector_push_back(vector_t* vector, const void* elem) {
+    bool resize = false;
     if (vector->size == vector->capacity) {
         size_t new_capacity = (vector->capacity == 0) ? 1 : vector->capacity * 2;
         void* temp = realloc(vector->data, new_capacity * vector->elem_size);
         if (!temp) {
             LOG_ERR("[ERROR] vector_t: reallocation failed when increasing capacity");
-            return; // vector still valid, but push back fails w/ msg
+            return false; // vector still valid, but push back fails w/ msg
         }
         vector->data = temp;
         vector->capacity = new_capacity;
+        resize = true;
     }
     memcpy((char*)vector->data + (vector->size * vector->elem_size), elem, vector->elem_size);
     ++vector->size;
+    return resize;
 }
 
+// removes last element of vector
 void vector_remove_back(vector_t* vector) {
     if (vector->size == 0) {
         return; // fail silently cuz empty
     }
     --vector->size;
 }
+
+// reserves a specified capacity
 void vector_reserve(vector_t* vector, size_t new_capacity) {
     if (new_capacity <= vector->capacity) {
         return; // we fine
@@ -106,15 +118,18 @@ void vector_reserve(vector_t* vector, size_t new_capacity) {
     vector->capacity = new_capacity;
 }
 
-void vector_shrink_to_fit(vector_t* vector) {
+// shrinks capacity to match size; invalidates iterators on resize
+// - returns true on resize and false otherwise
+bool vector_shrink_to_fit(vector_t* vector) {
     if (vector->size == vector->capacity) {
-        return;
+        return false;
     }
     void* temp = realloc(vector->data, vector->size * vector->elem_size);
     if (!temp) {
         LOG_ERR("[ERROR] vector_t: reallocation failed when shrinking to fit");
-        return;
+        return false;
     }
     vector->data = temp;
     vector->capacity = vector->size;
+    return true;
 }

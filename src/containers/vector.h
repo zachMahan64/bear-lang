@@ -1,5 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
+#include <stdbool.h>
 #include <stddef.h>
 
 // generic vector,
@@ -29,9 +30,9 @@ void* vector_start(const vector_t* vector);
 void* vector_end(const vector_t* vector);
 void* vector_last(const vector_t* vector);
 // modifiers
-void vector_push_back(vector_t* vector, const void* elem);
+bool vector_push_back(vector_t* vector, const void* elem);
 void vector_remove_back(vector_t* vector);
 void vector_reserve(vector_t* vector, size_t new_capacity);
-void vector_shrink_to_fit(vector_t* vector);
+bool vector_shrink_to_fit(vector_t* vector);
 
 #endif // !VECTOR_H
