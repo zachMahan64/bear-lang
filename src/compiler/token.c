@@ -238,8 +238,6 @@ token_t build_token(const char* start, size_t length, src_loc_t* loc) {
             &tkn); // will appropriately set literal symbol and values, but will leave sym as
                    // INDETERMINATE if no pattern was matched
     }
-
-    // TODO
     return tkn;
 }
 

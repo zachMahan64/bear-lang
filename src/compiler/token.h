@@ -115,10 +115,7 @@ typedef enum token_type {
     LE,
     EQ,
     NE,
-
-    // ERROR STATES
-    INVALID_LITERAL, // perhaps add more variations
-
+    // add error states?
 } token_type_e;
 
 typedef union {
