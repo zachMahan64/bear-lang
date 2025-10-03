@@ -6,7 +6,7 @@
 // returns a view into statically allocated map of char -> token_type_e
 const int* get_char_to_token_map(void) {
     static bool initialized = false;
-    static int char_to_token_map[128]; // ASCII lookup
+    static int char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
     if (!initialized) {
         // delimiters
         char_to_token_map['('] = LPAREN;
@@ -55,7 +55,7 @@ const strimap_t* get_string_to_token_strimap(void) {
     static strimap_t map;
 
     if (!initialized) {
-        map = strimap_create(128); // make large to reduce hash conflicts
+        map = strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
 
         // file
         strimap_insert(&map, "import", IMPORT);
@@ -161,8 +161,8 @@ const char* const* get_token_to_string_map(void) {
         map[KW_REF] = "ref";
         map[KW_INT] = "int";
         map[KW_CHAR] = "char";
-        map[KW_FLT] = "float";
-        map[KW_STR] = "string";
+        map[KW_FLT] = "flt";
+        map[KW_STR] = "str";
 
         map[KW_IF] = "if";
         map[KW_ELSE] = "else";
@@ -180,8 +180,8 @@ const char* const* get_token_to_string_map(void) {
         map[SYMBOL] = "symbol";
         map[CHAR_LIT] = "char_lit";
         map[INT_LIT] = "int_lit";
-        map[FLOAT_LIT] = "float_lit";
-        map[STRING_LIT] = "string_lit";
+        map[FLT_LIT] = "float_lit";
+        map[STR_LIT] = "string_lit";
 
         // special punctuation
         map[RARROW] = "->";

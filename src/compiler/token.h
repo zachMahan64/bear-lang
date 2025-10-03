@@ -7,6 +7,8 @@
 
 #define TOKEN_MAX_KEYWORD_LEN 16
 #define TOKEN_TOKEN_TO_STRING_MAP_SIZE 512
+#define TOKEN_CHAR_TO_TOKEN_MAP_SIZE 128
+#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 128
 
 typedef enum token_type {
     INVALID = 0,
@@ -85,8 +87,8 @@ typedef enum token_type {
     // built-in types
     CHAR_LIT,
     INT_LIT,
-    FLOAT_LIT,
-    STRING_LIT,
+    FLT_LIT,
+    STR_LIT,
 
     // punc
     RARROW,    // -> for return types
