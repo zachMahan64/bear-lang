@@ -1,7 +1,9 @@
 #include "token.h"
 #include "containers/strimap.h"
 #include <stdbool.h>
+#include <string.h>
 
+// returns a view into statically allocated map of char -> token_type_e
 const int* get_char_to_token_map(void) {
     static bool initialized = false;
     static int char_to_token_map[128]; // ASCII lookup
@@ -47,6 +49,7 @@ const int* get_char_to_token_map(void) {
     return char_to_token_map;
 }
 
+// returns a view into statically allocated map of string -> token_type_e
 const strimap_t* get_string_to_token_strimap(void) {
     static bool initialized = false;
     static strimap_t map;
@@ -104,4 +107,103 @@ const strimap_t* get_string_to_token_strimap(void) {
     }
 
     return &map;
+}
+
+// returns a view into statically allocated map of token_type_e -> string
+const char* const* get_token_to_string_map(void) {
+    static bool initialized = false;
+    static const char* map[TOKEN_TOKEN_TO_STRING_MAP_SIZE] = {0};
+
+    if (!initialized) {
+        map[INVALID] = "INVALID";
+
+        // mono-char tokens
+        map[LPAREN] = "(";
+        map[RPAREN] = ")";
+        map[LBRACE] = "{";
+        map[RBRACE] = "}";
+        map[LBRACK] = "[";
+        map[RBRACK] = "]";
+
+        // punctuation
+        map[SEMICOLON] = ";";
+        map[DOT] = ".";
+        map[COMMA] = ",";
+
+        // assignment / operators
+        map[ASSIGN_EQ] = "=";
+        map[PLUS] = "+";
+        map[MINUS] = "-";
+        map[MULT] = "*";
+        map[DIVIDE] = "/";
+        map[MOD] = "%";
+
+        // bitwise
+        map[BIT_OR] = "|";
+        map[BIT_AND] = "&";
+        map[BIT_NOT] = "~";
+        map[BIT_XOR] = "^";
+
+        // boolean
+        map[BOOL_NOT] = "!";
+
+        // comparison
+        map[GT] = ">";
+        map[LT] = "<";
+
+        // file / keywords
+        map[IMPORT] = "import";
+        map[KW_SPACE] = "space";
+        map[KW_FN] = "fn";
+        map[KW_COUT] = "cout";
+        map[KW_BOX] = "box";
+        map[KW_CONST] = "const";
+        map[KW_REF] = "ref";
+        map[KW_INT] = "int";
+        map[KW_CHAR] = "char";
+        map[KW_FLT] = "float";
+        map[KW_STR] = "string";
+
+        map[KW_IF] = "if";
+        map[KW_ELSE] = "else";
+        map[KW_ELIF] = "elif";
+        map[KW_WHILE] = "while";
+        map[KW_FOR] = "for";
+        map[KW_RETURN] = "return";
+
+        // structures
+        map[KW_THIS] = "this";
+        map[KW_STRUCT] = "struct";
+        map[KW_IMPL] = "impl";
+
+        // variable / literal types
+        map[SYMBOL] = "symbol";
+        map[CHAR_LIT] = "char_lit";
+        map[INT_LIT] = "int_lit";
+        map[FLOAT_LIT] = "float_lit";
+        map[STRING_LIT] = "string_lit";
+
+        // special punctuation
+        map[RARROW] = "->";
+        map[SCOPE_RES] = "..";
+        map[TYPE_MOD] = "::";
+
+        // operators
+        map[ASSIGN_LARROW] = "<-";
+        map[STREAM] = "<<-";
+        map[INC] = "++";
+        map[DEC] = "--";
+        map[LSH] = "<<";
+        map[RSHL] = ">>";
+        map[RSHA] = ">>>";
+        map[BOOL_OR] = "||";
+        map[BOOL_AND] = "&&";
+        map[GE] = ">=";
+        map[LE] = "<=";
+        map[EQ] = "==";
+        map[NE] = "!=";
+
+        initialized = true;
+    }
+    return map;
 }

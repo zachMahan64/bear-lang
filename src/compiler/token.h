@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define TOKEN_MAX_KEYWORD_LEN 16
+#define TOKEN_TOKEN_TO_STRING_MAP_SIZE 512
+
 typedef enum token_type {
     INVALID = 0,
     // mono-char tokens
@@ -133,5 +136,6 @@ typedef struct {
 
 const int* get_char_to_token_map(void);
 const strimap_t* get_string_to_token_strimap(void);
+const char* const* get_token_to_string_map(void);
 
 #endif // !COMPILER_TOKEN_H
