@@ -14,7 +14,7 @@ bool file_exists(const char* file_name) {
 #include <stdio.h>
 #include <stdlib.h>
 
-int read_file_to_char_buffer(char_buffer_from_file_t* buffer) {
+int read_file_to_src_buffer(src_buffer_t* buffer) {
     FILE* file = fopen(buffer->file_name, "rb");
     if (!file) {
         return -1;
@@ -58,13 +58,13 @@ int read_file_to_char_buffer(char_buffer_from_file_t* buffer) {
     return 0;
 }
 
-char_buffer_from_file_t create_char_buffer_from_file(const char* file_name) {
-    char_buffer_from_file_t buffer;
+src_buffer_t create_src_buffer_from_file(const char* file_name) {
+    src_buffer_t buffer;
     buffer.file_name = file_name;
-    if (read_file_to_char_buffer(&buffer) < 0) {
+    if (read_file_to_src_buffer(&buffer) < 0) {
         printf("[ERROR] Could not read file: %s", file_name);
     }
     return buffer;
 }
 
-void destroy_char_buffer_from_file(char_buffer_from_file_t* buffer) { free(buffer->data); }
+void destroy_src_buffer(src_buffer_t* buffer) { free(buffer->data); }

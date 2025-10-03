@@ -9,13 +9,13 @@ typedef struct {
     const char* file_name; // non-owning view into filename
     char* data;            // owns, freed by destroy_char_buffer_from_file
     size_t size;           // size of char buffer, in bytes/chars
-} char_buffer_from_file_t;
+} src_buffer_t;
 
-char_buffer_from_file_t create_char_buffer_from_file(const char* file_name);
-void destroy_char_buffer_from_file(char_buffer_from_file_t* buffer);
+src_buffer_t create_src_buffer_from_file(const char* file_name);
+void destroy_src_buffer(src_buffer_t* buffer);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // helpers
 bool file_exists(const char* file_name);
-int read_file_to_char_buffer(char_buffer_from_file_t* buffer);
+int read_file_to_src_buffer(src_buffer_t* buffer);
 
 #endif // !FILE_IO_H

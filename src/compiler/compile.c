@@ -5,7 +5,7 @@
 
 int compile_file(const char* file_name) {
     int error_code = 0; // return error code if hit error
-    char_buffer_from_file_t buffer = create_char_buffer_from_file(file_name);
+    src_buffer_t buffer = create_src_buffer_from_file(file_name);
     /*
      * TODO compile logic
      * output to a bytecode file eventually
@@ -16,6 +16,6 @@ int compile_file(const char* file_name) {
      * with original_file_name.bvm
      */
 
-    destroy_char_buffer_from_file(&buffer);
+    destroy_src_buffer(&buffer);
     return error_code;
 }
