@@ -1,12 +1,51 @@
 #ifndef COMPILER_TOKEN_H
 #define COMPILER_TOKEN_H
 
+#include "containers/strimap.h"
 #include <stddef.h>
 #include <stdint.h>
 
-typedef enum {
+typedef enum token_type {
+    // mono-char tokens
+    // delim
+    // brackets, etc
+    LPAREN = '(',
+    RPAREN = ')', // ()
+    LBRACE = '{',
+    RBRACE = '}', // {}
+    LBRACK = '[',
+    RBRACK = ']', // []
+
+    // punc
+    SEMICOLON = ';',
+    DOT = '.',
+    COMMA = ',',
+
+    // assign
+    ASSIGN_EQ = '=', // =
+
+    // arith
+    PLUS = '+',   // +
+    MINUS = '-',  // -
+    MULT = '*',   // *
+    DIVIDE = '/', // /
+    MOD = '%',    // %
+
+    // bitwise
+    BIT_OR = '|',  // |
+    BIT_AND = '&', // &
+    BIT_NOT = '~', // ~
+    BIT_XOR = '^', // ^
+
+    // bool
+    BOOL_NOT = '!', // !
+
+    // comparison
+    GT = '>',
+    LT = '<',
+
     // file
-    IMPORT,
+    IMPORT = 256,
     // keywords
     // namespace
     KW_SPACE, // space
@@ -17,6 +56,7 @@ typedef enum {
     // types
     KW_BOX,   // example: box::int
     KW_CONST, // example const int
+    KW_REF,   // ref
     KW_INT,
     KW_CHAR,
     KW_FLOAT,
@@ -44,52 +84,27 @@ typedef enum {
     FLOAT_LIT,
     STRING_LIT,
 
-    // delim
-    // brackets, etc
-    LPAREN,
-    RPAREN, // ()
-    LBRACE,
-    RBRACE, // {}
-    LBRACK,
-    RBRACK, // []
-
     // punc
-    SEMICOLON,
-    DOT,
-    COMMA,
     RARROW,    // -> for return types
     SCOPE_RES, // ..
     TYPE_MOD,  // ::, for example, box:: (maybe different ones could be added later)
 
     // operators
     // assign
-    ASSIGN_EQ,     // =
     ASSIGN_LARROW, // <-
     // stream
     STREAM, // <<-
     // arith
-    PLUS,   // +
-    MINUS,  // -
-    MULT,   // *
-    DIVIDE, // /
-    MOD,    // %
-    INC,    // ++
-    DEC,    // --
+    INC, // ++
+    DEC, // --
     // bitwise
-    BIT_OR,  // |
-    BIT_AND, // &
-    BIT_NOT, // ~
-    BIT_XOR, // ^
-    LSH,     // <<
-    RSHL,    // >>
-    RSHA,    // >>>
+    LSH,  // <<
+    RSHL, // >>
+    RSHA, // >>>
     // bool
     BOOL_OR,  // ||
-    BOOL_AND, // AND
-    BOOL_NOT, // !
+    BOOL_AND, // &&
     // comparison
-    GT,
-    LT,
     GE,
     LE,
     EQ,
@@ -114,5 +129,8 @@ typedef struct {
     token_value_u value; // get value using sym, only valid for literals
     token_loc_t loc;     // line & col, for error messages
 } token_t;
+
+int* get_char_to_token_map(void);
+strimap_t* get_string_to_token_strimap(void);
 
 #endif // !COMPILER_TOKEN_H
