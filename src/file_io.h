@@ -8,7 +8,7 @@
 typedef struct {
     const char* file_name; // non-owning view into filename
     char* data;            // owns, freed by destroy_char_buffer_from_file
-    size_t size;
+    size_t size;           // size of char buffer, in bytes/chars
 } char_buffer_from_file_t;
 
 char_buffer_from_file_t create_char_buffer_from_file(const char* file_name);

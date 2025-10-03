@@ -29,12 +29,14 @@ void strimap_insert(strimap_t* map, const char* key, int val);
 void strimap_remove(strimap_t* map, const char* key);
 void strimap_rehash(strimap_t* map, size_t new_capacity);
 int* strimap_at(strimap_t* map, const char* key);
+int* strimap_atn(strimap_t* map, const char* key, size_t key_len);
 
 // viewers
 const int* strimap_view(const strimap_t* map, const char* key);
+const int* strimap_viewn(const strimap_t* map, const char* key, size_t key_len);
 bool strimap_contains(const strimap_t* map, const char* key);
 
-// TODO impl iterator
+// iterator
 typedef struct {
     const strimap_t* map;
     size_t bucket_idx;

@@ -33,6 +33,7 @@ void strimap_destroy(strimap_t* map) {
     map->capacity = 0;
 }
 
+// inserts integer value index at specified key
 void strimap_insert(strimap_t* map, const char* key, int val) {
     if ((double)map->size / (double)map->capacity >= STRIMAP_LOAD_FACTOR) {
         strimap_rehash(map, 2 * map->capacity);
@@ -61,6 +62,7 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
     ++map->size;
 }
 
+// remove an entry from the map
 void strimap_remove(strimap_t* map, const char* key) {
     uint64_t raw_hash = hash_string(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
@@ -85,6 +87,7 @@ void strimap_remove(strimap_t* map, const char* key) {
     // if key not found, do nothing
 }
 
+// gets a mutatable pointer to the value at a specified key
 int* strimap_at(strimap_t* map, const char* key) {
     uint64_t raw_hash = hash_string(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
@@ -100,6 +103,24 @@ int* strimap_at(strimap_t* map, const char* key) {
     return NULL; // not found
 }
 
+// gets a mutatable pointer to the value at a specified key and finds string by length, so the
+// key does not have to be null-terminated
+int* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
+    uint64_t raw_hash = hash_string(key);
+    uint64_t bucket_idx = raw_hash % map->capacity;
+
+    strimap_entry_t* curr = map->buckets[bucket_idx];
+
+    while (curr) {
+        if (strncmp(key, curr->key, key_len) == 0) {
+            return &curr->val;
+        }
+        curr = curr->next;
+    }
+    return NULL; // not found
+}
+
+// gets an immutatable pointer to the value at a specified key
 const int* strimap_view(const strimap_t* map, const char* key) {
     uint64_t raw_hash = hash_string(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
@@ -115,8 +136,27 @@ const int* strimap_view(const strimap_t* map, const char* key) {
     return NULL; // not found
 }
 
+// gets an immutatable pointer to the value at a specified key and finds string by length, so the
+// key does not have to be null-terminated
+const int* strimap_viewn(const strimap_t* map, const char* key, size_t key_len) {
+    uint64_t raw_hash = hash_string(key);
+    uint64_t bucket_idx = raw_hash % map->capacity;
+
+    const strimap_entry_t* curr = map->buckets[bucket_idx];
+
+    while (curr) {
+        if (strncmp(key, curr->key, key_len) == 0) {
+            return &curr->val;
+        }
+        curr = curr->next;
+    }
+    return NULL; // not found
+}
+
+// rehash the map to a specified new number of buckets, will fail if new_capacity <
+// STRIMAP_MINIMUM_CAPACITY
 void strimap_rehash(strimap_t* map, size_t new_capacity) {
-    if (new_capacity < 1) {
+    if (new_capacity < STRIMAP_MINIMUM_CAPACITY) {
         return; // guard
     }
     strimap_entry_t** new_buckets =
@@ -142,6 +182,7 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
     map->capacity = new_capacity;
 }
 
+// returns true if the map contains an entry at the specified key
 bool strimap_contains(const strimap_t* map, const char* key) {
     return strimap_view(map, key) != NULL;
 }
@@ -209,7 +250,7 @@ strimap_entry_t* strimap_iter_next(strimap_iter_t* iter) {
     return iter->curr;
 }
 
-// helpers
+// helper
 uint64_t hash_string(const char* str) {
     uint64_t hash = 5381;
     int curr_ch;

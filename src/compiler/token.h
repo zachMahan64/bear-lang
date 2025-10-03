@@ -126,18 +126,21 @@ typedef union {
 
 typedef struct {
     size_t line, col;
-} token_loc_t;
+} src_loc_t;
 
 typedef struct {
-    token_type_e sym;    // type
-    const char* start;   // pointer into source
+    const char* start;   // NOT NULL TERMINATED; non-owning view into source buffer
     size_t length;       // len in source
-    token_value_u value; // get value using sym, only valid for literals
-    token_loc_t loc;     // line & col, for error messages
+    token_type_e sym;    // type
+    token_value_u value; // get value using sym, only valid for numeric literals
+    src_loc_t loc;       // line & col, for error messages
 } token_t;
 
+// token map functions
 const int* get_char_to_token_map(void);
 const strimap_t* get_string_to_token_strimap(void);
 const char* const* get_token_to_string_map(void);
+// token struct functions
+token_t build_token(const char* start, size_t length, src_loc_t* loc);
 
 #endif // !COMPILER_TOKEN_H

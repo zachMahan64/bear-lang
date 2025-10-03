@@ -1,6 +1,7 @@
 #include "token.h"
 #include "containers/strimap.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 
 // returns a view into statically allocated map of char -> token_type_e
@@ -206,4 +207,25 @@ const char* const* get_token_to_string_map(void) {
         initialized = true;
     }
     return map;
+}
+
+// token struct functions
+token_type_e token_determine_token_type(const char* start, size_t length);
+
+token_t build_token(const char* start, size_t length, src_loc_t* loc) {
+    token_t tkn;
+    tkn.start = start;
+    tkn.length = length;
+    tkn.loc = *loc;
+    // determine tkn's sym and optional value later
+}
+
+// helper, just impls logic to use different look ups for optimization
+token_type_e token_determine_token_type(const char* start, size_t length) {
+    const int* char_to_token_map = get_char_to_token_map();
+    if (length == 1) {
+        return char_to_token_map[start[0]]; // return token indexed at the mono-char literal
+    }
+    const strimap_t* string_to_token_map = get_string_to_token_strimap();
+    return (token_type_e)*strimap_view(string_to_token_map, start);
 }
