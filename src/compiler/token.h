@@ -141,6 +141,6 @@ const int* get_char_to_token_map(void);
 const strimap_t* get_string_to_token_strimap(void);
 const char* const* get_token_to_string_map(void);
 // token struct functions
-token_t build_token(const char* start, size_t length, src_loc_t* loc);
+token_t token_build(const char* start, size_t length, src_loc_t* loc);
 
 #endif // !COMPILER_TOKEN_H

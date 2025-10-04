@@ -46,5 +46,6 @@ strimap_iter_t strimap_iter_begin(const strimap_t* map);
 strimap_entry_t* strimap_iter_next(strimap_iter_t* iter);
 
 // helper
-uint64_t hash_string(const char* str);
+uint64_t hash_str(const char* str);
+uint64_t hash_strn(const char* str, size_t len);
 #endif // ! CONTAINERS_STRIMAP_H

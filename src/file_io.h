@@ -13,6 +13,7 @@ typedef struct {
 
 src_buffer_t src_buffer_from_file_create(const char* file_name);
 void src_buffer_destroy(src_buffer_t* buffer);
+char* src_buffer_get(src_buffer_t* buffer);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 bool file_exists(const char* file_name);

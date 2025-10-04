@@ -71,3 +71,6 @@ src_buffer_t src_buffer_from_file_create(const char* file_name) {
 
 // destructs an src_buffer_t that was created by src_buffer_from_file_create
 void src_buffer_destroy(src_buffer_t* buffer) { free(buffer->data); }
+
+// gets ptr to data
+char* src_buffer_get(src_buffer_t* buffer) { return buffer->data; }

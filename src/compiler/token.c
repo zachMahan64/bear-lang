@@ -1,9 +1,11 @@
 #include "token.h"
 #include "containers/strimap.h"
+#include "tests/test.h" // TODO remove
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h> // TODO remove
 #include <stdlib.h>
 #include <string.h>
 
@@ -215,11 +217,12 @@ const char* const* get_token_to_string_map(void) {
 // token struct functions
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length);
 void token_check_if_valid_literal_and_set_value(token_t* tkn);
+void token_check_if_valid_symbol_and_set_sym(token_t* tkn);
 
 // Builds token according to a starting ptr and length into src as well as an src_loc_t that
 // indicates row/col number for debugging purposes. This function assumes that the lexer has already
 // correct determined the string that needs to be tokenized.
-token_t build_token(const char* start, size_t length, src_loc_t* loc) {
+token_t token_build(const char* start, size_t length, src_loc_t* loc) {
     token_t tkn;
     // init provided values
     tkn.start = start;
@@ -238,6 +241,10 @@ token_t build_token(const char* start, size_t length, src_loc_t* loc) {
             &tkn); // will appropriately set literal symbol and values, but will leave sym as
                    // INDETERMINATE if no pattern was matched
     }
+
+    if (tkn.sym == INDETERMINATE) {
+        token_check_if_valid_symbol_and_set_sym(&tkn);
+    }
     return tkn;
 }
 
@@ -254,9 +261,10 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
     const strimap_t* string_to_token_map = get_string_to_token_strimap();
     token_type_e* tkn_type_ptr_from_multi_char_map =
         (token_type_e*)strimap_viewn(string_to_token_map, start, length);
+
     if (tkn_type_ptr_from_multi_char_map != NULL) {
-        return *tkn_type_ptr_from_multi_char_map; // derefence and return because it was valid and
-                                                  // thus found
+        return *tkn_type_ptr_from_multi_char_map; // derefence and return because it
+                                                  // was valid and thus found
     }
     return INDETERMINATE; // because strimap_viewn return NULL, it was thus not found and
                           // INDETERMINATE
@@ -273,10 +281,10 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     const char* str = tkn->start;
     size_t len = tkn->length;
 
-    // ~~~ CHAR literal: 'a' or escapes like '\n' ~~~
-    if (str[0] == '\'' && str[len - 1] == '\'' && len >= 3) {
+    // ~~~ CHAR literal: 'a' or escaped like '\n' ~~~
+    if (len >= 3 && str[0] == '\'' && str[len - 1] == '\'') {
         char c;
-        if (str[1] == '\\') { // escape sequence
+        if (str[1] == '\\' && len >= 4) { // escaped char
             switch (str[2]) {
             case 'n':
                 c = '\n';
@@ -290,7 +298,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
             case '\'':
                 c = '\'';
                 break;
-            case '\"':
+            case '"':
                 c = '\"';
                 break;
             case '0':
@@ -298,13 +306,13 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
                 break;
             default:
                 tkn->sym = INDETERMINATE;
-                return; // unsupported escape
+                return;
             }
-        } else if (len == 3) {
+        } else if (len == 3) { // simple char
             c = str[1];
         } else {
             tkn->sym = INDETERMINATE;
-            return; // multi-char literal invalid
+            return;
         }
         tkn->sym = CHAR_LIT;
         tkn->val.character = c;
@@ -312,17 +320,27 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     }
 
     // ~~~ STRING literal: "..." ~~~
-    if (str[0] == '"' && str[len - 1] == '"') {
+    if (len >= 2 && str[0] == '"' && str[len - 1] == '"') {
         tkn->sym = STR_LIT;
-        // val unused; escapes resolved later
+        // value handling / escape sequences deferred
         return;
     }
 
-    // ~~~ INTEGER literal (decimal, hex 0x, octal 0, binary 0b) ~~~
+    // ~~~ NUMERIC LITERALS ~~~
+    // copy to temporary buffer and null-terminate
+    char buf[64]; // may need to adjust very long numbers
+    if (len >= sizeof(buf)) {
+        tkn->sym = INDETERMINATE;
+        return;
+    }
+    memcpy(buf, str, len);
+    buf[len] = '\0';
+
+    // INTEGER
     errno = 0;
     char* endptr = NULL;
-    long long int_val = strtoll(str, &endptr, 0); // base 0 auto-detects 0x / 0 prefix
-    if (endptr != str && errno == 0) {
+    long long int_val = strtoll(buf, &endptr, 0);
+    if (endptr != buf && errno == 0) {
         while (isspace((unsigned char)*endptr)) {
             endptr++;
         }
@@ -333,11 +351,11 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
         }
     }
 
-    // ~~~ FLOAT literal (scientific notation handled) ~~~
+    // FLOAT
     errno = 0;
     endptr = NULL;
-    double float_val = strtod(str, &endptr);
-    if (endptr != str && errno == 0) {
+    double float_val = strtod(buf, &endptr);
+    if (endptr != buf && errno == 0) {
         while (isspace((unsigned char)*endptr)) {
             endptr++;
         }
@@ -348,5 +366,20 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
         }
     }
 
-    tkn->sym = INDETERMINATE; // fallback, ensure this
+    tkn->sym = INDETERMINATE;
+}
+
+void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
+    // token should never have size zero
+    if (tkn->start[0] >= '0' && tkn->start[0] <= '9') {
+        tkn->sym = INDETERMINATE;
+        return;
+    }
+    for (size_t i = 0; i < tkn->length; i++) {
+        if (!isalnum(tkn->start[i]) && tkn->start[i] != '_') {
+            tkn->sym = INDETERMINATE;
+            return;
+        }
+    }
+    tkn->sym = SYMBOL;
 }

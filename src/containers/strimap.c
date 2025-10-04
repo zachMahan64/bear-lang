@@ -38,7 +38,7 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
     if ((double)map->size / (double)map->capacity >= STRIMAP_LOAD_FACTOR) {
         strimap_rehash(map, 2 * map->capacity);
     }
-    uint64_t raw_hash = hash_string(key);
+    uint64_t raw_hash = hash_str(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
     strimap_entry_t* curr = map->buckets[bucket_idx];
@@ -64,7 +64,7 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
 
 // remove an entry from the map
 void strimap_remove(strimap_t* map, const char* key) {
-    uint64_t raw_hash = hash_string(key);
+    uint64_t raw_hash = hash_str(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
     strimap_entry_t* curr = map->buckets[bucket_idx];
@@ -89,7 +89,7 @@ void strimap_remove(strimap_t* map, const char* key) {
 
 // gets a mutatable pointer to the value at a specified key
 int* strimap_at(strimap_t* map, const char* key) {
-    uint64_t raw_hash = hash_string(key);
+    uint64_t raw_hash = hash_str(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
     strimap_entry_t* curr = map->buckets[bucket_idx];
@@ -106,13 +106,13 @@ int* strimap_at(strimap_t* map, const char* key) {
 // gets a mutatable pointer to the value at a specified key and finds string by length, so the
 // key does not have to be null-terminated
 int* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
-    uint64_t raw_hash = hash_string(key);
+    uint64_t raw_hash = hash_strn(key, key_len);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
     strimap_entry_t* curr = map->buckets[bucket_idx];
 
     while (curr) {
-        if (strncmp(key, curr->key, key_len) == 0) {
+        if (strlen(curr->key) == key_len && strncmp(key, curr->key, key_len) == 0) {
             return &curr->val;
         }
         curr = curr->next;
@@ -122,7 +122,7 @@ int* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
 
 // gets an immutatable pointer to the value at a specified key
 const int* strimap_view(const strimap_t* map, const char* key) {
-    uint64_t raw_hash = hash_string(key);
+    uint64_t raw_hash = hash_str(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
     const strimap_entry_t* curr = map->buckets[bucket_idx];
@@ -139,13 +139,13 @@ const int* strimap_view(const strimap_t* map, const char* key) {
 // gets an immutatable pointer to the value at a specified key and finds string by length, so the
 // key does not have to be null-terminated
 const int* strimap_viewn(const strimap_t* map, const char* key, size_t key_len) {
-    uint64_t raw_hash = hash_string(key);
+    uint64_t raw_hash = hash_strn(key, key_len);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
     const strimap_entry_t* curr = map->buckets[bucket_idx];
 
     while (curr) {
-        if (strncmp(key, curr->key, key_len) == 0) {
+        if (strlen(curr->key) == key_len && strncmp(key, curr->key, key_len) == 0) {
             return &curr->val;
         }
         curr = curr->next;
@@ -167,7 +167,7 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
         while (curr) {
             strimap_entry_t* next = curr->next;
 
-            uint64_t raw_hash = hash_string(curr->key);
+            uint64_t raw_hash = hash_str(curr->key);
             uint64_t bucket_idx = raw_hash % new_capacity;
 
             // ins node at head of new bucket
@@ -251,7 +251,9 @@ strimap_entry_t* strimap_iter_next(strimap_iter_t* iter) {
 }
 
 // helper
-uint64_t hash_string(const char* str) {
+
+// null-term str hash
+uint64_t hash_str(const char* str) {
     uint64_t hash = 5381;
     int curr_ch;
 
@@ -260,5 +262,15 @@ uint64_t hash_string(const char* str) {
         hash = ((hash << 5) + hash) + curr_ch;
     }
 
+    return hash;
+}
+
+// non-null-term str hash
+uint64_t hash_strn(const char* str, size_t len) {
+    uint64_t hash = 5381;
+    for (size_t i = 0; i < len; i++) {
+        unsigned char curr_ch = (unsigned char)str[i];
+        hash = ((hash << 5) + hash) + curr_ch; // hash * 33 + curr_ch
+    }
     return hash;
 }
