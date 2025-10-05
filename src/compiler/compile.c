@@ -10,6 +10,7 @@
 int compile_file(const char* file_name) {
     int error_code = 0; // return error code if hit error
     src_buffer_t buffer = src_buffer_from_file_create(file_name);
+    // vector_t tkn_vec = lexer_naively_by_whitespace_tokenize_src_buffer(&buffer);
     vector_t tkn_vec = lexer_tokenize_src_buffer(&buffer);
 
     // DEBUG
@@ -23,11 +24,6 @@ int compile_file(const char* file_name) {
         token_t* tkn = (token_t*)vector_at(&tkn_vec, i);
         printf("%s -> [[[%.*s]]]\n", tkn_map[tkn->sym], (int)tkn->length, tkn->start);
     }
-
-    // DEBUG
-    const strimap_t* tkn_strimap = get_string_to_token_strimap();
-    printf("\n\n%s -> %s\n", tkn_map[*strimap_view(tkn_strimap, "struct")],
-           tkn_map[*strimap_viewn(tkn_strimap, "struct", 6)]);
 
     /* TODO:
      * TOKENIZE -> AST -> BYTECODE

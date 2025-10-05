@@ -6,7 +6,7 @@
 typedef enum { NOT_IN_LIT = 0, IN_CHAR_LIT, IN_STRING_LIT } lexer_delim_state_e;
 typedef enum { NOT_IN_ESC = 0, IN_ESCAPE_SEQ = 1 } lexer_esc_seq_state_e;
 
-vector_t lexer_tokenize_src_buffer(const src_buffer_t* src_buffer) {
+vector_t lexer_naively_by_whitespace_tokenize_src_buffer(const src_buffer_t* src_buffer) {
     vector_t tkn_vec = vector_create_and_reserve(
         sizeof(token_t), src_buffer->size / LEXER_ESTIMATED_CHARS_PER_TOKEN);
 
@@ -112,5 +112,73 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* src_buffer) {
         vector_push_back(&tkn_vec, &tkn);
     }
 
+    return tkn_vec;
+}
+
+vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
+    vector_t tkn_vec =
+        vector_create_and_reserve(sizeof(token_t), buf->size / LEXER_ESTIMATED_CHARS_PER_TOKEN);
+
+    // tkn string view params
+    char* start = buf->data;               // start of tkn's view into buf
+    size_t len = 0;                        // len of tkn's view into buf
+    src_loc_t loc = {.line = 0, .col = 0}; // location in src file
+    token_t tkn;                           // scratch token
+
+    char* pos = buf->data;
+    char c;
+
+lex_start:
+    c = *pos;
+    switch (c) {
+    case ('\"'): {
+        goto lex_string_lit;
+        break;
+    }
+    case ('\0'): {
+        goto lex_eof;
+        break;
+    }
+    default: {
+        goto lex_next;
+        break;
+    }
+    }
+
+lex_next:
+    ++pos;
+    ++len;
+    ++loc.col;
+    goto lex_start;
+
+// for char/string literals where delimiter should be included in token
+lex_push_with_curr:
+    tkn = token_build(start, len, &loc);
+    vector_push_back(&tkn_vec, &tkn); // push trailing token
+    pos = pos + len;
+    start = start + len;
+    len = 0;
+    goto lex_next;
+
+lex_string_lit:
+    ++pos;
+    ++len;
+    ++loc.col;
+    while ((*pos != '\"' || *(pos - 1) == '\\') && *pos != '\n') {
+        ++pos;
+        ++len;
+        ++loc.col;
+    }
+    ++pos;
+    ++len; // include final "
+    ++loc.col;
+    goto lex_push_with_curr;
+
+lex_eof:
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn); // push trailing token
+    }
+    // TODO finish
     return tkn_vec;
 }
