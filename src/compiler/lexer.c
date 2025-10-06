@@ -56,9 +56,7 @@ vector_t lexer_naively_by_whitespace_tokenize_src_buffer(const src_buffer_t* src
 
         // handle escape start (only enter; reset after consuming next char)
         if (c == '\\') {
-            if (len == 0) {
-                token_start = loc;
-            }
+            if (len == 0) { token_start = loc; }
             ++len;
             ++pos;
             ++loc.col;
@@ -123,62 +121,57 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     char* start = buf->data;               // start of tkn's view into buf
     size_t len = 0;                        // len of tkn's view into buf
     src_loc_t loc = {.line = 0, .col = 0}; // location in src file
-    token_t tkn;                           // scratch token
+    size_t col = 0;
+    token_t tkn; // scratch token
 
     char* pos = buf->data;
     char c;
 
+    // maps
+    const int* always_one_char_map = get_always_one_char_to_token_map();
 lex_start:
     c = *pos;
-    switch (c) {
-    case ('\"'): {
-        goto lex_string_lit;
-        break;
-    }
-    case ('\0'): {
-        goto lex_eof;
-        break;
-    }
-    default: {
-        goto lex_next;
-        break;
-    }
-    }
+    if (always_one_char_map[(unsigned char)c] != 0) { goto lex_push_one_char; }
+    if (c == ' ' || c == '\t') { goto lex_whitespace; }
+    if (c == '\n') { goto lex_newline; }
+    if (c == '\0') { goto lex_end; }
+    goto lex_end;
 
-lex_next:
+lex_push_one_char:
+    // TODO previous token too
+    tkn = token_build(start, 1, &loc);
+    vector_push_back(&tkn_vec, &tkn);
+    len = 0;
+    ++col;
+    loc.col = col;
+    ++start;
     ++pos;
-    ++len;
-    ++loc.col;
     goto lex_start;
 
-// for char/string literals where delimiter should be included in token
-lex_push_with_curr:
-    tkn = token_build(start, len, &loc);
-    vector_push_back(&tkn_vec, &tkn); // push trailing token
-    pos = pos + len;
-    start = start + len;
-    len = 0;
-    goto lex_next;
-
-lex_string_lit:
-    ++pos;
-    ++len;
-    ++loc.col;
-    while ((*pos != '\"' || *(pos - 1) == '\\') && *pos != '\n') {
-        ++pos;
-        ++len;
-        ++loc.col;
-    }
-    ++pos;
-    ++len; // include final "
-    ++loc.col;
-    goto lex_push_with_curr;
-
-lex_eof:
+lex_whitespace:
     if (len != 0) {
         tkn = token_build(start, len, &loc);
-        vector_push_back(&tkn_vec, &tkn); // push trailing token
+        vector_push_back(&tkn_vec, &tkn);
+        len = 0;
     }
-    // TODO finish
+    ++col;
+    loc.col = col;
+    ++pos;
+    start = pos;
+    goto lex_start;
+
+lex_newline:
+    ++loc.line;
+    loc.col = 0;
+    col = 0;
+    ++pos;
+    ++start;
+    goto lex_start;
+
+lex_end:
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn);
+    }
     return tkn_vec;
 }

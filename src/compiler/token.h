@@ -7,8 +7,8 @@
 
 #define TOKEN_MAX_KEYWORD_LEN 16
 #define TOKEN_TOKEN_TO_STRING_MAP_SIZE 512
-#define TOKEN_CHAR_TO_TOKEN_MAP_SIZE 128
-#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 128
+#define TOKEN_CHAR_TO_TOKEN_MAP_SIZE 256
+#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 256
 
 typedef enum token_type {
     INDETERMINATE = 0,
@@ -115,6 +115,23 @@ typedef enum token_type {
     LE,
     EQ,
     NE,
+
+    // --------------- compound assignment -----------------
+    // arithmetic
+    ASSIGN_PLUS_EQ,  // +=
+    ASSIGN_MINUS_EQ, // -=
+    ASSIGN_MULT_EQ,  // *=
+    ASSIGN_DIV_EQ,   // /=
+    ASSIGN_MOD_EQ,   // %=
+
+    // bitwise
+    ASSIGN_AND_EQ,  // &=
+    ASSIGN_OR_EQ,   // |=
+    ASSIGN_XOR_EQ,  // ^=
+    ASSIGN_LSH_EQ,  // <<=
+    ASSIGN_RSHL_EQ, // >>=
+    ASSIGN_RSHA_EQ, // >>>=
+
     // add error states?
 } token_type_e;
 
@@ -140,6 +157,7 @@ typedef struct {
 const int* get_char_to_token_map(void);
 const strimap_t* get_string_to_token_strimap(void);
 const char* const* get_token_to_string_map(void);
+const int* get_always_one_char_to_token_map(void);
 // token struct functions
 token_t token_build(const char* start, size_t length, src_loc_t* loc);
 

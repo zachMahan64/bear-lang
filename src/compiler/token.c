@@ -209,9 +209,47 @@ const char* const* get_token_to_string_map(void) {
         map[EQ] = "==";
         map[NE] = "!=";
 
+        // --------------- compound assignment -----------------
+        // arithmetic
+        map[ASSIGN_PLUS_EQ] = "+=";
+        map[ASSIGN_MINUS_EQ] = "-=";
+        map[ASSIGN_MULT_EQ] = "*=";
+        map[ASSIGN_DIV_EQ] = "/=";
+        map[ASSIGN_MOD_EQ] = "%=";
+
+        // bitwise
+        map[ASSIGN_AND_EQ] = "&=";
+        map[ASSIGN_OR_EQ] = "|=";
+        map[ASSIGN_XOR_EQ] = "^=";
+        map[ASSIGN_LSH_EQ] = "<<=";
+        map[ASSIGN_RSHL_EQ] = ">>=";
+        map[ASSIGN_RSHA_EQ] = ">>>=";
+
         initialized = true;
     }
     return map;
+}
+
+// get map that contains always mono-char : token
+const int* get_always_one_char_to_token_map(void) {
+    static bool initialized = false;
+    static int char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
+    if (!initialized) {
+        // delimiters
+        char_to_token_map['('] = LPAREN;
+        char_to_token_map[')'] = RPAREN;
+        char_to_token_map['{'] = LBRACE;
+        char_to_token_map['}'] = RBRACE;
+        char_to_token_map['['] = LBRACK;
+        char_to_token_map[']'] = RBRACK;
+
+        // punctuation
+        char_to_token_map[';'] = SEMICOLON;
+        char_to_token_map[','] = COMMA;
+
+        initialized = true;
+    }
+    return char_to_token_map;
 }
 
 // token struct functions
@@ -242,9 +280,7 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
                    // INDETERMINATE if no pattern was matched
     }
 
-    if (tkn.sym == INDETERMINATE) {
-        token_check_if_valid_symbol_and_set_sym(&tkn);
-    }
+    if (tkn.sym == INDETERMINATE) { token_check_if_valid_symbol_and_set_sym(&tkn); }
     return tkn;
 }
 
@@ -272,9 +308,7 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
 
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     if (!tkn || tkn->length == 0) {
-        if (tkn) {
-            tkn->sym = INDETERMINATE;
-        }
+        if (tkn) { tkn->sym = INDETERMINATE; }
         return;
     }
 
