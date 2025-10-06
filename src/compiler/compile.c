@@ -22,7 +22,7 @@ int compile_file(const char* file_name) {
     size_t tkn_map_size = tkn_vec.size;
     for (size_t i = 0; i < tkn_map_size; i++) {
         token_t* tkn = (token_t*)vector_at(&tkn_vec, i);
-        printf("%s -> [[[%.*s]]]\n", tkn_map[tkn->sym], (int)tkn->length, tkn->start);
+        printf("%s -> [%.*s]\n", tkn_map[tkn->sym], (int)tkn->length, tkn->start);
     }
 
     /* TODO:

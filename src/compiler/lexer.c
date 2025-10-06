@@ -1,5 +1,6 @@
 #include "compiler/lexer.h"
 #include "containers/vector.h"
+#include "log.h"
 #include "token.h"
 #include <stddef.h>
 
@@ -56,7 +57,9 @@ vector_t lexer_naively_by_whitespace_tokenize_src_buffer(const src_buffer_t* src
 
         // handle escape start (only enter; reset after consuming next char)
         if (c == '\\') {
-            if (len == 0) { token_start = loc; }
+            if (len == 0) {
+                token_start = loc;
+            }
             ++len;
             ++pos;
             ++loc.col;
@@ -125,16 +128,30 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     token_t tkn; // scratch token
 
     char* pos = buf->data;
+    const char* end_of_buf = buf->data + buf->size;
     char c;
 
     // maps
     const int* always_one_char_map = get_always_one_char_to_token_map();
+    const int* first_char_in_multichar_operator_token_map =
+        get_first_char_in_multichar_operator_token_map();
 lex_start:
     c = *pos;
-    if (always_one_char_map[(unsigned char)c] != 0) { goto lex_push_one_char; }
-    if (c == ' ' || c == '\t') { goto lex_whitespace; }
-    if (c == '\n') { goto lex_newline; }
-    if (c == '\0') { goto lex_end; }
+    if (always_one_char_map[(unsigned char)c]) {
+        goto lex_push_one_char;
+    }
+    if (first_char_in_multichar_operator_token_map[c]) {
+        goto lex_multichar_operator;
+    };
+    if (c == ' ' || c == '\t') {
+        goto lex_whitespace;
+    }
+    if (c == '\n') {
+        goto lex_newline;
+    }
+    if (c == '\0') {
+        goto lex_end;
+    }
     goto lex_end;
 
 lex_push_one_char:
@@ -144,8 +161,64 @@ lex_push_one_char:
     len = 0;
     ++col;
     loc.col = col;
-    ++start;
     ++pos;
+    start = pos;
+    goto lex_start;
+
+lex_multichar_operator:
+    switch (c) {
+    case ('.'): {
+        if (pos + 1 < end_of_buf && *(pos + 1) == '.') {
+            len += 2;
+            tkn = token_build(start, len, &loc);
+            vector_push_back(&tkn_vec, &tkn);
+            pos += 3; // consume 2 for the token, and then move to next
+            ++col;
+            loc.col = col;
+            start = pos;
+            len = 0;
+        }
+        goto lex_push_one_char;
+    }
+    // assignment
+    case ('='): {
+    }
+
+    // arithmetic
+    case ('+'): {
+    }
+    case ('-'): {
+    }
+    case ('*'): {
+    }
+    case ('/'): {
+    }
+    case ('%'): {
+    }
+
+    // bitwise
+    case ('|'): {
+    }
+    case ('&'): {
+    }
+    case ('~'): {
+    }
+    case ('^'): {
+    }
+
+    // boolean
+    case ('!'): {
+    }
+
+    // comparison
+    case ('>'): {
+    }
+    case ('<'): {
+    }
+    default: {
+        LOG_ERR("[DEBUG | ERROR] unexpect first character in multichar operator during lexing.");
+    }
+    }
     goto lex_start;
 
 lex_whitespace:

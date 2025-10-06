@@ -251,6 +251,40 @@ const int* get_always_one_char_to_token_map(void) {
     }
     return char_to_token_map;
 }
+const int* get_first_char_in_multichar_operator_token_map(void) {
+    static bool initialized = false;
+    static int char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
+    if (!initialized) {
+        // punctuation
+        char_to_token_map['.'] = 1;
+
+        // assignment
+        char_to_token_map['='] = 1;
+
+        // arithmetic
+        char_to_token_map['+'] = 1;
+        char_to_token_map['-'] = 1;
+        char_to_token_map['*'] = 1;
+        char_to_token_map['/'] = 1;
+        char_to_token_map['%'] = 1;
+
+        // bitwise
+        char_to_token_map['|'] = 1;
+        char_to_token_map['&'] = 1;
+        char_to_token_map['~'] = 1;
+        char_to_token_map['^'] = 1;
+
+        // boolean
+        char_to_token_map['!'] = 1;
+
+        // comparison
+        char_to_token_map['>'] = 1;
+        char_to_token_map['<'] = 1;
+
+        initialized = true;
+    }
+    return char_to_token_map;
+}
 
 // token struct functions
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length);
