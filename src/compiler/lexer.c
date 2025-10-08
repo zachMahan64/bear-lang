@@ -135,10 +135,31 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     const char* always_one_char_map = get_always_one_char_to_token_map();
     const char* first_char_in_multichar_operator_token_map =
         get_first_char_in_multichar_operator_token_map();
+
+// pushes any previous token and delimits by pushing new token of a known length N in chars
+#define LEX_KNOWN_LEN_PUSH(N)                                                                      \
+    do {                                                                                           \
+        if (len != 0) {                                                                            \
+            tkn = token_build(start, len, &loc);                                                   \
+            vector_push_back(&tkn_vec, &tkn);                                                      \
+            len = 0;                                                                               \
+            loc.col = col;                                                                         \
+            start = pos;                                                                           \
+        }                                                                                          \
+        tkn = token_build(start, N, &loc);                                                         \
+        vector_push_back(&tkn_vec, &tkn);                                                          \
+        pos += (N);                                                                                \
+        col += (N);                                                                                \
+        loc.col = col;                                                                             \
+        start = pos;                                                                               \
+        len = 0;                                                                                   \
+        goto lex_start;                                                                            \
+    } while (0)
+
 lex_start:
     c = *pos;
     if (always_one_char_map[(unsigned char)c]) {
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
     if (c == '/' && (pos + 1 < end_of_buf) && pos[1] == '/') {
         goto lex_inline_comment;
@@ -160,91 +181,36 @@ lex_start:
     ++col;
     goto lex_start;
 
-// maybe macro-ize these?
-lex_push_known_one_char:
-    // push prev toknen
-    if (len != 0) {
-        tkn = token_build(start, len, &loc);
-        vector_push_back(&tkn_vec, &tkn);
-        len = 0;
-        loc.col = col;
-        start = pos;
-    }
-    tkn = token_build(start, 1, &loc);
-    vector_push_back(&tkn_vec, &tkn);
-    ++pos;
-    ++col;
-    loc.col = col;
-    start = pos;
-    len = 0;
-    goto lex_start;
-
-lex_push_known_two_char:
-    // push prev toknen
-    if (len != 0) {
-        tkn = token_build(start, len, &loc);
-        vector_push_back(&tkn_vec, &tkn);
-        len = 0;
-        loc.col = col;
-        start = pos;
-    }
-    tkn = token_build(start, 2, &loc);
-    vector_push_back(&tkn_vec, &tkn);
-    pos += 2; // consume 2 char for 2 char token
-    col += 2;
-    loc.col = col;
-    start = pos;
-    len = 0;
-    goto lex_start;
-
-lex_push_known_three_char:
-    // push prev toknen
-    if (len != 0) {
-        tkn = token_build(start, len, &loc);
-        vector_push_back(&tkn_vec, &tkn);
-        len = 0;
-        loc.col = col;
-        start = pos;
-    }
-    tkn = token_build(start, 3, &loc);
-    vector_push_back(&tkn_vec, &tkn);
-    pos += 3; // consume 2 char for 2 char token
-    col += 3;
-    loc.col = col;
-    start = pos;
-    len = 0;
-    goto lex_start;
-
 lex_multichar_operator:
     switch (c) {
     case ('.'): {
         if (pos + 1 < end_of_buf && pos[1] == '.') {
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
     // assignment
     case ('='): {
         if (pos + 1 < end_of_buf && pos[1] == '=') {
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
 
     // arithmetic
     case ('+'): {
         if (pos + 1 < end_of_buf && (pos[1] == '=' || pos[1] == '+')) {
             // ++ or +=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
     case ('-'): {
         if (pos + 1 < end_of_buf && (pos[1] == '=' || pos[1] == '-' || pos[1] == '>')) {
             // --, ->, or -=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
     case ('*'):
     case ('/'):
@@ -258,37 +224,37 @@ lex_multichar_operator:
     case ('!'):
         if (pos + 1 < end_of_buf && pos[1] == '=') {
             // [sym]=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     // comparison
     case ('>'): {
         if (pos + 3 < end_of_buf && pos[1] == '>' && pos[2] == '>' && pos[3] == '=') {
             // >>>=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
         if (pos + 2 < end_of_buf && pos[1] == '>' && (pos[2] == '>' || pos[2] == '=')) {
             // >>> or >>=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
         if (pos + 1 < end_of_buf && (pos[1] == '>' || pos[1] == '=')) {
             // >> or >=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
         // >
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
     case ('<'): {
         if (pos + 2 < end_of_buf && pos[1] == '<' && pos[2] == '=') {
             // <<=
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
         if (pos + 1 < end_of_buf && (pos[1] == '<' || pos[1] == '=' || pos[1] == '-')) {
             // <<, <=, or <-
-            goto lex_push_known_two_char;
+            LEX_KNOWN_LEN_PUSH(2);
         }
         // // <
-        goto lex_push_known_one_char;
+        LEX_KNOWN_LEN_PUSH(1);
     }
     default: {
         LOG_ERR("[DEBUG | ERROR] unexpect first character in multichar operator during lexing.");

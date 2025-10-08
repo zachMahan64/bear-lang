@@ -3,9 +3,9 @@ fn main (box::string[] args) {
 }
 
 fn foo(int bar) -> bool {
-    int what_up = 65536;
+    int whatUp = 65536;
     whatup<<=4;// test comment
-    int balls=333 + whatup;
-    flt 1_agh; // intentional error btw
-    return balls<222 + bar;
+    int balls=333 + whatUp;
+    flt myFloat = 1.5;
+    return balls<222 + bar * myFloat;
 }
