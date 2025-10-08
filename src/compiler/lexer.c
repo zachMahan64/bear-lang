@@ -138,7 +138,7 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
 lex_start:
     c = *pos;
     if (always_one_char_map[(unsigned char)c]) {
-        goto lex_push_one_char;
+        goto lex_push_known_one_char;
     }
     if (first_char_in_multichar_operator_token_map[c]) {
         goto lex_multichar_operator;
@@ -154,7 +154,7 @@ lex_start:
     }
     goto lex_end;
 
-lex_push_one_char:
+lex_push_known_one_char:
     // TODO previous token too
     tkn = token_build(start, 1, &loc);
     vector_push_back(&tkn_vec, &tkn);
@@ -165,12 +165,23 @@ lex_push_one_char:
     len = 0;
     goto lex_start;
 
-lex_push_two_char:
+lex_push_known_two_char:
     len += 2;
     tkn = token_build(start, len, &loc);
     vector_push_back(&tkn_vec, &tkn);
     pos += 2; // consume 2 char for 2 char token
-    ++col;
+    col += 2;
+    loc.col = col;
+    start = pos;
+    len = 0;
+    goto lex_start;
+
+lex_push_known_three_char:
+    len += 3;
+    tkn = token_build(start, len, &loc);
+    vector_push_back(&tkn_vec, &tkn);
+    pos += 3; // consume 2 char for 2 char token
+    col += 3;
     loc.col = col;
     start = pos;
     len = 0;
@@ -180,32 +191,32 @@ lex_multichar_operator:
     switch (c) {
     case ('.'): {
         if (pos + 1 < end_of_buf && *(pos + 1) == '.') {
-            goto lex_push_two_char;
+            goto lex_push_known_two_char;
         }
-        goto lex_push_one_char;
+        goto lex_push_known_one_char;
     }
     // assignment
     case ('='): {
         if (pos + 1 < end_of_buf && *(pos + 1) == '=') {
-            goto lex_push_two_char;
+            goto lex_push_known_two_char;
         }
-        goto lex_push_one_char;
+        goto lex_push_known_one_char;
     }
 
     // arithmetic
     case ('+'): {
         if (pos + 1 < end_of_buf && (*(pos + 1) == '=' || *(pos + 1) == '+')) {
             // ++ or +=
-            goto lex_push_two_char;
+            goto lex_push_known_two_char;
         }
-        goto lex_push_one_char;
+        goto lex_push_known_one_char;
     }
     case ('-'): {
         if (pos + 1 < end_of_buf && (*(pos + 1) == '=' || *(pos + 1) == '-' || *(pos + 1) == '>')) {
             // --, ->, or -=
-            goto lex_push_two_char;
+            goto lex_push_known_two_char;
         }
-        goto lex_push_one_char;
+        goto lex_push_known_one_char;
     }
     case ('*'):
     case ('/'):
@@ -219,11 +230,28 @@ lex_multichar_operator:
     case ('!'):
         if (pos + 1 < end_of_buf && *(pos + 1) == '=') {
             // [sym]=
-            goto lex_push_two_char;
+            goto lex_push_known_two_char;
         }
-        goto lex_push_one_char;
+        goto lex_push_known_one_char;
     // comparison
     case ('>'): {
+        if (pos + 3 < end_of_buf && *(pos + 1) == '>' && *(pos + 2) == '>' && *(pos + 3) == '=') {
+            // >>>=
+            goto lex_push_known_two_char;
+        }
+        if (pos + 2 < end_of_buf && *(pos + 1) == '>' && *(pos + 2) == '>') {
+            // >>>
+            goto lex_push_known_two_char;
+        }
+        if (pos + 2 < end_of_buf && *(pos + 1) == '>' && *(pos + 2) == '=') {
+            // >>=
+            goto lex_push_known_two_char;
+        }
+        if (pos + 1 < end_of_buf && *(pos + 1)) {
+            // >>
+            goto lex_push_known_two_char;
+        }
+        goto lex_push_known_one_char;
     }
     case ('<'): {
     }
