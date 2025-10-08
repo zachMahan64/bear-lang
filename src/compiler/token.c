@@ -1,6 +1,5 @@
 #include "token.h"
 #include "containers/strimap.h"
-#include "tests/test.h" // TODO remove
 #include <ctype.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -10,9 +9,9 @@
 #include <string.h>
 
 // returns a view into statically allocated map of char -> token_type_e
-const int* get_char_to_token_map(void) {
+const char* get_char_to_token_map(void) {
     static bool initialized = false;
-    static int char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
+    static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
     if (!initialized) {
         // delimiters
         char_to_token_map['('] = LPAREN;
@@ -244,9 +243,9 @@ const char* const* get_token_to_string_map(void) {
 }
 
 // get map that contains always mono-char : token
-const int* get_always_one_char_to_token_map(void) {
+const char* get_always_one_char_to_token_map(void) {
     static bool initialized = false;
-    static int char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
+    static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
     if (!initialized) {
         // delimiters
         char_to_token_map['('] = LPAREN;
@@ -264,9 +263,9 @@ const int* get_always_one_char_to_token_map(void) {
     }
     return char_to_token_map;
 }
-const int* get_first_char_in_multichar_operator_token_map(void) {
+const char* get_first_char_in_multichar_operator_token_map(void) {
     static bool initialized = false;
-    static int char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
+    static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
     if (!initialized) {
         // punctuation
         char_to_token_map['.'] = 1;
@@ -336,7 +335,7 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
 // helper that looks up tokens for fixed symbols (i.e keywords and operators), impls basic logic
 // using different look ups for optimization
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length) {
-    const int* char_to_token_map = get_char_to_token_map();
+    const char* char_to_token_map = get_char_to_token_map();
     if (length == 1) {
         return char_to_token_map[start[0]]; // return token indexed at the mono-char literal, any
                                             // invalid entry will be automatically '\0' since the

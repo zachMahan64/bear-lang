@@ -5,6 +5,7 @@
 
 #ifdef DEBUG
 #include <printf.h>
+#include <stdio.h>
 #define LOG_STR(x) printf("%s\n", x);
 #define LOG_STR_NNL(x) printf("%s", x);
 #define LOG_CHAR(x) printf("%c\n", x);

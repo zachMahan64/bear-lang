@@ -132,13 +132,16 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     char c;
 
     // maps
-    const int* always_one_char_map = get_always_one_char_to_token_map();
-    const int* first_char_in_multichar_operator_token_map =
+    const char* always_one_char_map = get_always_one_char_to_token_map();
+    const char* first_char_in_multichar_operator_token_map =
         get_first_char_in_multichar_operator_token_map();
 lex_start:
     c = *pos;
     if (always_one_char_map[(unsigned char)c]) {
         goto lex_push_known_one_char;
+    }
+    if (c == '/' && (pos + 1 < end_of_buf) && pos[1] == '/') {
+        goto lex_inline_comment;
     }
     if (first_char_in_multichar_operator_token_map[c]) {
         goto lex_multichar_operator;
@@ -152,10 +155,21 @@ lex_start:
     if (c == '\0') {
         goto lex_end;
     }
-    goto lex_end;
+    ++pos;
+    ++len;
+    ++col;
+    goto lex_start;
 
+// maybe macro-ize these?
 lex_push_known_one_char:
-    // TODO previous token too
+    // push prev toknen
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn);
+        len = 0;
+        loc.col = col;
+        start = pos;
+    }
     tkn = token_build(start, 1, &loc);
     vector_push_back(&tkn_vec, &tkn);
     ++pos;
@@ -166,8 +180,15 @@ lex_push_known_one_char:
     goto lex_start;
 
 lex_push_known_two_char:
-    len += 2;
-    tkn = token_build(start, len, &loc);
+    // push prev toknen
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn);
+        len = 0;
+        loc.col = col;
+        start = pos;
+    }
+    tkn = token_build(start, 2, &loc);
     vector_push_back(&tkn_vec, &tkn);
     pos += 2; // consume 2 char for 2 char token
     col += 2;
@@ -177,8 +198,15 @@ lex_push_known_two_char:
     goto lex_start;
 
 lex_push_known_three_char:
-    len += 3;
-    tkn = token_build(start, len, &loc);
+    // push prev toknen
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn);
+        len = 0;
+        loc.col = col;
+        start = pos;
+    }
+    tkn = token_build(start, 3, &loc);
     vector_push_back(&tkn_vec, &tkn);
     pos += 3; // consume 2 char for 2 char token
     col += 3;
@@ -190,14 +218,14 @@ lex_push_known_three_char:
 lex_multichar_operator:
     switch (c) {
     case ('.'): {
-        if (pos + 1 < end_of_buf && *(pos + 1) == '.') {
+        if (pos + 1 < end_of_buf && pos[1] == '.') {
             goto lex_push_known_two_char;
         }
         goto lex_push_known_one_char;
     }
     // assignment
     case ('='): {
-        if (pos + 1 < end_of_buf && *(pos + 1) == '=') {
+        if (pos + 1 < end_of_buf && pos[1] == '=') {
             goto lex_push_known_two_char;
         }
         goto lex_push_known_one_char;
@@ -205,14 +233,14 @@ lex_multichar_operator:
 
     // arithmetic
     case ('+'): {
-        if (pos + 1 < end_of_buf && (*(pos + 1) == '=' || *(pos + 1) == '+')) {
+        if (pos + 1 < end_of_buf && (pos[1] == '=' || pos[1] == '+')) {
             // ++ or +=
             goto lex_push_known_two_char;
         }
         goto lex_push_known_one_char;
     }
     case ('-'): {
-        if (pos + 1 < end_of_buf && (*(pos + 1) == '=' || *(pos + 1) == '-' || *(pos + 1) == '>')) {
+        if (pos + 1 < end_of_buf && (pos[1] == '=' || pos[1] == '-' || pos[1] == '>')) {
             // --, ->, or -=
             goto lex_push_known_two_char;
         }
@@ -228,32 +256,39 @@ lex_multichar_operator:
     case ('^'):
     // boolean
     case ('!'):
-        if (pos + 1 < end_of_buf && *(pos + 1) == '=') {
+        if (pos + 1 < end_of_buf && pos[1] == '=') {
             // [sym]=
             goto lex_push_known_two_char;
         }
         goto lex_push_known_one_char;
     // comparison
     case ('>'): {
-        if (pos + 3 < end_of_buf && *(pos + 1) == '>' && *(pos + 2) == '>' && *(pos + 3) == '=') {
+        if (pos + 3 < end_of_buf && pos[1] == '>' && pos[2] == '>' && pos[3] == '=') {
             // >>>=
             goto lex_push_known_two_char;
         }
-        if (pos + 2 < end_of_buf && *(pos + 1) == '>' && *(pos + 2) == '>') {
-            // >>>
+        if (pos + 2 < end_of_buf && pos[1] == '>' && (pos[2] == '>' || pos[2] == '=')) {
+            // >>> or >>=
             goto lex_push_known_two_char;
         }
-        if (pos + 2 < end_of_buf && *(pos + 1) == '>' && *(pos + 2) == '=') {
-            // >>=
+        if (pos + 1 < end_of_buf && (pos[1] == '>' || pos[1] == '=')) {
+            // >> or >=
             goto lex_push_known_two_char;
         }
-        if (pos + 1 < end_of_buf && *(pos + 1)) {
-            // >>
-            goto lex_push_known_two_char;
-        }
+        // >
         goto lex_push_known_one_char;
     }
     case ('<'): {
+        if (pos + 2 < end_of_buf && pos[1] == '<' && pos[2] == '=') {
+            // <<=
+            goto lex_push_known_two_char;
+        }
+        if (pos + 1 < end_of_buf && (pos[1] == '<' || pos[1] == '=' || pos[1] == '-')) {
+            // <<, <=, or <-
+            goto lex_push_known_two_char;
+        }
+        // // <
+        goto lex_push_known_one_char;
     }
     default: {
         LOG_ERR("[DEBUG | ERROR] unexpect first character in multichar operator during lexing.");
@@ -281,10 +316,35 @@ lex_newline:
     ++start;
     goto lex_start;
 
+lex_inline_comment:
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn);
+        len = 0;
+        loc.col = col;
+        start = pos;
+    }
+    while (true) {
+        c = *pos++;
+        if (c == '\n') {
+            break;
+        }
+        if (c == '\0') {
+            goto lex_done;
+        }
+    }
+    start = pos;
+    len = 0;
+    col = 0;
+    loc.col = 0;
+    ++loc.line;
+    goto lex_start;
+
 lex_end:
     if (len != 0) {
         tkn = token_build(start, len, &loc);
         vector_push_back(&tkn_vec, &tkn);
     }
+lex_done:
     return tkn_vec;
 }

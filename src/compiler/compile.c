@@ -11,6 +11,9 @@ int compile_file(const char* file_name) {
     int error_code = 0; // return error code if hit error
     src_buffer_t buffer = src_buffer_from_file_create(file_name);
     // vector_t tkn_vec = lexer_naively_by_whitespace_tokenize_src_buffer(&buffer);
+    if (!buffer.data) {
+        return -1;
+    }
     vector_t tkn_vec = lexer_tokenize_src_buffer(&buffer);
 
     // DEBUG

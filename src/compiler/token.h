@@ -154,11 +154,11 @@ typedef struct {
 } token_t;
 
 // token map functions
-const int* get_char_to_token_map(void);
+const char* get_char_to_token_map(void);
 const strimap_t* get_string_to_token_strimap(void);
 const char* const* get_token_to_string_map(void);
-const int* get_always_one_char_to_token_map(void);
-const int* get_first_char_in_multichar_operator_token_map(void);
+const char* get_always_one_char_to_token_map(void);
+const char* get_first_char_in_multichar_operator_token_map(void);
 // token struct functions
 token_t token_build(const char* start, size_t length, src_loc_t* loc);
 
