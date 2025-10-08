@@ -269,6 +269,7 @@ const char* get_first_char_in_multichar_operator_token_map(void) {
     if (!initialized) {
         // punctuation
         char_to_token_map['.'] = 1;
+        char_to_token_map[':'] = 1;
 
         // assignment
         char_to_token_map['='] = 1;

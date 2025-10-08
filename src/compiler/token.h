@@ -26,6 +26,7 @@ typedef enum token_type {
     SEMICOLON = ';',
     DOT = '.',
     COMMA = ',',
+    TYPE_GLUE = ':',
 
     // assign
     ASSIGN_EQ = '=', // =

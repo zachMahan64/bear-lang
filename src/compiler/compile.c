@@ -7,6 +7,20 @@
 #include <stddef.h>
 #include <stdio.h>
 
+void print_out_tkns(vector_t* tkn_vec) {
+    const char* const* tkn_map = get_token_to_string_map();
+    size_t tkn_map_size = tkn_vec->size;
+    puts("              Lexed tokens");
+    puts("=====================================");
+    printf("%-10s | %-12s | %-7s \n", "sym", "line, column", "str value");
+    puts("=====================================");
+    for (size_t i = 0; i < tkn_map_size; i++) {
+        token_t* tkn = (token_t*)vector_at(tkn_vec, i);
+        printf("%-8s @ %6zu, %-6zu -> [%.*s]\n", tkn_map[tkn->sym], tkn->loc.line, tkn->loc.col,
+               (int)tkn->length, tkn->start);
+    }
+}
+
 int compile_file(const char* file_name) {
     int error_code = 0; // return error code if hit error
     src_buffer_t buffer = src_buffer_from_file_create(file_name);
@@ -17,17 +31,13 @@ int compile_file(const char* file_name) {
     vector_t tkn_vec = lexer_tokenize_src_buffer(&buffer);
 
     // DEBUG
-    printf("Contents of [%s]:\n~~~~~\n%s\n~~~~~~\n", buffer.file_name, buffer.data);
-
-    printf("Lexed tokens:\n");
-
-    const char* const* tkn_map = get_token_to_string_map();
-    size_t tkn_map_size = tkn_vec.size;
-    for (size_t i = 0; i < tkn_map_size; i++) {
-        token_t* tkn = (token_t*)vector_at(&tkn_vec, i);
-        printf("%s -> [%.*s]\n", tkn_map[tkn->sym], (int)tkn->length, tkn->start);
-    }
-
+    printf("\n"
+           " Contents of [%s]\n"
+           "=====================================\n"
+           "%s\n"
+           "=====================================\n",
+           buffer.file_name, buffer.data);
+    print_out_tkns(&tkn_vec);
     /* TODO:
      * TOKENIZE -> AST -> BYTECODE
      * WIP         NS     WIP

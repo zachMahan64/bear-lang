@@ -256,6 +256,13 @@ lex_multichar_operator:
         // // <
         LEX_KNOWN_LEN_PUSH(1);
     }
+    case (':'): {
+        if (pos + 1 < end_of_buf && pos[1] == ':') {
+            // ::
+            LEX_KNOWN_LEN_PUSH(2);
+        }
+        LEX_KNOWN_LEN_PUSH(1);
+    }
     default: {
         LOG_ERR("[DEBUG | ERROR] unexpect first character in multichar operator during lexing.");
     }

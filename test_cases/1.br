@@ -4,7 +4,7 @@ fn main (box::string[] args) {
 
 fn foo(int bar) -> bool {
     int whatUp = 65536;
-    whatup<<=4;// test comment
+    whatUp<<=4;// test comment
     int balls=333 + whatUp;
     flt myFloat = 1.5;
     return balls<222 + bar * myFloat;
