@@ -109,6 +109,19 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "==", EQ);
         strimap_insert(&map, "!=", NE);
 
+        // compound assignment operators
+        strimap_insert(&map, "+=", ASSIGN_PLUS_EQ);
+        strimap_insert(&map, "-=", ASSIGN_MINUS_EQ);
+        strimap_insert(&map, "*=", ASSIGN_MULT_EQ);
+        strimap_insert(&map, "/=", ASSIGN_DIV_EQ);
+        strimap_insert(&map, "%=", ASSIGN_MOD_EQ);
+        strimap_insert(&map, "&=", ASSIGN_AND_EQ);
+        strimap_insert(&map, "|=", ASSIGN_OR_EQ);
+        strimap_insert(&map, "^=", ASSIGN_XOR_EQ);
+        strimap_insert(&map, "<<=", ASSIGN_LSH_EQ);
+        strimap_insert(&map, ">>=", ASSIGN_RSHL_EQ);
+        strimap_insert(&map, ">>>=", ASSIGN_RSHA_EQ);
+
         initialized = true;
     }
 
@@ -314,7 +327,9 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
                    // INDETERMINATE if no pattern was matched
     }
 
-    if (tkn.sym == INDETERMINATE) { token_check_if_valid_symbol_and_set_sym(&tkn); }
+    if (tkn.sym == INDETERMINATE) {
+        token_check_if_valid_symbol_and_set_sym(&tkn);
+    }
     return tkn;
 }
 
@@ -342,7 +357,9 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
 
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     if (!tkn || tkn->length == 0) {
-        if (tkn) { tkn->sym = INDETERMINATE; }
+        if (tkn) {
+            tkn->sym = INDETERMINATE;
+        }
         return;
     }
 

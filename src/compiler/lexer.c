@@ -158,58 +158,70 @@ lex_push_one_char:
     // TODO previous token too
     tkn = token_build(start, 1, &loc);
     vector_push_back(&tkn_vec, &tkn);
-    len = 0;
+    ++pos;
     ++col;
     loc.col = col;
-    ++pos;
     start = pos;
+    len = 0;
+    goto lex_start;
+
+lex_push_two_char:
+    len += 2;
+    tkn = token_build(start, len, &loc);
+    vector_push_back(&tkn_vec, &tkn);
+    pos += 2; // consume 2 char for 2 char token
+    ++col;
+    loc.col = col;
+    start = pos;
+    len = 0;
     goto lex_start;
 
 lex_multichar_operator:
     switch (c) {
     case ('.'): {
         if (pos + 1 < end_of_buf && *(pos + 1) == '.') {
-            len += 2;
-            tkn = token_build(start, len, &loc);
-            vector_push_back(&tkn_vec, &tkn);
-            pos += 3; // consume 2 for the token, and then move to next
-            ++col;
-            loc.col = col;
-            start = pos;
-            len = 0;
+            goto lex_push_two_char;
         }
         goto lex_push_one_char;
     }
     // assignment
     case ('='): {
+        if (pos + 1 < end_of_buf && *(pos + 1) == '=') {
+            goto lex_push_two_char;
+        }
+        goto lex_push_one_char;
     }
 
     // arithmetic
     case ('+'): {
+        if (pos + 1 < end_of_buf && (*(pos + 1) == '=' || *(pos + 1) == '+')) {
+            // ++ or +=
+            goto lex_push_two_char;
+        }
+        goto lex_push_one_char;
     }
     case ('-'): {
+        if (pos + 1 < end_of_buf && (*(pos + 1) == '=' || *(pos + 1) == '-' || *(pos + 1) == '>')) {
+            // --, ->, or -=
+            goto lex_push_two_char;
+        }
+        goto lex_push_one_char;
     }
-    case ('*'): {
-    }
-    case ('/'): {
-    }
-    case ('%'): {
-    }
-
+    case ('*'):
+    case ('/'):
+    case ('%'):
     // bitwise
-    case ('|'): {
-    }
-    case ('&'): {
-    }
-    case ('~'): {
-    }
-    case ('^'): {
-    }
-
+    case ('|'):
+    case ('&'):
+    case ('~'):
+    case ('^'):
     // boolean
-    case ('!'): {
-    }
-
+    case ('!'):
+        if (pos + 1 < end_of_buf && *(pos + 1) == '=') {
+            // [sym]=
+            goto lex_push_two_char;
+        }
+        goto lex_push_one_char;
     // comparison
     case ('>'): {
     }
