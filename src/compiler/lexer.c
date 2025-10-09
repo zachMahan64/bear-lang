@@ -220,10 +220,18 @@ lex_start:
     goto lex_start;
 
 lex_multichar_operator:
+
     switch (c) {
     case ('.'): {
         if (pos + 1 < end_of_buf && pos[1] == '.') {
             LEX_KNOWN_LEN_PUSH(2);
+        }
+        if (pos + 1 < end_of_buf && (pos[1]) >= '0' && pos[1] <= '9') {
+            // just proceed, this is a float lit
+            ++pos;
+            ++len;
+            ++col;
+            goto lex_start;
         }
         LEX_KNOWN_LEN_PUSH(1);
     }
@@ -269,11 +277,11 @@ lex_multichar_operator:
     case ('>'): {
         if (pos + 3 < end_of_buf && pos[1] == '>' && pos[2] == '>' && pos[3] == '=') {
             // >>>=
-            LEX_KNOWN_LEN_PUSH(2);
+            LEX_KNOWN_LEN_PUSH(4);
         }
         if (pos + 2 < end_of_buf && pos[1] == '>' && (pos[2] == '>' || pos[2] == '=')) {
             // >>> or >>=
-            LEX_KNOWN_LEN_PUSH(2);
+            LEX_KNOWN_LEN_PUSH(3);
         }
         if (pos + 1 < end_of_buf && (pos[1] == '>' || pos[1] == '=')) {
             // >> or >=
@@ -285,7 +293,7 @@ lex_multichar_operator:
     case ('<'): {
         if (pos + 2 < end_of_buf && pos[1] == '<' && pos[2] == '=') {
             // <<=
-            LEX_KNOWN_LEN_PUSH(2);
+            LEX_KNOWN_LEN_PUSH(3);
         }
         if (pos + 1 < end_of_buf && (pos[1] == '<' || pos[1] == '=' || pos[1] == '-')) {
             // <<, <=, or <-
