@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-void print_out_tkns(vector_t* tkn_vec) {
+void print_out_tkn_table(vector_t* tkn_vec) {
     const char* const* tkn_map = get_token_to_string_map();
     size_t tkn_map_size = tkn_vec->size;
     puts("              Lexed tokens");
@@ -37,7 +37,7 @@ int compile_file(const char* file_name) {
            "%s\n"
            "=====================================\n",
            buffer.file_name, buffer.data);
-    print_out_tkns(&tkn_vec);
+    print_out_tkn_table(&tkn_vec);
     /* TODO:
      * TOKENIZE -> AST -> BYTECODE
      * WIP         NS     WIP

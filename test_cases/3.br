@@ -2,7 +2,16 @@ struct Foo {
     box::int[] data;
     mt iterateThroughData() {
         for (int x in this.data) {
-            cout <<- x;
+            cout <<- Bar..foobar(x);
         }
     }
+}
+
+space Bar {
+fn foobar(int thing) -> int {
+    thing >>>= 5;
+    thing <<= 3;
+    thing+=12;
+    return thing;
+}
 }
