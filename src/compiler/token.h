@@ -58,16 +58,18 @@ typedef enum token_type {
     KW_SPACE, // space
     // function
     KW_FN,
+    KW_MT, // method, for implicit this ptr for data-associated behavior in structs
     // stdou
     KW_COUT, // example: cout <<- "Hello World";
     // types
     KW_BOX,   // example: box::int
-    KW_CONST, // example const int
-    KW_REF,   // ref
+    KW_CONST, // example: const::box::int or box::const::int
+    KW_REF,   // example: ref::int
     KW_INT,
     KW_CHAR,
     KW_FLT,
     KW_STR,
+    KW_VOID,
 
     // comparison
     KW_IF,
@@ -75,12 +77,12 @@ typedef enum token_type {
     KW_ELIF,
     KW_WHILE,
     KW_FOR,
+    KW_IN, // example: for (int a in myArr) {...}
     KW_RETURN,
 
     // structures (incorp after prodcedural is working)
     KW_THIS,
     KW_STRUCT,
-    KW_IMPL,
 
     // variable or function name
     SYMBOL,

@@ -24,6 +24,7 @@ const char* get_char_to_token_map(void) {
         // punctuation
         char_to_token_map[';'] = SEMICOLON;
         char_to_token_map['.'] = DOT;
+        char_to_token_map[':'] = TYPE_GLUE;
         char_to_token_map[','] = COMMA;
 
         // assignment
@@ -68,6 +69,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         // keywords
         strimap_insert(&map, "space", KW_SPACE);
         strimap_insert(&map, "fn", KW_FN);
+        strimap_insert(&map, "mt", KW_MT);
         strimap_insert(&map, "cout", KW_COUT);
         strimap_insert(&map, "box", KW_BOX);
         strimap_insert(&map, "const", KW_CONST);
@@ -76,6 +78,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "char", KW_CHAR);
         strimap_insert(&map, "flt", KW_FLT);
         strimap_insert(&map, "str", KW_STR);
+        strimap_insert(&map, "void", KW_VOID);
 
         // control flow
         strimap_insert(&map, "if", KW_IF);
@@ -88,7 +91,6 @@ const strimap_t* get_string_to_token_strimap(void) {
         // structures
         strimap_insert(&map, "this", KW_THIS);
         strimap_insert(&map, "struct", KW_STRUCT);
-        strimap_insert(&map, "impl", KW_IMPL);
 
         // operators / symbols (multi-char tokens)
         strimap_insert(&map, "->", RARROW);
@@ -173,6 +175,7 @@ const char* const* get_token_to_string_map(void) {
         map[IMPORT] = "import";
         map[KW_SPACE] = "space";
         map[KW_FN] = "fn";
+        map[KW_MT] = "mt";
         map[KW_COUT] = "cout";
         map[KW_BOX] = "box";
         map[KW_CONST] = "const";
@@ -181,6 +184,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_CHAR] = "char";
         map[KW_FLT] = "flt";
         map[KW_STR] = "str";
+        map[KW_VOID] = "void";
 
         map[KW_IF] = "if";
         map[KW_ELSE] = "else";
@@ -192,7 +196,6 @@ const char* const* get_token_to_string_map(void) {
         // structures
         map[KW_THIS] = "this";
         map[KW_STRUCT] = "struct";
-        map[KW_IMPL] = "impl";
 
         // variable / literal types
         map[SYMBOL] = "symbol";
@@ -205,6 +208,7 @@ const char* const* get_token_to_string_map(void) {
         map[RARROW] = "->";
         map[SCOPE_RES] = "..";
         map[TYPE_MOD] = "::";
+        map[TYPE_GLUE] = ":";
 
         // operators
         map[ASSIGN_LARROW] = "<-";
