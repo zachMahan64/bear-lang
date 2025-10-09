@@ -38,7 +38,7 @@ int br_interpreter_launch_cli(int argc, char** argv) {
         return -1;
     }
     if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
-        printf("[ERROR] File does not exist: %s", args.file_name);
+        printf("[ERROR] File does not exist: %s\n", args.file_name);
         return -1;
     }
     if (args.flag == HELP) {
