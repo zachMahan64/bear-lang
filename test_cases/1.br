@@ -1,4 +1,7 @@
-fn main (box::string[] args) {
+fn main (box::str[] args) {
+    char bing = '\t';
+    str arg2 = args[1];
+    str myStr = "This is my string.";
     foo(5);
 }
 
@@ -8,4 +11,10 @@ fn foo(int bar) -> bool {
     int balls=333 + whatUp;
     flt myFloat = 1.5;
     return balls<222 + bar * myFloat;
+}
+
+struct dog::T {
+    int age;
+    str name;
+    T itemOfChoice;
 }

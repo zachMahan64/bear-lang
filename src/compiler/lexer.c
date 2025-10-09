@@ -156,6 +156,37 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
         goto lex_start;                                                                            \
     } while (0)
 
+#define LEX_IN_LITERAL(D)                                                                          \
+    ++pos;                                                                                         \
+    ++len;                                                                                         \
+    ++col;                                                                                         \
+    while (true) {                                                                                 \
+        c = *(++pos);                                                                              \
+        ++len;                                                                                     \
+        ++col;                                                                                     \
+        if (c == '\n') {                                                                           \
+            tkn = token_build(start, len, &loc);                                                   \
+            vector_push_back(&tkn_vec, &tkn);                                                      \
+            len = 0;                                                                               \
+            loc.col = 0;                                                                           \
+            ++loc.line;                                                                            \
+            start = pos;                                                                           \
+            break;                                                                                 \
+        }                                                                                          \
+        if (pos - 1 >= buf->data && c == (D) && *(pos - 1) != '\\') {                              \
+            ++len;                                                                                 \
+            tkn = token_build(start, len, &loc);                                                   \
+            vector_push_back(&tkn_vec, &tkn);                                                      \
+            len = 0;                                                                               \
+            loc.col = 0;                                                                           \
+            ++loc.line;                                                                            \
+            ++pos;                                                                                 \
+            start = pos;                                                                           \
+            break;                                                                                 \
+        }                                                                                          \
+    }                                                                                              \
+    goto lex_start;
+
 lex_start:
     c = *pos;
     if (always_one_char_map[(unsigned char)c]) {
@@ -173,6 +204,13 @@ lex_start:
     if (c == '\n') {
         goto lex_newline;
     }
+    if (c == '\'') {
+        LEX_IN_LITERAL('\'');
+    }
+    if (c == '\"') {
+        LEX_IN_LITERAL('\"');
+    }
+
     if (c == '\0') {
         goto lex_end;
     }
