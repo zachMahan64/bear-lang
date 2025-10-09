@@ -17,7 +17,8 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
 
     char* pos = buf->data;
     const char* end_of_buf = buf->data + buf->size;
-    char c;
+    char c;  // cached curr char, pos[0]
+    char n1; // cached next char for lookaheads, pos[1]
 
     // maps
     const char* always_one_char_map = get_always_one_char_to_token_map();
@@ -108,13 +109,17 @@ lex_start:
     goto lex_start;
 
 lex_multichar_operator:
-
+    if (pos + 1 < end_of_buf) {
+        n1 = pos[1]; // cache
+    } else {
+        n1 = '\0'; // makes future n1 bounds check unnecessary
+    }
     switch (c) {
     case ('.'): {
-        if (pos + 1 < end_of_buf && pos[1] == '.') {
+        if (end_of_buf && n1 == '.') {
             LEX_KNOWN_LEN_PUSH(2);
         }
-        if (pos + 1 < end_of_buf && (pos[1]) >= '0' && pos[1] <= '9') {
+        if ((n1) >= '0' && n1 <= '9') {
             // just proceed, this is a float lit
             ++pos;
             ++len;
@@ -125,7 +130,7 @@ lex_multichar_operator:
     }
     // assignment
     case ('='): {
-        if (pos + 1 < end_of_buf && pos[1] == '=') {
+        if (n1 == '=') {
             LEX_KNOWN_LEN_PUSH(2);
         }
         LEX_KNOWN_LEN_PUSH(1);
@@ -133,14 +138,14 @@ lex_multichar_operator:
 
     // arithmetic
     case ('+'): {
-        if (pos + 1 < end_of_buf && (pos[1] == '=' || pos[1] == '+')) {
+        if (n1 == '=' || n1 == '+') {
             // ++ or +=
             LEX_KNOWN_LEN_PUSH(2);
         }
         LEX_KNOWN_LEN_PUSH(1);
     }
     case ('-'): {
-        if (pos + 1 < end_of_buf && (pos[1] == '=' || pos[1] == '-' || pos[1] == '>')) {
+        if (n1 == '=' || n1 == '-' || n1 == '>') {
             // --, ->, or -=
             LEX_KNOWN_LEN_PUSH(2);
         }
@@ -156,22 +161,22 @@ lex_multichar_operator:
     case ('^'):
     // boolean
     case ('!'):
-        if (pos + 1 < end_of_buf && pos[1] == '=') {
+        if (n1 == '=') {
             // [sym]=
             LEX_KNOWN_LEN_PUSH(2);
         }
         LEX_KNOWN_LEN_PUSH(1);
     // comparison
     case ('>'): {
-        if (pos + 3 < end_of_buf && pos[1] == '>' && pos[2] == '>' && pos[3] == '=') {
+        if (pos + 3 < end_of_buf && n1 == '>' && pos[2] == '>' && pos[3] == '=') {
             // >>>=
             LEX_KNOWN_LEN_PUSH(4);
         }
-        if (pos + 2 < end_of_buf && pos[1] == '>' && (pos[2] == '>' || pos[2] == '=')) {
+        if (pos + 2 < end_of_buf && n1 == '>' && (pos[2] == '>' || pos[2] == '=')) {
             // >>> or >>=
             LEX_KNOWN_LEN_PUSH(3);
         }
-        if (pos + 1 < end_of_buf && (pos[1] == '>' || pos[1] == '=')) {
+        if (n1 == '>' || n1 == '=') {
             // >> or >=
             LEX_KNOWN_LEN_PUSH(2);
         }
@@ -179,11 +184,11 @@ lex_multichar_operator:
         LEX_KNOWN_LEN_PUSH(1);
     }
     case ('<'): {
-        if (pos + 2 < end_of_buf && pos[1] == '<' && pos[2] == '=') {
+        if (pos + 2 < end_of_buf && n1 == '<' && pos[2] == '=') {
             // <<=
             LEX_KNOWN_LEN_PUSH(3);
         }
-        if (pos + 1 < end_of_buf && (pos[1] == '<' || pos[1] == '=' || pos[1] == '-')) {
+        if (n1 == '<' || n1 == '=' || n1 == '-') {
             // <<, <=, or <-
             LEX_KNOWN_LEN_PUSH(2);
         }
@@ -191,7 +196,7 @@ lex_multichar_operator:
         LEX_KNOWN_LEN_PUSH(1);
     }
     case (':'): {
-        if (pos + 1 < end_of_buf && pos[1] == ':') {
+        if (n1 == ':') {
             // ::
             LEX_KNOWN_LEN_PUSH(2);
         }

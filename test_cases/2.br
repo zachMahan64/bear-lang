@@ -1,1 +1,3 @@
 flt myFloat = 1.5;
+
+Thing..foo = 1.33;
