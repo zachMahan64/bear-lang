@@ -79,6 +79,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "flt", KW_FLT);
         strimap_insert(&map, "str", KW_STR);
         strimap_insert(&map, "void", KW_VOID);
+        strimap_insert(&map, "auto", KW_AUTO);
 
         // control flow
         strimap_insert(&map, "if", KW_IF);
@@ -91,6 +92,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         // structures
         strimap_insert(&map, "this", KW_THIS);
         strimap_insert(&map, "struct", KW_STRUCT);
+        strimap_insert(&map, "new", KW_NEW);
 
         // operators / symbols (multi-char tokens)
         strimap_insert(&map, "->", RARROW);
@@ -185,6 +187,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_FLT] = "flt";
         map[KW_STR] = "str";
         map[KW_VOID] = "void";
+        map[KW_AUTO] = "auto";
 
         map[KW_IF] = "if";
         map[KW_ELSE] = "else";
@@ -196,6 +199,7 @@ const char* const* get_token_to_string_map(void) {
         // structures
         map[KW_THIS] = "this";
         map[KW_STRUCT] = "struct";
+        map[KW_NEW] = "new";
 
         // variable / literal types
         map[SYMBOL] = "symbol";

@@ -70,6 +70,7 @@ typedef enum token_type {
     KW_FLT,
     KW_STR,
     KW_VOID,
+    KW_AUTO,
 
     // comparison
     KW_IF,
@@ -83,6 +84,7 @@ typedef enum token_type {
     // structures (incorp after prodcedural is working)
     KW_THIS,
     KW_STRUCT,
+    KW_NEW,
 
     // variable or function name
     SYMBOL,

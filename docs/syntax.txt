@@ -1,8 +1,15 @@
 BearLang Syntax (as of 20250929)
 
 - Mostly C-like
-- Deviations:
+- Types:
+    - Floats (all are doubles): flt 
+    - Integers (all are 64bit signed): int 
+    - Strings (heap managed): str 
+- Type mods:
+    - Box (automatically dereferenced shared ptr): box::some_type
+        - Can be reassigned by value or into another box: myObject =  
+
 - Functions: 
-    fn function_name(type_name arg) -> return_type;
+    fn function_name(type_name arg) -> return_type {...}
 - Scope:
     space my_space {...}

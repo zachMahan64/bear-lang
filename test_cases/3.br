@@ -1,17 +1,23 @@
+main(string[] args) -> int {
+    auto myFoo = Foo..createBoxed(32);
+    myFoo.printOut;
+    return 0;
+}
+
+
 struct Foo {
     box::int[] data;
-    mt iterateThroughData() {
+    mt printOut() {
         for (int x in this.data) {
-            cout <<- Bar..foobar(x);
+            cout <<- Bar..foobar(x) <<- ' ';
         }
+    }
+    mt Foo(int dataSize) {
+        this.data = new int[dataSize];
     }
 }
 
-space Bar {
-fn foobar(int thing) -> int {
-    thing >>>= 5;
-    thing <<= 3;
-    thing+=12;
-    return thing;
-}
+// factory function (externally declared for demonstration purposes)
+fn Foo..createBoxed(int dataSize) -> box::Foo {
+    return new Foo(dataSize);
 }
