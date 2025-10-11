@@ -59,10 +59,13 @@ typedef enum token_type {
     // function
     KW_FN,
     KW_MT, // method, for implicit this ptr for data-associated behavior in structs
+    KW_CT, // ctor
+    KW_DT, // dtor
     // stdou
     KW_COUT, // example: cout <<- "Hello World";
     // types
     KW_BOX,   // example: box::int
+    KW_BAG,   // example: bag::int
     KW_CONST, // example: const::box::int or box::const::int
     KW_REF,   // example: ref::int
     KW_INT,

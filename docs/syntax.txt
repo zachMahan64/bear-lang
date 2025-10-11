@@ -6,12 +6,16 @@ BearLang Syntax (as of 20250929)
     - Integers (all are 64bit signed): int 
     - Strings (heap managed): str 
 - Type mods:
-    - Box (automatically dereferenced shared ptr): box::some_type
-        - Can be reassigned by value or into another box: myObject =  
-    - Box (automatically dereferenced shared ptr): box::SomeType
+    - Box (automatically dereferenced unique ptr): box::SomeType
         - Can be reassigned into another box:
         - box::Foo myFoo = new Foo();
-        - myFoo = otherFoo;
+        - myFoo = new Foo(); // release previously held Foo
+    - Bag (automatically dereferenced shared ptr): bag::SomeType
+        - Can be assigned by new or by another bag:
+        - bag::Foo myFoo = new Foo();
+        - bag::Foo myFoo = otherFoo; // inc ref count
+        - myFoo = new Foo(); // reassign and dec ref count Foo
+    - Both 
 
 - Functions: 
     fn function_name(type_name arg) -> return_type {...}
