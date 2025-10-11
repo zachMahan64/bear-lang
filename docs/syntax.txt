@@ -8,6 +8,10 @@ BearLang Syntax (as of 20250929)
 - Type mods:
     - Box (automatically dereferenced shared ptr): box::some_type
         - Can be reassigned by value or into another box: myObject =  
+    - Box (automatically dereferenced shared ptr): box::SomeType
+        - Can be reassigned into another box:
+        - box::Foo myFoo = new Foo();
+        - myFoo = otherFoo;
 
 - Functions: 
     fn function_name(type_name arg) -> return_type {...}
