@@ -17,3 +17,16 @@ BearLang Syntax (as of 20250929)
     fn function_name(type_name arg) -> return_type {...}
 - Scope:
     space my_space {...}
+- Use ".." as scope resolution symbol:
+    - Example:
+```
+    fn main() -> int {
+        return Foo..bar;
+    }
+    struct Foo {
+        static int MAGIC_ZERO = 0; 
+        fn bar() -> int {
+            return MAGIC_FOO;
+        }
+    }
+```

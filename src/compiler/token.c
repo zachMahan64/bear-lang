@@ -80,6 +80,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "str", KW_STR);
         strimap_insert(&map, "void", KW_VOID);
         strimap_insert(&map, "auto", KW_AUTO);
+        strimap_insert(&map, "static", KW_STATIC);
 
         // control flow
         strimap_insert(&map, "if", KW_IF);
@@ -188,6 +189,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_STR] = "str";
         map[KW_VOID] = "void";
         map[KW_AUTO] = "auto";
+        map[KW_STATIC] = "static";
 
         map[KW_IF] = "if";
         map[KW_ELSE] = "else";

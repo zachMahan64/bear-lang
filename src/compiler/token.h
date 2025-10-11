@@ -71,6 +71,8 @@ typedef enum token_type {
     KW_STR,
     KW_VOID,
     KW_AUTO,
+    // memory location identifiers
+    KW_STATIC,
 
     // comparison
     KW_IF,
