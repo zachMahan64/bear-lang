@@ -15,7 +15,7 @@ BearLang Syntax (as of 20250929)
         - bag::Foo myFoo = new Foo();
         - bag::Foo myFoo = otherFoo; // inc ref count
         - myFoo = new Foo(); // reassign and dec ref count Foo
-    - Both 
+    - Both Bag and Box dec reference counter/release resource on destruction 
 
 - Functions: 
     fn function_name(type_name arg) -> return_type {...}
