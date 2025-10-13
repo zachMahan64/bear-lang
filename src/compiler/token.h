@@ -76,6 +76,7 @@ typedef enum token_type {
     KW_STR,
     KW_VOID,
     KW_AUTO,
+    KW_COMP, // compile-time (like constexpr)
     // memory location identifiers
     KW_STATIC,
 
