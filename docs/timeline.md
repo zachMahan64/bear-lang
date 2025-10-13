@@ -24,10 +24,9 @@
 
 #### Approach to Diagnostics
 - **This must be considered throughout developement of the compiler for future LSP compatibility.**
-- [ ] Unified diagnostic emitter with span + severity
-- [ ] Error, Warning, Note hierarchy
-- [ ] Integration with LSP later
-
+    - Unified diagnostic emitter with span + severity
+    - Error, warning, note/hint hierarchy
+    - Line/Column tracking
 
 ## Setting up for Future Codegen and Designing the ByteCode Interpreter
 #### Intermediate Representation
