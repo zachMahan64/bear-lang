@@ -1,3 +1,7 @@
+// BearLang
+// Copyright (C) 2025 Zachary Mahan
+// Licensed under the GNU GPL v3. See LICENSE.md for details.
+
 #include "bearlang/bearlang.h"
 #include "cli_args.h"
 #include "compiler/compile.h"
