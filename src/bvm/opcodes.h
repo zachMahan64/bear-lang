@@ -2,7 +2,9 @@
 #define BVM_H
 
 typedef enum {
-    // INT OPS (64 BIT)
+    // TODO needs a lot of refinement -> have a 32/64 bit bitflag in the opcode or just have
+    // dedicated opcodes for a 1:1 jump table?
+    // INT/LONG OPS (32/64 BIT)
     ADD,
     SUB,
     MULT,
@@ -12,7 +14,7 @@ typedef enum {
     UDIV,
     UMOD,
 
-    // BITWISE OPS (64 BIT)
+    // BITWISE OPS (32/64 BIT)
     OR,
     AND,
     XOR,
@@ -21,7 +23,7 @@ typedef enum {
     ARSH,
     LRSH,
 
-    // FLOAT OPS (64 BIT)
+    // FLOAT OPS (32/64 BIT)
     FADD,
     FSUB,
     FMUL,

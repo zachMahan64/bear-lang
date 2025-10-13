@@ -69,8 +69,10 @@ typedef enum token_type {
     KW_CONST, // example: const::box::int or box::const::int
     KW_REF,   // example: ref::int
     KW_INT,
+    KW_LONG,
     KW_CHAR,
     KW_FLT,
+    KW_DOUB,
     KW_STR,
     KW_VOID,
     KW_AUTO,
@@ -147,7 +149,7 @@ typedef enum token_type {
 
 typedef union {
     char character;
-    int64_t integer;
+    int64_t integral;
     double floating;
 } token_value_u;
 

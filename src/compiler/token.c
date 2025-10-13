@@ -78,6 +78,8 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "int", KW_INT);
         strimap_insert(&map, "char", KW_CHAR);
         strimap_insert(&map, "flt", KW_FLT);
+        strimap_insert(&map, "doub", KW_DOUB);
+        strimap_insert(&map, "long", KW_LONG);
         strimap_insert(&map, "str", KW_STR);
         strimap_insert(&map, "void", KW_VOID);
         strimap_insert(&map, "auto", KW_AUTO);
@@ -188,8 +190,10 @@ const char* const* get_token_to_string_map(void) {
         map[KW_CONST] = "const";
         map[KW_REF] = "ref";
         map[KW_INT] = "int";
+        map[KW_LONG] = "long";
         map[KW_CHAR] = "char";
         map[KW_FLT] = "flt";
+        map[KW_DOUB] = "doub";
         map[KW_STR] = "str";
         map[KW_VOID] = "void";
         map[KW_AUTO] = "auto";
@@ -445,7 +449,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
         }
         if (*endptr == '\0') {
             tkn->sym = INT_LIT;
-            tkn->val.integer = int_val;
+            tkn->val.integral = int_val;
             return;
         }
     }
