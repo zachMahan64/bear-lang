@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h> // TODO remove
 #include <stdlib.h>
 #include <string.h>
 
@@ -85,6 +84,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "auto", KW_AUTO);
         strimap_insert(&map, "static", KW_STATIC);
         strimap_insert(&map, "comp", KW_COMP);
+        strimap_insert(&map, "hidden", KW_HIDDEN);
 
         // control flow
         strimap_insert(&map, "if", KW_IF);
@@ -200,6 +200,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_AUTO] = "auto";
         map[KW_STATIC] = "static";
         map[KW_COMP] = "comp";
+        map[KW_COMP] = "hidden";
 
         map[KW_IF] = "if";
         map[KW_ELSE] = "else";

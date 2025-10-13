@@ -76,7 +76,9 @@ typedef enum token_type {
     KW_STR,
     KW_VOID,
     KW_AUTO,
-    KW_COMP, // compile-time (like constexpr)
+    KW_COMP,   // compile-time (like constexpr)
+    KW_HIDDEN, // like private, but with slightly different semantics because BearLang has no
+               // inheritance, so this is really just a hidden data member or function/method
     // memory location identifiers
     KW_STATIC,
 
