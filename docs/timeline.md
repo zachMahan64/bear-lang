@@ -34,9 +34,9 @@
 - [ ] Optional SSA
 - [ ] Implement lowering from AST to the IR 
 #### Defining the Requirements of the VM
-- [ ] Define VM opcodes and instruction format (make sure virtual-registers are the right choice)
+- [ ] Define VM opcodes and instruction format (Stack Machine)
 #### Moving from IR to ByteCode
-- [ ] Design an efficient pipeline for IR (unlimited virtual-register based, like LLVM) to BVM ByteCode
+- [ ] Design an efficient pipeline for IR (unlimited virtual-register based, like LLVM perhaps) to BVM ByteCode
 
 ## Imperative and Arithmetic 
 

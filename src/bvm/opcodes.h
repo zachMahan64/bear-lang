@@ -8,7 +8,7 @@
 typedef enum {
     // TODO needs a lot of refinement -> have a 32/64 bit bitflag in the opcode or just have
     // dedicated opcodes for a 1:1 jump table?
-    // TODO -> SHIFT THIS AWAY FROM A PURE STACK MACHINE INTO A V-REGISTER-BASED VM
+    // TODO -> FINALIZE PURE STACK MACHINE
     // INT/LONG OPS (32/64 BIT)
     ADD,
     SUB,
