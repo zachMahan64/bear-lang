@@ -9,6 +9,7 @@
 #include "token.h"
 
 typedef enum {
+    // TODO: very much needs to be updated for newer tokens
     // Expressions
     AST_BINARY_OP, // +, -, *, /, %, bitwise, comparison, boolean
     AST_UNARY_OP,  // unary -, !, ~, ++, --
