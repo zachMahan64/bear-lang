@@ -1,8 +1,13 @@
-// top-level exec
+// top-level exec; boolean type demo
 bool myBool = true;
+myBool = transformBool(myBool);
 printBool(myBool);
 
 fn printBool(bool val) {
     if (val) cout <<- "true";
     else cout <<- "false";
+}
+
+fn transformBool(bool val) -> bool {
+    return (val && false || true) && true != false; 
 }
