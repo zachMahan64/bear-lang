@@ -1,0 +1,8 @@
+// top-level exec
+bool myBool = true;
+printBool(myBool);
+
+fn printBool(bool val) {
+    if (val) cout <<- "true";
+    else cout <<- "false";
+}

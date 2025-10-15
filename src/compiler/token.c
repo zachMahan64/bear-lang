@@ -66,6 +66,10 @@ const strimap_t* get_string_to_token_strimap(void) {
     if (!initialized) {
         map = strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
 
+        // bool literals
+        strimap_insert(&map, "true", BOOL_LIT_TRUE);
+        strimap_insert(&map, "false", BOOL_LIT_FALSE);
+
         // file
         strimap_insert(&map, "import", IMPORT);
 
@@ -84,6 +88,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "doub", KW_DOUB);
         strimap_insert(&map, "long", KW_LONG);
         strimap_insert(&map, "str", KW_STR);
+        strimap_insert(&map, "bool", KW_BOOL);
         strimap_insert(&map, "void", KW_VOID);
         strimap_insert(&map, "auto", KW_AUTO);
         strimap_insert(&map, "static", KW_STATIC);
@@ -202,6 +207,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_FLT] = "flt";
         map[KW_DOUB] = "doub";
         map[KW_STR] = "str";
+        map[KW_BOOL] = "bool";
         map[KW_VOID] = "void";
         map[KW_AUTO] = "auto";
         map[KW_STATIC] = "static";
@@ -225,8 +231,10 @@ const char* const* get_token_to_string_map(void) {
         map[SYMBOL] = "symbol";
         map[CHAR_LIT] = "char_lit";
         map[INT_LIT] = "int_lit";
-        map[FLT_LIT] = "float_lit";
-        map[STR_LIT] = "string_lit";
+        map[FLT_LIT] = "flt_lit";
+        map[STR_LIT] = "str_lit";
+        map[BOOL_LIT_TRUE] = "true_lit";
+        map[BOOL_LIT_FALSE] = "false_lit";
 
         // special punctuation
         map[RARROW] = "->";

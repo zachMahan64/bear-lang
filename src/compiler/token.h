@@ -78,6 +78,7 @@ typedef enum token_type {
     KW_FLT,
     KW_DOUB,
     KW_STR,
+    KW_BOOL,
     KW_VOID,
     KW_AUTO,
     KW_COMP,     // compile-time (like constexpr)
@@ -111,6 +112,8 @@ typedef enum token_type {
     INT_LIT,
     FLT_LIT,
     STR_LIT,
+    BOOL_LIT_FALSE,
+    BOOL_LIT_TRUE,
 
     // punc
     RARROW,    // -> for return types
