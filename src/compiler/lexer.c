@@ -8,6 +8,10 @@
 #include "token.h"
 #include <stddef.h>
 
+/*
+ * create a vector storing token_t from a specified src_buffer_t
+ *
+ */
 vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     vector_t tkn_vec =
         vector_create_and_reserve(sizeof(token_t), buf->size / LEXER_ESTIMATED_CHARS_PER_TOKEN);
