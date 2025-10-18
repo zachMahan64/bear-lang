@@ -73,7 +73,9 @@ typedef enum token_type {
     KW_CONST, // example: const::box::int or box::const::int
     KW_REF,   // example: ref::int
     KW_INT,
+    KW_UINT,
     KW_LONG,
+    KW_ULONG,
     KW_CHAR,
     KW_FLT,
     KW_DOUB,

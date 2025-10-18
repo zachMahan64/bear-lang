@@ -10,37 +10,94 @@ typedef enum {
     // dedicated opcodes for a 1:1 jump table?
     // TODO -> FINALIZE PURE STACK MACHINE
     // INT/LONG OPS (32/64 BIT)
-    ADD,
-    SUB,
-    MULT,
-    DIV,
-    MOD,
-    UMULT,
-    UDIV,
-    UMOD,
+    ADDI,
+    SUBI,
+    MULTI,
+    DIVI,
+    MODI,
+    UMULTI,
+    UDIVI,
+    UMODI,
+
+    ADDL,
+    SUBL,
+    MULTL,
+    DIVL,
+    MODL,
+    UMULTL,
+    UDIVL,
+    UMODL,
 
     // BITWISE OPS (32/64 BIT)
-    OR,
-    AND,
-    XOR,
-    NOT,
-    LSH,
-    ARSH,
-    LRSH,
+    ORI,
+    ANDI,
+    XORI,
+    NOTI,
+    LSHI,
+    ARSHI,
+    LRSHI,
+
+    ORL,
+    ANDL,
+    XORL,
+    NOTL,
+    LSHL,
+    ARSHL,
+    LRSHL,
 
     // FLOAT OPS (32/64 BIT)
-    FADD,
-    FSUB,
-    FMUL,
-    FDIV,
-    FMOD,
+    ADDF,
+    SUBF,
+    MULF,
+    DIVF,
+    MODF,
 
-    // CONVERSIONS
+    ADDD,
+    SUBD,
+    MULD,
+    DIVD,
+    MODD,
+
+    // CONVERSIONS TODO: specify elisions for unsigned types
+    // int -> _
+    I2L,
     I2F,
+    I2D,
+    // uint -> _
+    UI2L,
+    UI2F,
+    UI2D,
+
+    // long -> _
+    L2I,
+    L2F,
+    L2D,
+    // ulong -> _
+    UL2I,
+    UL2F,
+    UL2D,
+
+    // float -> _
     F2I,
+    F2L,
+    F2D,
+
+    F2UI,
+    F2UL,
+    // doub -> _
+    D2I,
+    D2L,
+    D2F,
+
+    D2UI,
+    D2UL,
+    // char convs
+    I2C,
+    C2I,
 
     // MEMORY OPS
     PUSHI,
+    PUSHL,
     LOAD,
     STORE,
     DUP,

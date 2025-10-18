@@ -83,10 +83,12 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "const", KW_CONST);
         strimap_insert(&map, "ref", KW_REF);
         strimap_insert(&map, "int", KW_INT);
+        strimap_insert(&map, "uint", KW_UINT);
         strimap_insert(&map, "char", KW_CHAR);
         strimap_insert(&map, "flt", KW_FLT);
         strimap_insert(&map, "doub", KW_DOUB);
         strimap_insert(&map, "long", KW_LONG);
+        strimap_insert(&map, "ulong", KW_ULONG);
         strimap_insert(&map, "str", KW_STR);
         strimap_insert(&map, "bool", KW_BOOL);
         strimap_insert(&map, "void", KW_VOID);
@@ -202,7 +204,9 @@ const char* const* get_token_to_string_map(void) {
         map[KW_CONST] = "const";
         map[KW_REF] = "ref";
         map[KW_INT] = "int";
+        map[KW_UINT] = "uint";
         map[KW_LONG] = "long";
+        map[KW_ULONG] = "ulong";
         map[KW_CHAR] = "char";
         map[KW_FLT] = "flt";
         map[KW_DOUB] = "doub";
@@ -391,6 +395,9 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
                           // INDETERMINATE
 }
 
+/*
+ * TODO: update to handle variants of floating/integral
+ */
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     if (!tkn || tkn->length == 0) {
         if (tkn) {
@@ -457,7 +464,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     memcpy(buf, str, len);
     buf[len] = '\0';
 
-    // INTEGER
+    // INTEGRAL
     errno = 0;
     char* endptr = NULL;
     long long int_val = strtoll(buf, &endptr, 0);
@@ -472,7 +479,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
         }
     }
 
-    // FLOAT
+    // FLOATING
     errno = 0;
     endptr = NULL;
     double float_val = strtod(buf, &endptr);
