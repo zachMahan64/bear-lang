@@ -6,9 +6,7 @@
 #define BVM_H
 
 typedef enum {
-    // TODO needs a lot of refinement -> have a 32/64 bit bitflag in the opcode or just have
-    // dedicated opcodes for a 1:1 jump table?
-    // TODO -> FINALIZE PURE STACK MACHINE
+    // TODO finish this section
     // INT/LONG OPS (32/64 BIT)
     ADDI,
     SUBI,
@@ -58,7 +56,8 @@ typedef enum {
     DIVD,
     MODD,
 
-    // CONVERSIONS TODO: specify elisions for unsigned types
+    // CONVERSIONS
+    // same width signed <-> unsigned are just bitcasts, so no dedicated op
     // int -> _
     I2L,
     I2F,
