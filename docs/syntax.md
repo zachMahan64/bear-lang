@@ -22,7 +22,7 @@ BearLang Syntax
             - `ref::box::Foo = existingBoxedFoo;`
             - `ref::int = existingInt;`
             - `fn myFunc(ref::str myString) {doWork(myString)} // take string by reference and then doWork on it`
-    - Templated Types (very WIP):
+    - Templated Types (very WIP), always turbofish for maximum specificity:
         - MyTemplatedType::<param1,param2,param3>
         - box::MyTemplatedType::<param1,param2,param3>
 - Functions: 
