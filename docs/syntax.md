@@ -22,6 +22,9 @@ BearLang Syntax
             - `ref::box::Foo = existingBoxedFoo;`
             - `ref::int = existingInt;`
             - `fn myFunc(ref::str myString) {doWork(myString)} // take string by reference and then doWork on it`
+    - Templated Types (very WIP):
+        - MyTemplatedType::<param1,param2,param3>
+        - box::MyTemplatedType::<param1,param2,param3>
 - Functions: 
     - `fn function_name(type_name arg) -> return_type {...}`
     - return type can be elided if it's void:
