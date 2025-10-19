@@ -103,8 +103,11 @@ typedef enum {
     ALLOC,
     FREE,
 
-    // BUILT-IN
-    COUT, // for now, hook into printf
+    // BUILT-IN, TODO: figure out the practical mechanics of this
+    // hook into printf directly?
+    COUT_STR,
+    COUT_INT,
+    COUT_FLT,
 
     // comparisons (push bool result)
     CMP_EQ, // push (lhs == rhs)
