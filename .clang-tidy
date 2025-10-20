@@ -1,4 +1,5 @@
 Checks: >
+  clang-diagnostic-*,
   bugprone-*,
   clang-analyzer-*,
   performance-*,
@@ -11,3 +12,4 @@ Checks: >
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none
+

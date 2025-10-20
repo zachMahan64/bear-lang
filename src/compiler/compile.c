@@ -34,7 +34,6 @@ int compile_file(const char* file_name) {
         return -1;
     }
     vector_t tkn_vec = lexer_tokenize_src_buffer(&buffer);
-
     // DEBUG
     printf("\n"
            " Contents of [%s]\n"
@@ -49,7 +48,6 @@ int compile_file(const char* file_name) {
      * when we can, just output one unified bytecode file
      * with original_file_name.bvm
      */
-
     src_buffer_destroy(&buffer);
     return error_code;
 }
