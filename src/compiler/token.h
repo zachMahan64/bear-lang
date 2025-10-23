@@ -52,8 +52,8 @@ typedef enum token_type {
     BOOL_NOT = '!', // !
 
     // comparison
-    GT = '>',
-    LT = '<',
+    GT = '>', // will also be used as closing bracket in future generics
+    LT = '<', // will also be used as opening bracket in future generics
 
     // file
     IMPORT = 256,
@@ -67,6 +67,7 @@ typedef enum token_type {
     KW_DT, // dtor
     // stdou
     KW_COUT, // example: cout <<- "Hello World";
+    KW_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >> some_val;
     // types
     KW_BOX,   // example: box::int
     KW_BAG,   // example: bag::int

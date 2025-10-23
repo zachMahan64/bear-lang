@@ -1,6 +1,6 @@
 BearLang Syntax 
 - **Work In Progress** this document will be the main syntax reference before moving to a more rigorous system of seperate documents for each language feature.
-- BearLang is a C-Like language inspired by elements of Java, Python, Rust, and C++.
+- BearLang is a C-Like language inspired by elements of Java, Rust, and C++.
 - Types:
     - Floating Point: single/double precision -> `flt` or `doub`, respectively 
     - Integers (all are signed): 32bit/64bit -> `int` or `long`, respectively 
@@ -22,9 +22,9 @@ BearLang Syntax
             - `ref::box::Foo = existingBoxedFoo;`
             - `ref::int = existingInt;`
             - `fn myFunc(ref::str myString) {doWork(myString)} // take string by reference and then doWork on it`
-    - Templated Types (very WIP), always turbofish for maximum specificity:
-        - MyTemplatedType::<param1,param2,param3>
-        - box::MyTemplatedType::<param1,param2,param3>
+    - Templated Types (very WIP):
+        - `MyTemplatedType<param1,param2,param3>`
+        - `box::MyTemplatedType<param1,param2,param3>`
 - Functions: 
     - `fn function_name(type_name arg) -> return_type {...}`
     - return type can be elided if it's void:

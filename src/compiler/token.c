@@ -78,6 +78,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "fn", KW_FN);
         strimap_insert(&map, "mt", KW_MT);
         strimap_insert(&map, "cout", KW_COUT);
+        strimap_insert(&map, "cin", KW_CIN);
         strimap_insert(&map, "box", KW_BOX);
         strimap_insert(&map, "bag", KW_BAG);
         strimap_insert(&map, "const", KW_CONST);
@@ -199,6 +200,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_CT] = "ct";
         map[KW_DT] = "dt";
         map[KW_COUT] = "cout";
+        map[KW_CIN] = "cin";
         map[KW_BOX] = "box";
         map[KW_BAG] = "bag";
         map[KW_CONST] = "const";
