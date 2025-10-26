@@ -11,7 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-// returns a view into statically allocated map of char -> token_type_e
+/**
+ * returns a view into statically allocated map of char -> token_type_e
+ */
 const char* get_char_to_token_map(void) {
     static bool initialized = false;
     static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
@@ -150,7 +152,9 @@ const strimap_t* get_string_to_token_strimap(void) {
     return &map;
 }
 
-// returns a view into statically allocated map of token_type_e -> string
+/**
+ * returns a view into statically allocated map of token_type_e -> string
+ */
 const char* const* get_token_to_string_map(void) {
     static bool initialized = false;
     static const char* map[TOKEN_TOKEN_TO_STRING_MAP_SIZE] = {0};
@@ -284,7 +288,9 @@ const char* const* get_token_to_string_map(void) {
     return map;
 }
 
-// get map that contains always mono-char : token
+/**
+ * get map that contains always mono-char : token
+ */
 const char* get_always_one_char_to_token_map(void) {
     static bool initialized = false;
     static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
@@ -305,6 +311,7 @@ const char* get_always_one_char_to_token_map(void) {
     }
     return char_to_token_map;
 }
+
 const char* get_first_char_in_multichar_operator_token_map(void) {
     static bool initialized = false;
     static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
@@ -341,14 +348,18 @@ const char* get_first_char_in_multichar_operator_token_map(void) {
     return char_to_token_map;
 }
 
-// token struct functions
+// helper
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length);
+// helper
 void token_check_if_valid_literal_and_set_value(token_t* tkn);
+// helper
 void token_check_if_valid_symbol_and_set_sym(token_t* tkn);
 
-// Builds token according to a starting ptr and length into src as well as an src_loc_t that
-// indicates row/col number for debugging purposes. This function assumes that the lexer has already
-// correct determined the string that needs to be tokenized.
+/**
+ * Builds token according to a starting ptr and length into src as well as an src_loc_t that
+ * indicates row/col number for debugging purposes. This function assumes that the lexer has already
+ * correct determined the string that needs to be tokenized.
+ */
 token_t token_build(const char* start, size_t length, src_loc_t* loc) {
     token_t tkn;
     // init provided values
@@ -375,8 +386,10 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
     return tkn;
 }
 
-// helper that looks up tokens for fixed symbols (i.e keywords and operators), impls basic logic
-// using different look ups for optimization
+/**
+ * helper that looks up tokens for fixed symbols (i.e keywords and operators), impls basic logic
+ * using different look ups for optimization
+ */
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length) {
     const char* char_to_token_map = get_char_to_token_map();
     if (length == 1) {
@@ -397,7 +410,7 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
                           // INDETERMINATE
 }
 
-/*
+/**
  * TODO: update to handle variants of floating/integral
  */
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
@@ -499,6 +512,9 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     tkn->sym = INDETERMINATE;
 }
 
+/**
+ * check if a token is a valid variable/function name (a "symbol")
+ */
 void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
     // token should never have size zero
     if (tkn->start[0] >= '0' && tkn->start[0] <= '9') {

@@ -8,7 +8,7 @@
 #include "token.h"
 #include <stddef.h>
 
-/*
+/**
  * create a vector storing token_t from a specified src_buffer_t
  *
  */
