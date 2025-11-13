@@ -108,6 +108,7 @@ typedef enum {
     COUT_STR,
     COUT_INT,
     COUT_FLT,
+    CIN,
 
     // comparisons (push bool result)
     CMP_EQ, // push (lhs == rhs)

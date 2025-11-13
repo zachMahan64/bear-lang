@@ -3,6 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/lexer.h"
+#include "containers/strimap.h"
 #include "containers/vector.h"
 #include "log.h"
 #include "token.h"
@@ -267,5 +268,11 @@ lex_end:
         vector_push_back(&tkn_vec, &tkn);
     }
 lex_done:
+    // build up eof token manually
+    tkn.start = start; // shouldn't be read from, but make sure start isn't null just in case
+    tkn.length = 1;
+    tkn.sym = EOF_TKN;
+    tkn.loc = loc; // set loc to currently tracked loc
+    vector_push_back(&tkn_vec, &tkn);
     return tkn_vec;
 }

@@ -282,6 +282,10 @@ const char* const* get_token_to_string_map(void) {
         map[ASSIGN_RSHL_EQ] = ">>=";
         map[ASSIGN_RSHA_EQ] = ">>>=";
 
+        // EOF
+        map[EOF_TKN] = "eof";
+        map[LEX_ERROR_EMPTY_SYMBOL] = "error_empty_symbol";
+
         initialized = true;
     }
     return map;
@@ -409,9 +413,6 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
                           // INDETERMINATE
 }
 
-/**
- * TODO: update to handle variants of floating/integral
- */
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     if (!tkn || tkn->length == 0) {
         if (tkn) {
@@ -523,6 +524,10 @@ void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
     // token should never have size zero
     if (tkn->start[0] >= '0' && tkn->start[0] <= '9') {
         tkn->sym = INDETERMINATE;
+        return;
+    }
+    if (tkn->length <= 0) {
+        tkn->sym = LEX_ERROR_EMPTY_SYMBOL;
         return;
     }
     for (size_t i = 0; i < tkn->length; i++) {

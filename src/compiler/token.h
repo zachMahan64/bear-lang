@@ -160,7 +160,12 @@ typedef enum token_type {
     ASSIGN_RSHL_EQ, // >>=
     ASSIGN_RSHA_EQ, // >>>=
 
-    // add error states?
+    // EOF
+    EOF_TKN,
+
+    // error states (represent an error in lexing, should never happen and should not be triggered
+    // by syntax errors)
+    LEX_ERROR_EMPTY_SYMBOL,
 } token_type_e;
 
 typedef union {
