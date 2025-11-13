@@ -8,9 +8,9 @@ fn main (box::str[] args) {
 fn foo(int bar) -> bool {
     int whatUp = 65536;
     whatUp<<=4;// test comment
-    int balls=333 + whatUp;
+    int num=333 + whatUp;
     flt myFloat = 1.5;
-    return balls<222 + bar * myFloat;
+    return num<222 + bar * myFloat;
 }
 
 struct dog::T {

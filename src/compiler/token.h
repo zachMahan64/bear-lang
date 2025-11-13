@@ -30,7 +30,6 @@ typedef enum token_type {
     SEMICOLON = ';',
     DOT = '.',
     COMMA = ',',
-    TYPE_GLUE = ':',
 
     // assign
     ASSIGN_EQ = '=', // =
@@ -69,10 +68,10 @@ typedef enum token_type {
     KW_COUT, // example: cout <<- "Hello World";
     KW_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >> some_val;
     // types
-    KW_BOX,   // example: box::int
-    KW_BAG,   // example: bag::int
-    KW_CONST, // example: const::box::int or box::const::int
-    KW_REF,   // example: ref::int
+    KW_BOX, // example: box int
+    KW_BAG, // example: bag int
+    KW_MUT, // example: mut int or box::const int
+    KW_REF, // example: ref::int
     KW_INT,
     KW_UINT,
     KW_LONG,
@@ -113,7 +112,8 @@ typedef enum token_type {
     // built-in types
     CHAR_LIT,
     INT_LIT,
-    FLT_LIT,
+    LONG_LIT,
+    DOUB_LIT, // currently float literals not suported, so we would need to downcast at comptime
     STR_LIT,
     BOOL_LIT_FALSE,
     BOOL_LIT_TRUE,
@@ -121,7 +121,7 @@ typedef enum token_type {
     // punc
     RARROW,    // -> for return types
     SCOPE_RES, // ..
-    TYPE_MOD,  // ::, for example, box:: (maybe different ones could be added later)
+    TYPE_MOD,  // :: , for example, box::int
 
     // operators
     // assign

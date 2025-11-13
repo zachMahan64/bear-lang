@@ -6,6 +6,7 @@
 #include "containers/strimap.h"
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@ const char* get_char_to_token_map(void) {
         // punctuation
         char_to_token_map[';'] = SEMICOLON;
         char_to_token_map['.'] = DOT;
-        char_to_token_map[':'] = TYPE_GLUE;
         char_to_token_map[','] = COMMA;
 
         // assignment
@@ -83,7 +83,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "cin", KW_CIN);
         strimap_insert(&map, "box", KW_BOX);
         strimap_insert(&map, "bag", KW_BAG);
-        strimap_insert(&map, "const", KW_CONST);
+        strimap_insert(&map, "mut", KW_MUT);
         strimap_insert(&map, "ref", KW_REF);
         strimap_insert(&map, "int", KW_INT);
         strimap_insert(&map, "uint", KW_UINT);
@@ -207,7 +207,7 @@ const char* const* get_token_to_string_map(void) {
         map[KW_CIN] = "cin";
         map[KW_BOX] = "box";
         map[KW_BAG] = "bag";
-        map[KW_CONST] = "const";
+        map[KW_MUT] = "mut";
         map[KW_REF] = "ref";
         map[KW_INT] = "int";
         map[KW_UINT] = "uint";
@@ -241,7 +241,7 @@ const char* const* get_token_to_string_map(void) {
         map[SYMBOL] = "symbol";
         map[CHAR_LIT] = "char_lit";
         map[INT_LIT] = "int_lit";
-        map[FLT_LIT] = "flt_lit";
+        map[DOUB_LIT] = "doub_lit";
         map[STR_LIT] = "str_lit";
         map[BOOL_LIT_TRUE] = "true_lit";
         map[BOOL_LIT_FALSE] = "false_lit";
@@ -250,7 +250,6 @@ const char* const* get_token_to_string_map(void) {
         map[RARROW] = "->";
         map[SCOPE_RES] = "..";
         map[TYPE_MOD] = "::";
-        map[TYPE_GLUE] = ":";
 
         // operators
         map[ASSIGN_LARROW] = "<-";
@@ -479,32 +478,37 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     memcpy(buf, str, len);
     buf[len] = '\0';
 
-    // INTEGRAL
+    // INT, use a int literal unless it would overflow
     errno = 0;
     char* endptr = NULL;
-    long long int_val = strtoll(buf, &endptr, 0);
+    long long integral_val = strtoll(buf, &endptr, 0);
     if (endptr != buf && errno == 0) {
         while (isspace((unsigned char)*endptr)) {
             endptr++;
         }
         if (*endptr == '\0') {
-            tkn->sym = INT_LIT;
-            tkn->val.integral = int_val;
+            if (integral_val > INT_MAX || integral_val < INT_MIN) {
+                tkn->sym = LONG_LIT;
+                tkn->val.integral = integral_val;
+            } else {
+                tkn->sym = INT_LIT;
+                tkn->val.integral = integral_val;
+            }
             return;
         }
     }
 
-    // FLOATING
+    // FLOATING, default to double literal
     errno = 0;
     endptr = NULL;
-    double float_val = strtod(buf, &endptr);
+    double floating_val = strtod(buf, &endptr);
     if (endptr != buf && errno == 0) {
         while (isspace((unsigned char)*endptr)) {
             endptr++;
         }
         if (*endptr == '\0') {
-            tkn->sym = FLT_LIT;
-            tkn->val.floating = float_val;
+            tkn->sym = DOUB_LIT;
+            tkn->val.floating = floating_val;
             return;
         }
     }
