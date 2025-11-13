@@ -9,7 +9,25 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-file(GLOB_RECURSE SRC CONFIGURE_DEPENDS src/*.c)
+# for globbing:
+# file(GLOB_RECURSE SRC CONFIGURE_DEPENDS src/*.c)
+
+set(SRC
+    src/compiler/ast.c
+    src/compiler/compile.c
+    src/compiler/lexer.c
+    src/compiler/token.c
+
+    src/containers/strimap.c
+    src/containers/vector.c
+
+    src/tests/test.c
+
+    src/bearlang.c
+    src/cli_args.c
+    src/file_io.c
+    src/main.c
+)
 
 set(CMAKE_C_FLAGS_DEBUG   "-Wall -Wextra -Wpedantic -g -gdwarf-4" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
