@@ -7,6 +7,7 @@
 
 #include "containers/vector.h"
 #include "token.h"
+#include <stddef.h>
 
 typedef enum {
     // TODO: very much needs to be updated for newer tokens
@@ -45,10 +46,22 @@ typedef enum {
     AST_UNKNOWN
 } ast_node_type_e;
 
-typedef struct ast_node_s {
+typedef struct ast_node {
     ast_node_type_e type;
-    token_t* token;    // must be non-NULL for literals/operators/variables
-    vector_t children; // dynamic list of child nodes
+    token_t* token; // must be non-NULL for literals/operators/variables
+    size_t child_count;
+    struct ast_node* children[]; // var len array of child nodes
 } ast_node_t;
+
+typedef struct ast_node_arena {
+    uint8_t* base;
+    size_t idx;
+    size_t cap;
+} ast_node_arena_t; // TODO use linked chunk based approach
+
+ast_node_arena_t ast_node_arena_create(size_t size);
+ast_node_arena_t ast_node_arena_create_from_vec(vector_t vec);
+void ast_node_arena_destroy(ast_node_arena_t*);
+ast_node_t* ast_node_arena_new_node(ast_node_arena_t* arena); // TODO impl
 
 #endif // !COMPILER_AST
