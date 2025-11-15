@@ -13,6 +13,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # file(GLOB_RECURSE SRC CONFIGURE_DEPENDS src/*.c)
 
 set(SRC
+    src/compiler/ast/node.c
     src/compiler/ast/node_arena.c
     src/compiler/ast/parser.c
     src/compiler/compile.c

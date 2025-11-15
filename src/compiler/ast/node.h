@@ -6,7 +6,6 @@
 #define COMPILER_AST
 
 #include "compiler/token.h"
-#include "containers/vector.h"
 #include <stddef.h>
 
 typedef enum {
@@ -22,8 +21,8 @@ typedef enum {
     AST_ASSIGN,    // = or <- assignment
 
     // Function/Call
-    AST_FUNCTION_DEC, // KW_FN/MT/CT/DT + params + (body for definitions / null for declarations) +
-                      // return type
+    AST_FUNCTION_DEC,  // KW_FN/MT/CT/DT + params + (body for definitions / null for declarations) +
+                       // return type
     AST_FUNCTION_CALL, // func(args...)
 
     // Control Flow
@@ -53,5 +52,8 @@ typedef struct ast_node {
     size_t child_count;
     struct ast_node* children[]; // var len array of child nodes
 } ast_node_t;
+
+// add a child at a specified index inside the specified node.
+void ast_node_add_child(ast_node_t* node, size_t idx, ast_node_t* child);
 
 #endif // !COMPILER_AST

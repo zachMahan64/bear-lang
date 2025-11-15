@@ -7,6 +7,7 @@
 
 #include "compiler/ast/node.h"
 #include "compiler/token.h"
+#include "containers/vector.h"
 #include <stdint.h>
 
 typedef enum {
@@ -23,5 +24,7 @@ typedef struct {
     ast_node_t* head;
     const char* file_name;
 } ast_t;
+
+ast_t build_ast_from_token_(const char* file_name, vector_t* token_vec);
 
 #endif // !COMPILER_PARSER_H

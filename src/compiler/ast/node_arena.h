@@ -7,6 +7,7 @@
 
 #include "compiler/ast/node.h"
 #include "containers/arena.h"
+#include "containers/vector.h"
 #include <stddef.h>
 
 typedef struct {
