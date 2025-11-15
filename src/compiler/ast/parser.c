@@ -171,6 +171,7 @@ uint32_t precendence_of_operator(token_type_e type) {
     return map[type];
 }
 
+// primary function for parsing a file into an ast
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec) {
     // position tracking for consuming tokens
     size_t pos = 0;
