@@ -9,7 +9,7 @@
 #include "containers/arena.h"
 #include <stddef.h>
 
-typedef struct ast_node_arena {
+typedef struct {
     arena_t arena;
 } ast_node_arena_t;
 

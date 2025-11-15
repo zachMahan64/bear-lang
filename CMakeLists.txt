@@ -14,6 +14,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(SRC
     src/compiler/ast/node_arena.c
+    src/compiler/ast/parser.c
     src/compiler/compile.c
     src/compiler/lexer.c
     src/compiler/token.c
