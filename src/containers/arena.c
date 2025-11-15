@@ -38,13 +38,14 @@ void arena_destroy_chunk_chain(arena_chunk_t* first_chunk) {
     }
 }
 
-// arena ctor
 arena_t arena_create(size_t chunk_cap_bytes) {
     arena_t arena;
     arena.chunk_size = chunk_cap_bytes;
     arena.head = arena_chunk_new(chunk_cap_bytes);
     return arena;
 }
+
+void arena_destroy(arena_t* arena) { arena_destroy_chunk_chain(arena->head); }
 
 void* arena_alloc(arena_t* arena, size_t req_size_bytes) {
     arena_chunk_t* curr = arena->head;
