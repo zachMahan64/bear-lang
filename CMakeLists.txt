@@ -20,6 +20,7 @@ set(SRC
 
     src/containers/strimap.c
     src/containers/vector.c
+    src/containers/arena.c
 
     src/tests/test.c
 
