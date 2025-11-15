@@ -18,13 +18,15 @@ typedef enum {
 associativity_e associativity_of(uint32_t precedence);
 
 #define PRECENDENCE_MAP_SIZE 64
-uint32_t precendence_of(token_type_e type);
+// find the precendence an operator based on token type
+uint32_t precendence_of_operator(token_type_e type);
 
 typedef struct {
     ast_node_t* head;
     const char* file_name;
 } ast_t;
 
-ast_t build_ast_from_token_(const char* file_name, vector_t* token_vec);
+// build up an ast from a specified vector of tokens
+ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec);
 
 #endif // !COMPILER_PARSER_H

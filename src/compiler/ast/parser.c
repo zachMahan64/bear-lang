@@ -3,7 +3,11 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/ast/parser.h"
+#include "compiler/ast/node.h"
+#include "compiler/ast/node_arena.h"
 #include "compiler/token.h"
+#include "containers/vector.h"
+#include <cstddef>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -27,22 +31,23 @@ associativity_e associativity_of(uint32_t precedence) {
     }
     return map[precedence];
 }
-
-uint32_t precendence_of(token_type_e type) {
-    const uint32_t todo = 0; // TODO
+// TODO, need to implement some logic to handle operators with multiple variants (unary vs binary
+// +/-)
+uint32_t precendence_of_operator(token_type_e type) {
+    const uint32_t NONE = 0; // TODO, resolve if any of these shouldn't be none
     static bool initialized = false;
     static uint32_t map[TOKEN_MAP_SIZE];
     if (!initialized) {
-        map[LPAREN] = todo;
-        map[RPAREN] = todo;
+        map[LPAREN] = NONE;
+        map[RPAREN] = NONE;
 
-        map[LBRACE] = todo;
-        map[RBRACE] = todo;
+        map[LBRACE] = NONE;
+        map[RBRACE] = NONE;
 
-        map[LBRACK] = todo;
-        map[RBRACK] = todo;
+        map[LBRACK] = NONE;
+        map[RBRACK] = NONE;
 
-        map[SEMICOLON] = todo;
+        map[SEMICOLON] = NONE;
         map[DOT] = 2;
         map[COMMA] = 17;
 
@@ -65,68 +70,68 @@ uint32_t precendence_of(token_type_e type) {
         map[GT] = 9;
         map[LT] = 9;
 
-        map[IMPORT] = todo;
-        map[KW_SPACE] = todo;
+        map[IMPORT] = NONE;
+        map[KW_SPACE] = NONE;
 
-        map[KW_FN] = todo;
-        map[KW_MT] = todo;
-        map[KW_CT] = todo;
-        map[KW_DT] = todo;
+        map[KW_FN] = NONE;
+        map[KW_MT] = NONE;
+        map[KW_CT] = NONE;
+        map[KW_DT] = NONE;
 
-        map[KW_COUT] = todo;
-        map[KW_CIN] = todo;
+        map[KW_COUT] = NONE;
+        map[KW_CIN] = NONE;
 
-        map[KW_BOX] = todo;
-        map[KW_BAG] = todo;
+        map[KW_BOX] = NONE;
+        map[KW_BAG] = NONE;
 
-        map[KW_MUT] = todo;
-        map[KW_REF] = todo;
-        map[KW_INT] = todo;
-        map[KW_UINT] = todo;
-        map[KW_ULONG] = todo;
-        map[KW_CHAR] = todo;
-        map[KW_FLT] = todo;
-        map[KW_DOUB] = todo;
-        map[KW_STR] = todo;
-        map[KW_BOOL] = todo;
-        map[KW_VOID] = todo;
-        map[KW_AUTO] = todo;
-        map[KW_COMP] = todo;
-        map[KW_HIDDEN] = todo;
+        map[KW_MUT] = NONE;
+        map[KW_REF] = NONE;
+        map[KW_INT] = NONE;
+        map[KW_UINT] = NONE;
+        map[KW_ULONG] = NONE;
+        map[KW_CHAR] = NONE;
+        map[KW_FLT] = NONE;
+        map[KW_DOUB] = NONE;
+        map[KW_STR] = NONE;
+        map[KW_BOOL] = NONE;
+        map[KW_VOID] = NONE;
+        map[KW_AUTO] = NONE;
+        map[KW_COMP] = NONE;
+        map[KW_HIDDEN] = NONE;
 
-        map[KW_TEMPLATE] = todo;
+        map[KW_TEMPLATE] = NONE;
 
-        map[KW_ENUM] = todo;
+        map[KW_ENUM] = NONE;
 
-        map[KW_STATIC] = todo;
+        map[KW_STATIC] = NONE;
 
-        map[KW_IF] = todo;
-        map[KW_ELSE] = todo;
-        map[KW_ELIF] = todo;
-        map[KW_WHILE] = todo;
-        map[KW_FOR] = todo;
-        map[KW_RETURN] = todo;
+        map[KW_IF] = NONE;
+        map[KW_ELSE] = NONE;
+        map[KW_ELIF] = NONE;
+        map[KW_WHILE] = NONE;
+        map[KW_FOR] = NONE;
+        map[KW_RETURN] = NONE;
 
-        map[KW_THIS] = todo;
-        map[KW_STRUCT] = todo;
+        map[KW_THIS] = NONE;
+        map[KW_STRUCT] = NONE;
         map[KW_NEW] = 3;
 
         // literals
-        map[SYMBOL] = todo;
-        map[CHAR_LIT] = todo;
-        map[INT_LIT] = todo;
-        map[LONG_LIT] = todo;
-        map[DOUB_LIT] = todo;
+        map[SYMBOL] = NONE;
+        map[CHAR_LIT] = NONE;
+        map[INT_LIT] = NONE;
+        map[LONG_LIT] = NONE;
+        map[DOUB_LIT] = NONE;
 
-        map[STR_LIT] = todo;
-        map[BOOL_LIT_FALSE] = todo;
-        map[BOOL_LIT_TRUE] = todo;
+        map[STR_LIT] = NONE;
+        map[BOOL_LIT_FALSE] = NONE;
+        map[BOOL_LIT_TRUE] = NONE;
 
-        map[RARROW] = todo;
+        map[RARROW] = NONE;
         map[SCOPE_RES] = 1;
-        map[TYPE_MOD] = todo;
+        map[TYPE_MOD] = NONE;
 
-        map[ASSIGN_LARROW] = todo;
+        map[ASSIGN_LARROW] = NONE;
         map[STREAM] = 16;
 
         map[INC] = 2;
@@ -164,4 +169,25 @@ uint32_t precendence_of(token_type_e type) {
         initialized = true;
     }
     return map[type];
+}
+
+typedef struct {
+    vector_t tkn_vec;
+    size_t pos;
+    size_t len;
+} parser_t;
+
+// TODO add eat, peek, prev
+
+ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec) {
+
+    // init ast & node arena
+    ast_node_arena_t arena = ast_node_arena_create_from_token_vec(token_vec);
+    ast_t ast;
+    ast.file_name = file_name; // view
+    ast.head = ast_node_arena_new_node(&arena, AST_FILE, NULL, 0);
+
+    // TODO, AST building up logic here
+
+    return ast;
 }

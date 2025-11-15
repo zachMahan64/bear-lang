@@ -3,6 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compile.h"
+#include "compiler/ast/parser.h"
 #include "compiler/lexer.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
@@ -27,12 +28,14 @@ void print_out_tkn_table(vector_t* tkn_vec) {
 
 int compile_file(const char* file_name) {
     int error_code = 0; // return error code if hit error
+
     src_buffer_t buffer = src_buffer_from_file_create(file_name);
-    // vector_t tkn_vec = lexer_naively_by_whitespace_tokenize_src_buffer(&buffer);
+
     if (!buffer.data) {
         return -1;
     }
     vector_t tkn_vec = lexer_tokenize_src_buffer(&buffer);
+
     // DEBUG
     printf("\n"
            " Contents of [%s]\n"
@@ -40,13 +43,18 @@ int compile_file(const char* file_name) {
            "%s\n"
            "=============================================\n",
            buffer.file_name, buffer.data);
+
     print_out_tkn_table(&tkn_vec);
+
+    parser_build_ast_from_file(buffer.file_name, tkn_vec);
+
     /* TODO:
      * TOKENIZE -> AST -> BYTECODE
-     * WIP         NS     WIP
+     * DONE        WIP     WIP
      * when we can, just output one unified bytecode file
      * with original_file_name.bvm
      */
+
     src_buffer_destroy(&buffer);
     return error_code;
 }
