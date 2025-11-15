@@ -23,4 +23,7 @@ void arena_destroy(arena_t* arena);
 // get an allocation from the arena of a specified size
 void* arena_alloc(arena_t* arena, size_t req_size_bytes);
 
+// testing
+void arena_log_debug_info(arena_t* arena);
+
 #endif // !CONTAINERS_ARENA_H

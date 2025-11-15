@@ -5,6 +5,7 @@
 #include "containers/arena.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 // arena chunk, composes the arena
@@ -81,4 +82,21 @@ void* arena_alloc(arena_t* arena, size_t req_size_bytes) {
     curr->used = new_used;
 
     return allocation;
+}
+
+void arena_log_debug_info(arena_t* arena) {
+    arena_chunk_t* curr = arena->head;
+    arena_chunk_t* next = NULL;
+    // stats
+    size_t chunk_num = 0;
+
+    while (curr) {
+        next = curr->next;
+        printf("chunk #%zu\n", chunk_num);
+        printf("-> cap : %zu\n", curr->cap);
+        printf("-> used: %zu\n", curr->used);
+        curr = next;
+        chunk_num++;
+    }
+    printf("total # of chunks: %zu\n", chunk_num);
 }

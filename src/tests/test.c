@@ -1,13 +1,16 @@
 #include "test.h"
 #include "compiler/token.h"
+#include "containers/arena.h"
 #include "containers/strimap.h"
 #include "containers/vector.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 void test_vector(void);
 void test_strimap(void);
+void test_arena(void);
 
-void test_run(void) { test_strimap(); }
+void test_run(void) { test_arena(); }
 
 void test_vector(void) {
     vector_t vec_int = vector_create_and_init(sizeof(int), 5);
@@ -38,4 +41,19 @@ void test_strimap(void) {
         printf("%-8s -> %-8d -> %-8s @ %-8zu\n", iter.curr->key, iter.curr->val,
                tkn_to_str_map[iter.curr->val], iter.bucket_idx);
     }
+}
+
+void test_arena(void) {
+    arena_t arena = arena_create(4096);
+    int* my_int = arena_alloc(&arena, sizeof(int));
+    *my_int = 5;
+    char* str_0 = arena_alloc(&arena, 4);
+    strcpy(str_0, "testing this string or something");
+    char* str_1 = arena_alloc(&arena, 4);
+    strcpy(str_1, "injected!?");
+    printf("my int: %d\n", *my_int);
+    printf("my string: %s\n", str_0);
+
+    // debug arena itself w/ info
+    arena_log_debug_info(&arena);
 }
