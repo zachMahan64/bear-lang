@@ -1,2 +1,2 @@
 doub myDouble = 123.456;
-int muInteger = 123456;
+int myInteger = 123456;

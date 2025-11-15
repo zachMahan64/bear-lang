@@ -7,7 +7,6 @@
 #include "compiler/token.h"
 #include "containers/vector.h"
 #include "file_io.h"
-#include "log.h"
 #include <stddef.h>
 #include <stdio.h>
 

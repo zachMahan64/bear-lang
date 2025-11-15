@@ -10,7 +10,10 @@
 #include <stddef.h>
 
 typedef enum {
+    // Unknown / fallback
+    AST_UNKNOWN,
     // TODO: very much needs to be updated for newer tokens
+    AST_FILE,
     // Expressions
     AST_BINARY_OP, // +, -, *, /, %, bitwise, comparison, boolean
     AST_UNARY_OP,  // unary -, !, ~, ++, --
@@ -19,7 +22,8 @@ typedef enum {
     AST_ASSIGN,    // = or <- assignment
 
     // Function/Call
-    AST_FUNCTION_DEF,  // KW_FN + body + params + return type
+    AST_FUNCTION_DEC, // KW_FN/MT/CT/DT + params + (body for definitions / null for declarations) +
+                      // return type
     AST_FUNCTION_CALL, // func(args...)
 
     // Control Flow
@@ -41,9 +45,6 @@ typedef enum {
     // Other / Punctuation / Scope
     AST_TYPE_MOD,  // :: for type modifiers
     AST_SCOPE_RES, // .. scope resolution
-
-    // Unknown / fallback
-    AST_UNKNOWN
 } ast_node_type_e;
 
 typedef struct ast_node {
