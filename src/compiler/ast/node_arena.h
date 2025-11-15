@@ -23,4 +23,8 @@ void ast_node_arena_destroy(ast_node_arena_t*);
 ast_node_t* ast_node_arena_new_node(ast_node_arena_t* arena, ast_node_type_e type, token_t* token,
                                     size_t child_count);
 
+// allocates and returns a pointer to a new node with its children
+ast_node_t* ast_node_arena_new_node_with_children(ast_node_arena_t* arena, ast_node_type_e type,
+                                                  token_t* token, size_t child_count, ...);
+
 #endif // !COMPILER_AST_NODE_ARENA

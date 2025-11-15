@@ -57,9 +57,7 @@ int read_file_to_src_buffer(src_buffer_t* buffer) {
     }
 
     buffer->data[size] = '\0'; // safe even if binary, optional
-    if (buffer->size) {
-        buffer->size = (size_t)size;
-    }
+    buffer->size = (size_t)size;
     return 0;
 }
 

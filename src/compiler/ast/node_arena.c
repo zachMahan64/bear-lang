@@ -5,6 +5,8 @@
 #include "compiler/ast/node_arena.h"
 #include "compiler/ast/node.h"
 #include "containers/arena.h"
+#include "containers/strimap.h"
+#include <stdarg.h>
 #include <stddef.h>
 
 ast_node_arena_t ast_node_arena_create_from_token_vec(vector_t vec) {
@@ -22,6 +24,36 @@ ast_node_t* ast_node_arena_new_node(ast_node_arena_t* arena, ast_node_type_e typ
     const size_t size = sizeof(ast_node_t) + (sizeof(ast_node_t*) * child_count);
 
     ast_node_t* node = (ast_node_t*)arena_alloc(&arena->arena, size);
+    if (node == NULL) {
+        return NULL;
+    }
+    node->type = type;
+    node->token = token;
+    node->child_count = child_count;
+
+    return node;
+}
+
+ast_node_t* ast_node_arena_new_node_with_children(ast_node_arena_t* arena, ast_node_type_e type,
+                                                  token_t* token, size_t child_count, ...) {
+    va_list args;
+
+    // init node
+    const size_t size = sizeof(ast_node_t) + (sizeof(ast_node_t*) * child_count);
+    ast_node_t* node = (ast_node_t*)arena_alloc(&arena->arena, size);
+    if (node == NULL) {
+        return NULL;
+    }
+    node->type = type;
+    node->token = token;
+    node->child_count = child_count;
+
+    // set children using va_list
+    va_start(args, child_count);
+    for (size_t i = 0; i < child_count; i++) {
+        node->children[i] = va_arg(args, ast_node_t*);
+    }
+    va_end(args);
 
     return node;
 }
