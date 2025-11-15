@@ -7,8 +7,8 @@
 #include "compiler/ast/node_arena.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
-#include <cstddef>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define MAX_ASSOCIATIVITY 18
@@ -171,18 +171,12 @@ uint32_t precendence_of_operator(token_type_e type) {
     return map[type];
 }
 
-typedef struct {
-    vector_t tkn_vec;
-    size_t pos;
-    size_t len;
-} parser_t;
-
-// TODO add eat, peek, prev
-
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec) {
-
+    // position tracking for consuming tokens
+    size_t pos = 0;
+    size_t end = token_vec.size;
     // init ast & node arena
-    ast_node_arena_t arena = ast_node_arena_create_from_token_vec(token_vec);
+    ast_node_arena_t arena = ast_node_arena_create_from_token_vec(&token_vec);
     ast_t ast;
     ast.file_name = file_name; // view
     ast.head = ast_node_arena_new_node(&arena, AST_FILE, NULL, 0);

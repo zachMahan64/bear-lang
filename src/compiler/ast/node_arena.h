@@ -15,7 +15,7 @@ typedef struct {
 } ast_node_arena_t;
 
 // creates an ast_node_arena_t based on the length of a vector of tokens
-ast_node_arena_t ast_node_arena_create_from_token_vec(vector_t vec);
+ast_node_arena_t ast_node_arena_create_from_token_vec(vector_t* vec);
 
 // destroy an ast_node_arena_t and clean up its resources
 void ast_node_arena_destroy(ast_node_arena_t*);

@@ -10,10 +10,10 @@
 #include <stddef.h>
 
 #define NODE_ARENA_EXPECTED_NUM_CHILDREN 4 // expected num
-ast_node_arena_t ast_node_arena_create_from_token_vec(vector_t vec) {
+ast_node_arena_t ast_node_arena_create_from_token_vec(vector_t* vec) {
     ast_node_arena_t node_arena;
     const size_t arena_chunk_size =
-        (vec.size * sizeof(ast_node_t)) +
+        (vec->size * sizeof(ast_node_t)) +
         (8L * NODE_ARENA_EXPECTED_NUM_CHILDREN); // tokens * size of a node + size of pointer *
                                                  // expected number of children
     node_arena.arena = arena_create(arena_chunk_size);
