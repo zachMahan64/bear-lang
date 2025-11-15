@@ -5,8 +5,8 @@
 #ifndef COMPILER_AST
 #define COMPILER_AST
 
+#include "compiler/token.h"
 #include "containers/vector.h"
-#include "token.h"
 #include <stddef.h>
 
 typedef enum {
@@ -52,16 +52,5 @@ typedef struct ast_node {
     size_t child_count;
     struct ast_node* children[]; // var len array of child nodes
 } ast_node_t;
-
-typedef struct ast_node_arena {
-    uint8_t* base;
-    size_t idx;
-    size_t cap;
-} ast_node_arena_t; // TODO use linked chunk based approach
-
-ast_node_arena_t ast_node_arena_create(size_t size);
-ast_node_arena_t ast_node_arena_create_from_vec(vector_t vec);
-void ast_node_arena_destroy(ast_node_arena_t*);
-ast_node_t* ast_node_arena_new_node(ast_node_arena_t* arena); // TODO impl
 
 #endif // !COMPILER_AST

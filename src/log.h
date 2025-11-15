@@ -5,6 +5,8 @@
 #ifndef LOG_H
 #define LOG_H
 
+#define DEBUG
+
 #ifdef DEBUG
 #include <printf.h>
 #include <stdio.h>

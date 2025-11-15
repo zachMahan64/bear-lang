@@ -19,7 +19,7 @@ typedef struct arena {
 // arena ctor (init) from a specified standard chunk size.
 arena_t arena_create(size_t chunk_cap_bytes);
 // arena dtor (clean up resources)
-void arena_destroy(arena_t* arena);
+void arena_destroy(arena_t* arena); // TODO define this
 // get an allocation from the arena of a specified size
 void* arena_alloc(arena_t* arena, size_t req_size_bytes);
 
