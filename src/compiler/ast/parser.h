@@ -6,6 +6,7 @@
 #define COMPILER_PARSER_H
 
 #include "compiler/ast/node.h"
+#include "compiler/ast/node_arena.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
 #include <stdint.h>
@@ -24,9 +25,13 @@ uint32_t precendence_of_operator(token_type_e type);
 typedef struct {
     ast_node_t* head;
     const char* file_name;
+    ast_node_arena_t arena;
 } ast_t;
 
-// build up an ast from a specified vector of tokens
+// ctor that builds up an ast from a specified vector of tokens
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec);
+
+// dtor for ast_t
+void ast_destroy(ast_t* ast);
 
 #endif // !COMPILER_PARSER_H

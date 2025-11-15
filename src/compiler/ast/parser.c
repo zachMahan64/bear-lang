@@ -164,25 +164,66 @@ uint32_t precendence_of_operator(token_type_e type) {
 
         map[EOF_TKN] = 18;
 
-        // TODO resolve these todos
-
         initialized = true;
     }
     return map[type];
 }
 
+typedef struct {
+    vector_t tokens;
+    size_t pos;
+    size_t end;
+} parser_t;
+
+// consume a token
+token_t* parser_eat(parser_t* parser) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    parser->pos++;
+    return tkn;
+}
+
+// peek next uneaten token without consuming it
+token_t* parser_peek(parser_t* parser) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    return tkn;
+}
+
+// see last eaten token
+token_t* parser_prev(parser_t* parser) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos - 1);
+    return tkn;
+}
+
+/*
+ * peek then conditionally eat
+ * \return token_t* to consumed token or NULL if not matched
+ */
+token_t* parser_match(parser_t* parser, token_type_e type) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    if (tkn->sym == type) {
+        parser->pos++;
+        return tkn;
+    }
+    return NULL;
+}
+
+// eat or throw
+token_t* parser_expect(parser_t* parser, token_type_e type /*, !!!! TODO, error list */);
+
 // primary function for parsing a file into an ast
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec) {
-    // position tracking for consuming tokens
-    size_t pos = 0;
-    size_t end = token_vec.size;
+    // position tracking, consuming tokens, etc
+    parser_t parser = {.tokens = token_vec, .pos = 0, .end = token_vec.size};
+
     // init ast & node arena
-    ast_node_arena_t arena = ast_node_arena_create_from_token_vec(&token_vec);
     ast_t ast;
+    ast.arena = ast_node_arena_create_from_token_vec(&token_vec);
     ast.file_name = file_name; // view
-    ast.head = ast_node_arena_new_node(&arena, AST_FILE, NULL, 0);
+    ast.head = ast_node_arena_new_node(&ast.arena, AST_FILE, NULL, 0);
 
     // TODO, AST building up logic here
 
     return ast;
 }
+
+void ast_destroy(ast_t* ast) { ast_node_arena_destroy(&ast->arena); }

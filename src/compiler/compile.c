@@ -3,7 +3,9 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compile.h"
+#include "compiler/ast/node_arena.h"
 #include "compiler/ast/parser.h"
+#include "compiler/errors/error_list.h"
 #include "compiler/lexer.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
@@ -29,12 +31,20 @@ void print_out_tkn_table(vector_t* tkn_vec) {
 int compile_file(const char* file_name) {
     int error_code = 0; // return error code if hit error
 
-    src_buffer_t buffer = src_buffer_from_file_create(file_name);
+    src_buffer_t src_buffer = src_buffer_from_file_create(file_name);
 
-    if (!buffer.data) {
+    if (!src_buffer.data) {
         return -1;
     }
-    vector_t tkn_vec = lexer_tokenize_src_buffer(&buffer);
+
+    // init error list for error tracking
+    error_list_t error_list = error_list_create(src_buffer);
+
+    // ---------------------- LEXING ----------------------
+
+    // TODO, CHECK FOR INDETERMINATE TOKENS (illegal/unrecognized symbols like `, @, $)
+    // probably just pass in error_list here
+    vector_t tkn_vec = lexer_tokenize_src_buffer(&src_buffer);
 
     // DEBUG
     printf("\n"
@@ -42,11 +52,15 @@ int compile_file(const char* file_name) {
            "=============================================\n"
            "%s\n"
            "=============================================\n",
-           buffer.file_name, buffer.data);
+           src_buffer.file_name, src_buffer.data);
 
     print_out_tkn_table(&tkn_vec);
 
-    parser_build_ast_from_file(buffer.file_name, tkn_vec);
+    // ----------------------------------------------------
+
+    // ---------------------- PARSING ---------------------
+    ast_t ast = parser_build_ast_from_file(src_buffer.file_name, tkn_vec);
+    // ----------------------------------------------------
 
     /* TODO:
      * TOKENIZE -> AST -> BYTECODE
@@ -54,7 +68,10 @@ int compile_file(const char* file_name) {
      * when we can, just output one unified bytecode file
      * with original_file_name.bvm
      */
-
-    src_buffer_destroy(&buffer);
+    // clean up resources
+    ast_destroy(&ast);
+    error_list_destroy(&error_list);
+    vector_destroy(&tkn_vec);
+    src_buffer_destroy(&src_buffer);
     return error_code;
 }

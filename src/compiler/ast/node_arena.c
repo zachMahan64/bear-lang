@@ -10,7 +10,7 @@
 #include <stddef.h>
 
 #define NODE_ARENA_EXPECTED_NUM_CHILDREN 4 // expected num
-ast_node_arena_t ast_node_arena_create_from_token_vec(vector_t* vec) {
+ast_node_arena_t ast_node_arena_create_from_token_vec(const vector_t* vec) {
     ast_node_arena_t node_arena;
     const size_t arena_chunk_size =
         (vec->size * sizeof(ast_node_t)) +
