@@ -5,6 +5,11 @@
 #ifndef COMPILER_ERROR_MESSAGES_H
 #define COMPILER_ERROR_MESSAGES_H
 
-// TODO
+#define ERROR_MESSAGES_NUM 32
+
+typedef enum { ERR_UNRECOGNIZED_SYMBOL } error_code_e;
+
+// getting the error message for a given error_code_e
+const char* error_message_for(error_code_e error_code);
 
 #endif

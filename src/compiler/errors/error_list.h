@@ -27,18 +27,19 @@ typedef struct {
 typedef struct {
     const src_buffer_t src_buffer; // holds file_name and view into src code inside a buffer
     vector_t list_vec;             // hold type compiler_error_t
-} error_list_t;
+} compiler_error_list_t;
 
 // ctor for error_list_t
-error_list_t error_list_create(src_buffer_t src_buffer);
+compiler_error_list_t compiler_error_list_create(src_buffer_t* src_buffer);
 
 // dtor for error_list_t
-void error_list_destroy(error_list_t* error_list);
+void compiler_error_list_destroy(compiler_error_list_t* error_list);
 
 // push an error onto the error list
-void error_list_push(error_list_t* list, const compiler_error_t* compiler_error);
+void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_t* compiler_error);
 
 // emplace an error onto the error list
-void error_list_emplace(error_list_t* list, token_t* token, const char* error_msg);
+void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
+                                 const char* error_msg);
 
 #endif // COMPILER_AST_ERROR_LIST_H

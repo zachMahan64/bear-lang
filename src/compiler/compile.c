@@ -38,7 +38,7 @@ int compile_file(const char* file_name) {
     }
 
     // init error list for error tracking
-    error_list_t error_list = error_list_create(src_buffer);
+    compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
 
     // ---------------------- LEXING ----------------------
 
@@ -70,7 +70,7 @@ int compile_file(const char* file_name) {
      */
     // clean up resources
     ast_destroy(&ast);
-    error_list_destroy(&error_list);
+    compiler_error_list_destroy(&error_list);
     vector_destroy(&tkn_vec);
     src_buffer_destroy(&src_buffer);
     return error_code;

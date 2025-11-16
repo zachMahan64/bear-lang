@@ -40,7 +40,7 @@
 
 ## Imperative and Arithmetic 
 
-#### A Game of Declarations and Operator Precedence
+#### Declarations and Operator Precedence
 - [ ] `int`, `long` (integral)
 - [ ] `flt`, `doub` (floating)
 - [ ] `char`

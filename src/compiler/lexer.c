@@ -3,7 +3,8 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/lexer.h"
-#include "containers/strimap.h"
+#include "compiler/errors/error_list.h"
+#include "compiler/errors/error_messages.h"
 #include "containers/vector.h"
 #include "log.h"
 #include "token.h"
@@ -275,4 +276,14 @@ lex_done:
     tkn.loc = loc; // set loc to currently tracked loc
     vector_push_back(&tkn_vec, &tkn);
     return tkn_vec;
+}
+
+void find_lexer_errors(const vector_t* token_vec, compiler_error_list_t* error_list) {
+    for (size_t i = 0; i < token_vec->size; i++) {
+        token_t* tkn = vector_at(token_vec, i);
+        if (tkn->sym == INDETERMINATE) {
+            compiler_error_list_emplace(error_list, tkn,
+                                        error_message_for(ERR_UNRECOGNIZED_SYMBOL));
+        }
+    }
 }
