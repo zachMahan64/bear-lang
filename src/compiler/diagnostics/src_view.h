@@ -8,9 +8,10 @@
 #include "containers/string_view.h"
 #include "file_io.h"
 /*
- * builds a string view that displays source code w/ a line number and cursor poiting to the
- * diagnostic
+ * builds a string view that displays source code
  */
 string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn);
+
+// TODO add a function to display a cursor pointing to the error using string_t
 
 #endif // !COMPILER_DIAGNOSTICS_SRC_VIEW_H
