@@ -41,10 +41,10 @@ int compile_file(const char* file_name) {
     compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
 
     // ---------------------- LEXING ----------------------
-
-    // TODO, CHECK FOR INDETERMINATE TOKENS (illegal/unrecognized symbols like `, @, $)
-    // probably just pass in error_list here
+    // build up token vector by lexing the source buffer
     vector_t tkn_vec = lexer_tokenize_src_buffer(&src_buffer);
+    // detect errors in lexing
+    find_lexer_errors(&tkn_vec, &error_list);
 
     // DEBUG
     printf("\n"
@@ -68,6 +68,10 @@ int compile_file(const char* file_name) {
      * when we can, just output one unified bytecode file
      * with original_file_name.bvm
      */
+
+    // display all comptime errors
+    compiler_error_list_print_all(&error_list);
+
     // clean up resources
     ast_destroy(&ast);
     compiler_error_list_destroy(&error_list);

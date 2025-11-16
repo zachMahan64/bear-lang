@@ -5,6 +5,8 @@
 #include "compiler/errors/error_list.h"
 #include "containers/vector.h"
 #include "file_io.h"
+#include <stddef.h>
+#include <stdio.h>
 
 #define ERROR_LIST_ARENA_CHUNK_CAP 4096
 #define ERROR_LIST_VEC_RESERVE_CAP 128
@@ -20,14 +22,22 @@ void compiler_error_list_destroy(compiler_error_list_t* error_list) {
     vector_destroy(&error_list->list_vec);
 }
 
-// push an error onto the error list
 void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_t* compiler_error) {
     vector_push_back(&list->list_vec, compiler_error);
 }
 
-// emplace an error onto the error list
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  const char* error_msg) {
     const compiler_error_t err = {.token = token, .error_msg = error_msg};
     vector_push_back(&list->list_vec, &err);
+}
+
+void compiler_error_list_print_all(const compiler_error_list_t* list) {
+    size_t len = list->list_vec.size;
+    for (size_t i = 0; i < len; i++) {
+        compiler_error_t* err = vector_at(&list->list_vec, i);
+        printf("[ERROR] %s in \"%s\" on line %zu \n", err->error_msg, list->src_buffer.file_name,
+               err->token->loc.line);
+    }
+    // TODO add line preview
 }

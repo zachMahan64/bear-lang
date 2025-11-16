@@ -42,4 +42,7 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  const char* error_msg);
 
+// print out all compiler errors
+void compiler_error_list_print_all(const compiler_error_list_t* list);
+
 #endif // COMPILER_AST_ERROR_LIST_H

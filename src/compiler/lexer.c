@@ -10,10 +10,6 @@
 #include "token.h"
 #include <stddef.h>
 
-/**
- * create a vector storing token_t from a specified src_buffer_t
- *
- */
 vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     vector_t tkn_vec =
         vector_create_and_reserve(sizeof(token_t), buf->size / LEXER_ESTIMATED_CHARS_PER_TOKEN);
@@ -278,12 +274,15 @@ lex_done:
     return tkn_vec;
 }
 
-void find_lexer_errors(const vector_t* token_vec, compiler_error_list_t* error_list) {
+bool find_lexer_errors(const vector_t* token_vec, compiler_error_list_t* error_list) {
+    bool at_least_one_err = false;
     for (size_t i = 0; i < token_vec->size; i++) {
         token_t* tkn = vector_at(token_vec, i);
         if (tkn->sym == INDETERMINATE) {
             compiler_error_list_emplace(error_list, tkn,
                                         error_message_for(ERR_UNRECOGNIZED_SYMBOL));
+            at_least_one_err = true;
         }
     }
+    return at_least_one_err;
 }
