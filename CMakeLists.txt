@@ -19,8 +19,9 @@ set(SRC
     src/compiler/compile.c
     src/compiler/lexer.c
     src/compiler/token.c
-    src/compiler/errors/error_list.c
-    src/compiler/errors/error_codes.c
+    src/compiler/diagnostics/error_list.c
+    src/compiler/diagnostics/error_codes.c
+    src/compiler/diagnostics/src_view.c
 
     src/containers/strimap.c
     src/containers/vector.c

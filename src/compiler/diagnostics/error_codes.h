@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef COMPILER_ERROR_CODES_H
-#define COMPILER_ERROR_CODES_H
+#ifndef COMPILER_DIAGNOSTICS_ERROR_CODES_H
+#define COMPILER_DIAGNOSTICS_ERROR_CODES_H
 
 #define ERROR_CODE_NUM 32
 

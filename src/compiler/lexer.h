@@ -5,7 +5,7 @@
 #ifndef COMPILER_LEXER
 #define COMPILER_LEXER
 
-#include "compiler/errors/error_list.h"
+#include "compiler/diagnostics/error_list.h"
 #include "containers/vector.h"
 #include "file_io.h"
 

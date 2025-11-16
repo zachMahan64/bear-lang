@@ -3,9 +3,8 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compile.h"
-#include "compiler/ast/node_arena.h"
 #include "compiler/ast/parser.h"
-#include "compiler/errors/error_list.h"
+#include "compiler/diagnostics/error_list.h"
 #include "compiler/lexer.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
@@ -63,8 +62,8 @@ int compile_file(const char* file_name) {
     // ----------------------------------------------------
 
     /* TODO:
-     * TOKENIZE -> AST -> BYTECODE
-     * DONE        WIP     WIP
+     * TOKENIZE -> AST -> SEMANTIC ANALYSIS -> BYTECODE
+     * DONE        WIP
      * when we can, just output one unified bytecode file
      * with original_file_name.bvm
      */

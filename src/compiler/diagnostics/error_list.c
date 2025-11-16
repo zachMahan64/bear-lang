@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#include "compiler/errors/error_list.h"
-#include "compiler/errors/error_codes.h"
+#include "compiler/diagnostics/error_list.h"
+#include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
 #include "containers/string_view.h"
 #include "containers/vector.h"
@@ -37,11 +37,6 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
 
 // TODO, ANSI escape strings?
 
-// builds a string view that displays the error diagnostic message in the context of the source code
-string_view_t build_line_preview_string_view(src_buffer_t* src_buffer, token_t* tkn) {
-    // TODO
-}
-
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
     size_t len = list->list_vec.size;
     for (size_t i = 0; i < len; i++) {
@@ -53,7 +48,7 @@ void compiler_error_list_print_all(const compiler_error_list_t* list) {
         // TODO add line preview
     }
     if (len == 0) {
-        return; // no erros
+        return; // no errors
     }
     if (len == 1) {
         puts("1 error generated.");

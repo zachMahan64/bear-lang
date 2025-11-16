@@ -2,10 +2,10 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef COMPILER_AST_ERROR_LIST_H
-#define COMPILER_AST_ERROR_LIST_H
+#ifndef COMPILER_DIAGNOSTICS_ERROR_LIST_H
+#define COMPILER_DIAGNOSTICS_ERROR_LIST_H
 
-#include "compiler/errors/error_codes.h"
+#include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
 #include "file_io.h"
@@ -46,4 +46,4 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
 // print out all compiler errors
 void compiler_error_list_print_all(const compiler_error_list_t* list);
 
-#endif // COMPILER_AST_ERROR_LIST_H
+#endif // COMPILER_DIAGNOSTICS_ERROR_LIST_H
