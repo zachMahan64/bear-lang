@@ -4,6 +4,7 @@
 
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/diagnostics/error_codes.h"
+#include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
 #include "containers/string_view.h"
 #include "containers/vector.h"
@@ -35,9 +36,8 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
     vector_push_back(&list->list_vec, &err);
 }
 
-// TODO, ANSI escape strings?
-
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
+    // add ANSI escape strings eventually
     size_t len = list->list_vec.size;
     for (size_t i = 0; i < len; i++) {
         compiler_error_t* err = vector_at(&list->list_vec, i);
@@ -45,7 +45,8 @@ void compiler_error_list_print_all(const compiler_error_list_t* list) {
                list->src_buffer.file_name,
                err->token->loc.line + 1); // line is zero-indexed, so adjust
 
-        // TODO add line preview
+        string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
+        printf("%.*s\n", (int)line_preview.len, line_preview.start);
     }
     if (len == 0) {
         return; // no errors
