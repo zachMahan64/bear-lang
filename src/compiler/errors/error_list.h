@@ -5,6 +5,7 @@
 #ifndef COMPILER_AST_ERROR_LIST_H
 #define COMPILER_AST_ERROR_LIST_H
 
+#include "compiler/errors/error_codes.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
 #include "file_io.h"
@@ -17,8 +18,8 @@
  * from both the token's data as well as the error message
  */
 typedef struct {
-    token_t* token;        // view into a tkn whose resources are externally managed
-    const char* error_msg; // should be a string literal
+    token_t* token;          // view into a tkn whose resources are externally managed
+    error_code_e error_code; // correspond to a type of compilation error
 } compiler_error_t;
 
 /*
@@ -40,7 +41,7 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 
 // emplace an error onto the error list
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
-                                 const char* error_msg);
+                                 error_code_e error_code);
 
 // print out all compiler errors
 void compiler_error_list_print_all(const compiler_error_list_t* list);

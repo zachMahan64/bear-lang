@@ -3,8 +3,8 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/lexer.h"
+#include "compiler/errors/error_codes.h"
 #include "compiler/errors/error_list.h"
-#include "compiler/errors/error_messages.h"
 #include "containers/vector.h"
 #include "log.h"
 #include "token.h"
@@ -279,8 +279,7 @@ bool find_lexer_errors(const vector_t* token_vec, compiler_error_list_t* error_l
     for (size_t i = 0; i < token_vec->size; i++) {
         token_t* tkn = vector_at(token_vec, i);
         if (tkn->sym == INDETERMINATE) {
-            compiler_error_list_emplace(error_list, tkn,
-                                        error_message_for(ERR_UNRECOGNIZED_SYMBOL));
+            compiler_error_list_emplace(error_list, tkn, ERR_UNRECOGNIZED_SYMBOL);
             at_least_one_err = true;
         }
     }

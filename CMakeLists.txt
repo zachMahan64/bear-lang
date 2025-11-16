@@ -20,7 +20,7 @@ set(SRC
     src/compiler/lexer.c
     src/compiler/token.c
     src/compiler/errors/error_list.c
-    src/compiler/errors/error_messages.c
+    src/compiler/errors/error_codes.c
 
     src/containers/strimap.c
     src/containers/vector.c

@@ -3,6 +3,9 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/errors/error_list.h"
+#include "compiler/errors/error_codes.h"
+#include "compiler/token.h"
+#include "containers/string_view.h"
 #include "containers/vector.h"
 #include "file_io.h"
 #include <stddef.h>
@@ -27,17 +30,34 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 }
 
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
-                                 const char* error_msg) {
-    const compiler_error_t err = {.token = token, .error_msg = error_msg};
+                                 error_code_e error_code) {
+    const compiler_error_t err = {.token = token, .error_code = error_code};
     vector_push_back(&list->list_vec, &err);
+}
+
+// TODO, ANSI escape strings?
+
+// builds a string view that displays the error diagnostic message in the context of the source code
+string_view_t build_line_preview_string_view(src_buffer_t* src_buffer, token_t* tkn) {
+    // TODO
 }
 
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
     size_t len = list->list_vec.size;
     for (size_t i = 0; i < len; i++) {
         compiler_error_t* err = vector_at(&list->list_vec, i);
-        printf("[ERROR] %s in \"%s\" on line %zu \n", err->error_msg, list->src_buffer.file_name,
-               err->token->loc.line);
+        printf("[ERROR] %s in \"%s\" on line %zu \n", error_message_for(err->error_code),
+               list->src_buffer.file_name,
+               err->token->loc.line + 1); // line is zero-indexed, so adjust
+
+        // TODO add line preview
     }
-    // TODO add line preview
+    if (len == 0) {
+        return; // no erros
+    }
+    if (len == 1) {
+        puts("1 error generated.");
+        return;
+    }
+    printf("%zu errors generated.\n", len);
 }
