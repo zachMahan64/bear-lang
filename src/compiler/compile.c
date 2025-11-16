@@ -3,6 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compile.h"
+#include "ansi_codes.h"
 #include "compiler/ast/parser.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/lexer.h"
@@ -70,6 +71,12 @@ int compile_file(const char* file_name) {
 
     // display all comptime errors
     compiler_error_list_print_all(&error_list);
+
+    if (compiler_error_list_empty(&error_list)) {
+        // codegen here
+    } else {
+        printf(ANSI_BOLD "Compilation stopped.\n" ANSI_RESET);
+    }
 
     // clean up resources
     ast_destroy(&ast);

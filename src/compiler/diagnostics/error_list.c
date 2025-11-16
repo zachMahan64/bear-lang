@@ -3,9 +3,11 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/diagnostics/error_list.h"
+#include "ansi_codes.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
+#include "containers/string.h"
 #include "containers/string_view.h"
 #include "containers/vector.h"
 #include "file_io.h"
@@ -36,17 +38,27 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
     vector_push_back(&list->list_vec, &err);
 }
 
+// private helper
+void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
+    compiler_error_t* err = vector_at(&list->list_vec, i);
+
+    printf(ANSI_BOLD "\"%s\" on line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
+                     "%s" ANSI_RESET "\n",
+           list->src_buffer.file_name, err->token->loc.line + 1,
+           error_message_for(err->error_code)); // line is zero-indexed, so adjust
+
+    string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
+    printf("%.*s\n", (int)line_preview.len, line_preview.start);
+
+    string_t cursor_string = get_cursor_string(line_preview, err->token, ANSI_RED_FG);
+    printf("%s\n", string_get_data(&cursor_string));
+    string_destroy(&cursor_string);
+}
+
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
-    // add ANSI escape strings eventually
     size_t len = list->list_vec.size;
     for (size_t i = 0; i < len; i++) {
-        compiler_error_t* err = vector_at(&list->list_vec, i);
-        printf("[ERROR] %s in \"%s\" on line %zu \n", error_message_for(err->error_code),
-               list->src_buffer.file_name,
-               err->token->loc.line + 1); // line is zero-indexed, so adjust
-
-        string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
-        printf("%.*s\n", (int)line_preview.len, line_preview.start);
+        compiler_error_print_err(list, i);
     }
     if (len == 0) {
         return; // no errors
@@ -55,5 +67,9 @@ void compiler_error_list_print_all(const compiler_error_list_t* list) {
         puts("1 error generated.");
         return;
     }
-    printf("%zu errors generated.\n", len);
+    printf(ANSI_BOLD "%zu errors generated.\n" ANSI_RESET, len);
+}
+
+bool compiler_error_list_empty(const compiler_error_list_t* list) {
+    return list->list_vec.size == 0;
 }

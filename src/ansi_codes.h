@@ -1,0 +1,36 @@
+#ifndef ANSI_CODES_H
+#define ANSI_CODES_H
+
+// ESC character
+#define ESC "\x1b"
+
+// Reset
+#define ANSI_RESET ESC "[0m"
+
+// Text Styles
+#define ANSI_BOLD ESC "[1m"
+#define ANSI_FAINT ESC "[2m"
+#define ANSI_ITALIC ESC "[3m"
+#define ANSI_UNDERLINE ESC "[4m"
+
+// Foreground Colors
+#define ANSI_BLACK_FG ESC "[30m"
+#define ANSI_RED_FG ESC "[31m"
+#define ANSI_GREEN_FG ESC "[32m"
+#define ANSI_YELLOW_FG ESC "[33m"
+#define ANSI_BLUE_FG ESC "[34m"
+#define ANSI_MAGENTA_FG ESC "[35m"
+#define ANSI_CYAN_FG ESC "[36m"
+#define ANSI_WHITE_FG ESC "[37m"
+
+// Background Colors
+#define ANSI_BLACK_BG ESC "[40m"
+#define ANSI_RED_BG ESC "[41m"
+#define ANSI_GREEN_BG ESC "[42m"
+#define ANSI_YELLOW_BG ESC "[43m"
+#define ANSI_BLUE_BG ESC "[44m"
+#define ANSI_MAGENTA_BG ESC "[45m"
+#define ANSI_CYAN_BG ESC "[46m"
+#define ANSI_WHITE_BG ESC "[47m"
+
+#endif // ANSI_CODES_H

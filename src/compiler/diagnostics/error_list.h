@@ -46,4 +46,7 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
 // print out all compiler errors
 void compiler_error_list_print_all(const compiler_error_list_t* list);
 
+// check if a compiler_error_list_t is empty
+bool compiler_error_list_empty(const compiler_error_list_t* list);
+
 #endif // COMPILER_DIAGNOSTICS_ERROR_LIST_H
