@@ -34,11 +34,14 @@ string_t get_cursor_string(string_view_t line_view, token_t* tkn, const char* an
     string_push_cstring(&str, ansi_color);
     string_push_cstring(&str, ANSI_BOLD);
     for (size_t i = 0; i < line_view.len; i++) {
-        if (i == tkn->loc.col) {
+        if (i >= tkn->loc.col && i < tkn->loc.col + tkn->length) {
             string_push_char(&str, '^');
             continue;
         }
-        string_push_char(&str, '~');
+        if (i >= tkn->loc.col + tkn->length) {
+            break;
+        }
+        string_push_char(&str, ' ');
     }
     string_push_cstring(&str, ANSI_RESET);
     return str;
