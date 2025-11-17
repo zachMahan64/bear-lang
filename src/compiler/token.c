@@ -345,6 +345,7 @@ const char* get_first_char_in_multichar_operator_token_map(void) {
         // comparison
         char_to_token_map['>'] = 1;
         char_to_token_map['<'] = 1;
+        char_to_token_map['='] = 1;
 
         initialized = true;
     }
@@ -396,10 +397,11 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length) {
     const char* char_to_token_map = get_char_to_token_map();
     if (length == 1) {
-        return char_to_token_map[start[0]]; // return token indexed at the mono-char literal, any
-                                            // invalid entry will be automatically '\0' since the
-                                            // map was statically initialized and token
-                                            // INDETERMINATE = 0
+        return char_to_token_map[(
+            unsigned char)start[0]]; // return token indexed at the mono-char literal, any
+                                     // invalid entry will be automatically '\0' since the
+                                     // map was statically initialized and token
+                                     // INDETERMINATE = 0
     }
     const strimap_t* string_to_token_map = get_string_to_token_strimap();
     token_type_e* tkn_type_ptr_from_multi_char_map =

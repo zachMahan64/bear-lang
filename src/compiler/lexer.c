@@ -89,7 +89,7 @@ lex_start:
     if (c == '/' && (pos + 1 < end_of_buf) && pos[1] == '/') {
         goto lex_inline_comment;
     }
-    if (first_char_in_multichar_operator_token_map[c]) {
+    if (first_char_in_multichar_operator_token_map[(unsigned char)c]) {
         goto lex_multichar_operator;
     };
     if (c == ' ' || c == '\t') {

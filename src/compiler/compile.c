@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-// #define COMPILER_DEBUG
+#define COMPILER_DEBUG
 
 // private debug helper
 void print_out_tkn_table(vector_t* tkn_vec) {

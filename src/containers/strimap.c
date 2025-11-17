@@ -61,7 +61,7 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
     memcpy(fresh_key, key, key_size);
     entry->key = fresh_key;
     entry->val = val;
-    entry->len = key_size;
+    entry->len = key_size - 1; // subtract away null term
     entry->next = map->buckets[bucket_idx];
     map->buckets[bucket_idx] = entry;
     ++map->size;
