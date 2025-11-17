@@ -228,6 +228,7 @@ lex_whitespace:
     goto lex_start;
 
 lex_newline:
+    // pushes any in-progress token, this part may break
     if (len != 0) {
         tkn = token_build(start, len, &loc);
         vector_push_back(&tkn_vec, &tkn);

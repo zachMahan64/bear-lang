@@ -1,19 +1,19 @@
 #ifndef ANSI_CODES_H
 #define ANSI_CODES_H
 
-// ESC character
+// escape sequence character
 #define ESC "\x1b"
 
-// Reset
+// reset
 #define ANSI_RESET ESC "[0m"
 
-// Text Styles
+// text styles
 #define ANSI_BOLD ESC "[1m"
 #define ANSI_FAINT ESC "[2m"
 #define ANSI_ITALIC ESC "[3m"
 #define ANSI_UNDERLINE ESC "[4m"
 
-// Foreground Colors
+// foreground Colors
 #define ANSI_BLACK_FG ESC "[30m"
 #define ANSI_RED_FG ESC "[31m"
 #define ANSI_GREEN_FG ESC "[32m"
@@ -23,7 +23,7 @@
 #define ANSI_CYAN_FG ESC "[36m"
 #define ANSI_WHITE_FG ESC "[37m"
 
-// Background Colors
+// background colors
 #define ANSI_BLACK_BG ESC "[40m"
 #define ANSI_RED_BG ESC "[41m"
 #define ANSI_GREEN_BG ESC "[42m"
