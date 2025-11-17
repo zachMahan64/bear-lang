@@ -13,162 +13,163 @@
 #define TOKEN_STRING_TO_TOKEN_MAP_SIZE 256 // abitrary, but large enough to reduce hashing conflicts
 
 typedef enum token_type {
-    NONE = 0,
-    INDETERMINATE = 0,
+    TOK_NONE = 0,
+    TOK_INDETERMINATE = 0,
     // mono-char tokens
     // delim
     // brackets, etc
-    LPAREN = '(',
-    RPAREN = ')', // ()
-    LBRACE = '{',
-    RBRACE = '}', // {}
-    LBRACK = '[',
-    RBRACK = ']', // []
+    TOK_LPAREN = '(',
+    TOK_RPAREN = ')', // ()
+    TOK_LBRACE = '{',
+    TOK_RBRACE = '}', // {}
+    TOK_LBRACK = '[',
+    TOK_RBRACK = ']', // []
 
     // punc
-    SEMICOLON = ';',
-    DOT = '.',
-    COMMA = ',',
-    COLON = ':',
+    TOK_SEMICOLON = ';',
+    TOK_DOT = '.',
+    TOK_COMMA = ',',
+    TOK_COLON = ':',
 
     // assign
-    ASSIGN_EQ = '=', // =
+    TOK_ASSIGN_EQ = '=', // =
 
     // arith
-    PLUS = '+',   // +
-    MINUS = '-',  // -
-    MULT = '*',   // *
-    DIVIDE = '/', // /
-    MOD = '%',    // %
+    TOK_PLUS = '+',   // +
+    TOK_MINUS = '-',  // -
+    TOK_MULT = '*',   // *
+    TOK_DIVIDE = '/', // /
+    TOK_MOD = '%',    // %
 
     // bitwise
-    BIT_OR = '|',  // |
-    BIT_AND = '&', // &
-    BIT_NOT = '~', // ~
-    BIT_XOR = '^', // ^
+    TOK_BIT_OR = '|',  // |
+    TOK_BIT_AND = '&', // &
+    TOK_BIT_NOT = '~', // ~
+    TOK_BIT_XOR = '^', // ^
 
     // bool
-    BOOL_NOT = '!', // !
+    TOK_BOOL_NOT = '!', // !
 
     // comparison
-    GT = '>', // will also be used as closing bracket in future generics
-    LT = '<', // will also be used as opening bracket in future generics
+    TOK_GT = '>', // will also be used as closing bracket in future generics
+    TOK_LT = '<', // will also be used as opening bracket in future generics
 
     // file
-    IMPORT = 256,
+    TOK_KW_IMPORT = 256,
     // keywords
     // namespace
-    KW_SPACE, // space
+    TOK_KW_SPACE, // space
     // function
-    KW_FN,
-    KW_MT, // method, for implicit this ptr for data-associated behavior in structs
-    KW_CT, // ctor
-    KW_DT, // dtor
+    TOK_KW_FN,
+    TOK_KW_MT, // method, for implicit this ptr for data-associated behavior in structs
+    TOK_KW_CT, // ctor
+    TOK_KW_DT, // dtor
     // stdou
-    KW_COUT, // example: cout <<- "Hello World";
-    KW_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >> some_val;
+    TOK_KW_COUT, // example: cout <<- "Hello World";
+    TOK_KW_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
+                 // some_val;
     // types
-    KW_BOX, // example: box int
-    KW_BAG, // example: bag int
-    KW_MUT, // example: mut int or box::const int
-    KW_REF, // example: ref::int
-    KW_INT,
-    KW_UINT,
-    KW_LONG,
-    KW_ULONG,
-    KW_CHAR,
-    KW_FLT,
-    KW_DOUB,
-    KW_STR,
-    KW_BOOL,
-    KW_VOID,
-    KW_AUTO,
-    KW_COMP,     // compile-time (like constexpr)
-    KW_HIDDEN,   // like private, but with slightly different semantics because BearLang has no
-                 // inheritance, so this is really just a hidden data member or function/method
-    KW_TEMPLATE, // like a C++ template, with much more basic features (for), just like a smarter
-                 // macro
-    KW_ENUM,     // scoped/type-checked enums
+    TOK_KW_BOX, // example: box int
+    TOK_KW_BAG, // example: bag int
+    TOK_KW_MUT, // example: mut int or box::const int
+    TOK_KW_REF, // example: ref::int
+    TOK_KW_INT,
+    TOK_KW_UINT,
+    TOK_KW_LONG,
+    TOK_KW_ULONG,
+    TOK_KW_CHAR,
+    TOK_KW_FLT,
+    TOK_KW_DOUB,
+    TOK_KW_STR,
+    TOK_KW_BOOL,
+    TOK_KW_VOID,
+    TOK_KW_AUTO,
+    TOK_KW_COMP,     // compile-time (like constexpr)
+    TOK_KW_HIDDEN,   // like private, but with slightly different semantics because BearLang has no
+                     // inheritance, so this is really just a hidden data member or function/method
+    TOK_KW_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
+                     // smarter macro
+    TOK_KW_ENUM, // scoped/type-checked enums
     // memory location identifiers
-    KW_STATIC,
+    TOK_KW_STATIC,
 
     // comparison
-    KW_IF,
-    KW_ELSE,
-    KW_ELIF,
-    KW_WHILE,
-    KW_FOR,
-    KW_IN, // example: for (int a in myArr) {...}
-    KW_RETURN,
+    TOK_KW_IF,
+    TOK_KW_ELSE,
+    TOK_KW_ELIF,
+    TOK_KW_WHILE,
+    TOK_KW_FOR,
+    TOK_KW_IN, // example: for (int a in myArr) {...}
+    TOK_KW_RETURN,
 
     // structures (incorp after prodcedural is working)
-    KW_THIS,
-    KW_STRUCT,
-    KW_NEW,
+    TOK_KW_THIS,
+    TOK_KW_STRUCT,
+    TOK_KW_NEW,
 
     // variable or function name
-    SYMBOL,
+    TOK_SYMBOL,
 
     // built-in types
-    CHAR_LIT,
-    INT_LIT,
-    LONG_LIT,
-    DOUB_LIT, // currently float literals not suported, so we would need to downcast at comptime
-    STR_LIT,
-    BOOL_LIT_FALSE,
-    BOOL_LIT_TRUE,
+    TOK_CHAR_LIT,
+    TOK_INT_LIT,
+    TOK_LONG_LIT,
+    TOK_DOUB_LIT, // currently float literals not suported, so we would need to downcast at comptime
+    TOK_STR_LIT,
+    TOK_BOOL_LIT_FALSE,
+    TOK_BOOL_LIT_TRUE,
 
     // punc
-    RARROW,    // -> for return types
-    SCOPE_RES, // ..
-    TYPE_MOD,  // :: , for example, box::int
+    TOK_RARROW,    // -> for return types
+    TOK_SCOPE_RES, // ..
+    TOK_TYPE_MOD,  // :: , for example, box::int
 
     // operators
     // assign
-    ASSIGN_LARROW, // <-
+    TOK_ASSIGN_LARROW, // <-
     // stream
-    STREAM, // <<-
+    TOK_STREAM, // <<-
     // arith
-    INC, // ++
-    DEC, // --
+    TOK_INC, // ++
+    TOK_DEC, // --
     // bitwise
-    LSH,  // <<
-    RSHL, // >>
-    RSHA, // >>>
+    TOK_LSH,  // <<
+    TOK_RSHL, // >>
+    TOK_RSHA, // >>>
     // bool
-    BOOL_OR,  // ||
-    BOOL_AND, // &&
+    TOK_BOOL_OR,  // ||
+    TOK_BOOL_AND, // &&
     // comparison
-    GE,
-    LE,
-    BOOL_EQ,
-    NE,
+    TOK_GE,
+    TOK_LE,
+    TOK_BOOL_EQ,
+    TOK_NE,
 
     // --------------- compound assignment -----------------
     // arithmetic
-    ASSIGN_PLUS_EQ,  // +=
-    ASSIGN_MINUS_EQ, // -=
-    ASSIGN_MULT_EQ,  // *=
-    ASSIGN_DIV_EQ,   // /=
-    ASSIGN_MOD_EQ,   // %=
+    TOK_ASSIGN_PLUS_EQ,  // +=
+    TOK_ASSIGN_MINUS_EQ, // -=
+    TOK_ASSIGN_MULT_EQ,  // *=
+    TOK_ASSIGN_DIV_EQ,   // /=
+    TOK_ASSIGN_MOD_EQ,   // %=
 
     // bitwise
-    ASSIGN_AND_EQ,  // &=
-    ASSIGN_OR_EQ,   // |=
-    ASSIGN_XOR_EQ,  // ^=
-    ASSIGN_LSH_EQ,  // <<=
-    ASSIGN_RSHL_EQ, // >>=
-    ASSIGN_RSHA_EQ, // >>>=
+    TOK_ASSIGN_AND_EQ,  // &=
+    TOK_ASSIGN_OR_EQ,   // |=
+    TOK_ASSIGN_XOR_EQ,  // ^=
+    TOK_ASSIGN_LSH_EQ,  // <<=
+    TOK_ASSIGN_RSHL_EQ, // >>=
+    TOK_ASSIGN_RSHA_EQ, // >>>=
 
     // EOF
-    EOF_TKN,
+    TOK_EOF,
 
     // error states (represent an error in lexing, should never happen and should not be triggered
     // by syntax errors)
-    LEX_ERROR_EMPTY_TOKEN,
+    TOK_LEX_ERROR_EMPTY_TOKEN,
 
     // num token_type_e
-    TKN__NUM,
+    TOK__NUM,
 } token_type_e;
 
 typedef union {

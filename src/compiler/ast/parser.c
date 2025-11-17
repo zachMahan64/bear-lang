@@ -38,133 +38,133 @@ associativity_e associativity_of(uint32_t precedence) {
 uint32_t precendence_of_operator(token_type_e type) {
     const uint32_t NONE = 0; // TODO, resolve if any of these shouldn't be none
     static bool initialized = false;
-    static uint32_t map[TKN__NUM];
+    static uint32_t map[TOK__NUM];
     if (!initialized) {
-        map[LPAREN] = NONE;
-        map[RPAREN] = NONE;
+        map[TOK_LPAREN] = NONE;
+        map[TOK_RPAREN] = NONE;
 
-        map[LBRACE] = NONE;
-        map[RBRACE] = NONE;
+        map[TOK_LBRACE] = NONE;
+        map[TOK_RBRACE] = NONE;
 
-        map[LBRACK] = NONE;
-        map[RBRACK] = NONE;
+        map[TOK_LBRACK] = NONE;
+        map[TOK_RBRACK] = NONE;
 
-        map[SEMICOLON] = NONE;
-        map[DOT] = 2;
-        map[COMMA] = 17;
+        map[TOK_SEMICOLON] = NONE;
+        map[TOK_DOT] = 2;
+        map[TOK_COMMA] = 17;
 
-        map[ASSIGN_EQ] = 16;
+        map[TOK_ASSIGN_EQ] = 16;
 
-        map[PLUS] = 6;
-        map[MINUS] = 6;
+        map[TOK_PLUS] = 6;
+        map[TOK_MINUS] = 6;
 
-        map[MULT] = 5;
-        map[DIVIDE] = 5;
-        map[MOD] = 5;
+        map[TOK_MULT] = 5;
+        map[TOK_DIVIDE] = 5;
+        map[TOK_MOD] = 5;
 
-        map[BIT_OR] = 13;
-        map[BIT_AND] = 11;
-        map[BIT_NOT] = 3;
-        map[BIT_XOR] = 12;
+        map[TOK_BIT_OR] = 13;
+        map[TOK_BIT_AND] = 11;
+        map[TOK_BIT_NOT] = 3;
+        map[TOK_BIT_XOR] = 12;
 
-        map[BOOL_NOT] = 3;
+        map[TOK_BOOL_NOT] = 3;
 
-        map[GT] = 9;
-        map[LT] = 9;
+        map[TOK_GT] = 9;
+        map[TOK_LT] = 9;
 
-        map[IMPORT] = NONE;
-        map[KW_SPACE] = NONE;
+        map[TOK_KW_IMPORT] = NONE;
+        map[TOK_KW_SPACE] = NONE;
 
-        map[KW_FN] = NONE;
-        map[KW_MT] = NONE;
-        map[KW_CT] = NONE;
-        map[KW_DT] = NONE;
+        map[TOK_KW_FN] = NONE;
+        map[TOK_KW_MT] = NONE;
+        map[TOK_KW_CT] = NONE;
+        map[TOK_KW_DT] = NONE;
 
-        map[KW_COUT] = NONE;
-        map[KW_CIN] = NONE;
+        map[TOK_KW_COUT] = NONE;
+        map[TOK_KW_CIN] = NONE;
 
-        map[KW_BOX] = NONE;
-        map[KW_BAG] = NONE;
+        map[TOK_KW_BOX] = NONE;
+        map[TOK_KW_BAG] = NONE;
 
-        map[KW_MUT] = NONE;
-        map[KW_REF] = NONE;
-        map[KW_INT] = NONE;
-        map[KW_UINT] = NONE;
-        map[KW_ULONG] = NONE;
-        map[KW_CHAR] = NONE;
-        map[KW_FLT] = NONE;
-        map[KW_DOUB] = NONE;
-        map[KW_STR] = NONE;
-        map[KW_BOOL] = NONE;
-        map[KW_VOID] = NONE;
-        map[KW_AUTO] = NONE;
-        map[KW_COMP] = NONE;
-        map[KW_HIDDEN] = NONE;
+        map[TOK_KW_MUT] = NONE;
+        map[TOK_KW_REF] = NONE;
+        map[TOK_KW_INT] = NONE;
+        map[TOK_KW_UINT] = NONE;
+        map[TOK_KW_ULONG] = NONE;
+        map[TOK_KW_CHAR] = NONE;
+        map[TOK_KW_FLT] = NONE;
+        map[TOK_KW_DOUB] = NONE;
+        map[TOK_KW_STR] = NONE;
+        map[TOK_KW_BOOL] = NONE;
+        map[TOK_KW_VOID] = NONE;
+        map[TOK_KW_AUTO] = NONE;
+        map[TOK_KW_COMP] = NONE;
+        map[TOK_KW_HIDDEN] = NONE;
 
-        map[KW_TEMPLATE] = NONE;
+        map[TOK_KW_TEMPLATE] = NONE;
 
-        map[KW_ENUM] = NONE;
+        map[TOK_KW_ENUM] = NONE;
 
-        map[KW_STATIC] = NONE;
+        map[TOK_KW_STATIC] = NONE;
 
-        map[KW_IF] = NONE;
-        map[KW_ELSE] = NONE;
-        map[KW_ELIF] = NONE;
-        map[KW_WHILE] = NONE;
-        map[KW_FOR] = NONE;
-        map[KW_RETURN] = NONE;
+        map[TOK_KW_IF] = NONE;
+        map[TOK_KW_ELSE] = NONE;
+        map[TOK_KW_ELIF] = NONE;
+        map[TOK_KW_WHILE] = NONE;
+        map[TOK_KW_FOR] = NONE;
+        map[TOK_KW_RETURN] = NONE;
 
-        map[KW_THIS] = NONE;
-        map[KW_STRUCT] = NONE;
-        map[KW_NEW] = 3;
+        map[TOK_KW_THIS] = NONE;
+        map[TOK_KW_STRUCT] = NONE;
+        map[TOK_KW_NEW] = 3;
 
         // literals
-        map[SYMBOL] = NONE;
-        map[CHAR_LIT] = NONE;
-        map[INT_LIT] = NONE;
-        map[LONG_LIT] = NONE;
-        map[DOUB_LIT] = NONE;
+        map[TOK_SYMBOL] = NONE;
+        map[TOK_CHAR_LIT] = NONE;
+        map[TOK_INT_LIT] = NONE;
+        map[TOK_LONG_LIT] = NONE;
+        map[TOK_DOUB_LIT] = NONE;
 
-        map[STR_LIT] = NONE;
-        map[BOOL_LIT_FALSE] = NONE;
-        map[BOOL_LIT_TRUE] = NONE;
+        map[TOK_STR_LIT] = NONE;
+        map[TOK_BOOL_LIT_FALSE] = NONE;
+        map[TOK_BOOL_LIT_TRUE] = NONE;
 
-        map[RARROW] = NONE;
-        map[SCOPE_RES] = 1;
-        map[TYPE_MOD] = NONE;
+        map[TOK_RARROW] = NONE;
+        map[TOK_SCOPE_RES] = 1;
+        map[TOK_TYPE_MOD] = NONE;
 
-        map[ASSIGN_LARROW] = NONE;
-        map[STREAM] = 16;
+        map[TOK_ASSIGN_LARROW] = NONE;
+        map[TOK_STREAM] = 16;
 
-        map[INC] = 2;
-        map[DEC] = 2;
+        map[TOK_INC] = 2;
+        map[TOK_DEC] = 2;
 
-        map[LSH] = 7;
-        map[RSHL] = 7;
-        map[RSHA] = 7;
+        map[TOK_LSH] = 7;
+        map[TOK_RSHL] = 7;
+        map[TOK_RSHA] = 7;
 
-        map[BOOL_OR] = 15;
-        map[BOOL_AND] = 14;
+        map[TOK_BOOL_OR] = 15;
+        map[TOK_BOOL_AND] = 14;
 
-        map[GE] = 9;
-        map[LE] = 9;
-        map[BOOL_EQ] = 10;
-        map[NE] = 10;
+        map[TOK_GE] = 9;
+        map[TOK_LE] = 9;
+        map[TOK_BOOL_EQ] = 10;
+        map[TOK_NE] = 10;
 
-        map[ASSIGN_PLUS_EQ] = 16;
-        map[ASSIGN_MINUS_EQ] = 16;
-        map[ASSIGN_MULT_EQ] = 16;
-        map[ASSIGN_DIV_EQ] = 16;
-        map[ASSIGN_MOD_EQ] = 16;
+        map[TOK_ASSIGN_PLUS_EQ] = 16;
+        map[TOK_ASSIGN_MINUS_EQ] = 16;
+        map[TOK_ASSIGN_MULT_EQ] = 16;
+        map[TOK_ASSIGN_DIV_EQ] = 16;
+        map[TOK_ASSIGN_MOD_EQ] = 16;
 
-        map[ASSIGN_AND_EQ] = 16;
-        map[ASSIGN_OR_EQ] = 16;
-        map[ASSIGN_XOR_EQ] = 16;
-        map[ASSIGN_LSH_EQ] = 16;
-        map[ASSIGN_RSHL_EQ] = 16;
-        map[ASSIGN_RSHA_EQ] = 16;
+        map[TOK_ASSIGN_AND_EQ] = 16;
+        map[TOK_ASSIGN_OR_EQ] = 16;
+        map[TOK_ASSIGN_XOR_EQ] = 16;
+        map[TOK_ASSIGN_LSH_EQ] = 16;
+        map[TOK_ASSIGN_RSHL_EQ] = 16;
+        map[TOK_ASSIGN_RSHA_EQ] = 16;
 
-        map[EOF_TKN] = 18;
+        map[TOK_EOF] = 18;
 
         initialized = true;
     }
@@ -180,7 +180,7 @@ typedef struct {
 // consume a token
 token_t* parser_eat(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (tkn->sym != EOF_TKN) {
+    if (tkn->sym != TOK_EOF) {
         parser->pos++;
     }
     return tkn;
@@ -208,7 +208,7 @@ token_t* parser_prev(parser_t* parser) {
 token_t* parser_match(parser_t* parser, token_type_e type) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->sym == type) {
-        if (tkn->sym != EOF_TKN) {
+        if (tkn->sym != TOK_EOF) {
             parser->pos++;
         }
         return tkn;
@@ -243,7 +243,7 @@ token_t* parser_expect(parser_t* parser, token_type_e expected_type,
 // returns true when parser is at EOF
 bool parser_eof(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    return tkn->sym == EOF_TKN;
+    return tkn->sym == TOK_EOF;
 }
 
 // primary function for parsing a file into an ast
@@ -261,11 +261,11 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
     // TODO, AST building up logic here
     token_t* tkn = NULL; // scratch token
     while (!parser_eof(&parser)) {
-        tkn = parser_match(&parser, INDETERMINATE);
+        tkn = parser_match(&parser, TOK_INDETERMINATE);
         if (tkn) {
             compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
-        } else if (parser_match(&parser, KW_CHAR)) {
-            parser_expect(&parser, SYMBOL, error_list, ERR_EXPECTED_VARIABLE_ID);
+        } else if (parser_match(&parser, TOK_KW_CHAR)) {
+            parser_expect(&parser, TOK_SYMBOL, error_list, ERR_EXPECTED_VARIABLE_ID);
         } else {
             parser_eat(&parser);
         }

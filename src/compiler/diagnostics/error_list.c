@@ -35,7 +35,7 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  error_code_e error_code) {
     const compiler_error_t err = {
-        .token = token, .error_code = error_code, .expected_token_type = NONE};
+        .token = token, .error_code = error_code, .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
 }
 
