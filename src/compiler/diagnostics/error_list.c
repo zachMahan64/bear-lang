@@ -7,7 +7,6 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
-#include "containers/strimap.h"
 #include "containers/string.h"
 #include "containers/string_view.h"
 #include "containers/vector.h"
@@ -40,8 +39,9 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
     vector_push_back(&list->list_vec, &err);
 }
 
-void compiler_error_list_emplace_expected(compiler_error_list_t* list, token_t* token,
-                                          error_code_e error_code, token_type_e expected_tkn_type) {
+void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, token_t* token,
+                                                error_code_e error_code,
+                                                token_type_e expected_tkn_type) {
     const compiler_error_t err = {
         .token = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
     vector_push_back(&list->list_vec, &err);
@@ -67,11 +67,10 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstring(&line_under_num_str, "  |");
 
     // do printing now that we have all strings setup
-    printf(
-        ANSI_BOLD "\"%s\": line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD "%s" ANSI_RESET
-                  "\n",
-        list->src_buffer.file_name, line,
-        error_message_for_code(err->error_code)); // TODO impl proper logic for expected tokens here
+    printf(ANSI_BOLD "\"%s\": line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
+                     "%s%s" ANSI_RESET "\n",
+           list->src_buffer.file_name, line, error_message_for_code(err->error_code),
+           error_message_context_for(err));
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
     printf(ANSI_BOLD "%s" ANSI_RESET " %.*s\n", string_get_data(&line_num_str),

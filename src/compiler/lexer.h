@@ -15,9 +15,5 @@
  * create a vector storing token_t from a specified src_buffer_t
  */
 vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf);
-/*
- * locates errors inside of the lexed token vector
- */
-bool find_lexer_errors(const vector_t* token_vec, compiler_error_list_t* error_list);
 
 #endif // !COMPILER_LEXER

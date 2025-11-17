@@ -279,15 +279,3 @@ lex_done:
     vector_push_back(&tkn_vec, &tkn);
     return tkn_vec;
 }
-
-bool find_lexer_errors(const vector_t* token_vec, compiler_error_list_t* error_list) {
-    bool at_least_one_err = false;
-    for (size_t i = 0; i < token_vec->size; i++) {
-        token_t* tkn = vector_at(token_vec, i);
-        if (tkn->sym == INDETERMINATE) {
-            compiler_error_list_emplace(error_list, tkn, ERR_UNRECOGNIZED_SYMBOL);
-            at_least_one_err = true;
-        }
-    }
-    return at_least_one_err;
-}

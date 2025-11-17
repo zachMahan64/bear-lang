@@ -180,11 +180,13 @@ typedef struct {
 // consume a token
 token_t* parser_eat(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    parser->pos++;
+    if (tkn->sym != EOF_TKN) {
+        parser->pos++;
+    }
     return tkn;
 }
 
-// peek next uneaten token without consuming it
+// peek current uneaten token without consuming it
 token_t* parser_peek(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     return tkn;
@@ -192,6 +194,9 @@ token_t* parser_peek(parser_t* parser) {
 
 // see last eaten token
 token_t* parser_prev(parser_t* parser) {
+    if (parser->pos == 0) {
+        return NULL;
+    }
     token_t* tkn = vector_at(&parser->tokens, parser->pos - 1);
     return tkn;
 }
@@ -203,22 +208,42 @@ token_t* parser_prev(parser_t* parser) {
 token_t* parser_match(parser_t* parser, token_type_e type) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->sym == type) {
-        parser->pos++;
+        if (tkn->sym != EOF_TKN) {
+            parser->pos++;
+        }
         return tkn;
     }
     return NULL;
 }
 
 // eat or return NULL and add to error_list
-token_t* parser_expect(parser_t* parser, token_type_e expected_type,
-                       compiler_error_list_t* error_list) {
+token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
+                             compiler_error_list_t* error_list) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->sym == expected_type) {
         parser->pos++;
         return tkn;
     }
-    compiler_error_list_emplace_expected(error_list, tkn, ERR_EXPECTED_TOKEN, expected_type);
+    compiler_error_list_emplace_expected_token(error_list, tkn, ERR_EXPECTED_TOKEN, expected_type);
     return NULL;
+}
+
+// eat or return NULL and add a specific error to error_list (not just Expected token: __)
+token_t* parser_expect(parser_t* parser, token_type_e expected_type,
+                       compiler_error_list_t* error_list, error_code_e code) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    if (tkn->sym == expected_type) {
+        parser->pos++;
+        return tkn;
+    }
+    compiler_error_list_emplace(error_list, tkn, code);
+    return NULL;
+}
+
+// returns true when parser is at EOF
+bool parser_eof(parser_t* parser) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    return tkn->sym == EOF_TKN;
 }
 
 // primary function for parsing a file into an ast
@@ -234,6 +259,17 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
     ast.head = ast_node_arena_new_node(&ast.arena, AST_FILE, NULL, 0);
 
     // TODO, AST building up logic here
+    token_t* tkn = NULL; // scratch token
+    while (!parser_eof(&parser)) {
+        tkn = parser_match(&parser, INDETERMINATE);
+        if (tkn) {
+            compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
+        } else if (parser_match(&parser, KW_CHAR)) {
+            parser_expect(&parser, SYMBOL, error_list, ERR_EXPECTED_VARIABLE_ID);
+        } else {
+            parser_eat(&parser);
+        }
+    }
 
     return ast;
 }

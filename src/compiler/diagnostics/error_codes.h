@@ -5,9 +5,32 @@
 #ifndef COMPILER_DIAGNOSTICS_ERROR_CODES_H
 #define COMPILER_DIAGNOSTICS_ERROR_CODES_H
 
-typedef enum { ERR_UNRECOGNIZED_SYMBOL, ERR_EXPECTED_TOKEN, ERR__COUNT } error_code_e;
+#include "compiler/token.h"
+
+typedef enum {
+    ERR_ILLEGAL_IDENTIFER,
+    ERR_EXPECTED_TOKEN,
+    ERR_EXPECTED_VARIABLE_ID,
+    ERR__COUNT
+} error_code_e;
+
+typedef struct {
+    token_t* token;          // view into a tkn whose resources are externally managed
+    error_code_e error_code; // correspond to a type of compilation error
+    // corresponds to the type of an expected token, should be NONE by default
+    token_type_e expected_token_type;
+} compiler_error_t;
 
 // getting the error message for a given error_code_e
 const char* error_message_for_code(error_code_e error_code);
+
+/* gives addition context for appropriate compiler_error_t's
+ * this is safe to call on any compiler_error_t, regardless of its error_code
+ * primary use is to get this kind of string:
+ * Expected token: ->
+ * *                **
+ * first string /// this function gives this string
+ */
+const char* error_message_context_for(compiler_error_t* error);
 
 #endif

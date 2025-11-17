@@ -155,11 +155,12 @@ const strimap_t* get_string_to_token_strimap(void) {
 /**
  * returns a view into statically allocated map of token_type_e -> string
  */
-const char* const* get_token_to_string_map(void) {
+const char* const* token_to_string_map(void) {
     static bool initialized = false;
     static const char* map[TKN__NUM] = {0};
 
     if (!initialized) {
+        map[NONE] = "";
         map[INDETERMINATE] = "INDETER.";
 
         // mono-char tokens
