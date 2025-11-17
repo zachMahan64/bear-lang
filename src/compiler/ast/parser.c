@@ -5,6 +5,7 @@
 #include "compiler/ast/parser.h"
 #include "compiler/ast/node.h"
 #include "compiler/ast/node_arena.h"
+#include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
@@ -209,13 +210,14 @@ token_t* parser_match(parser_t* parser, token_type_e type) {
 }
 
 // eat or return NULL and add to error_list
-token_t* parser_expect(parser_t* parser, token_type_e type, compiler_error_list_t* error_list) {
+token_t* parser_expect(parser_t* parser, token_type_e expected_type,
+                       compiler_error_list_t* error_list) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (tkn->sym == type) {
+    if (tkn->sym == expected_type) {
         parser->pos++;
         return tkn;
     }
-    // TODO expect logic, also need to implement logic for displaying this in compiler_error_list
+    compiler_error_list_emplace_expected(error_list, tkn, ERR_EXPECTED_TOKEN, expected_type);
     return NULL;
 }
 

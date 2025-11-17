@@ -5,9 +5,10 @@
 #include "compiler/diagnostics/error_codes.h"
 #include <stdbool.h>
 
-const char* error_message_for(error_code_e error_code) {
+const char* error_message_for_code(error_code_e error_code) {
     static const char* error_messages[ERR__COUNT] = {
         [ERR_UNRECOGNIZED_SYMBOL] = "Unrecognized symbol",
+        [ERR_EXPECTED_TOKEN] = "Expected: ",
     };
     return error_messages[error_code];
 }

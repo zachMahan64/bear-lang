@@ -18,9 +18,10 @@
  * from both the token's data as well as the error message
  */
 typedef struct {
-    token_t* token;              // view into a tkn whose resources are externally managed
-    error_code_e error_code;     // correspond to a type of compilation error
-    token_type_e expected_token; // corresponds to the type of an expected token, NONE by default
+    token_t* token;          // view into a tkn whose resources are externally managed
+    error_code_e error_code; // correspond to a type of compilation error
+    token_type_e
+        expected_token_type; // corresponds to the type of an expected token, NONE by default
 } compiler_error_t;
 
 /*
@@ -43,6 +44,10 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 // emplace an error onto the error list
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  error_code_e error_code);
+
+// emplace an error onto the error list with an expected_token_type
+void compiler_error_list_emplace_expected(compiler_error_list_t* list, token_t* token,
+                                          error_code_e error_code, token_type_e expected_tkn_type);
 
 // print out all compiler errors
 void compiler_error_list_print_all(const compiler_error_list_t* list);
