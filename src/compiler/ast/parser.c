@@ -147,7 +147,7 @@ uint32_t precendence_of_operator(token_type_e type) {
 
         map[GE] = 9;
         map[LE] = 9;
-        map[EQ] = 10;
+        map[BOOL_EQ] = 10;
         map[NE] = 10;
 
         map[ASSIGN_PLUS_EQ] = 16;

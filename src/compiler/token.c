@@ -130,7 +130,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "&&", BOOL_AND);
         strimap_insert(&map, ">=", GE);
         strimap_insert(&map, "<=", LE);
-        strimap_insert(&map, "==", EQ);
+        strimap_insert(&map, "==", BOOL_EQ);
         strimap_insert(&map, "!=", NE);
 
         // compound assignment operators
@@ -263,7 +263,7 @@ const char* const* get_token_to_string_map(void) {
         map[BOOL_AND] = "&&";
         map[GE] = ">=";
         map[LE] = "<=";
-        map[EQ] = "==";
+        map[BOOL_EQ] = "==";
         map[NE] = "!=";
 
         // --------------- compound assignment -----------------
@@ -320,36 +320,35 @@ const char* get_first_char_in_multichar_operator_token_map(void) {
     static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
     if (!initialized) {
         // punctuation
-        char_to_token_map['.'] = 1;
-        char_to_token_map[':'] = 1;
+        char_to_token_map['.'] = DOT;
+        char_to_token_map[':'] = COLON;
 
         // assignment
-        char_to_token_map['='] = 1;
+        char_to_token_map['='] = ASSIGN_EQ;
 
         // arithmetic
-        char_to_token_map['+'] = 1;
-        char_to_token_map['-'] = 1;
-        char_to_token_map['*'] = 1;
-        char_to_token_map['/'] = 1;
-        char_to_token_map['%'] = 1;
+        char_to_token_map['+'] = PLUS;
+        char_to_token_map['-'] = MINUS;
+        char_to_token_map['*'] = MULT;
+        char_to_token_map['/'] = DIVIDE;
+        char_to_token_map['%'] = MOD;
 
         // bitwise
-        char_to_token_map['|'] = 1;
-        char_to_token_map['&'] = 1;
-        char_to_token_map['~'] = 1;
-        char_to_token_map['^'] = 1;
+        char_to_token_map['|'] = BIT_OR;
+        char_to_token_map['&'] = BIT_AND;
+        char_to_token_map['~'] = BIT_NOT;
+        char_to_token_map['^'] = BIT_XOR;
 
         // boolean
-        char_to_token_map['!'] = 1;
+        char_to_token_map['!'] = BOOL_NOT;
 
         // comparison
-        char_to_token_map['>'] = 1;
-        char_to_token_map['<'] = 1;
-        char_to_token_map['='] = 1;
+        char_to_token_map['>'] = GT;
+        char_to_token_map['<'] = LT;
 
         initialized = true;
     }
-    return char_to_token_map;
+    return char_to_token_map; // return the map itself for faster look-up
 }
 
 // helper

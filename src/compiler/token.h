@@ -28,6 +28,7 @@ typedef enum token_type {
     SEMICOLON = ';',
     DOT = '.',
     COMMA = ',',
+    COLON = ':',
 
     // assign
     ASSIGN_EQ = '=', // =
@@ -139,7 +140,7 @@ typedef enum token_type {
     // comparison
     GE,
     LE,
-    EQ,
+    BOOL_EQ,
     NE,
 
     // --------------- compound assignment -----------------
