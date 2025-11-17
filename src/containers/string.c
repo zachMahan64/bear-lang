@@ -11,7 +11,7 @@
 #define STRING_DEFAULT_CAP 8
 
 // ctor
-string_t string_create() {
+string_t string_create(void) {
     string_t string = {.vec = vector_create_and_reserve(sizeof(char), STRING_DEFAULT_CAP)};
     ((char*)string.vec.data)[0] = '\0'; // ensure null-term
     return string;

@@ -16,7 +16,7 @@ typedef struct {
 } string_t;
 
 // ctor
-string_t string_create();
+string_t string_create(void);
 // must be a null-terminated string, ideally a string literal
 string_t string_from(const char* null_term_string);
 string_t string_create_and_reserve(size_t capacity);

@@ -48,7 +48,7 @@ int br_launch_cli(int argc, char** argv) {
         do_cli_help();
     } else if (args.flag == VERSION) {
         do_cli_version();
-    } else if (args.flag == COMPILE || args.flag == NO_FLAG && strlen(args.file_name)) {
+    } else if (args.flag == COMPILE || (args.flag == NO_FLAG && strlen(args.file_name))) {
         error_status = do_cli_compile(&args);
     } else if (args.flag == BUILD) {
         error_status = do_cli_build(&args);
