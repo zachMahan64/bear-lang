@@ -1,6 +1,7 @@
-# BearLang (Work in Progress), by Zach Mahan
-- A modern, C-like language inspired by C++, Java, and Rust, targeting an in-house VM.
+# BearLang (Work in Progress)
+- A modern, C-like language inspired by C++ and Rust.
 - BearLang is statically-typed and compiled aiming for simplicity and clarity.
+- Right now, I'm working on the frontend but plan on using LLVM for the backend.
 
 ## Documentation
 - [Project Timeline](/docs/timeline.md)
