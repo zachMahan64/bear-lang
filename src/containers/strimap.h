@@ -14,6 +14,7 @@
 
 typedef struct strimap_entry_t {
     char* key;
+    size_t len;
     int val;
     struct strimap_entry_t* next;
 } strimap_entry_t;

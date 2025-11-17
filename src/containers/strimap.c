@@ -61,6 +61,7 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
     memcpy(fresh_key, key, key_size);
     entry->key = fresh_key;
     entry->val = val;
+    entry->len = key_size;
     entry->next = map->buckets[bucket_idx];
     map->buckets[bucket_idx] = entry;
     ++map->size;
@@ -116,7 +117,7 @@ int* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
     strimap_entry_t* curr = map->buckets[bucket_idx];
 
     while (curr) {
-        if (strlen(curr->key) == key_len && strncmp(key, curr->key, key_len) == 0) {
+        if (curr->len == key_len && strncmp(key, curr->key, key_len) == 0) {
             return &curr->val;
         }
         curr = curr->next;
@@ -149,7 +150,7 @@ const int* strimap_viewn(const strimap_t* map, const char* key, size_t key_len) 
     const strimap_entry_t* curr = map->buckets[bucket_idx];
 
     while (curr) {
-        if (strlen(curr->key) == key_len && strncmp(key, curr->key, key_len) == 0) {
+        if (curr->len == key_len && strncmp(key, curr->key, key_len) == 0) {
             return &curr->val;
         }
         curr = curr->next;

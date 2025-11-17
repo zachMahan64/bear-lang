@@ -14,4 +14,4 @@ build*/
 _*/
 
 # perf
-perf.data
+perf.data*
