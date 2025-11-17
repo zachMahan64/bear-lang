@@ -19,8 +19,7 @@
 - **Every Codegen Phase:**
     - Update the following to support the added feature: 
         - Linear IR
-        - SSA?
-        - Emission of ByteCode
+        - SSA
 
 #### Approach to Diagnostics
 - **This must be considered throughout developement of the compiler for future LSP compatibility.**
@@ -28,15 +27,8 @@
     - Error, warning, note/hint hierarchy
     - Line/Column tracking
 
-## Setting up for Future Codegen and Designing the ByteCode Interpreter
-#### Intermediate Representation
-- [ ] Define stable linear IR
-- [ ] Optional SSA
+#### Setting up for Future Codegen
 - [ ] Implement lowering from AST to the IR 
-#### Defining the Requirements of the VM
-- [ ] Define VM opcodes and instruction format (Stack Machine)
-#### Moving from IR to ByteCode
-- [ ] Design an efficient pipeline for IR (unlimited virtual-register based, like LLVM perhaps) to BVM ByteCode
 
 ## Imperative and Arithmetic 
 
@@ -51,7 +43,6 @@
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
 - [ ] Codegen
-- [ ] Interpreter Runtime
 
 ## Procedural
 
@@ -63,12 +54,10 @@
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
 - [ ] Codegen
-- [ ] Interpreter Runtime
 
 #### II) Free-Function Calls and Scope Resolution (spaces)
 - [ ] AST 
 - [ ] Codegen
-- [ ] Interpreter Runtime
 
 #### III) Memory Semantics & More Advanced Compiler Errors
 - [ ] `box`, `bag`, and `ref`
@@ -76,7 +65,6 @@
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
 - [ ] Codegen
-- [ ] Interpreter Runtime (exceptions?)
 
 #### IV) Fixed-Size Arrays
 - [ ] Stack Arrays 
@@ -85,7 +73,6 @@
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
 - [ ] Codegen
-- [ ] Interpreter Runtime
 
 #### V) Compile Time Constants
 - [ ] `comp` -> support for integral and floating constants
@@ -94,10 +81,6 @@
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
 - [ ] Codegen
-
-## Helpful Sanity Detour
-- [ ] ByteCode Decompiler
-- [ ] Step-Through Debugger
 
 ## Data-Based
 

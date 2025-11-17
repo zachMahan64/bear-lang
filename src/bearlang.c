@@ -22,11 +22,10 @@ void do_cli_help(void);
 void do_cli_version(void);
 cli_error_status do_cli_compile(const cli_args* args);
 cli_error_status do_cli_build(const cli_args* args);
-cli_error_status do_cli_interpret_file(void);
-cli_error_status do_cli_interpret_live(void);
+cli_error_status do_cli_no_flags(void);
 void do_cli_announce_error(cli_args* args);
 
-int br_interpreter_launch_cli(int argc, char** argv) {
+int br_launch_cli(int argc, char** argv) {
     // parse and do preliminary validatation on args, convert to max 1 flag, 1 filename
     cli_args args = parse_cli_args(argc, argv);
 
@@ -49,14 +48,12 @@ int br_interpreter_launch_cli(int argc, char** argv) {
         do_cli_help();
     } else if (args.flag == VERSION) {
         do_cli_version();
-    } else if (args.flag == COMPILE) {
+    } else if (args.flag == COMPILE || args.flag == NO_FLAG && strlen(args.file_name)) {
         error_status = do_cli_compile(&args);
     } else if (args.flag == BUILD) {
         error_status = do_cli_build(&args);
     } else if (args.flag == NO_FLAG && !strlen(args.file_name)) {
-        error_status = do_cli_interpret_live();
-    } else if (args.flag == NO_FLAG && strlen(args.file_name)) {
-        error_status = do_cli_interpret_file();
+        error_status = do_cli_no_flags();
     }
     if (error_status.error_code < 0) {
         printf("[ERROR] %s", error_status.error_message);
@@ -69,11 +66,10 @@ void do_cli_help(void) {
     const char* help_message = "usage:\n"
                                "        br <file_name> <flag> \n"
                                "flags:\n"
-                               "        [--compile | -c]\n"
+                               "        [--compile | -c | <none>]\n"
                                "        [--version | -v]\n"
                                "        [--build | -b]\n"
-                               "        [--help | -h]\n"
-                               "        [<none>] -> live interpret\n";
+                               "        [--help | -h]\n";
 
     printf("%s", help_message);
 }
@@ -93,15 +89,8 @@ cli_error_status do_cli_build(const cli_args* args) {
     cli_error_status error_status = {0, ""};
     return error_status;
 }
-cli_error_status do_cli_interpret_file(void) {
-    // TODO
-    puts("(interpret file) This feature is WIP.");
-    cli_error_status error_status = {0, ""};
-    return error_status;
-}
-cli_error_status do_cli_interpret_live(void) {
-    // TODO
-    puts("(live interpret) This feature is WIP.");
+cli_error_status do_cli_no_flags(void) {
+    puts("[ERROR] no arguments specified.");
     cli_error_status error_status = {0, ""};
     return error_status;
 }

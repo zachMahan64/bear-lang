@@ -1,6 +1,6 @@
-BearLang Syntax 
+BearLang Syntax, currently very out of date 
 - **Work In Progress** this document will be the main syntax reference before moving to a more rigorous system of seperate documents for each language feature.
-- BearLang is a C-Like language inspired by elements of Java, Rust, and C++.
+- BearLang is a C-Like language inspired by elements of Rust, and C++.
 - Types:
     - Floating Point: single/double precision -> `flt` or `doub`, respectively 
     - Integers (all are signed): 32bit/64bit -> `int` or `long`, respectively 
