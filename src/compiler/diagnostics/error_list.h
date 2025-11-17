@@ -18,8 +18,9 @@
  * from both the token's data as well as the error message
  */
 typedef struct {
-    token_t* token;          // view into a tkn whose resources are externally managed
-    error_code_e error_code; // correspond to a type of compilation error
+    token_t* token;              // view into a tkn whose resources are externally managed
+    error_code_e error_code;     // correspond to a type of compilation error
+    token_type_e expected_token; // corresponds to the type of an expected token, NONE by default
 } compiler_error_t;
 
 /*

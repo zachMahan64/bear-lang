@@ -70,7 +70,7 @@ int compile_file(const char* file_name) {
     // ----------------------------------------------------
 
     // ---------------------- PARSING ---------------------
-    ast_t ast = parser_build_ast_from_file(src_buffer.file_name, tkn_vec);
+    ast_t ast = parser_build_ast_from_file(src_buffer.file_name, tkn_vec, &error_list);
     // ----------------------------------------------------
 
     /* TODO:

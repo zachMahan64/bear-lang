@@ -7,6 +7,7 @@
 
 #include "compiler/ast/node.h"
 #include "compiler/ast/node_arena.h"
+#include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
 #include <stdint.h>
@@ -29,7 +30,8 @@ typedef struct {
 } ast_t;
 
 // ctor that builds up an ast from a specified vector of tokens
-ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec);
+ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
+                                 compiler_error_list_t* error_list);
 
 // dtor for ast_t
 void ast_destroy(ast_t* ast);

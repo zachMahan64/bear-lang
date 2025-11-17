@@ -209,10 +209,19 @@ token_t* parser_match(parser_t* parser, token_type_e type) {
 }
 
 // eat or return NULL and add to error_list
-token_t* parser_expect(parser_t* parser, token_type_e type, compiler_error_list_t* error_list);
+token_t* parser_expect(parser_t* parser, token_type_e type, compiler_error_list_t* error_list) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    if (tkn->sym == type) {
+        parser->pos++;
+        return tkn;
+    }
+    // TODO expect logic, also need to implement logic for displaying this in compiler_error_list
+    return NULL;
+}
 
 // primary function for parsing a file into an ast
-ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec) {
+ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
+                                 compiler_error_list_t* error_list) {
     // position tracking, consuming tokens, etc
     parser_t parser = {.tokens = token_vec, .pos = 0, .end = token_vec.size};
 

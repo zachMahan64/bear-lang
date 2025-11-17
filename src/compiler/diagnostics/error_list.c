@@ -7,6 +7,7 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
+#include "containers/strimap.h"
 #include "containers/string.h"
 #include "containers/string_view.h"
 #include "containers/vector.h"
@@ -34,7 +35,7 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  error_code_e error_code) {
-    const compiler_error_t err = {.token = token, .error_code = error_code};
+    const compiler_error_t err = {.token = token, .error_code = error_code, .expected_token = NONE};
     vector_push_back(&list->list_vec, &err);
 }
 

@@ -13,6 +13,7 @@
 #define TOKEN_STRING_TO_TOKEN_MAP_SIZE 256 // abitrary, but large enough to reduce hashing conflicts
 
 typedef enum token_type {
+    NONE = 0,
     INDETERMINATE = 0,
     // mono-char tokens
     // delim
