@@ -64,7 +64,7 @@ int br_launch_cli(int argc, char** argv) {
 
 void do_cli_help(void) {
     const char* help_message = "usage:\n"
-                               "        br <file_name> <flag> \n"
+                               "        bearc <file_name> <flag> \n"
                                "flags:\n"
                                "        [--compile | -c | <none>]\n"
                                "        [--version | -v]\n"
