@@ -74,7 +74,6 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
             vector_push_back(&tkn_vec, &tkn);                                                      \
             len = 0;                                                                               \
             loc.col = 0;                                                                           \
-            ++loc.line;                                                                            \
             ++pos;                                                                                 \
             start = pos;                                                                           \
             break;                                                                                 \

@@ -13,7 +13,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// #define COMPILER_DEBUG
+
+// private debug helper
 void print_out_tkn_table(vector_t* tkn_vec) {
+#ifdef COMPILER_DEBUG
     const char* const* tkn_map = get_token_to_string_map();
     size_t tkn_map_size = tkn_vec->size;
     puts("                  Lexed tokens");
@@ -26,6 +30,20 @@ void print_out_tkn_table(vector_t* tkn_vec) {
                (int)tkn->length, tkn->start);
     }
     puts("=============================================");
+#endif
+}
+
+// private debug helper
+
+void print_out_src_buffer(src_buffer_t* src_buffer) {
+#ifdef COMPILER_DEBUG
+    printf("\n"
+           " Contents of [%s]\n"
+           "=============================================\n"
+           "%s\n"
+           "=============================================\n",
+           src_buffer->file_name, src_buffer->data);
+#endif
 }
 
 int compile_file(const char* file_name) {
@@ -46,14 +64,7 @@ int compile_file(const char* file_name) {
     // detect errors in lexing
     find_lexer_errors(&tkn_vec, &error_list);
 
-    // DEBUG
-    printf("\n"
-           " Contents of [%s]\n"
-           "=============================================\n"
-           "%s\n"
-           "=============================================\n",
-           src_buffer.file_name, src_buffer.data);
-
+    print_out_src_buffer(&src_buffer);
     print_out_tkn_table(&tkn_vec);
 
     // ----------------------------------------------------
