@@ -6,11 +6,8 @@
 #include <stdbool.h>
 
 const char* error_message_for(error_code_e error_code) {
-    static bool initialized = false;
-    static const char* error_messages[ERROR_CODE_NUM];
-    if (!initialized) {
-        error_messages[ERR_UNRECOGNIZED_SYMBOL] = "Unrecognized symbol";
-        initialized = true;
-    }
+    static const char* error_messages[ERR__COUNT] = {
+        [ERR_UNRECOGNIZED_SYMBOL] = "Unrecognized symbol",
+    };
     return error_messages[error_code];
 }

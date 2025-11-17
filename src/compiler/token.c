@@ -284,7 +284,7 @@ const char* const* get_token_to_string_map(void) {
 
         // EOF
         map[EOF_TKN] = "eof";
-        map[LEX_ERROR_EMPTY_SYMBOL] = "error_empty_symbol";
+        map[LEX_ERROR_EMPTY_TOKEN] = "err_empty_token";
 
         initialized = true;
     }
@@ -418,7 +418,7 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     if (!tkn || tkn->length == 0) {
         if (tkn) {
-            tkn->sym = INDETERMINATE;
+            tkn->sym = LEX_ERROR_EMPTY_TOKEN;
         }
         return;
     }
@@ -529,7 +529,7 @@ void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
         return;
     }
     if (tkn->length <= 0) {
-        tkn->sym = LEX_ERROR_EMPTY_SYMBOL;
+        tkn->sym = LEX_ERROR_EMPTY_TOKEN;
         return;
     }
     for (size_t i = 0; i < tkn->length; i++) {

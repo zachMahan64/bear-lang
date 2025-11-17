@@ -166,7 +166,7 @@ typedef enum token_type {
 
     // error states (represent an error in lexing, should never happen and should not be triggered
     // by syntax errors)
-    LEX_ERROR_EMPTY_SYMBOL,
+    LEX_ERROR_EMPTY_TOKEN,
 } token_type_e;
 
 typedef union {

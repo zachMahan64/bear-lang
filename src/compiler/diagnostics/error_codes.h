@@ -5,9 +5,7 @@
 #ifndef COMPILER_DIAGNOSTICS_ERROR_CODES_H
 #define COMPILER_DIAGNOSTICS_ERROR_CODES_H
 
-#define ERROR_CODE_NUM 32
-
-typedef enum { ERR_UNRECOGNIZED_SYMBOL } error_code_e;
+typedef enum { ERR_UNRECOGNIZED_SYMBOL, ERR__COUNT } error_code_e;
 
 // getting the error message for a given error_code_e
 const char* error_message_for(error_code_e error_code);
