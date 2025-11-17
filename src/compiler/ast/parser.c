@@ -5,6 +5,7 @@
 #include "compiler/ast/parser.h"
 #include "compiler/ast/node.h"
 #include "compiler/ast/node_arena.h"
+#include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
 #include "containers/vector.h"
 #include <stdbool.h>
@@ -36,7 +37,7 @@ associativity_e associativity_of(uint32_t precedence) {
 uint32_t precendence_of_operator(token_type_e type) {
     const uint32_t NONE = 0; // TODO, resolve if any of these shouldn't be none
     static bool initialized = false;
-    static uint32_t map[TOKEN_MAP_SIZE];
+    static uint32_t map[TKN__NUM];
     if (!initialized) {
         map[LPAREN] = NONE;
         map[RPAREN] = NONE;
@@ -207,8 +208,8 @@ token_t* parser_match(parser_t* parser, token_type_e type) {
     return NULL;
 }
 
-// eat or throw
-token_t* parser_expect(parser_t* parser, token_type_e type /*, !!!! TODO, error list */);
+// eat or return NULL and add to error_list
+token_t* parser_expect(parser_t* parser, token_type_e type, compiler_error_list_t* error_list);
 
 // primary function for parsing a file into an ast
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec) {

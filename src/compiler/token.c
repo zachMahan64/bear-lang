@@ -157,7 +157,7 @@ const strimap_t* get_string_to_token_strimap(void) {
  */
 const char* const* get_token_to_string_map(void) {
     static bool initialized = false;
-    static const char* map[TOKEN_TOKEN_TO_STRING_MAP_SIZE] = {0};
+    static const char* map[TKN__NUM] = {0};
 
     if (!initialized) {
         map[INDETERMINATE] = "INDETER.";

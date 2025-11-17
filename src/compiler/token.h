@@ -9,11 +9,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define TOKEN_MAX_KEYWORD_LEN 16
-#define TOKEN_TOKEN_TO_STRING_MAP_SIZE 512
-#define TOKEN_CHAR_TO_TOKEN_MAP_SIZE 256
-#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 256
-#define TOKEN_MAP_SIZE 512
+#define TOKEN_CHAR_TO_TOKEN_MAP_SIZE 256   // unsigned char max value
+#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 256 // abitrary, but large enough to reduce hashing conflicts
 
 typedef enum token_type {
     INDETERMINATE = 0,
@@ -167,6 +164,9 @@ typedef enum token_type {
     // error states (represent an error in lexing, should never happen and should not be triggered
     // by syntax errors)
     LEX_ERROR_EMPTY_TOKEN,
+
+    // num token_type_e
+    TKN__NUM,
 } token_type_e;
 
 typedef union {
