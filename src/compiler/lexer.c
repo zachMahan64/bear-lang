@@ -228,6 +228,12 @@ lex_whitespace:
     goto lex_start;
 
 lex_newline:
+    if (len != 0) {
+        tkn = token_build(start, len, &loc);
+        vector_push_back(&tkn_vec, &tkn);
+        len = 0;
+        ++start;
+    }
     ++loc.line;
     loc.col = 0;
     col = 0;
