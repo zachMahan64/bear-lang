@@ -24,19 +24,19 @@ typedef enum {
 typedef struct {
     cli_flag_e flag;
     char file_name[CLI_ARGS_MAX_FILE_NAME_LENGTH];
-} cli_args;
+} cli_args_t;
 
 typedef struct {
     char name[CLI_ARGS_MAX_FLAG_LENGTH];
     cli_flag_e flag;
-} cli_flag_long_mapping;
+} cli_flag_long_mapping_t;
 
 // CLI TABLES
 
-extern cli_flag_long_mapping cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES];
+extern cli_flag_long_mapping_t cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES];
 
 // CLI LOGIC
-cli_args parse_cli_args(int argc, char** argv);
+cli_args_t parse_cli_args(int argc, char** argv);
 bool is_valid_cli_flag_short(char flag);
 bool is_valid_cli_flag_long(const char* flag);
 cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag);

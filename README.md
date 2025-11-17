@@ -17,9 +17,9 @@ $ pwd                   # and copy result
 $ vim ~/.zshrc          # or .bashrc, etc.
                         # add this line into the rc file: export PATH="result/from/pwd/:$PATH" and then :wq
 $ source ~/.zshrc       # or .bashrc, etc.
-$ br -v                 # check to ensure it works
+$ brc -v                # check to ensure it works
 ```
 ### Run 
 ```
-$ br --help             # to see CLI usage
+$ brc --help             # to see CLI usage
 ```

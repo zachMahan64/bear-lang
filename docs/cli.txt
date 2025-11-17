@@ -1,9 +1,0 @@
-usage:
-        br <file_name> <flag> 
-flags:
-        [--compile | -c]
-        [--version | -v]
-        [--build | -b]
-        [--help | -h]
-        [<none>] -> live interpret
-

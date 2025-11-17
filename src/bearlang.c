@@ -20,14 +20,14 @@ typedef struct {
 // private cli functions
 void do_cli_help(void);
 void do_cli_version(void);
-cli_error_status do_cli_compile(const cli_args* args);
-cli_error_status do_cli_build(const cli_args* args);
+cli_error_status do_cli_compile(const cli_args_t* args);
+cli_error_status do_cli_build(const cli_args_t* args);
 cli_error_status do_cli_no_flags(void);
-void do_cli_announce_error(cli_args* args);
+void do_cli_announce_error(cli_args_t* args);
 
 int br_launch_cli(int argc, char** argv) {
     // parse and do preliminary validatation on args, convert to max 1 flag, 1 filename
-    cli_args args = parse_cli_args(argc, argv);
+    cli_args_t args = parse_cli_args(argc, argv);
 
     // error that dispatched cli functions can return, default to inoffensive values
     cli_error_status error_status = {0, ""};
@@ -76,14 +76,14 @@ void do_cli_help(void) {
 
 void do_cli_version(void) { puts("BearLang v0.0.1"); }
 
-cli_error_status do_cli_compile(const cli_args* args) {
+cli_error_status do_cli_compile(const cli_args_t* args) {
     // TODO, WIP
     puts("(compile) This feature is WIP.");
     cli_error_status error_status = {0, ""};
     error_status.error_code = compile_file(args->file_name);
     return error_status;
 }
-cli_error_status do_cli_build(const cli_args* args) {
+cli_error_status do_cli_build(const cli_args_t* args) {
     // TODO
     puts("(build) This feature is WIP.");
     cli_error_status error_status = {0, ""};
@@ -94,4 +94,4 @@ cli_error_status do_cli_no_flags(void) {
     cli_error_status error_status = {0, ""};
     return error_status;
 }
-void do_cli_announce_error(cli_args* args) { puts("[ERROR] Invalid flag"); }
+void do_cli_announce_error(cli_args_t* args) { puts("[ERROR] Invalid flag"); }
