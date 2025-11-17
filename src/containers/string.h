@@ -20,6 +20,8 @@ string_t string_create();
 // must be a null-terminated string, ideally a string literal
 string_t string_from(const char* null_term_string);
 string_t string_create_and_reserve(size_t capacity);
+// creates a string of a specified length filled with the specified character
+string_t string_create_and_fill(size_t len, char c);
 
 // dtor
 void string_destroy(string_t* string);
@@ -30,10 +32,13 @@ size_t string_get_size(const string_t* string);
 size_t string_get_capacity(const string_t* string);
 
 // idx
-char* string_substr(const string_t* string, size_t idx);
+char* string_at_ptr(const string_t* string, size_t idx);
 char string_at(const string_t* string, size_t idx);
 char* string_start(const string_t* string);
+
 // modifiers
+
+// push a char to the end of the string
 bool string_push_char(string_t* string, char c);
 // push a string_t onto a string_t
 void string_push_string(string_t* dest, const string_t* src);

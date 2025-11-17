@@ -160,7 +160,7 @@ const char* const* get_token_to_string_map(void) {
     static const char* map[TOKEN_TOKEN_TO_STRING_MAP_SIZE] = {0};
 
     if (!initialized) {
-        map[INDETERMINATE] = "INDETERMINATE";
+        map[INDETERMINATE] = "INDETER.";
 
         // mono-char tokens
         map[LPAREN] = "(";

@@ -42,16 +42,32 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
 void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     compiler_error_t* err = vector_at(&list->list_vec, i);
 
-    printf(ANSI_BOLD "\"%s\" on line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
-                     "%s" ANSI_RESET "\n",
-           list->src_buffer.file_name, err->token->loc.line + 1,
-           error_message_for(err->error_code)); // line is zero-indexed, so adjust
+    // line is zero-indexed inside of token_t, so adjust
+    size_t line = err->token->loc.line + 1;
+
+// setup " | <line num> strings"
+// max buf of size 21 since size_t max is 18'446'744'073'709'551'615
+#define LINE_NUM_BUF_SIZE 21
+    char line_num_buf[LINE_NUM_BUF_SIZE] = {0};
+    sprintf(line_num_buf, "%zu", line);
+    string_t line_num_str = string_create_and_reserve(LINE_NUM_BUF_SIZE + 4); // for spaces
+    string_push_cstring(&line_num_str, "  ");
+    string_push_cstring(&line_num_str, line_num_buf);
+    string_t line_under_num_str = string_create_and_fill(string_get_size(&line_num_str), ' ');
+    string_push_cstring(&line_num_str, "  |");
+    string_push_cstring(&line_under_num_str, "  |");
+
+    printf(ANSI_BOLD "\"%s\": line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD "%s" ANSI_RESET
+                     "\n",
+           list->src_buffer.file_name, line, error_message_for(err->error_code));
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
-    printf("%.*s\n", (int)line_preview.len, line_preview.start);
+    printf(ANSI_BOLD "%s" ANSI_RESET " %.*s\n", string_get_data(&line_num_str),
+           (int)line_preview.len, line_preview.start);
 
     string_t cursor_string = get_cursor_string(line_preview, err->token, ANSI_RED_FG);
-    printf("%s\n", string_get_data(&cursor_string));
+    printf(ANSI_BOLD "%s" ANSI_RESET " %s\n", string_get_data(&line_under_num_str),
+           string_get_data(&cursor_string));
     string_destroy(&cursor_string);
 }
 

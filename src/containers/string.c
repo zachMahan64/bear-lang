@@ -13,10 +13,12 @@
 // ctor
 string_t string_create() {
     string_t string = {.vec = vector_create_and_reserve(sizeof(char), STRING_DEFAULT_CAP)};
+    ((char*)string.vec.data)[0] = '\0'; // ensure null-term
     return string;
 }
 string_t string_create_and_reserve(size_t capacity) {
     string_t string = {.vec = vector_create_and_reserve(sizeof(char), capacity)};
+    ((char*)string.vec.data)[0] = '\0'; // ensure null-term
     return string;
 }
 
@@ -34,6 +36,14 @@ string_t string_from(const char* null_term_string) {
     return new_string;
 }
 
+string_t string_create_and_fill(size_t len, char c) {
+    string_t str = string_create_and_reserve(len);
+    for (size_t i = 0; i < len; i++) {
+        string_push_char(&str, c);
+    }
+    return str;
+}
+
 // dtor
 void string_destroy(string_t* string) { vector_destroy(&string->vec); }
 
@@ -43,7 +53,7 @@ size_t string_get_size(const string_t* string) { return string->vec.size; }
 size_t string_get_capacity(const string_t* string) { return string->vec.capacity; }
 
 // idx
-char* string_substr(const string_t* string, size_t idx) { return vector_at(&string->vec, idx); }
+char* string_at_ptr(const string_t* string, size_t idx) { return vector_at(&string->vec, idx); }
 char string_at(const string_t* string, size_t idx) { return *(char*)vector_at(&string->vec, idx); }
 char* string_start(const string_t* string) { return vector_start(&string->vec); }
 
