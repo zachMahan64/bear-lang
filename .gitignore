@@ -1,4 +1,17 @@
+#ides 
+.idea*/
+
+# macos
 .DS_Store
+
+# build dirs
 build*/
+
+# caches
 .cache*/
+
+# hidden files
 _*/
+
+# perf
+perf.data
