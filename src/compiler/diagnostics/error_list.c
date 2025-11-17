@@ -49,7 +49,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
 // max buf of size 21 since size_t max is 18'446'744'073'709'551'615
 #define LINE_NUM_BUF_SIZE 21
     char line_num_buf[LINE_NUM_BUF_SIZE] = {0};
-    sprintf(line_num_buf, "%zu", line);
+    snprintf(line_num_buf, LINE_NUM_BUF_SIZE, "%zu", line);
     string_t line_num_str = string_create_and_reserve(LINE_NUM_BUF_SIZE + 4); // for spaces
     string_push_cstring(&line_num_str, "  ");
     string_push_cstring(&line_num_str, line_num_buf);
@@ -57,6 +57,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstring(&line_num_str, "  |");
     string_push_cstring(&line_under_num_str, "  |");
 
+    // do printing now that we have all strings setup
     printf(ANSI_BOLD "\"%s\": line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD "%s" ANSI_RESET
                      "\n",
            list->src_buffer.file_name, line, error_message_for(err->error_code));
@@ -68,7 +69,11 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_t cursor_string = get_cursor_string(line_preview, err->token, ANSI_RED_FG);
     printf(ANSI_BOLD "%s" ANSI_RESET " %s\n", string_get_data(&line_under_num_str),
            string_get_data(&cursor_string));
+
+    // free resources
     string_destroy(&cursor_string);
+    string_destroy(&line_num_str);
+    string_destroy(&line_under_num_str);
 }
 
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
