@@ -73,47 +73,48 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "false", TOK_BOOL_LIT_FALSE);
 
         // file
-        strimap_insert(&map, "import", TOK_KW_IMPORT);
+        strimap_insert(&map, "import", TOK_IMPORT);
 
         // keywords
-        strimap_insert(&map, "space", TOK_KW_SPACE);
-        strimap_insert(&map, "fn", TOK_KW_FN);
-        strimap_insert(&map, "mt", TOK_KW_MT);
-        strimap_insert(&map, "cout", TOK_KW_COUT);
-        strimap_insert(&map, "cin", TOK_KW_CIN);
-        strimap_insert(&map, "box", TOK_KW_BOX);
-        strimap_insert(&map, "bag", TOK_KW_BAG);
-        strimap_insert(&map, "mut", TOK_KW_MUT);
-        strimap_insert(&map, "ref", TOK_KW_REF);
-        strimap_insert(&map, "int", TOK_KW_INT);
-        strimap_insert(&map, "uint", TOK_KW_UINT);
-        strimap_insert(&map, "char", TOK_KW_CHAR);
-        strimap_insert(&map, "flt", TOK_KW_FLT);
-        strimap_insert(&map, "doub", TOK_KW_DOUB);
-        strimap_insert(&map, "long", TOK_KW_LONG);
-        strimap_insert(&map, "ulong", TOK_KW_ULONG);
-        strimap_insert(&map, "str", TOK_KW_STR);
-        strimap_insert(&map, "bool", TOK_KW_BOOL);
-        strimap_insert(&map, "void", TOK_KW_VOID);
-        strimap_insert(&map, "auto", TOK_KW_AUTO);
-        strimap_insert(&map, "static", TOK_KW_STATIC);
-        strimap_insert(&map, "comp", TOK_KW_COMP);
-        strimap_insert(&map, "hidden", TOK_KW_HIDDEN);
-        strimap_insert(&map, "template", TOK_KW_TEMPLATE);
-        strimap_insert(&map, "enum", TOK_KW_ENUM);
+        strimap_insert(&map, "space", TOK_SPACE);
+        strimap_insert(&map, "fn", TOK_FN);
+        strimap_insert(&map, "mt", TOK_MT);
+        strimap_insert(&map, "cout", TOK_COUT);
+        strimap_insert(&map, "cin", TOK_CIN);
+        strimap_insert(&map, "box", TOK_BOX);
+        strimap_insert(&map, "bag", TOK_BAG);
+        strimap_insert(&map, "mut", TOK_MUT);
+        strimap_insert(&map, "ref", TOK_REF);
+        strimap_insert(&map, "int", TOK_INT);
+        strimap_insert(&map, "uint", TOK_UINT);
+        strimap_insert(&map, "char", TOK_CHAR);
+        strimap_insert(&map, "byte", TOK_BYTE);
+        strimap_insert(&map, "flt", TOK_FLT);
+        strimap_insert(&map, "doub", TOK_DOUB);
+        strimap_insert(&map, "long", TOK_LONG);
+        strimap_insert(&map, "ulong", TOK_ULONG);
+        strimap_insert(&map, "str", TOK_STR);
+        strimap_insert(&map, "bool", TOK_BOOL);
+        strimap_insert(&map, "void", TOK_VOID);
+        strimap_insert(&map, "auto", TOK_AUTO);
+        strimap_insert(&map, "static", TOK_STATIC);
+        strimap_insert(&map, "comp", TOK_COMP);
+        strimap_insert(&map, "hid", TOK_HID);
+        strimap_insert(&map, "template", TOK_TEMPLATE);
+        strimap_insert(&map, "enum", TOK_ENUM);
 
         // control flow
-        strimap_insert(&map, "if", TOK_KW_IF);
-        strimap_insert(&map, "else", TOK_KW_ELSE);
-        strimap_insert(&map, "elif", TOK_KW_ELIF);
-        strimap_insert(&map, "while", TOK_KW_WHILE);
-        strimap_insert(&map, "for", TOK_KW_FOR);
-        strimap_insert(&map, "return", TOK_KW_RETURN);
+        strimap_insert(&map, "if", TOK_IF);
+        strimap_insert(&map, "else", TOK_ELSE);
+        strimap_insert(&map, "elif", TOK_ELIF);
+        strimap_insert(&map, "while", TOK_WHILE);
+        strimap_insert(&map, "for", TOK_FOR);
+        strimap_insert(&map, "return", TOK_RETURN);
 
         // structures
-        strimap_insert(&map, "this", TOK_KW_THIS);
-        strimap_insert(&map, "struct", TOK_KW_STRUCT);
-        strimap_insert(&map, "new", TOK_KW_NEW);
+        strimap_insert(&map, "this", TOK_THIS);
+        strimap_insert(&map, "struct", TOK_STRUCT);
+        strimap_insert(&map, "new", TOK_NEW);
 
         // operators / symbols (multi-char tokens)
         strimap_insert(&map, "->", TOK_RARROW);
@@ -198,48 +199,49 @@ const char* const* token_to_string_map(void) {
         map[TOK_LT] = "<";
 
         // file / keywords
-        map[TOK_KW_IMPORT] = "import";
-        map[TOK_KW_SPACE] = "space";
-        map[TOK_KW_FN] = "fn";
-        map[TOK_KW_MT] = "mt";
-        map[TOK_KW_CT] = "ct";
-        map[TOK_KW_DT] = "dt";
-        map[TOK_KW_COUT] = "cout";
-        map[TOK_KW_CIN] = "cin";
-        map[TOK_KW_BOX] = "box";
-        map[TOK_KW_BAG] = "bag";
-        map[TOK_KW_MUT] = "mut";
-        map[TOK_KW_REF] = "ref";
-        map[TOK_KW_INT] = "int";
-        map[TOK_KW_UINT] = "uint";
-        map[TOK_KW_LONG] = "long";
-        map[TOK_KW_ULONG] = "ulong";
-        map[TOK_KW_CHAR] = "char";
-        map[TOK_KW_FLT] = "flt";
-        map[TOK_KW_DOUB] = "doub";
-        map[TOK_KW_STR] = "str";
-        map[TOK_KW_BOOL] = "bool";
-        map[TOK_KW_VOID] = "void";
-        map[TOK_KW_AUTO] = "auto";
-        map[TOK_KW_STATIC] = "static";
-        map[TOK_KW_COMP] = "comp";
-        map[TOK_KW_HIDDEN] = "hidden";
-        map[TOK_KW_TEMPLATE] = "template";
+        map[TOK_IMPORT] = "import";
+        map[TOK_SPACE] = "space";
+        map[TOK_FN] = "fn";
+        map[TOK_MT] = "mt";
+        map[TOK_CT] = "ct";
+        map[TOK_DT] = "dt";
+        map[TOK_COUT] = "cout";
+        map[TOK_CIN] = "cin";
+        map[TOK_BOX] = "box";
+        map[TOK_BAG] = "bag";
+        map[TOK_MUT] = "mut";
+        map[TOK_REF] = "ref";
+        map[TOK_INT] = "int";
+        map[TOK_UINT] = "uint";
+        map[TOK_LONG] = "long";
+        map[TOK_ULONG] = "ulong";
+        map[TOK_CHAR] = "char";
+        map[TOK_BYTE] = "byte";
+        map[TOK_FLT] = "flt";
+        map[TOK_DOUB] = "doub";
+        map[TOK_STR] = "str";
+        map[TOK_BOOL] = "bool";
+        map[TOK_VOID] = "void";
+        map[TOK_AUTO] = "auto";
+        map[TOK_STATIC] = "static";
+        map[TOK_COMP] = "comp";
+        map[TOK_HID] = "hidden";
+        map[TOK_TEMPLATE] = "template";
 
-        map[TOK_KW_IF] = "if";
-        map[TOK_KW_ELSE] = "else";
-        map[TOK_KW_ELIF] = "elif";
-        map[TOK_KW_WHILE] = "while";
-        map[TOK_KW_FOR] = "for";
-        map[TOK_KW_RETURN] = "return";
+        map[TOK_IF] = "if";
+        map[TOK_ELSE] = "else";
+        map[TOK_ELIF] = "elif";
+        map[TOK_WHILE] = "while";
+        map[TOK_FOR] = "for";
+        map[TOK_RETURN] = "return";
 
         // structures
-        map[TOK_KW_THIS] = "this";
-        map[TOK_KW_STRUCT] = "struct";
-        map[TOK_KW_NEW] = "new";
+        map[TOK_THIS] = "this";
+        map[TOK_STRUCT] = "struct";
+        map[TOK_NEW] = "new";
 
         // variable / literal types
-        map[TOK_SYMBOL] = "symbol";
+        map[TOK_IDENTIFIER] = "id";
         map[TOK_CHAR_LIT] = "char_lit";
         map[TOK_INT_LIT] = "int_lit";
         map[TOK_DOUB_LIT] = "doub_lit";
@@ -538,5 +540,5 @@ void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
             return;
         }
     }
-    tkn->sym = TOK_SYMBOL;
+    tkn->sym = TOK_IDENTIFIER;
 }

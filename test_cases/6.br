@@ -2,6 +2,12 @@ int x = 1 + 3*2;
 int y = 14 / x * (3 + 1);
 
 char "oops" = 'h';
+int 321 = 123;
+
+
+fn 123(int x) -> intoops {
+    return 123;
+}
 
 1 + 2;
 

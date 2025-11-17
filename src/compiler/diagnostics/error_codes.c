@@ -8,8 +8,9 @@
 const char* error_message_for_code(error_code_e error_code) {
     static const char* error_messages[ERR__COUNT] = {[ERR_ILLEGAL_IDENTIFER] = "Illegal identifier",
                                                      [ERR_EXPECTED_TOKEN] = "Expected token: ",
-                                                     [ERR_EXPECTED_VARIABLE_ID] =
-                                                         "Expected variable identifier"};
+                                                     [ERR_EXPECTED_IDENTIFIER] =
+                                                         "Expected identifier",
+                                                     [ERR_EXPECTED_TYPE] = "Expected type"};
     return error_messages[error_code];
 }
 

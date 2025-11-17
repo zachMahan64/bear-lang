@@ -72,54 +72,55 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_GT] = 9;
         map[TOK_LT] = 9;
 
-        map[TOK_KW_IMPORT] = NONE;
-        map[TOK_KW_SPACE] = NONE;
+        map[TOK_IMPORT] = NONE;
+        map[TOK_SPACE] = NONE;
 
-        map[TOK_KW_FN] = NONE;
-        map[TOK_KW_MT] = NONE;
-        map[TOK_KW_CT] = NONE;
-        map[TOK_KW_DT] = NONE;
+        map[TOK_FN] = NONE;
+        map[TOK_MT] = NONE;
+        map[TOK_CT] = NONE;
+        map[TOK_DT] = NONE;
 
-        map[TOK_KW_COUT] = NONE;
-        map[TOK_KW_CIN] = NONE;
+        map[TOK_COUT] = NONE;
+        map[TOK_CIN] = NONE;
 
-        map[TOK_KW_BOX] = NONE;
-        map[TOK_KW_BAG] = NONE;
+        map[TOK_BOX] = NONE;
+        map[TOK_BAG] = NONE;
 
-        map[TOK_KW_MUT] = NONE;
-        map[TOK_KW_REF] = NONE;
-        map[TOK_KW_INT] = NONE;
-        map[TOK_KW_UINT] = NONE;
-        map[TOK_KW_ULONG] = NONE;
-        map[TOK_KW_CHAR] = NONE;
-        map[TOK_KW_FLT] = NONE;
-        map[TOK_KW_DOUB] = NONE;
-        map[TOK_KW_STR] = NONE;
-        map[TOK_KW_BOOL] = NONE;
-        map[TOK_KW_VOID] = NONE;
-        map[TOK_KW_AUTO] = NONE;
-        map[TOK_KW_COMP] = NONE;
-        map[TOK_KW_HIDDEN] = NONE;
+        map[TOK_MUT] = NONE;
+        map[TOK_REF] = NONE;
+        map[TOK_INT] = NONE;
+        map[TOK_UINT] = NONE;
+        map[TOK_ULONG] = NONE;
+        map[TOK_CHAR] = NONE;
+        map[TOK_BYTE] = NONE;
+        map[TOK_FLT] = NONE;
+        map[TOK_DOUB] = NONE;
+        map[TOK_STR] = NONE;
+        map[TOK_BOOL] = NONE;
+        map[TOK_VOID] = NONE;
+        map[TOK_AUTO] = NONE;
+        map[TOK_COMP] = NONE;
+        map[TOK_HID] = NONE;
 
-        map[TOK_KW_TEMPLATE] = NONE;
+        map[TOK_TEMPLATE] = NONE;
 
-        map[TOK_KW_ENUM] = NONE;
+        map[TOK_ENUM] = NONE;
 
-        map[TOK_KW_STATIC] = NONE;
+        map[TOK_STATIC] = NONE;
 
-        map[TOK_KW_IF] = NONE;
-        map[TOK_KW_ELSE] = NONE;
-        map[TOK_KW_ELIF] = NONE;
-        map[TOK_KW_WHILE] = NONE;
-        map[TOK_KW_FOR] = NONE;
-        map[TOK_KW_RETURN] = NONE;
+        map[TOK_IF] = NONE;
+        map[TOK_ELSE] = NONE;
+        map[TOK_ELIF] = NONE;
+        map[TOK_WHILE] = NONE;
+        map[TOK_FOR] = NONE;
+        map[TOK_RETURN] = NONE;
 
-        map[TOK_KW_THIS] = NONE;
-        map[TOK_KW_STRUCT] = NONE;
-        map[TOK_KW_NEW] = 3;
+        map[TOK_THIS] = NONE;
+        map[TOK_STRUCT] = NONE;
+        map[TOK_NEW] = 3;
 
         // literals
-        map[TOK_SYMBOL] = NONE;
+        map[TOK_IDENTIFIER] = NONE;
         map[TOK_CHAR_LIT] = NONE;
         map[TOK_INT_LIT] = NONE;
         map[TOK_LONG_LIT] = NONE;
@@ -174,7 +175,6 @@ uint32_t precendence_of_operator(token_type_e type) {
 typedef struct {
     vector_t tokens;
     size_t pos;
-    size_t end;
 } parser_t;
 
 // consume a token
@@ -190,6 +190,14 @@ token_t* parser_eat(parser_t* parser) {
 token_t* parser_peek(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     return tkn;
+}
+
+token_t* parser_peek_n(parser_t* parser, size_t n) {
+    size_t idx = parser->pos + n;
+    if (idx >= parser->tokens.size) {
+        return parser_peek(parser); // return EOF
+    }
+    return vector_at(&parser->tokens, idx);
 }
 
 // see last eaten token
@@ -216,7 +224,28 @@ token_t* parser_match(parser_t* parser, token_type_e type) {
     return NULL;
 }
 
-// eat or return NULL and add to error_list
+//------------- match forward decls --------------
+bool parser_match_is_builtin_type(token_type_e t);
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/*
+ * peek then conditionally eat based on a match function call, which takes a token_type_e and
+ * returns bool if valid, else false
+ * \return token_t* to consumed token or NULL if not matched
+ */
+token_t* parser_match_call(parser_t* parser, bool (*match)(token_type_e)) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    if (match(tkn->sym)) {
+        if (tkn->sym != TOK_EOF) {
+            parser->pos++;
+        }
+        return tkn;
+    }
+    return NULL;
+}
+
+// eat if current token matches specified type or return NULL and add to error_list
 token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
                              compiler_error_list_t* error_list) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
@@ -229,10 +258,24 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
 }
 
 // eat or return NULL and add a specific error to error_list (not just Expected token: __)
+// matches based on a specified token_type_e
 token_t* parser_expect(parser_t* parser, token_type_e expected_type,
                        compiler_error_list_t* error_list, error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->sym == expected_type) {
+        parser->pos++;
+        return tkn;
+    }
+    compiler_error_list_emplace(error_list, tkn, code);
+    return NULL;
+}
+
+// eat or return NULL and add a specific error to error_list (not just Expected token: __)
+// uses a match call that returns bool based on a token_type_e
+token_t* parser_expect_call(parser_t* parser, bool (*match)(token_type_e),
+                            compiler_error_list_t* error_list, error_code_e code) {
+    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    if (match(tkn->sym)) {
         parser->pos++;
         return tkn;
     }
@@ -250,7 +293,7 @@ bool parser_eof(parser_t* parser) {
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
                                  compiler_error_list_t* error_list) {
     // position tracking, consuming tokens, etc
-    parser_t parser = {.tokens = token_vec, .pos = 0, .end = token_vec.size};
+    parser_t parser = {.tokens = token_vec, .pos = 0};
 
     // init ast & node arena
     ast_t ast;
@@ -259,13 +302,17 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
     ast.head = ast_node_arena_new_node(&ast.arena, AST_FILE, NULL, 0);
 
     // TODO, AST building up logic here
+    // right now this is just some placeholder logic to test the basic parser functions
     token_t* tkn = NULL; // scratch token
     while (!parser_eof(&parser)) {
         tkn = parser_match(&parser, TOK_INDETERMINATE);
         if (tkn) {
             compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
-        } else if (parser_match(&parser, TOK_KW_CHAR)) {
-            parser_expect(&parser, TOK_SYMBOL, error_list, ERR_EXPECTED_VARIABLE_ID);
+        } else if (parser_match_call(&parser, &parser_match_is_builtin_type)) {
+            parser_expect(&parser, TOK_IDENTIFIER, error_list, ERR_EXPECTED_IDENTIFIER);
+        } else if (parser_match(&parser, TOK_RARROW)) {
+            parser_expect_call(&parser, &parser_match_is_builtin_type, error_list,
+                               ERR_EXPECTED_TYPE);
         } else {
             parser_eat(&parser);
         }
@@ -275,3 +322,11 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
 }
 
 void ast_destroy(ast_t* ast) { ast_node_arena_destroy(&ast->arena); }
+
+// match helpers
+bool parser_match_is_builtin_type(token_type_e t) {
+    return t == TOK_CHAR || t == TOK_BYTE || t == TOK_BOOL || t == TOK_INT || t == TOK_UINT ||
+           t == TOK_LONG || t == TOK_ULONG || t == TOK_FLT || t == TOK_DOUB || t == TOK_STR ||
+           t == TOK_SPACE || t == TOK_FN || t == TOK_MT || t == TOK_CT || t == TOK_DT ||
+           t == TOK_AUTO || t == TOK_VOID || t == TOK_ENUM || t == TOK_STRUCT;
+}

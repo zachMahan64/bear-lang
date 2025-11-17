@@ -8,9 +8,11 @@
 #include "compiler/token.h"
 
 typedef enum {
-    ERR_ILLEGAL_IDENTIFER,
+    ERR_NONE = 0,
     ERR_EXPECTED_TOKEN,
-    ERR_EXPECTED_VARIABLE_ID,
+    ERR_ILLEGAL_IDENTIFER,
+    ERR_EXPECTED_IDENTIFIER,
+    ERR_EXPECTED_TYPE,
     ERR__COUNT
 } error_code_e;
 

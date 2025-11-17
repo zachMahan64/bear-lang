@@ -55,60 +55,61 @@ typedef enum token_type {
     TOK_LT = '<', // will also be used as opening bracket in future generics
 
     // file
-    TOK_KW_IMPORT = 256,
+    TOK_IMPORT = 256,
     // keywords
     // namespace
-    TOK_KW_SPACE, // space
+    TOK_SPACE, // space
     // function
-    TOK_KW_FN,
-    TOK_KW_MT, // method, for implicit this ptr for data-associated behavior in structs
-    TOK_KW_CT, // ctor
-    TOK_KW_DT, // dtor
+    TOK_FN,
+    TOK_MT, // method, for implicit this ptr for data-associated behavior in structs
+    TOK_CT, // ctor
+    TOK_DT, // dtor
     // stdou
-    TOK_KW_COUT, // example: cout <<- "Hello World";
-    TOK_KW_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
-                 // some_val;
+    TOK_COUT, // example: cout <<- "Hello World";
+    TOK_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
+              // some_val;
     // types
-    TOK_KW_BOX, // example: box int
-    TOK_KW_BAG, // example: bag int
-    TOK_KW_MUT, // example: mut int or box::const int
-    TOK_KW_REF, // example: ref::int
-    TOK_KW_INT,
-    TOK_KW_UINT,
-    TOK_KW_LONG,
-    TOK_KW_ULONG,
-    TOK_KW_CHAR,
-    TOK_KW_FLT,
-    TOK_KW_DOUB,
-    TOK_KW_STR,
-    TOK_KW_BOOL,
-    TOK_KW_VOID,
-    TOK_KW_AUTO,
-    TOK_KW_COMP,     // compile-time (like constexpr)
-    TOK_KW_HIDDEN,   // like private, but with slightly different semantics because BearLang has no
-                     // inheritance, so this is really just a hidden data member or function/method
-    TOK_KW_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
-                     // smarter macro
-    TOK_KW_ENUM, // scoped/type-checked enums
+    TOK_BOX, // example: box int
+    TOK_BAG, // example: bag int
+    TOK_MUT, // example: mut int or box::const int
+    TOK_REF, // example: ref::int
+    TOK_INT,
+    TOK_UINT,
+    TOK_LONG,
+    TOK_ULONG,
+    TOK_CHAR,
+    TOK_BYTE,
+    TOK_FLT,
+    TOK_DOUB,
+    TOK_STR,
+    TOK_BOOL,
+    TOK_VOID,
+    TOK_AUTO,
+    TOK_COMP,     // compile-time (like constexpr)
+    TOK_HID,      // like private, but with slightly different semantics because BearLang has no
+                  // inheritance, so this is really just a hidden data member or function/method
+    TOK_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
+                  // smarter macro
+    TOK_ENUM,     // scoped/type-checked enums
     // memory location identifiers
-    TOK_KW_STATIC,
+    TOK_STATIC,
 
     // comparison
-    TOK_KW_IF,
-    TOK_KW_ELSE,
-    TOK_KW_ELIF,
-    TOK_KW_WHILE,
-    TOK_KW_FOR,
-    TOK_KW_IN, // example: for (int a in myArr) {...}
-    TOK_KW_RETURN,
+    TOK_IF,
+    TOK_ELSE,
+    TOK_ELIF,
+    TOK_WHILE,
+    TOK_FOR,
+    TOK_IN, // example: for (int a in myArr) {...}
+    TOK_RETURN,
 
     // structures (incorp after prodcedural is working)
-    TOK_KW_THIS,
-    TOK_KW_STRUCT,
-    TOK_KW_NEW,
+    TOK_THIS,
+    TOK_STRUCT,
+    TOK_NEW,
 
     // variable or function name
-    TOK_SYMBOL,
+    TOK_IDENTIFIER,
 
     // built-in types
     TOK_CHAR_LIT,
