@@ -30,7 +30,7 @@ git clone https://github.com/zachMahan64/bear-lang.git
 pacman -S mingw-w64-ucrt-x86_64-gcc \
     mingw-w64-ucrt-x86_64-make      \
     mingw-w64-ucrt-x86_64-cmake
-cd bear-lang && mkdir build && cd build && cmake -G "Unix Makefiles" .. && mingw32-make
+cd bear-lang && mkdir build && cd build && cmake -G "MinGW Makefiles" .. && mingw32-make
                       # if you want BearLang on your path:
 pwd                   # and copy result
 vim ~/.bashrc
