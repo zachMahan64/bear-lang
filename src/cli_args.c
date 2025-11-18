@@ -10,7 +10,7 @@
 // LONG FLAG NAME MAP
 
 cli_flag_long_mapping_t cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES] = {
-    {"build", BUILD}, {"help", HELP}, {"version", VERSION}};
+    {"help", HELP}, {"version", VERSION}};
 
 cli_args_t parse_cli_args(int argc, char** argv) {
     cli_args_t args = {NO_FLAG, ""}; // WIP
@@ -38,9 +38,7 @@ cli_args_t parse_cli_args(int argc, char** argv) {
     return args;
 }
 
-bool is_valid_cli_flag_short(const char flag) {
-    return (flag == 'b' || flag == 'c' || flag == 'h' || flag == 'v');
-}
+bool is_valid_cli_flag_short(const char flag) { return (flag == 'h' || flag == 'v'); }
 
 bool is_valid_cli_flag_long(const char* flag) {
     size_t FLAG_PREFIX_LENGTH = 2;

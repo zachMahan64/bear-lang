@@ -10,12 +10,11 @@
 // CLI DATA STRUCTS
 #define CLI_ARGS_MAX_FILE_NAME_LENGTH 256
 #define CLI_ARGS_MAX_FLAG_LENGTH 16
-#define CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES 4
+#define CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES 2
 
 typedef enum {
     NO_FLAG = '\0',
     ERROR = -1,
-    BUILD = 'b',
     HELP = 'h',
     VERSION = 'v',
 } cli_flag_e;

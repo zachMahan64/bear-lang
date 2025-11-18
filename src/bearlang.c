@@ -24,7 +24,7 @@ void do_cli_version(void);
 cli_error_status do_cli_compile(const cli_args_t* args);
 cli_error_status do_cli_build(const cli_args_t* args);
 cli_error_status do_cli_no_args(void);
-void do_cli_announce_error(cli_args_t* args);
+void do_cli_announce_error(void);
 
 int br_launch_cli(int argc, char** argv) {
     // parse and do preliminary validatation on args, convert to max 1 flag, 1 filename
@@ -38,7 +38,7 @@ int br_launch_cli(int argc, char** argv) {
     LOG_STR_NNL("Flag: ");
     LOG_CHAR(args.flag);
     if (args.flag == ERROR) {
-        do_cli_announce_error(&args);
+        do_cli_announce_error();
         return -1;
     }
     if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
@@ -52,8 +52,6 @@ int br_launch_cli(int argc, char** argv) {
         do_cli_version();
     } else if (args.flag == NO_FLAG && strlen(args.file_name)) {
         error_status = do_cli_compile(&args);
-    } else if (args.flag == BUILD) {
-        error_status = do_cli_build(&args);
     } else if (args.flag == NO_FLAG && !strlen(args.file_name)) {
         error_status = do_cli_no_args();
     }
@@ -69,7 +67,6 @@ void do_cli_help(void) {
                                "        bearc <file_name> <flag> \n"
                                "flags:\n"
                                "        [--version | -v]\n"
-                               "        [--build | -b]\n"
                                "        [--help | -h]\n";
 
     printf("%s", help_message);
@@ -79,15 +76,9 @@ void do_cli_version(void) { puts("bearc v0.0.1"); }
 
 cli_error_status do_cli_compile(const cli_args_t* args) {
     // TODO, WIP
-    puts("(compile) This feature is WIP.");
+    puts(ANSI_BOLD "(bearc) this feature is a work-in-progress" ANSI_RESET);
     cli_error_status error_status = {0, ""};
     error_status.error_code = compile_file(args->file_name);
-    return error_status;
-}
-cli_error_status do_cli_build(const cli_args_t* args) {
-    // TODO
-    puts("(build) This feature is WIP.");
-    cli_error_status error_status = {0, ""};
     return error_status;
 }
 cli_error_status do_cli_no_args(void) {
@@ -95,4 +86,4 @@ cli_error_status do_cli_no_args(void) {
     cli_error_status error_status = {0, ""};
     return error_status;
 }
-void do_cli_announce_error(cli_args_t* args) { puts("(bearc) invalid flag"); }
+void do_cli_announce_error(void) { puts("(bearc) invalid flag"); }

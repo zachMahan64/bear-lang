@@ -5,9 +5,7 @@
 #ifndef LOG_H
 #define LOG_H
 
-#define DEBUG
-
-#ifdef DEBUG
+#ifdef DEBUG_BUILD
 #include <stdio.h>
 #define LOG_STR(x) printf("%s\n", x);
 #define LOG_STR_NNL(x)                                                                             \

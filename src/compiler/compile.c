@@ -13,11 +13,9 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define COMPILER_LOG
-
 // private debug helper
 void print_out_tkn_table(vector_t* tkn_vec) {
-#ifdef COMPILER_LOG
+#ifdef DEBUG_BUILD
     const char* const* tkn_map = token_to_string_map();
     size_t tkn_map_size = tkn_vec->size;
     puts("                  Lexed tokens");
@@ -35,7 +33,7 @@ void print_out_tkn_table(vector_t* tkn_vec) {
 
 // private debug helper
 void print_out_src_buffer(src_buffer_t* src_buffer) {
-#ifdef COMPILER_LOG
+#ifdef DEBUG_BUILD
     printf("\n"
            " Contents of [%s]\n"
            "=============================================\n"

@@ -39,6 +39,10 @@ set(SRC
 set(CMAKE_C_FLAGS_DEBUG   "-Wall -Wextra -Wpedantic -g -gdwarf-4" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG_BUILD)
+endif()
+
 add_executable(${EXECUTABLE} ${SRC})
 target_include_directories(${EXECUTABLE} PRIVATE src)
 target_include_directories(${EXECUTABLE} PUBLIC include)
