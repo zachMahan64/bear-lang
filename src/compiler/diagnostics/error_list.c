@@ -67,7 +67,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstring(&line_under_num_str, "  |");
 
     // do printing now that we have all strings setup
-    printf(ANSI_BOLD "\"%s\": line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
+    printf(ANSI_BOLD "\'%s\': line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
                      "%s%s" ANSI_RESET "\n",
            list->src_buffer.file_name, line, error_message_for_code(err->error_code),
            error_message_context_for(err));

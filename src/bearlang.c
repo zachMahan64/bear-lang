@@ -3,6 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "bearlang/bearlang.h"
+#include "ansi_codes.h"
 #include "cli_args.h"
 #include "compiler/compile.h"
 #include "file_io.h"
@@ -22,7 +23,7 @@ void do_cli_help(void);
 void do_cli_version(void);
 cli_error_status do_cli_compile(const cli_args_t* args);
 cli_error_status do_cli_build(const cli_args_t* args);
-cli_error_status do_cli_no_flags(void);
+cli_error_status do_cli_no_args(void);
 void do_cli_announce_error(cli_args_t* args);
 
 int br_launch_cli(int argc, char** argv) {
@@ -32,16 +33,17 @@ int br_launch_cli(int argc, char** argv) {
     // error that dispatched cli functions can return, default to inoffensive values
     cli_error_status error_status = {0, ""};
 
-    LOG_STR_NNL("[DEBUG] File name: ");
+    LOG_STR_NNL("File name: ");
     LOG_STR(args.file_name);
-    LOG_STR_NNL("[DEBUG] Flag: ");
+    LOG_STR_NNL("Flag: ");
     LOG_CHAR(args.flag);
     if (args.flag == ERROR) {
         do_cli_announce_error(&args);
         return -1;
     }
     if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
-        printf("[ERROR] File does not exist: %s\n", args.file_name);
+        printf(ANSI_BOLD ANSI_RED_FG "error:" ANSI_RESET " file does not exist: %s\n",
+               args.file_name);
         return -1;
     }
     if (args.flag == HELP) {
@@ -53,10 +55,10 @@ int br_launch_cli(int argc, char** argv) {
     } else if (args.flag == BUILD) {
         error_status = do_cli_build(&args);
     } else if (args.flag == NO_FLAG && !strlen(args.file_name)) {
-        error_status = do_cli_no_flags();
+        error_status = do_cli_no_args();
     }
     if (error_status.error_code < 0) {
-        printf("[ERROR] %s", error_status.error_message);
+        printf("error: %s", error_status.error_message);
         return error_status.error_code;
     }
     return 0;
@@ -74,7 +76,7 @@ void do_cli_help(void) {
     printf("%s", help_message);
 }
 
-void do_cli_version(void) { puts("BearLang v0.0.1"); }
+void do_cli_version(void) { puts("bearc v0.0.1"); }
 
 cli_error_status do_cli_compile(const cli_args_t* args) {
     // TODO, WIP
@@ -89,9 +91,9 @@ cli_error_status do_cli_build(const cli_args_t* args) {
     cli_error_status error_status = {0, ""};
     return error_status;
 }
-cli_error_status do_cli_no_flags(void) {
-    puts("[ERROR] no arguments specified.");
+cli_error_status do_cli_no_args(void) {
+    puts("(bearc) no arguments specified.");
     cli_error_status error_status = {0, ""};
     return error_status;
 }
-void do_cli_announce_error(cli_args_t* args) { puts("[ERROR] Invalid flag"); }
+void do_cli_announce_error(cli_args_t* args) { puts("(bearc) invalid flag"); }

@@ -62,7 +62,7 @@ size_t vector_get_elem_size(const vector_t* vector) { return vector->elem_size; 
 // gets value at specified index
 void* vector_at(const vector_t* vector, size_t idx) {
     if (idx >= vector->size) {
-        LOG_ERR("[ERROR] vector_t: out of range")
+        LOG_ERR("[ERROR|vector_at] out of range")
         return NULL; // out of bounds
     }
     return (void*)((char*)vector->data + (idx * vector->elem_size));
@@ -88,7 +88,7 @@ bool vector_push_back(vector_t* vector, const void* elem) {
         size_t new_capacity = (vector->capacity == 0) ? 1 : vector->capacity * 2;
         void* temp = realloc(vector->data, new_capacity * vector->elem_size);
         if (!temp) {
-            LOG_ERR("[ERROR] vector_t: reallocation failed when increasing capacity");
+            LOG_ERR("[ERROR|vector_push_back] reallocation failed when increasing capacity");
             return false; // vector still valid, but push back fails w/ msg
         }
         vector->data = temp;
@@ -115,7 +115,7 @@ void vector_reserve(vector_t* vector, size_t new_capacity) {
     }
     void* temp = realloc(vector->data, new_capacity * vector->elem_size);
     if (!temp) {
-        LOG_ERR("[ERROR] vector_t: reallocation failed when reserving");
+        LOG_ERR("[ERROR|vector_reserve] reallocation failed");
         return; // vector still valid, but fails w/ msg
     }
     vector->data = temp;
@@ -130,7 +130,7 @@ bool vector_shrink_to_fit(vector_t* vector) {
     }
     void* temp = realloc(vector->data, vector->size * vector->elem_size);
     if (!temp) {
-        LOG_ERR("[ERROR] vector_t: reallocation failed when shrinking to fit");
+        LOG_ERR("[ERROR|vector_shrink_to_fit] vector_t: reallocation failed");
         return false;
     }
     vector->data = temp;

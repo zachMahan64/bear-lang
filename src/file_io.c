@@ -3,6 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "file_io.h"
+#include "ansi_codes.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,11 +11,10 @@
 bool file_exists(const char* file_name) {
     FILE* file = fopen(file_name, "r");
     if (file) {
-        printf("[DEBUG] File '%s' exists\n", file_name);
         fclose(file);
         return true;
     }
-    printf("[ERROR] File '%s' does not exist\n", file_name);
+    printf(ANSI_RED_FG ANSI_BOLD "error:" ANSI_RESET " '%s' does not exist\n", file_name);
     return false;
 }
 
@@ -66,7 +66,7 @@ src_buffer_t src_buffer_from_file_create(const char* file_name) {
     src_buffer_t buffer;
     buffer.file_name = file_name;
     if (read_file_to_src_buffer(&buffer) < 0) {
-        printf("[ERROR] Could not read file: %s", file_name);
+        printf(ANSI_BOLD ANSI_RED_FG "error:" ANSI_RESET " could not read file: %s", file_name);
     }
     return buffer;
 }

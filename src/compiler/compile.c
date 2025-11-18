@@ -83,7 +83,7 @@ int compile_file(const char* file_name) {
     if (compiler_error_list_empty(&error_list)) {
         // codegen here
     } else {
-        printf(ANSI_BOLD "Compilation stopped.\n" ANSI_RESET);
+        printf(ANSI_BOLD "compilation terminated.\n" ANSI_RESET);
     }
 
     // clean up resources

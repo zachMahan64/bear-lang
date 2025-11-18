@@ -10,10 +10,13 @@
 #ifdef DEBUG
 #include <stdio.h>
 #define LOG_STR(x) printf("%s\n", x);
-#define LOG_STR_NNL(x) printf("%s", x);
+#define LOG_STR_NNL(x)                                                                             \
+    printf("[DEBUG] "                                                                              \
+           "%s",                                                                                   \
+           x);
 #define LOG_CHAR(x) printf("%c\n", x);
 #define LOG_CHAR_NNL(x) printf("%c", x);
-#define LOG_ERR(x) puts(x);
+#define LOG_ERR(x) puts("[ERROR] " x);
 #else
 #define LOG_STR(x)
 #define LOG_STR_NNL(x)

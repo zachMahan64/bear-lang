@@ -209,7 +209,7 @@ lex_multichar_operator:
         LEX_KNOWN_LEN_PUSH(1);
     }
     default: {
-        LOG_ERR("[DEBUG | ERROR] unexpected first character in multichar operator during lexing.");
+        LOG_ERR("unexpected first character in multichar operator during lexing.");
     }
     }
     goto lex_start;
