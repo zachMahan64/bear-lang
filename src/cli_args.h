@@ -16,7 +16,6 @@ typedef enum {
     NO_FLAG = '\0',
     ERROR = -1,
     BUILD = 'b',
-    COMPILE = 'c',
     HELP = 'h',
     VERSION = 'v',
 } cli_flag_e;

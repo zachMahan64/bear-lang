@@ -10,7 +10,7 @@
 // LONG FLAG NAME MAP
 
 cli_flag_long_mapping_t cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES] = {
-    {"build", BUILD}, {"compile", COMPILE}, {"help", HELP}, {"version", VERSION}};
+    {"build", BUILD}, {"help", HELP}, {"version", VERSION}};
 
 cli_args_t parse_cli_args(int argc, char** argv) {
     cli_args_t args = {NO_FLAG, ""}; // WIP

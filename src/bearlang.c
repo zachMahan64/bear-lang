@@ -50,7 +50,7 @@ int br_launch_cli(int argc, char** argv) {
         do_cli_help();
     } else if (args.flag == VERSION) {
         do_cli_version();
-    } else if (args.flag == COMPILE || (args.flag == NO_FLAG && strlen(args.file_name))) {
+    } else if (args.flag == NO_FLAG && strlen(args.file_name)) {
         error_status = do_cli_compile(&args);
     } else if (args.flag == BUILD) {
         error_status = do_cli_build(&args);
@@ -68,7 +68,6 @@ void do_cli_help(void) {
     const char* help_message = "usage:\n"
                                "        bearc <file_name> <flag> \n"
                                "flags:\n"
-                               "        [--compile | -c | <none>]\n"
                                "        [--version | -v]\n"
                                "        [--build | -b]\n"
                                "        [--help | -h]\n";
