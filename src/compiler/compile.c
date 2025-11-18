@@ -34,7 +34,6 @@ void print_out_tkn_table(vector_t* tkn_vec) {
 }
 
 // private debug helper
-
 void print_out_src_buffer(src_buffer_t* src_buffer) {
 #ifdef COMPILER_LOG
     printf("\n"

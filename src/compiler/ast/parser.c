@@ -177,6 +177,8 @@ typedef struct {
     size_t pos;
 } parser_t;
 
+// ----------- token consumption primitive functions -------
+
 // consume a token
 token_t* parser_eat(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
@@ -213,7 +215,7 @@ token_t* parser_prev(parser_t* parser) {
  * peek then conditionally eat
  * \return token_t* to consumed token or NULL if not matched
  */
-token_t* parser_match(parser_t* parser, token_type_e type) {
+token_t* parser_match_token(parser_t* parser, token_type_e type) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->sym == type) {
         if (tkn->sym != TOK_EOF) {
@@ -234,7 +236,7 @@ bool parser_match_is_builtin_type(token_type_e t);
  * returns bool if valid, else false
  * \return token_t* to consumed token or NULL if not matched
  */
-token_t* parser_match_call(parser_t* parser, bool (*match)(token_type_e)) {
+token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (match(tkn->sym)) {
         if (tkn->sym != TOK_EOF) {
@@ -259,8 +261,8 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
 
 // eat or return NULL and add a specific error to error_list (not just Expected token: __)
 // matches based on a specified token_type_e
-token_t* parser_expect(parser_t* parser, token_type_e expected_type,
-                       compiler_error_list_t* error_list, error_code_e code) {
+token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expected_type,
+                                           compiler_error_list_t* error_list, error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->sym == expected_type) {
         parser->pos++;
@@ -272,8 +274,8 @@ token_t* parser_expect(parser_t* parser, token_type_e expected_type,
 
 // eat or return NULL and add a specific error to error_list (not just Expected token: __)
 // uses a match call that returns bool based on a token_type_e
-token_t* parser_expect_call(parser_t* parser, bool (*match)(token_type_e),
-                            compiler_error_list_t* error_list, error_code_e code) {
+token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
+                                  compiler_error_list_t* error_list, error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (match(tkn->sym)) {
         parser->pos++;
@@ -288,6 +290,16 @@ bool parser_eof(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     return tkn->sym == TOK_EOF;
 }
+
+// match helpers
+bool parser_match_is_builtin_type(token_type_e t) {
+    return t == TOK_CHAR || t == TOK_BYTE || t == TOK_BOOL || t == TOK_INT || t == TOK_UINT ||
+           t == TOK_LONG || t == TOK_ULONG || t == TOK_FLT || t == TOK_DOUB || t == TOK_STR ||
+           t == TOK_SPACE || t == TOK_FN || t == TOK_MT || t == TOK_CT || t == TOK_DT ||
+           t == TOK_AUTO || t == TOK_VOID || t == TOK_ENUM || t == TOK_STRUCT;
+}
+
+// ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // primary function for parsing a file into an ast
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
@@ -305,14 +317,15 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
     // right now this is just some placeholder logic to test the basic parser functions
     token_t* tkn = NULL; // scratch token
     while (!parser_eof(&parser)) {
-        tkn = parser_match(&parser, TOK_INDETERMINATE);
+        tkn = parser_match_token(&parser, TOK_INDETERMINATE);
         if (tkn) {
             compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
-        } else if (parser_match_call(&parser, &parser_match_is_builtin_type)) {
-            parser_expect(&parser, TOK_IDENTIFIER, error_list, ERR_EXPECTED_IDENTIFIER);
-        } else if (parser_match(&parser, TOK_RARROW)) {
-            parser_expect_call(&parser, &parser_match_is_builtin_type, error_list,
-                               ERR_EXPECTED_TYPE);
+        } else if (parser_match_token_call(&parser, &parser_match_is_builtin_type)) {
+            parser_expect_token_with_err_code(&parser, TOK_IDENTIFIER, error_list,
+                                              ERR_EXPECTED_IDENTIFIER);
+        } else if (parser_match_token(&parser, TOK_RARROW)) {
+            parser_expect_token_call(&parser, &parser_match_is_builtin_type, error_list,
+                                     ERR_EXPECTED_TYPE);
         } else {
             parser_eat(&parser);
         }
@@ -322,11 +335,3 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
 }
 
 void ast_destroy(ast_t* ast) { ast_node_arena_destroy(&ast->arena); }
-
-// match helpers
-bool parser_match_is_builtin_type(token_type_e t) {
-    return t == TOK_CHAR || t == TOK_BYTE || t == TOK_BOOL || t == TOK_INT || t == TOK_UINT ||
-           t == TOK_LONG || t == TOK_ULONG || t == TOK_FLT || t == TOK_DOUB || t == TOK_STR ||
-           t == TOK_SPACE || t == TOK_FN || t == TOK_MT || t == TOK_CT || t == TOK_DT ||
-           t == TOK_AUTO || t == TOK_VOID || t == TOK_ENUM || t == TOK_STRUCT;
-}
