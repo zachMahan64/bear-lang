@@ -37,13 +37,13 @@ typedef enum token_type {
     // arith
     TOK_PLUS = '+',   // +
     TOK_MINUS = '-',  // -
-    TOK_MULT = '*',   // *
+    TOK_STAR = '*',   // *
     TOK_DIVIDE = '/', // /
     TOK_MOD = '%',    // %
 
     // bitwise
     TOK_BIT_OR = '|',  // |
-    TOK_BIT_AND = '&', // &
+    TOK_AMPER = '&',   // & ------> means bitwise and, also means reference
     TOK_BIT_NOT = '~', // ~
     TOK_BIT_XOR = '^', // ^
 
@@ -69,23 +69,30 @@ typedef enum token_type {
     TOK_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
               // some_val;
     // types
-    TOK_BOX, // example: box int
-    TOK_BAG, // example: bag int
-    TOK_MUT, // example: mut int or box::const int
-    TOK_REF, // example: ref::int
-    TOK_INT,
-    TOK_UINT,
-    TOK_LONG,
-    TOK_ULONG,
-    TOK_CHAR,
-    TOK_BYTE,
+    TOK_BOX, // example: box::i32
+    TOK_BAG, // example: bag::i32
+    TOK_MUT, // example: mut i32
+    // integers
+    TOK_I8,
+    TOK_U8,
+    TOK_I16,
+    TOK_U16,
+    TOK_I32,
+    TOK_U32,
+    TOK_I64,
+    TOK_U64,
+    // char
+    TOK_CHAR, // 32 bit unicode character
+    // flt
     TOK_FLT,
     TOK_DOUB,
-    TOK_STR,
+    // special
+    TOK_STR, // utf8 str
     TOK_BOOL,
-    TOK_VOID,
-    TOK_AUTO,
-    TOK_COMP,     // compile-time (like constexpr)
+    // more special
+    TOK_VOID,     // no type
+    TOK_AUTO,     // like cpp auto
+    TOK_COMPT,    // compile-time (like constexpr)
     TOK_HID,      // like private, but with slightly different semantics because BearLang has no
                   // inheritance, so this is really just a hidden data member or function/method
     TOK_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
@@ -127,7 +134,7 @@ typedef enum token_type {
 
     // operators
     // assign
-    TOK_ASSIGN_LARROW, // <-
+    TOK_ASSIGN_INIT, // <-
     // stream
     TOK_STREAM, // <<-
     // arith

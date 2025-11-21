@@ -38,13 +38,13 @@ const char* get_char_to_token_map(void) {
         // arithmetic
         char_to_token_map['+'] = TOK_PLUS;
         char_to_token_map['-'] = TOK_MINUS;
-        char_to_token_map['*'] = TOK_MULT;
+        char_to_token_map['*'] = TOK_STAR;
         char_to_token_map['/'] = TOK_DIVIDE;
         char_to_token_map['%'] = TOK_MOD;
 
         // bitwise
         char_to_token_map['|'] = TOK_BIT_OR;
-        char_to_token_map['&'] = TOK_BIT_AND;
+        char_to_token_map['&'] = TOK_AMPER;
         char_to_token_map['~'] = TOK_BIT_NOT;
         char_to_token_map['^'] = TOK_BIT_XOR;
 
@@ -84,21 +84,28 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "box", TOK_BOX);
         strimap_insert(&map, "bag", TOK_BAG);
         strimap_insert(&map, "mut", TOK_MUT);
-        strimap_insert(&map, "ref", TOK_REF);
-        strimap_insert(&map, "int", TOK_INT);
-        strimap_insert(&map, "uint", TOK_UINT);
+
+        strimap_insert(&map, "i8", TOK_I8);
+        strimap_insert(&map, "u8", TOK_U8);
+
+        strimap_insert(&map, "i16", TOK_I16);
+        strimap_insert(&map, "u16", TOK_U16);
+
+        strimap_insert(&map, "i32", TOK_I32);
+        strimap_insert(&map, "u32", TOK_U32);
+
+        strimap_insert(&map, "i64", TOK_I64);
+        strimap_insert(&map, "u64", TOK_U64);
+
         strimap_insert(&map, "char", TOK_CHAR);
-        strimap_insert(&map, "byte", TOK_BYTE);
         strimap_insert(&map, "flt", TOK_FLT);
         strimap_insert(&map, "doub", TOK_DOUB);
-        strimap_insert(&map, "long", TOK_LONG);
-        strimap_insert(&map, "ulong", TOK_ULONG);
         strimap_insert(&map, "str", TOK_STR);
         strimap_insert(&map, "bool", TOK_BOOL);
         strimap_insert(&map, "void", TOK_VOID);
         strimap_insert(&map, "auto", TOK_AUTO);
         strimap_insert(&map, "static", TOK_STATIC);
-        strimap_insert(&map, "comp", TOK_COMP);
+        strimap_insert(&map, "compt", TOK_COMPT);
         strimap_insert(&map, "hid", TOK_HID);
         strimap_insert(&map, "template", TOK_TEMPLATE);
         strimap_insert(&map, "enum", TOK_ENUM);
@@ -120,7 +127,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "->", TOK_RARROW);
         strimap_insert(&map, "..", TOK_SCOPE_RES);
         strimap_insert(&map, "::", TOK_TYPE_MOD);
-        strimap_insert(&map, "<-", TOK_ASSIGN_LARROW);
+        strimap_insert(&map, "<-", TOK_ASSIGN_INIT);
         strimap_insert(&map, "<<-", TOK_STREAM);
         strimap_insert(&map, "++", TOK_INC);
         strimap_insert(&map, "--", TOK_DEC);
@@ -181,13 +188,13 @@ const char* const* token_to_string_map(void) {
         map[TOK_ASSIGN_EQ] = "=";
         map[TOK_PLUS] = "+";
         map[TOK_MINUS] = "-";
-        map[TOK_MULT] = "*";
+        map[TOK_STAR] = "*";
         map[TOK_DIVIDE] = "/";
         map[TOK_MOD] = "%";
 
         // bitwise
         map[TOK_BIT_OR] = "|";
-        map[TOK_BIT_AND] = "&";
+        map[TOK_AMPER] = "&";
         map[TOK_BIT_NOT] = "~";
         map[TOK_BIT_XOR] = "^";
 
@@ -210,21 +217,30 @@ const char* const* token_to_string_map(void) {
         map[TOK_BOX] = "box";
         map[TOK_BAG] = "bag";
         map[TOK_MUT] = "mut";
-        map[TOK_REF] = "ref";
-        map[TOK_INT] = "int";
-        map[TOK_UINT] = "uint";
-        map[TOK_LONG] = "long";
-        map[TOK_ULONG] = "ulong";
+
+        map[TOK_I8] = "i8";
+        map[TOK_U8] = "u8";
+
+        map[TOK_I16] = "i16";
+        map[TOK_U16] = "u16";
+
+        map[TOK_I32] = "i32";
+        map[TOK_U32] = "u32";
+
+        map[TOK_I64] = "i64";
+        map[TOK_U64] = "u64";
+
         map[TOK_CHAR] = "char";
-        map[TOK_BYTE] = "byte";
+
         map[TOK_FLT] = "flt";
         map[TOK_DOUB] = "doub";
+
         map[TOK_STR] = "str";
         map[TOK_BOOL] = "bool";
         map[TOK_VOID] = "void";
         map[TOK_AUTO] = "auto";
         map[TOK_STATIC] = "static";
-        map[TOK_COMP] = "comp";
+        map[TOK_COMPT] = "compt";
         map[TOK_HID] = "hidden";
         map[TOK_TEMPLATE] = "template";
 
@@ -255,7 +271,7 @@ const char* const* token_to_string_map(void) {
         map[TOK_TYPE_MOD] = "::";
 
         // operators
-        map[TOK_ASSIGN_LARROW] = "<-";
+        map[TOK_ASSIGN_INIT] = "<-";
         map[TOK_STREAM] = "<<-";
         map[TOK_INC] = "++";
         map[TOK_DEC] = "--";
@@ -332,13 +348,13 @@ const char* get_first_char_in_multichar_operator_token_map(void) {
         // arithmetic
         char_to_token_map['+'] = TOK_PLUS;
         char_to_token_map['-'] = TOK_MINUS;
-        char_to_token_map['*'] = TOK_MULT;
+        char_to_token_map['*'] = TOK_STAR;
         char_to_token_map['/'] = TOK_DIVIDE;
         char_to_token_map['%'] = TOK_MOD;
 
         // bitwise
         char_to_token_map['|'] = TOK_BIT_OR;
-        char_to_token_map['&'] = TOK_BIT_AND;
+        char_to_token_map['&'] = TOK_AMPER;
         char_to_token_map['~'] = TOK_BIT_NOT;
         char_to_token_map['^'] = TOK_BIT_XOR;
 

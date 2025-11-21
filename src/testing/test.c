@@ -10,7 +10,12 @@ void test_vector(void);
 void test_strimap(void);
 void test_arena(void);
 
-void test_run(void) { test_arena(); }
+int main(void) {
+    test_vector();
+    test_strimap();
+    test_arena();
+    return 0;
+}
 
 void test_vector(void) {
     vector_t vec_int = vector_create_and_init(sizeof(int), 5);

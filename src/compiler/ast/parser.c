@@ -58,12 +58,12 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_PLUS] = 6;
         map[TOK_MINUS] = 6;
 
-        map[TOK_MULT] = 5;
+        map[TOK_STAR] = 5;
         map[TOK_DIVIDE] = 5;
         map[TOK_MOD] = 5;
 
         map[TOK_BIT_OR] = 13;
-        map[TOK_BIT_AND] = 11;
+        map[TOK_AMPER] = 11;
         map[TOK_BIT_NOT] = 3;
         map[TOK_BIT_XOR] = 12;
 
@@ -87,19 +87,18 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_BAG] = NONE;
 
         map[TOK_MUT] = NONE;
-        map[TOK_REF] = NONE;
-        map[TOK_INT] = NONE;
-        map[TOK_UINT] = NONE;
-        map[TOK_ULONG] = NONE;
+        map[TOK_I32] = NONE;
+        map[TOK_U32] = NONE;
+        map[TOK_U64] = NONE;
         map[TOK_CHAR] = NONE;
-        map[TOK_BYTE] = NONE;
+        map[TOK_U8] = NONE;
         map[TOK_FLT] = NONE;
         map[TOK_DOUB] = NONE;
         map[TOK_STR] = NONE;
         map[TOK_BOOL] = NONE;
         map[TOK_VOID] = NONE;
         map[TOK_AUTO] = NONE;
-        map[TOK_COMP] = NONE;
+        map[TOK_COMPT] = NONE;
         map[TOK_HID] = NONE;
 
         map[TOK_TEMPLATE] = NONE;
@@ -134,7 +133,7 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_SCOPE_RES] = 1;
         map[TOK_TYPE_MOD] = NONE;
 
-        map[TOK_ASSIGN_LARROW] = NONE;
+        map[TOK_ASSIGN_INIT] = NONE;
         map[TOK_STREAM] = 16;
 
         map[TOK_INC] = 2;
@@ -291,13 +290,17 @@ bool parser_eof(parser_t* parser) {
     return tkn->sym == TOK_EOF;
 }
 
+// map containing look-ups for builtin types
+static const bool parser_builtin_type_map[TOK__NUM] = {
+    [TOK_CHAR] = true, [TOK_U8] = true,   [TOK_I8] = true,   [TOK_I32] = true,
+    [TOK_U32] = true,  [TOK_I64] = true,  [TOK_U64] = true,  [TOK_FLT] = true,
+    [TOK_DOUB] = true, [TOK_BOOL] = true, [TOK_STR] = true,  [TOK_SPACE] = true,
+    [TOK_FN] = true,   [TOK_MT] = true,   [TOK_CT] = true,   [TOK_DT] = true,
+    [TOK_AUTO] = true, [TOK_VOID] = true, [TOK_ENUM] = true, [TOK_STRUCT] = true,
+};
+
 // match helpers
-bool parser_match_is_builtin_type(token_type_e t) {
-    return t == TOK_CHAR || t == TOK_BYTE || t == TOK_BOOL || t == TOK_INT || t == TOK_UINT ||
-           t == TOK_LONG || t == TOK_ULONG || t == TOK_FLT || t == TOK_DOUB || t == TOK_STR ||
-           t == TOK_SPACE || t == TOK_FN || t == TOK_MT || t == TOK_CT || t == TOK_DT ||
-           t == TOK_AUTO || t == TOK_VOID || t == TOK_ENUM || t == TOK_STRUCT;
-}
+bool parser_match_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -320,13 +323,21 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
         tkn = parser_match_token(&parser, TOK_INDETERMINATE);
         if (tkn) {
             compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
-        } else if (parser_match_token_call(&parser, &parser_match_is_builtin_type)) {
+        }
+        // expect id after builtin type
+        else if (parser_match_token_call(&parser, &parser_match_is_builtin_type)) {
             parser_expect_token_with_err_code(&parser, TOK_IDENTIFIER, error_list,
                                               ERR_EXPECTED_IDENTIFIER);
-        } else if (parser_match_token(&parser, TOK_RARROW)) {
+        }
+
+        // expect type after rarrow
+        else if (parser_match_token(&parser, TOK_RARROW)) {
             parser_expect_token_call(&parser, &parser_match_is_builtin_type, error_list,
                                      ERR_EXPECTED_TYPE);
-        } else {
+        }
+
+        // just consume
+        else {
             parser_eat(&parser);
         }
     }

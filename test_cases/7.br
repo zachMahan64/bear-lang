@@ -1,0 +1,4 @@
+// mains with args
+fn main(str[] args) -> int {
+    return 0;
+}
