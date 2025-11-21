@@ -13,12 +13,11 @@
 ```
 git clone https://github.com/zachMahan64/bear-lang.git
 cd bear-lang && mkdir build && cd build && cmake .. && make
-                      # if you want BearLang on your path:
-pwd                   # and copy result
-vim ~/.zshrc          # or .bashrc, etc.
-                      # add this line into the rc file: export PATH="result/from/pwd/:$PATH" and then :wq
-source ~/.zshrc       # or .bashrc, etc.
-bearc -v              # check to ensure it works
+                                                         # if you want BearLang on your path:
+pwd                                                      # and copy result
+echo "export PATH='result/from/pwd/:\$PATH'" >> ~/.zshrc  # or .bashrc, etc.
+source ~/.zshrc                                          # or .bashrc, etc.
+bearc -v                                                 # check to ensure it works
 ```
 
 ### Build Directions (Windows with MSYS2 UCRT64)
@@ -31,12 +30,11 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
     mingw-w64-ucrt-x86_64-make      \
     mingw-w64-ucrt-x86_64-cmake
 cd bear-lang && mkdir build && cd build && cmake -G "MinGW Makefiles" .. && mingw32-make
-                      # if you want BearLang on your path:
-pwd                   # and copy result
-vim ~/.bashrc
-                      # add this line into the rc file: export PATH="result/from/pwd/:$PATH" and then :wq
-source ~/.bashrc
-bearc -v              # check to ensure it works
+                                                          # if you want BearLang on your path:
+pwd                                                       # and copy result
+echo "export PATH='result/from/pwd/:\$PATH'" >> ~/.bashrc  
+source ~/.bashrc                                          
+bearc -v                                                  # check to ensure it works
 ```
 
 ### Run 
