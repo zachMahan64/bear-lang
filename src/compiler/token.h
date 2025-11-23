@@ -34,6 +34,9 @@ typedef enum token_type {
     // assign
     TOK_ASSIGN_EQ = '=', // =
 
+    // mark invocation
+    TOK_HASH_INVOKE = '#',
+
     // arith
     TOK_PLUS = '+',   // +
     TOK_MINUS = '-',  // -
@@ -61,10 +64,8 @@ typedef enum token_type {
     TOK_SPACE, // space
     // function
     TOK_FN,
-    TOK_MT,  // method, for implicit this ptr for data-associated behavior in structs
-    TOK_CT,  // ctor
-    TOK_MCT, // special move ctor
-    TOK_DT,  // dtor
+    TOK_MT, // method, for implicit this ptr for data-associated behavior in structs
+    TOK_DT, // dtor
     // stdio
     TOK_COUT, // example: cout <<- "Hello World";
     TOK_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
@@ -99,8 +100,11 @@ typedef enum token_type {
     TOK_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
                   // smarter macro
     TOK_ENUM,     // scoped/type-checked enums
+    TOK_KW_MARK,  // marks (like traits)
     // memory location identifiers
     TOK_STATIC,
+
+    // mark
 
     // comparison
     TOK_IF,
@@ -112,12 +116,15 @@ typedef enum token_type {
     TOK_RETURN,
 
     // structures (incorp after prodcedural is working)
-    TOK_THIS,
+    TOK_SELF,
     TOK_STRUCT,
-    TOK_NEW,
+    TOK_MALLOC,
+    TOK_FREE,
 
     // variable or function name
     TOK_IDENTIFIER,
+    // mark
+    TOK_MARK_ID,
 
     // built-in types
     TOK_CHAR_LIT,

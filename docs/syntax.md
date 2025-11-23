@@ -34,17 +34,18 @@ fn do_thing() {
 - type-deduction: `auto x = func_returning_i32(); // x will be i32`
 - compt: `compt i32 x = some_compt_func();`
 #### Moves / Copies 
-- All objects are copiable and moveable, always
+- All objects are copiable and moveable, unless marked with `NoCopy`, `NoMove`
 - `=` for copies, `<-` for moves during assignment 
-- All copies are bitwise copies and the moved-from object's destructor is never called
-- Bitwise copies can be replaced by custom logic using the special mct member function
+- All copies and moves are bitwise
+- Moved-from objects will never have their dtor's called
+- You cannot move fields out of objects
 #### Variables
 ```
 i32 x = 0; // assignment
 i32 y <- x; // move assignment
-i32 z <- crunch_numbers(); // = or <- would be fine here
-BigStruct big_thing <- get_big_thing(); // guranteed RVO
-ResrcManager manager1 <- ResrcManager();
+i32 z = crunch_numbers();
+BigStruct big_thing = get_big_thing();
+ResrcManager manager1 = ResrcManager::new();
 ResrcManager manager2 <- manager1; // transfer ownership through move
 ```
 #### Arrays

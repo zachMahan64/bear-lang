@@ -29,8 +29,12 @@ const char* get_char_to_token_map(void) {
 
         // punctuation
         char_to_token_map[';'] = TOK_SEMICOLON;
+        char_to_token_map[':'] = TOK_COLON;
         char_to_token_map['.'] = TOK_DOT;
         char_to_token_map[','] = TOK_COMMA;
+
+        // at invoke
+        char_to_token_map['#'] = TOK_HASH_INVOKE;
 
         // assignment
         char_to_token_map['='] = TOK_ASSIGN_EQ;
@@ -79,14 +83,13 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "space", TOK_SPACE);
         strimap_insert(&map, "fn", TOK_FN);
         strimap_insert(&map, "mt", TOK_MT);
-        strimap_insert(&map, "ct", TOK_CT);
-        strimap_insert(&map, "mct", TOK_MCT);
         strimap_insert(&map, "dt", TOK_DT);
         strimap_insert(&map, "cout", TOK_COUT);
         strimap_insert(&map, "cin", TOK_CIN);
         strimap_insert(&map, "box", TOK_BOX);
         strimap_insert(&map, "bag", TOK_BAG);
         strimap_insert(&map, "mut", TOK_MUT);
+        strimap_insert(&map, "mark", TOK_KW_MARK);
 
         strimap_insert(&map, "i8", TOK_I8);
         strimap_insert(&map, "u8", TOK_U8);
@@ -122,9 +125,12 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "return", TOK_RETURN);
 
         // structures
-        strimap_insert(&map, "this", TOK_THIS);
+        strimap_insert(&map, "self", TOK_SELF);
         strimap_insert(&map, "struct", TOK_STRUCT);
-        strimap_insert(&map, "new", TOK_NEW);
+
+        // heap
+        strimap_insert(&map, "malloc", TOK_MALLOC);
+        strimap_insert(&map, "free", TOK_FREE);
 
         // operators / symbols (multi-char tokens)
         strimap_insert(&map, "->", TOK_RARROW);
@@ -184,8 +190,10 @@ const char* const* token_to_string_map(void) {
 
         // punctuation
         map[TOK_SEMICOLON] = ";";
+        map[TOK_COLON] = ":";
         map[TOK_DOT] = ".";
         map[TOK_COMMA] = ",";
+        map[TOK_HASH_INVOKE] = "#";
 
         // assignment / operators
         map[TOK_ASSIGN_EQ] = "=";
@@ -213,14 +221,13 @@ const char* const* token_to_string_map(void) {
         map[TOK_SPACE] = "space";
         map[TOK_FN] = "fn";
         map[TOK_MT] = "mt";
-        map[TOK_CT] = "ct";
-        map[TOK_MCT] = "mct";
         map[TOK_DT] = "dt";
         map[TOK_COUT] = "cout";
         map[TOK_CIN] = "cin";
         map[TOK_BOX] = "box";
         map[TOK_BAG] = "bag";
         map[TOK_MUT] = "mut";
+        map[TOK_KW_MARK] = "mark";
 
         map[TOK_I8] = "i8";
         map[TOK_U8] = "u8";
@@ -256,9 +263,12 @@ const char* const* token_to_string_map(void) {
         map[TOK_RETURN] = "return";
 
         // structures
-        map[TOK_THIS] = "this";
+        map[TOK_SELF] = "self";
         map[TOK_STRUCT] = "struct";
-        map[TOK_NEW] = "new";
+
+        // heap
+        map[TOK_MALLOC] = "malloc";
+        map[TOK_FREE] = "free";
 
         // variable / literal types
         map[TOK_IDENTIFIER] = "id";
@@ -332,6 +342,8 @@ const char* get_always_one_char_to_token_map(void) {
         // punctuation
         char_to_token_map[';'] = TOK_SEMICOLON;
         char_to_token_map[','] = TOK_COMMA;
+
+        char_to_token_map['#'] = TOK_HASH_INVOKE;
 
         initialized = true;
     }
@@ -554,11 +566,17 @@ void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
         tkn->sym = TOK_LEX_ERROR_EMPTY_TOKEN;
         return;
     }
-    for (size_t i = 0; i < tkn->length; i++) {
+    size_t i;
+    if (tkn->start[0] == '@' && tkn->length > 1) {
+        tkn->sym = TOK_MARK_ID;
+        i = 1;
+    } else {
+        tkn->sym = TOK_IDENTIFIER;
+        i = 0;
+    }
+    for (; i < tkn->length; i++) {
         if (!isalnum(tkn->start[i]) && tkn->start[i] != '_') {
             tkn->sym = TOK_INDETERMINATE;
-            return;
         }
     }
-    tkn->sym = TOK_IDENTIFIER;
 }

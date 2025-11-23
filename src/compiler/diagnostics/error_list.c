@@ -73,12 +73,10 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
            error_message_context_for(err));
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
-    printf(ANSI_BOLD "%s" ANSI_RESET " %.*s\n", string_get_data(&line_num_str),
-           (int)line_preview.len, line_preview.start);
+    printf("%s %.*s\n", string_get_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
     string_t cursor_string = get_cursor_string(line_preview, err->token, ANSI_RED_FG);
-    printf(ANSI_BOLD "%s" ANSI_RESET " %s\n", string_get_data(&line_under_num_str),
-           string_get_data(&cursor_string));
+    printf("%s %s\n", string_get_data(&line_under_num_str), string_get_data(&cursor_string));
 
     // free resources
     string_destroy(&cursor_string);

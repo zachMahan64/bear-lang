@@ -80,8 +80,9 @@ int compile_file(const char* file_name) {
 
     if (compiler_error_list_empty(&error_list)) {
         // codegen here
+        printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, src_buffer.file_name);
     } else {
-        printf(ANSI_BOLD "compilation terminated.\n" ANSI_RESET);
+        printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, src_buffer.file_name);
     }
 
     // clean up resources

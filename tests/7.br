@@ -1,4 +1,14 @@
 // mains with args
-fn main(str[] args) -> int {
+fn main(str[]& args) -> i32 {
     return 0;
+}
+
+#[NoMove, TriviallyCopiable]
+struct Thing {
+    i32 my_int
+    fn new() -> Thing {
+        Thing thing;
+        thing.my_int = 42;
+        return thing;
+    }
 }
