@@ -1,5 +1,5 @@
 // mains with args
-fn main(str[]& args) -> i32 {
+fn main(i32 argc, str[]& argv) -> i32 {
     return 0;
 }
 

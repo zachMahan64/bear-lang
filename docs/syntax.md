@@ -8,7 +8,7 @@
 // in main.br 
 import my_mod // a module
 
-fn main(str[]& args) -> i32 {
+fn main(i32 argc, str[]& argv) -> i32 {
     my_mod..do_thing();
     return 0;
 }
@@ -48,13 +48,18 @@ BigStruct big_thing = get_big_thing();
 ResrcManager manager1 = ResrcManager::new();
 ResrcManager manager2 <- manager1; // transfer ownership through move
 ```
-#### Fat Arrays
+#### Arrays
 ```
-i32[10] my_arr; // holding {usize, elem1, elem2, ...}
-i32[10]& my_slice; // slice holds ptr + len
+i32[10] my_arr;      // holding {elem_0, elem_1, ...}
+i32[10]& my_arr_ref; // ptr to elem_0 w/ compile time size awareness
 ```
+```
+fn take_an_arr(i32[10]& arr) -> i32[10]& {
+    return arr; // does nothing, but demonstrates by-size array passing
+}
+```
+
 #### References & Ptrs
-```
 i32 x = 1;
 i32* x_ptr = &x; // same as C 
 i32& x_ref = x;  // same as C++
