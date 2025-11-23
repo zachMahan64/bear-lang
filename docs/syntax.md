@@ -33,7 +33,7 @@ fn do_thing() {
 - type-deduction: `auto x = func_returning_i32(); // x will be i32`
 - compt: `compt i32 x = some_compt_func();`
 #### Moves / Copies 
-- All objects are copiable and moveable, unless marked with `NoCopy`, `NoMove`
+- All objects are copyable and moveable, unless marked with `NoCopy`, `NoMove`
 - `=` for copies, `<-` for moves during assignment 
 - All copies and moves are bitwise
 - Moved-from objects will never have their dtor's called
@@ -49,9 +49,11 @@ ResrcManager manager1 = ResrcManager::new();
 ResrcManager manager2 <- manager1; // transfer ownership through move
 ```
 #### Arrays
+- Arrays are first-class objects and don't decay to pointers.
+- To pass a pointer to the first element, pass like this &arr
 ```
 i32[10] my_arr;      // holding {elem_0, elem_1, ...}
-i32[10]& my_arr_ref; // ptr to elem_0 w/ compile time size awareness
+i32[10]& my_arr_ref = &my_arr; // ptr to elem_0 w/ compile time size awareness
 ```
 ```
 fn take_an_arr(i32[10]& arr) -> i32[10]& {
@@ -60,6 +62,7 @@ fn take_an_arr(i32[10]& arr) -> i32[10]& {
 ```
 
 #### References & Ptrs
+```
 i32 x = 1;
 i32* x_ptr = &x; // same as C 
 i32& x_ref = x;  // same as C++
@@ -67,7 +70,9 @@ i32& x_ref = x;  // same as C++
 #### Marks 
 - Models viable operators and abstract aspects of types
 - Built-in mark hierachies: 
-- NoCopy
+- TriviallyCopyable
+- NoCopy (implicit for large types)
+    - requires !TriviallyCopyable 
 - NoDt (implicit for small types or types composed of only smalls types)
 - Numeric
     - requires Addable, Subtractable, Multipliable, Divisable
@@ -76,7 +81,7 @@ i32& x_ref = x;  // same as C++
 - Floating
      - requires Addable, Subtractable, Multipliable, Divisable
 ```
-#[NoMove, TriviallyCopiable]
+#[TriviallyCopyable]
 struct Thing {
     i32 my_int
     fn new() -> Thing {
