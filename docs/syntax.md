@@ -37,6 +37,7 @@ fn do_thing() {
 - All objects are copiable and moveable, always
 - `=` for copies, `<-` for moves during assignment 
 - All copies are bitwise copies and the moved-from object's destructor is never called
+- Bitwise copies can be replaced by custom logic using the special mct member function
 #### Variables
 ```
 i32 x = 0; // assignment
