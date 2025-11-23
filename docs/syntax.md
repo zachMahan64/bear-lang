@@ -64,8 +64,11 @@ fn take_an_arr(i32[10]& arr) -> i32[10]& {
 #### References & Ptrs
 ```
 i32 x = 1;
-i32* x_ptr = &x; // same as C 
-i32& x_ref = x;  // same as C++
+i32* x_ptr = &x;  // same as C/C++
+i32& x_ref = &x;  // & borrow syntax
+auto y = &x;      // defaults to reference
+auto& y = &x;     // also fine for getting reference
+auto* y = &x;     // to get a ptr
 ```
 #### Marks 
 - Models viable operators and abstract aspects of types
