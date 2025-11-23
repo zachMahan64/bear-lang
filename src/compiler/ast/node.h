@@ -38,7 +38,7 @@ typedef enum {
     AST_STRUCT_DEF, // KW_STRUCT + fields + optional impl
     AST_IMPL,       // KW_IMPL for method implementations
     AST_IMPORT,     // IMPORT statements
-    AST_NAMESPACE,  // KW_SPACE for namespace blocks
+    AST_MODULE,     // for module blocks
     AST_THIS,       // KW_THIS keyword
 
     // Other / Punctuation / Scope

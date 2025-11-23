@@ -55,7 +55,7 @@
 - [ ] AST 
 - [ ] Codegen
 
-#### II) Free-Function Calls and Scope Resolution (spaces)
+#### II) Free-Function Calls and Scope Resolution (modules)
 - [ ] AST 
 - [ ] Codegen
 

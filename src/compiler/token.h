@@ -42,7 +42,7 @@ typedef enum token_type {
     TOK_MINUS = '-',  // -
     TOK_STAR = '*',   // *
     TOK_DIVIDE = '/', // /
-    TOK_MOD = '%',    // %
+    TOK_MODULO = '%', // %
 
     // bitwise
     TOK_BAR = '|',     // |
@@ -60,8 +60,8 @@ typedef enum token_type {
     // file
     TOK_IMPORT = 256,
     // keywords
-    // namespace
-    TOK_SPACE, // space
+    // module
+    TOK_MODULE, // mod
     // function
     TOK_FN,
     TOK_MT, // method, for implicit this ptr for data-associated behavior in structs

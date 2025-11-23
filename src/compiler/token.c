@@ -44,7 +44,7 @@ const char* get_char_to_token_map(void) {
         char_to_token_map['-'] = TOK_MINUS;
         char_to_token_map['*'] = TOK_STAR;
         char_to_token_map['/'] = TOK_DIVIDE;
-        char_to_token_map['%'] = TOK_MOD;
+        char_to_token_map['%'] = TOK_MODULO;
 
         // bitwise
         char_to_token_map['|'] = TOK_BAR;
@@ -80,7 +80,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "import", TOK_IMPORT);
 
         // keywords
-        strimap_insert(&map, "space", TOK_SPACE);
+        strimap_insert(&map, "mod", TOK_MODULE);
         strimap_insert(&map, "fn", TOK_FN);
         strimap_insert(&map, "mt", TOK_MT);
         strimap_insert(&map, "dt", TOK_DT);
@@ -202,7 +202,7 @@ const char* const* token_to_string_map(void) {
         map[TOK_MINUS] = "-";
         map[TOK_STAR] = "*";
         map[TOK_DIVIDE] = "/";
-        map[TOK_MOD] = "%";
+        map[TOK_MODULO] = "%";
 
         // bitwise
         map[TOK_BAR] = "|";
@@ -219,7 +219,7 @@ const char* const* token_to_string_map(void) {
 
         // file / keywords
         map[TOK_IMPORT] = "import";
-        map[TOK_SPACE] = "space";
+        map[TOK_MODULE] = "mod";
         map[TOK_FN] = "fn";
         map[TOK_MT] = "mt";
         map[TOK_DT] = "dt";
@@ -368,7 +368,7 @@ const char* get_first_char_in_multichar_operator_token_map(void) {
         char_to_token_map['-'] = TOK_MINUS;
         char_to_token_map['*'] = TOK_STAR;
         char_to_token_map['/'] = TOK_DIVIDE;
-        char_to_token_map['%'] = TOK_MOD;
+        char_to_token_map['%'] = TOK_MODULO;
 
         // bitwise
         char_to_token_map['|'] = TOK_BAR;

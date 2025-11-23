@@ -60,7 +60,7 @@ uint32_t precendence_of_operator(token_type_e type) {
 
         map[TOK_STAR] = 5;
         map[TOK_DIVIDE] = 5;
-        map[TOK_MOD] = 5;
+        map[TOK_MODULO] = 5;
 
         map[TOK_BAR] = 13;
         map[TOK_AMPER] = 11;
@@ -72,66 +72,7 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_GT] = 9;
         map[TOK_LT] = 9;
 
-        map[TOK_IMPORT] = NONE;
-        map[TOK_SPACE] = NONE;
-
-        map[TOK_FN] = NONE;
-        map[TOK_MT] = NONE;
-        map[TOK_DT] = NONE;
-
-        map[TOK_COUT] = NONE;
-        map[TOK_CIN] = NONE;
-
-        map[TOK_BOX] = NONE;
-        map[TOK_BAG] = NONE;
-
-        map[TOK_MUT] = NONE;
-        map[TOK_I32] = NONE;
-        map[TOK_U32] = NONE;
-        map[TOK_U64] = NONE;
-        map[TOK_CHAR] = NONE;
-        map[TOK_U8] = NONE;
-        map[TOK_F32] = NONE;
-        map[TOK_F64] = NONE;
-        map[TOK_STR] = NONE;
-        map[TOK_BOOL] = NONE;
-        map[TOK_VOID] = NONE;
-        map[TOK_AUTO] = NONE;
-        map[TOK_COMPT] = NONE;
-        map[TOK_HID] = NONE;
-
-        map[TOK_TEMPLATE] = NONE;
-
-        map[TOK_ENUM] = NONE;
-
-        map[TOK_STATIC] = NONE;
-
-        map[TOK_IF] = NONE;
-        map[TOK_ELSE] = NONE;
-        map[TOK_ELIF] = NONE;
-        map[TOK_WHILE] = NONE;
-        map[TOK_FOR] = NONE;
-        map[TOK_RETURN] = NONE;
-
-        map[TOK_SELF] = NONE;
-        map[TOK_STRUCT] = NONE;
-
-        // literals
-        map[TOK_IDENTIFIER] = NONE;
-        map[TOK_CHAR_LIT] = NONE;
-        map[TOK_INT_LIT] = NONE;
-        map[TOK_LONG_LIT] = NONE;
-        map[TOK_DOUB_LIT] = NONE;
-
-        map[TOK_STR_LIT] = NONE;
-        map[TOK_BOOL_LIT_FALSE] = NONE;
-        map[TOK_BOOL_LIT_TRUE] = NONE;
-
-        map[TOK_RARROW] = NONE;
         map[TOK_SCOPE_RES] = 1;
-        map[TOK_TYPE_MOD] = NONE;
-
-        map[TOK_ASSIGN_MOVE] = NONE;
         map[TOK_STREAM] = 16;
 
         map[TOK_INC] = 2;
@@ -292,7 +233,7 @@ bool parser_eof(parser_t* parser) {
 static const bool parser_builtin_type_map[TOK__NUM] = {
     [TOK_CHAR] = true, [TOK_U8] = true,   [TOK_I8] = true,     [TOK_I32] = true,
     [TOK_U32] = true,  [TOK_I64] = true,  [TOK_U64] = true,    [TOK_F32] = true,
-    [TOK_F64] = true,  [TOK_BOOL] = true, [TOK_STR] = true,    [TOK_SPACE] = true,
+    [TOK_F64] = true,  [TOK_BOOL] = true, [TOK_STR] = true,    [TOK_MODULE] = true,
     [TOK_FN] = true,   [TOK_MT] = true,   [TOK_DT] = true,     [TOK_AUTO] = true,
     [TOK_VOID] = true, [TOK_ENUM] = true, [TOK_STRUCT] = true,
 };

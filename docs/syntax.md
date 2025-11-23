@@ -17,7 +17,7 @@ fn main(str[]& args) -> i32 {
 - Whichever one it finds is the root of that module
 ```
 // in ./my_mod
-space my_mod; // the rest of the file will be apart of the "my_mod" namespace
+mod my_mod; // the rest of the file will be apart of the "my_mod" namespace/module
 
 fn do_thing() {
     cout <<- "I'm doing a thing\n";
@@ -60,7 +60,19 @@ i32* x_ptr = &x; // same as C
 i32& x_ref = x;  // same as C++
 ```
 #### Marks 
-- Built-in marks: NoMove, NoCopy, Numeric, Integral, Floating 
+- Models viable operators and abstract aspects of types
+- Built-in mark hierachies: 
+- NoMove
+    - requires !NoCopy 
+- NoCopy
+    - requires !NoMove
+- NoDt (implicit for small types or types composed of only smalls types)
+- Numeric
+    - requires Addable, Subtractable, Multipliable, Divisable
+- Integral
+    - requires Addable, Subtractable, Multipliable, Divisable, Modable
+- Floating
+     - requires Addable, Subtractable, Multipliable, Divisable
 ```
 #[NoMove, TriviallyCopiable]
 struct Thing {
