@@ -3,7 +3,10 @@ fn main(str[]& args) -> i32 {
     return 0;
 }
 
-#[NoMove, TriviallyCopiable]
+// for example this must be true (although the user won't have to manually declare this)
+mark NoMove requires !NoCopy; // this would be declared inside std
+
+#[std..NoMove, std..NoDt]
 struct Thing {
     i32 my_int
     fn new() -> Thing {

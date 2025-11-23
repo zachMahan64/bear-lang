@@ -100,11 +100,12 @@ typedef enum token_type {
     TOK_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
                   // smarter macro
     TOK_ENUM,     // scoped/type-checked enums
-    TOK_KW_MARK,  // marks (like traits)
     // memory location identifiers
     TOK_STATIC,
 
-    // mark
+    // marks
+    TOK_MARK, // marks (like traits)
+    TOK_REQUIRES,
 
     // comparison
     TOK_IF,
@@ -123,8 +124,6 @@ typedef enum token_type {
 
     // variable or function name
     TOK_IDENTIFIER,
-    // mark
-    TOK_MARK_ID,
 
     // built-in types
     TOK_CHAR_LIT,

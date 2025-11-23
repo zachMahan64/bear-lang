@@ -89,7 +89,8 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "box", TOK_BOX);
         strimap_insert(&map, "bag", TOK_BAG);
         strimap_insert(&map, "mut", TOK_MUT);
-        strimap_insert(&map, "mark", TOK_KW_MARK);
+        strimap_insert(&map, "mark", TOK_MARK);
+        strimap_insert(&map, "requires", TOK_REQUIRES);
 
         strimap_insert(&map, "i8", TOK_I8);
         strimap_insert(&map, "u8", TOK_U8);
@@ -227,7 +228,8 @@ const char* const* token_to_string_map(void) {
         map[TOK_BOX] = "box";
         map[TOK_BAG] = "bag";
         map[TOK_MUT] = "mut";
-        map[TOK_KW_MARK] = "mark";
+        map[TOK_MARK] = "mark";
+        map[TOK_REQUIRES] = "requires";
 
         map[TOK_I8] = "i8";
         map[TOK_U8] = "u8";
@@ -566,17 +568,11 @@ void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
         tkn->sym = TOK_LEX_ERROR_EMPTY_TOKEN;
         return;
     }
-    size_t i;
-    if (tkn->start[0] == '@' && tkn->length > 1) {
-        tkn->sym = TOK_MARK_ID;
-        i = 1;
-    } else {
-        tkn->sym = TOK_IDENTIFIER;
-        i = 0;
-    }
-    for (; i < tkn->length; i++) {
+    tkn->sym = TOK_IDENTIFIER;
+    for (size_t i = 0; i < tkn->length; i++) {
         if (!isalnum(tkn->start[i]) && tkn->start[i] != '_') {
             tkn->sym = TOK_INDETERMINATE;
+            return;
         }
     }
 }

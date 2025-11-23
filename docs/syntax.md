@@ -13,7 +13,7 @@ fn main(str[]& args) -> i32 {
     return 0;
 }
 ```
-- From the root dir, the compiler will search for ./my_mod then try ./my_mod/my_mod 
+- From the root dir, the compiler will search for ./my_mod then try ./my_mod/mod.br 
 - Whichever one it finds is the root of that module
 ```
 // in ./my_mod
@@ -22,7 +22,6 @@ space my_mod; // the rest of the file will be apart of the "my_mod" namespace
 fn do_thing() {
     cout <<- "I'm doing a thing\n";
 }
-
 ```
 #### Built-in types:
 - `i8, u8, ..., i64, u64` supported
@@ -41,6 +40,7 @@ fn do_thing() {
 - You cannot move fields out of objects
 #### Variables
 ```
+i32 a; // default init
 i32 x = 0; // assignment
 i32 y <- x; // move assignment
 i32 z = crunch_numbers();
@@ -52,6 +52,25 @@ ResrcManager manager2 <- manager1; // transfer ownership through move
 ```
 i32[10] my_arr;
 i32[10]& my_slice; // slice holds ptr + len
+```
+#### References & Ptrs
+```
+i32 x = 1;
+i32* x_ptr = &x; // same as C 
+i32& x_ref = x;  // same as C++
+```
+#### Marks 
+- Built-in marks: NoMove, NoCopy, Numeric, Integral, Floating 
+```
+#[NoMove, TriviallyCopiable]
+struct Thing {
+    i32 my_int
+    fn new() -> Thing {
+        Thing thing;
+        thing.my_int = 42;
+        return thing;
+    }
+}
 ```
 #### Templated Types (will come later)
     - `MyTemplatedType<param1,param2,param3>`
