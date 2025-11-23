@@ -9,7 +9,7 @@ fn foo(int bar) -> bool {
     int whatUp = 65536;
     whatUp<<=4;// test comment
     int num=333 + whatUp;
-    flt myFloat = 1.5;
+    f32 myFloat = 1.5;
     return num<222 + bar * myFloat;
 }
 

@@ -33,8 +33,8 @@
 ## Imperative and Arithmetic 
 
 #### Declarations and Operator Precedence
-- [ ] `int`, `long` (integral)
-- [ ] `flt`, `doub` (floating)
+- [ ] `i32`, etc (integral)
+- [ ] `f32`, `f64` (floating)
 - [ ] `char`
 - [ ] `bool`
 - [ ] Arithmetic and boolean operators

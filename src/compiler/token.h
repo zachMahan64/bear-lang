@@ -42,7 +42,7 @@ typedef enum token_type {
     TOK_MOD = '%',    // %
 
     // bitwise
-    TOK_BIT_OR = '|',  // |
+    TOK_BAR = '|',     // |
     TOK_AMPER = '&',   // & ------> means bitwise and, also means reference
     TOK_BIT_NOT = '~', // ~
     TOK_BIT_XOR = '^', // ^
@@ -61,10 +61,11 @@ typedef enum token_type {
     TOK_SPACE, // space
     // function
     TOK_FN,
-    TOK_MT, // method, for implicit this ptr for data-associated behavior in structs
-    TOK_CT, // ctor
-    TOK_DT, // dtor
-    // stdou
+    TOK_MT,  // method, for implicit this ptr for data-associated behavior in structs
+    TOK_CT,  // ctor
+    TOK_MCT, // special move ctor
+    TOK_DT,  // dtor
+    // stdio
     TOK_COUT, // example: cout <<- "Hello World";
     TOK_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
               // some_val;
@@ -83,9 +84,9 @@ typedef enum token_type {
     TOK_U64,
     // char
     TOK_CHAR, // 32 bit unicode character
-    // flt
-    TOK_FLT,
-    TOK_DOUB,
+    // floating
+    TOK_F32,
+    TOK_F64,
     // special
     TOK_STR, // utf8 str
     TOK_BOOL,
@@ -134,7 +135,7 @@ typedef enum token_type {
 
     // operators
     // assign
-    TOK_ASSIGN_INIT, // <-
+    TOK_ASSIGN_MOVE, // <-
     // stream
     TOK_STREAM, // <<-
     // arith

@@ -1,2 +1,2 @@
-doub myDouble = 123.456;
+f64 myDouble = 123.456;
 int myInteger = 123456;

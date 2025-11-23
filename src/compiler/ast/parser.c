@@ -62,7 +62,7 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_DIVIDE] = 5;
         map[TOK_MOD] = 5;
 
-        map[TOK_BIT_OR] = 13;
+        map[TOK_BAR] = 13;
         map[TOK_AMPER] = 11;
         map[TOK_BIT_NOT] = 3;
         map[TOK_BIT_XOR] = 12;
@@ -92,8 +92,8 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_U64] = NONE;
         map[TOK_CHAR] = NONE;
         map[TOK_U8] = NONE;
-        map[TOK_FLT] = NONE;
-        map[TOK_DOUB] = NONE;
+        map[TOK_F32] = NONE;
+        map[TOK_F64] = NONE;
         map[TOK_STR] = NONE;
         map[TOK_BOOL] = NONE;
         map[TOK_VOID] = NONE;
@@ -133,7 +133,7 @@ uint32_t precendence_of_operator(token_type_e type) {
         map[TOK_SCOPE_RES] = 1;
         map[TOK_TYPE_MOD] = NONE;
 
-        map[TOK_ASSIGN_INIT] = NONE;
+        map[TOK_ASSIGN_MOVE] = NONE;
         map[TOK_STREAM] = 16;
 
         map[TOK_INC] = 2;
@@ -293,8 +293,8 @@ bool parser_eof(parser_t* parser) {
 // map containing look-ups for builtin types
 static const bool parser_builtin_type_map[TOK__NUM] = {
     [TOK_CHAR] = true, [TOK_U8] = true,   [TOK_I8] = true,   [TOK_I32] = true,
-    [TOK_U32] = true,  [TOK_I64] = true,  [TOK_U64] = true,  [TOK_FLT] = true,
-    [TOK_DOUB] = true, [TOK_BOOL] = true, [TOK_STR] = true,  [TOK_SPACE] = true,
+    [TOK_U32] = true,  [TOK_I64] = true,  [TOK_U64] = true,  [TOK_F32] = true,
+    [TOK_F64] = true,  [TOK_BOOL] = true, [TOK_STR] = true,  [TOK_SPACE] = true,
     [TOK_FN] = true,   [TOK_MT] = true,   [TOK_CT] = true,   [TOK_DT] = true,
     [TOK_AUTO] = true, [TOK_VOID] = true, [TOK_ENUM] = true, [TOK_STRUCT] = true,
 };
