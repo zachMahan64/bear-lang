@@ -104,6 +104,8 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "i64", TOK_I64);
         strimap_insert(&map, "u64", TOK_U64);
 
+        strimap_insert(&map, "usize", TOK_USIZE);
+
         strimap_insert(&map, "char", TOK_CHAR);
         strimap_insert(&map, "f32", TOK_F32);
         strimap_insert(&map, "f64", TOK_F64);
@@ -242,6 +244,8 @@ const char* const* token_to_string_map(void) {
 
         map[TOK_I64] = "i64";
         map[TOK_U64] = "u64";
+
+        map[TOK_USIZE] = "usize";
 
         map[TOK_CHAR] = "char";
 

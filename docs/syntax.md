@@ -40,7 +40,7 @@ fn do_thing() {
 - You cannot move fields out of objects
 #### Variables
 ```
-i32 a; // default init
+i32 a; // default init (zero-init)
 i32 x = 0; // assignment
 i32 y <- x; // move assignment
 i32 z = crunch_numbers();
@@ -48,9 +48,9 @@ BigStruct big_thing = get_big_thing();
 ResrcManager manager1 = ResrcManager::new();
 ResrcManager manager2 <- manager1; // transfer ownership through move
 ```
-#### Arrays
+#### Fat Arrays
 ```
-i32[10] my_arr;
+i32[10] my_arr; // holding {usize, elem1, elem2, ...}
 i32[10]& my_slice; // slice holds ptr + len
 ```
 #### References & Ptrs
@@ -62,10 +62,7 @@ i32& x_ref = x;  // same as C++
 #### Marks 
 - Models viable operators and abstract aspects of types
 - Built-in mark hierachies: 
-- NoMove
-    - requires !NoCopy 
 - NoCopy
-    - requires !NoMove
 - NoDt (implicit for small types or types composed of only smalls types)
 - Numeric
     - requires Addable, Subtractable, Multipliable, Divisable
