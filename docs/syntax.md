@@ -102,5 +102,7 @@ struct Thing {
 }
 ```
 #### Templated Types (will come later)
-    - `MyTemplatedType<param1,param2,param3>`
-    - `box::MyTemplatedType<param1,param2,param3>`
+```
+MyTemplatedType<param1,param2,param3> thing;
+box::MyTemplatedType<param1,param2,param3> boxedThing;
+```

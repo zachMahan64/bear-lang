@@ -42,7 +42,8 @@ int br_launch_cli(int argc, char** argv) {
         return -1;
     }
     if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
-        printf(ANSI_BOLD ANSI_RED_FG "error:" ANSI_RESET " file does not exist: %s\n",
+        printf(ANSI_BOLD ANSI_RED_FG "error:" ANSI_RESET " file does not exist: " ANSI_BOLD
+                                     "'%s'\n" ANSI_RESET,
                args.file_name);
         return -1;
     }

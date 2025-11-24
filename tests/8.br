@@ -1,0 +1,53 @@
+// in main.br 
+import my_mod // a module
+
+fn main(i32 argc, str[]& argv) -> i32 {
+    my_mod..do_thing();
+    return 0;
+}
+// in ./my_mod
+mod my_mod; // the rest of the file will be apart of the "my_mod" namespace/module
+
+fn do_thing() {
+    cout <<- "I'm doing a thing\n";
+}
+i32 a; // default init (zero-init)
+i32 x = 0; // assignment
+i32 y <- x; // move assignment
+i32 z = crunch_numbers();
+BigStruct big_thing = get_big_thing();
+ResrcManager manager1 = ResrcManager::new();
+ResrcManager manager2 <- manager1; // transfer ownership through move
+
+i32[10] my_arr;      // holding {elem_0, elem_1, ...}
+i32[10]& my_arr_ref = &my_arr; // ptr to elem_0 w/ compile time size awareness
+fn take_an_arr(i32[10]& arr) -> i32[10]& {
+    return arr; // does nothing, but demonstrates by-size array passing
+}
+
+i32 x = 1;
+i32* x_ptr = &x;  // same as C/C++
+i32& x_ref = &x;  // & borrow syntax
+auto y = &x;      // defaults to reference
+auto& y = &x;     // also fine for getting reference
+auto* y = &x;     // to get a ptr
+
+// East/West rules (mut applies left->right or right->left iff nothing is to the left of the mut)
+mut i32& z = &x;     // (const) ref to mutable i32
+i32& mut z = &x;     // mutable ref to (const) i32
+mut i32& mut z = &x; // mutabe ref to mutable i32 
+mut i32* mut z = &x; // same but ptr
+i32 mut *mut z = &x; // also legal, but not preferred
+
+#[TriviallyCopyable]
+struct Thing {
+    i32 my_int
+    fn new() -> Thing {
+        Thing thing;
+        thing.my_int = 42;
+        return thing;
+    }
+}
+#### Templated Types (will come later)
+MyTemplatedType<param1,param2,param3> thing;
+box::MyTemplatedType<param1,param2,param3> boxedThing;

@@ -240,6 +240,9 @@ static const bool parser_builtin_type_map[TOK__NUM] = {
 
 // match helpers
 bool parser_match_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
+bool parser_match_is_builtin_type_or_id(token_type_e t) {
+    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER;
+}
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -257,21 +260,31 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
 
     // TODO, AST building up logic here
     // right now this is just some placeholder logic to test the basic parser functions
+    // no ast is being raised, we're just running through the tokens
     token_t* tkn = NULL; // scratch token
     while (!parser_eof(&parser)) {
         tkn = parser_match_token(&parser, TOK_INDETERMINATE);
         if (tkn) {
             compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
         }
-        // expect id after builtin type
+        // expect id or other after builtin type
         else if (parser_match_token_call(&parser, &parser_match_is_builtin_type)) {
-            parser_expect_token_with_err_code(&parser, TOK_IDENTIFIER, error_list,
-                                              ERR_EXPECTED_IDENTIFIER);
+            tkn = parser_match_token(&parser, TOK_IDENTIFIER);
+            if (!tkn) {
+                tkn = parser_match_token(&parser, TOK_MUT);
+            }
+            if (!tkn) {
+                tkn = parser_match_token(&parser, TOK_STAR);
+            }
+            if (!tkn) {
+                tkn = parser_match_token(&parser, TOK_AMPER);
+            }
+
         }
 
         // expect type after rarrow
         else if (parser_match_token(&parser, TOK_RARROW)) {
-            parser_expect_token_call(&parser, &parser_match_is_builtin_type, error_list,
+            parser_expect_token_call(&parser, &parser_match_is_builtin_type_or_id, error_list,
                                      ERR_EXPECTED_TYPE);
         }
 

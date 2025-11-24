@@ -14,7 +14,6 @@ bool file_exists(const char* file_name) {
         fclose(file);
         return true;
     }
-    printf(ANSI_RED_FG ANSI_BOLD "error:" ANSI_RESET " '%s' does not exist\n", file_name);
     return false;
 }
 
