@@ -5,8 +5,6 @@ git clone --branch llvmorg-21.1.6 --depth 1 https://github.com/llvm/llvm-project
 mkdir llvm-build
 cd llvm-build || exit
 
-# tested & working macos install:
-
 cmake -G Ninja ../llvm-project/llvm \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_PROJECTS="clang;lld" \

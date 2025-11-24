@@ -8,12 +8,13 @@
 - [Syntax](docs/syntax.md)
 - [References](docs/references.md)
 
-## Setting Up BearLang
+## Set up
 #### Build
-- See the [build docs](docs/build.md). You can use these scripts:
+- See the [build docs](docs/build.md).
+- With git, gcc or clang, CMake, and Ninja installed, you can use these scripts: 
 ```
 ./scripts/llvm-install.sh          # for installing the LLVM distribution
-./scripts/clean.sh [Release|Debug] # defaults to debug with no args
+./scripts/clean.sh [Release|Debug] # builds bearc; defaults to Debug with no args
 ```
 #### Run 
 ```

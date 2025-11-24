@@ -1,10 +1,9 @@
 ## Building `bearc`
 #### Dependencies
 - CMake >= 3.20
-- Make and/or Ninja
-- In my scripts and directions, I use Make for building `bearc` itself, but Ninja for building LLVM.
+- Ninja
 ### Linux/MacOS
-```
+```bash
 git clone https://github.com/zachMahan64/bear-lang.git
 cd bear-lang && mkdir build && cd build && cmake .. && make
                                                          # if you want BearLang on your path:
@@ -17,7 +16,7 @@ bearc -v                                                 # check to ensure it wo
 
 ### Windows with MSYS2 UCRT64
 First, [download MSYS2](https://www.msys2.org/), and then open MSYS2 UCRT64.
-```
+```bash
 pacman -Syu
 pacman -S git vim     # some essentials you will need if you haven't used MSYS2 before
 git clone https://github.com/zachMahan64/bear-lang.git
@@ -34,15 +33,13 @@ bearc -v                                                  # check to ensure it w
 ```
 
 ### Building LLVM
-```
+```bash
 # starting from project root dir
 cd bearc
 git clone --branch llvmorg-21.1.6 --depth 1 https://github.com/llvm/llvm-project.git
 
 mkdir llvm-build
 cd llvm-build
-
-# tested & working macos install:
 
 cmake -G Ninja ../llvm-project/llvm \
   -DCMAKE_BUILD_TYPE=Release \
@@ -58,20 +55,4 @@ cmake -G Ninja ../llvm-project/llvm \
   -DCMAKE_INSTALL_PREFIX=../llvm
 
 ninja install
-
-### using example llvm build (fails on macos, haven't tested elsewhere yet)
-cmake -G Ninja \
-  -C ../llvm-project/clang/cmake/caches/DistributionExample.cmake \
-  -DCMAKE_INSTALL_PREFIX=../llvm \
-  ../llvm-project/llvm
-
-ninja stage2-distribution
-ninja stage2-install-distribution
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#
-
-# strip (optional)
-strip bearc/llvm/bin/clang
-strip bearc/llvm/bin/clang++
-strip bearc/llvm/bin/lld
-strip bearc/llvm/bin/opt
-strip bearc/llvm/bin/llc
+```
