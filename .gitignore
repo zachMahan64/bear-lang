@@ -15,3 +15,6 @@ _*/
 
 # perf
 perf.data*
+
+# llvm
+llvm*/

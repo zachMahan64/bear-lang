@@ -37,6 +37,28 @@ source ~/.bashrc
 bearc -v                                                  # check to ensure it works
 ```
 
+### Building LLVM
+```
+# note: adjust paths according to wherever your bear-lang lives
+cd bearc
+git clone --branch llvmorg-21.1.6 --depth 1 https://github.com/llvm/llvm-project.git
+mkdir -p bearc/llvm-build
+cd bearc/llvm-build
+cmake -G Ninja \
+  -C ../llvm-project/clang/cmake/caches/DistributionExample.cmake \
+  -DCMAKE_INSTALL_PREFIX=$HOME/dev/bear-lang/bearc/llvm \
+  ../llvm-project/llvm
+ninja stage2-distribution
+ninja stage2-install-distribution
+
+# strip
+strip bearc/llvm/bin/clang
+strip bearc/llvm/bin/clang++
+strip bearc/llvm/bin/lld
+strip bearc/llvm/bin/opt
+strip bearc/llvm/bin/llc
+```
+
 ### Run 
 ```
 bearc --help          # to see CLI usage
