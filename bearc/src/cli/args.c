@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#include "cli_args.h"
+#include "cli/args.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>

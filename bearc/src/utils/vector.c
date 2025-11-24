@@ -3,7 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "utils/vector.h"
-#include "log.h"
+#include "utils/log.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>

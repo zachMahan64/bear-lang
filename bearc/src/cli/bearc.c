@@ -3,11 +3,11 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "bearc/bearc.h"
-#include "cli_args.h"
+#include "cli/args.h"
 #include "compiler/compile.h"
-#include "log.h"
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"
+#include "utils/log.h"
 #include <stdio.h>
 #include <string.h>
 

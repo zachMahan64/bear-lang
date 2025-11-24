@@ -3,10 +3,8 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/lexer.h"
-#include "compiler/diagnostics/error_codes.h"
-#include "compiler/diagnostics/error_list.h"
-#include "log.h"
 #include "token.h"
+#include "utils/log.h"
 #include "utils/vector.h"
 #include <stddef.h>
 
