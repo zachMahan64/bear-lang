@@ -5,6 +5,10 @@
 #ifndef COMPILER_AST_NODE_ARENA
 #define COMPILER_AST_NODE_ARENA
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "compiler/ast/node.h"
 #include "utils/arena.h"
 #include "utils/vector.h"
@@ -27,5 +31,9 @@ ast_node_t* ast_node_arena_new_node(ast_node_arena_t* arena, ast_node_type_e typ
 // allocates and returns a pointer to a new node with its children
 ast_node_t* ast_node_arena_new_node_with_children(ast_node_arena_t* arena, ast_node_type_e type,
                                                   token_t* token, size_t child_count, ...);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // !COMPILER_AST_NODE_ARENA

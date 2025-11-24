@@ -5,6 +5,10 @@
 #ifndef COMPILER_AST
 #define COMPILER_AST
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "compiler/token.h"
 #include <stddef.h>
 
@@ -55,5 +59,9 @@ typedef struct ast_node {
 
 // add a child at a specified index inside the specified node.
 void ast_node_add_child(ast_node_t* node, size_t idx, ast_node_t* child);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // !COMPILER_AST

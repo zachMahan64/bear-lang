@@ -5,6 +5,10 @@
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "compiler/ast/node.h"
 #include "compiler/ast/node_arena.h"
 #include "compiler/diagnostics/error_list.h"
@@ -35,5 +39,9 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
 
 // dtor for ast_t
 void ast_destroy(ast_t* ast);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // !COMPILER_PARSER_H

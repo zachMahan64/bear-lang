@@ -12,8 +12,8 @@
 #### Build
 - See the [build docs](docs/build.md). You can use these scripts:
 ```
-./scripts/llvm-install.sh # for the LLVM distribution
-./scripts/clean.sh
+./scripts/llvm-install.sh          # for installing the LLVM distribution
+./scripts/clean.sh [Release|Debug] # defaults to debug with no args
 ```
 #### Run 
 ```
