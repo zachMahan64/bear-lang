@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef BEARLANG_H
-#define BEARLANG_H
+#ifndef BEARC_H
+#define BEARC_H
 
 // FUNCTIONS
 // MAIN CLI FUNCTION
