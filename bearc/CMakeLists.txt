@@ -66,24 +66,32 @@ endif()
 target_include_directories(${EXECUTABLE} PRIVATE src)
 target_include_directories(${EXECUTABLE} PUBLIC include)
 
-# LLVM
-set(LLVM_DIR "${CMAKE_SOURCE_DIR}/bearc/llvm/lib/cmake/llvm")
 
-# Find LLVM using CMake package
-find_package(LLVM REQUIRED CONFIG)
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+#LLVM
 
-target_include_directories(${EXECUTABLE} PRIVATE ${LLVM_INCLUDE_DIRS})
+# until LLVM integration is actually needed, toggle this on/off as needed
+option(NO_LLVM "Build without LLVM backend" OFF)
 
-add_definitions(${LLVM_DEFINITIONS})
+if (NOT NO_LLVM)
+    # LLVM setup
+    set(LLVM_DIR "${CMAKE_SOURCE_DIR}/bearc/llvm/lib/cmake/llvm")
 
-# add all LLVMs libs here (stil very wip)
-llvm_map_components_to_libnames(LLVM_LIBS
-    Core
-    Support
-    Option
-    IRReader
-)
+    find_package(LLVM REQUIRED CONFIG)
+    message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+    message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-target_link_libraries(${EXECUTABLE} PRIVATE ${LLVM_LIBS})
+    target_include_directories(${EXECUTABLE} PRIVATE ${LLVM_INCLUDE_DIRS})
+    add_definitions(${LLVM_DEFINITIONS})
+
+    llvm_map_components_to_libnames(LLVM_LIBS
+        Core
+        Support
+        Option
+        IRReader
+    )
+
+    target_link_libraries(${EXECUTABLE} PRIVATE ${LLVM_LIBS})
+else()
+    message(STATUS "Building WITHOUT LLVM backend (NO_LLVM=ON)")
+endif()
+
