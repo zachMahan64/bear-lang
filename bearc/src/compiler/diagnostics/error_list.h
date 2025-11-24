@@ -7,8 +7,8 @@
 
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
-#include "containers/vector.h"
-#include "file_io.h"
+#include "utils/file_io.h"
+#include "utils/vector.h"
 
 /*
  * compiler error containing the token causing the error w/ its built in meta-data (line & col

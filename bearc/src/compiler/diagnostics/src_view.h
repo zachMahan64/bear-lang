@@ -5,9 +5,9 @@
 #ifndef COMPILER_DIAGNOSTICS_SRC_VIEW_H
 #define COMPILER_DIAGNOSTICS_SRC_VIEW_H
 #include "compiler/token.h"
-#include "containers/string.h"
-#include "containers/string_view.h"
-#include "file_io.h"
+#include "utils/file_io.h"
+#include "utils/string.h"
+#include "utils/string_view.h"
 /*
  * builds a string view that displays source code
  */

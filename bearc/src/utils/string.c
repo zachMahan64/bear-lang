@@ -2,9 +2,9 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#include "containers/string.h"
-#include "containers/vector.h"
+#include "utils/string.h"
 #include "stdbool.h"
+#include "utils/vector.h"
 #include <stddef.h>
 #include <string.h>
 

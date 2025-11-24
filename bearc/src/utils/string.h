@@ -2,9 +2,9 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef CONTAINERS_STRING
-#define CONTAINERS_STRING
-#include "containers/vector.h"
+#ifndef UTILS_STRING
+#define UTILS_STRING
+#include "utils/vector.h"
 
 /*
  * string type that owns its own resources. string_destory(string_t) before a string goes out of
@@ -50,4 +50,4 @@ char string_pop_char(string_t* string);
 void string_reserve(string_t* string, size_t new_capacity);
 bool string_shrink_to_fit(string_t* string);
 
-#endif // !CONTAINERS_STRING
+#endif // !UTILS_STRING

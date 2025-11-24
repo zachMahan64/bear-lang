@@ -9,7 +9,7 @@
 #include "compiler/ast/node_arena.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
-#include "containers/vector.h"
+#include "utils/vector.h"
 #include <stdint.h>
 
 typedef enum {

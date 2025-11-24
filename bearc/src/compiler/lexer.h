@@ -6,8 +6,8 @@
 #define COMPILER_LEXER
 
 #include "compiler/diagnostics/error_list.h"
-#include "containers/vector.h"
-#include "file_io.h"
+#include "utils/file_io.h"
+#include "utils/vector.h"
 
 #define LEXER_ESTIMATED_CHARS_PER_TOKEN 6
 

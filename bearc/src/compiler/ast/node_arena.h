@@ -6,8 +6,8 @@
 #define COMPILER_AST_NODE_ARENA
 
 #include "compiler/ast/node.h"
-#include "containers/arena.h"
-#include "containers/vector.h"
+#include "utils/arena.h"
+#include "utils/vector.h"
 #include <stddef.h>
 
 typedef struct {

@@ -8,7 +8,7 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
-#include "containers/vector.h"
+#include "utils/vector.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

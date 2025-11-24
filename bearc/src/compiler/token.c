@@ -3,7 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "token.h"
-#include "containers/strimap.h"
+#include "utils/strimap.h"
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>

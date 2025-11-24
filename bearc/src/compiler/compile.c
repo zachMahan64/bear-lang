@@ -3,13 +3,13 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compile.h"
-#include "ansi_codes.h"
 #include "compiler/ast/parser.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/lexer.h"
 #include "compiler/token.h"
-#include "containers/vector.h"
-#include "file_io.h"
+#include "utils/ansi_codes.h"
+#include "utils/file_io.h"
+#include "utils/vector.h"
 #include <stddef.h>
 #include <stdio.h>
 

@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef CONTAINERS_ARENA_H
-#define CONTAINERS_ARENA_H
+#ifndef UTILS_ARENA_H
+#define UTILS_ARENA_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,4 +26,4 @@ void* arena_alloc(arena_t* arena, size_t req_size_bytes);
 // testing
 void arena_log_debug_info(arena_t* arena);
 
-#endif // !CONTAINERS_ARENA_H
+#endif // !UTILS_ARENA_H

@@ -3,14 +3,14 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/diagnostics/error_list.h"
-#include "ansi_codes.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
-#include "containers/string.h"
-#include "containers/string_view.h"
-#include "containers/vector.h"
-#include "file_io.h"
+#include "utils/ansi_codes.h"
+#include "utils/file_io.h"
+#include "utils/string.h"
+#include "utils/string_view.h"
+#include "utils/vector.h"
 #include <stddef.h>
 #include <stdio.h>
 

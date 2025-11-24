@@ -5,7 +5,7 @@
 #ifndef COMPILER_TOKEN_H
 #define COMPILER_TOKEN_H
 
-#include "containers/strimap.h"
+#include "utils/strimap.h"
 #include <stddef.h>
 #include <stdint.h>
 

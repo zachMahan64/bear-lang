@@ -5,9 +5,9 @@
 #include "compiler/lexer.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
-#include "containers/vector.h"
 #include "log.h"
 #include "token.h"
+#include "utils/vector.h"
 #include <stddef.h>
 
 vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {

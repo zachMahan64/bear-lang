@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef CONTAINERS_STRIMAP_H
-#define CONTAINERS_STRIMAP_H
+#ifndef UTILS_STRIMAP_H
+#define UTILS_STRIMAP_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -53,4 +53,4 @@ strimap_entry_t* strimap_iter_next(strimap_iter_t* iter);
 // helper
 uint64_t hash_str(const char* str);
 uint64_t hash_strn(const char* str, size_t len);
-#endif // ! CONTAINERS_STRIMAP_H
+#endif // ! UTILS_STRIMAP_H

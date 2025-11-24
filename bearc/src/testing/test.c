@@ -1,8 +1,8 @@
 #include "test.h"
 #include "compiler/token.h"
-#include "containers/arena.h"
-#include "containers/strimap.h"
-#include "containers/vector.h"
+#include "utils/arena.h"
+#include "utils/strimap.h"
+#include "utils/vector.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>

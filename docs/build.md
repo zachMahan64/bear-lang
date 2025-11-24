@@ -4,6 +4,7 @@
 git clone https://github.com/zachMahan64/bear-lang.git
 cd bear-lang && mkdir build && cd build && cmake .. && make
                                                          # if you want BearLang on your path:
+cd bearc
 pwd                                                      # and copy result
 echo "export PATH='result/from/pwd/:\$PATH'" >> ~/.zshrc  # or .bashrc, etc.
 source ~/.zshrc                                          # or .bashrc, etc.
@@ -21,6 +22,7 @@ pacman -S mingw-w64-ucrt-x86_64-gcc \
     mingw-w64-ucrt-x86_64-cmake
 cd bear-lang && mkdir build && cd build && cmake -G "MinGW Makefiles" .. && mingw32-make
                                                           # if you want BearLang on your path:
+cd bearc
 pwd                                                       # and copy result
 echo "export PATH='result/from/pwd/:\$PATH'" >> ~/.bashrc  
 source ~/.bashrc                                          
@@ -36,6 +38,7 @@ git clone --branch llvmorg-21.1.6 --depth 1 https://github.com/llvm/llvm-project
 mkdir -p bearc/llvm-build
 cd bearc/llvm-build
 
+### using example llvm build (fails on macos, haven't tested elsewhere yet)
 cmake -G Ninja \
   -C ../llvm-project/clang/cmake/caches/DistributionExample.cmake \
   -DCMAKE_INSTALL_PREFIX=$HOME/dev/bear-lang/bearc/llvm \
@@ -43,8 +46,10 @@ cmake -G Ninja \
 
 ninja stage2-distribution
 ninja stage2-install-distribution
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#
 
-##### or if that fails:
+# tested & working macos install:
+
 cmake -G Ninja ../llvm-project/llvm \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_PROJECTS="clang;lld" \
@@ -60,7 +65,7 @@ cmake -G Ninja ../llvm-project/llvm \
 
 ninja install
 
-# strip
+# strip (optional)
 strip bearc/llvm/bin/clang
 strip bearc/llvm/bin/clang++
 strip bearc/llvm/bin/lld

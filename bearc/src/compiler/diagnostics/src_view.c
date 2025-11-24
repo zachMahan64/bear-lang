@@ -3,11 +3,11 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/diagnostics/src_view.h"
-#include "ansi_codes.h"
 #include "compiler/token.h"
-#include "containers/string.h"
-#include "containers/string_view.h"
-#include "file_io.h"
+#include "utils/ansi_codes.h"
+#include "utils/file_io.h"
+#include "utils/string.h"
+#include "utils/string_view.h"
 
 string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn) {
     // find start of line

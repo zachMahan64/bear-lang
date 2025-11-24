@@ -2,8 +2,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef UTILS_VECTOR_H
+#define UTILS_VECTOR_H
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -39,4 +39,4 @@ void vector_remove_back(vector_t* vector);
 void vector_reserve(vector_t* vector, size_t new_capacity);
 bool vector_shrink_to_fit(vector_t* vector);
 
-#endif // !VECTOR_H
+#endif // !UTILS_VECTOR_H
