@@ -279,6 +279,13 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
             if (!tkn) {
                 tkn = parser_match_token(&parser, TOK_AMPER);
             }
+            if (!tkn) {
+                tkn = parser_match_token(&parser, TOK_LBRACK);
+            }
+            if (!tkn) {
+                compiler_error_list_emplace(error_list, tkn = parser_eat(&parser),
+                                            ERR_EXPECTED_TYPE);
+            }
 
         }
 
