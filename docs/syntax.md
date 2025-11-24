@@ -69,6 +69,13 @@ i32& x_ref = &x;  // & borrow syntax
 auto y = &x;      // defaults to reference
 auto& y = &x;     // also fine for getting reference
 auto* y = &x;     // to get a ptr
+
+// East/West rules (mut applies left->right or right->left iff nothing is to the left of the mut)
+mut i32& z = &x;     // (const) ref to mutable i32
+i32& mut z = &x;     // mutable ref to (const) i32
+mut i32& mut z = &x; // mutabe ref to mutable i32 
+mut i32* mut z = &x; // same but ptr
+i32 mut *mut z = &x; // also legal, but not preferred
 ```
 #### Marks 
 - Models viable operators and abstract aspects of types
@@ -80,7 +87,7 @@ auto* y = &x;     // to get a ptr
 - Numeric
     - requires Addable, Subtractable, Multipliable, Divisable
 - Integral
-    - requires Addable, Subtractable, Multipliable, Divisable, Modable
+    - requires Addable, Subtractable, Multipliable, Divisable, Modable, BitShiftable
 - Floating
      - requires Addable, Subtractable, Multipliable, Divisable
 ```
