@@ -4,6 +4,6 @@
 #include "utils/vector.h"
 #include <stdio.h>
 
-void test_run(void);
+void tests_run(void);
 
 #endif // !TEST_H

@@ -17,4 +17,6 @@ _*/
 perf.data*
 
 # llvm
-llvm*/
+llvm/
+llvm-build/
+llvm-project/

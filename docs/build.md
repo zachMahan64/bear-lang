@@ -31,22 +31,12 @@ bearc -v                                                  # check to ensure it w
 
 ### Building LLVM
 ```
-# note: adjust paths according to wherever your bear-lang lives
+# starting from project root dir
 cd bearc
 git clone --branch llvmorg-21.1.6 --depth 1 https://github.com/llvm/llvm-project.git
 
-mkdir -p bearc/llvm-build
-cd bearc/llvm-build
-
-### using example llvm build (fails on macos, haven't tested elsewhere yet)
-cmake -G Ninja \
-  -C ../llvm-project/clang/cmake/caches/DistributionExample.cmake \
-  -DCMAKE_INSTALL_PREFIX=$HOME/dev/bear-lang/bearc/llvm \
-  ../llvm-project/llvm
-
-ninja stage2-distribution
-ninja stage2-install-distribution
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#
+mkdir llvm-build
+cd llvm-build
 
 # tested & working macos install:
 
@@ -61,9 +51,19 @@ cmake -G Ninja ../llvm-project/llvm \
   -DLLVM_BUILD_EXAMPLES=OFF \
   -DLLVM_ENABLE_ASSERTIONS=OFF \
   -DLLVM_TARGETS_TO_BUILD="X86;ARM;AArch64" \
-  -DCMAKE_INSTALL_PREFIX=$HOME/dev/bear-lang/bearc/llvm
+  -DCMAKE_INSTALL_PREFIX=../llvm
 
 ninja install
+
+### using example llvm build (fails on macos, haven't tested elsewhere yet)
+cmake -G Ninja \
+  -C ../llvm-project/clang/cmake/caches/DistributionExample.cmake \
+  -DCMAKE_INSTALL_PREFIX=../llvm \
+  ../llvm-project/llvm
+
+ninja stage2-distribution
+ninja stage2-install-distribution
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^#
 
 # strip (optional)
 strip bearc/llvm/bin/clang

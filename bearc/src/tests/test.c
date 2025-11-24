@@ -1,4 +1,4 @@
-#include "test.h"
+#include "tests/test.h"
 #include "compiler/token.h"
 #include "utils/arena.h"
 #include "utils/strimap.h"

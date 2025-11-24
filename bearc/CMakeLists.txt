@@ -35,9 +35,7 @@ set(SRC
     src/utils/file_io.c
 
     src/cli/bearc.c
-    src/cli/args
-
-    src/main.c
+    src/cli/args.c
 )
 
 set(NO_TEST_SRC

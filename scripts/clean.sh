@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: ./clean.sh [Debug|Release]
+# usage: ./clean.sh [Debug|Release]
 config="${1:-Debug}"
 
 case "$config" in
@@ -12,4 +12,3 @@ esac
 rm -rf build
 cmake -DCMAKE_BUILD_TYPE="$config" -B build
 cmake --build build -j"$(nproc)"
-
