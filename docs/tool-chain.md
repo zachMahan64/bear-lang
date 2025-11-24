@@ -10,7 +10,7 @@ bearc/
             opt
             llc
         lib/
-            libLLVM-18.so*
+            libLLVM-21.so* # decide version
             libclang.so*
         include/
         lib/cmake/llvm/
