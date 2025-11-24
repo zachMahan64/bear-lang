@@ -9,7 +9,12 @@
 - [References](docs/references.md)
 
 ## Setting Up BearLang
-#### [Build](docs/build.md)
+#### Build
+- See the [build docs](docs/build.md).
+```
+./scripts/llvm-install.sh # for the LLVM distribution
+./scripts/clean.sh
+```
 #### Run 
 ```
 bearc --help          # to see CLI usage

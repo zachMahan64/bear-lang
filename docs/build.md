@@ -1,5 +1,9 @@
 ## Building `bearc`
-### Build Directions (Linux/MacOS)
+#### Dependencies
+- CMake >= 3.20
+- Make and/or Ninja
+- In my scripts and directions, I use Make for building `bearc` itself, but Ninja for building LLVM.
+### Linux/MacOS
 ```
 git clone https://github.com/zachMahan64/bear-lang.git
 cd bear-lang && mkdir build && cd build && cmake .. && make
@@ -11,7 +15,7 @@ source ~/.zshrc                                          # or .bashrc, etc.
 bearc -v                                                 # check to ensure it works
 ```
 
-### Build Directions (Windows with MSYS2 UCRT64)
+### Windows with MSYS2 UCRT64
 First, [download MSYS2](https://www.msys2.org/), and then open MSYS2 UCRT64.
 ```
 pacman -Syu
