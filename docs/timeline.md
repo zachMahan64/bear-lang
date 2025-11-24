@@ -60,7 +60,7 @@
 - [ ] Codegen
 
 #### III) Memory Semantics & More Advanced Compiler Errors
-- [ ] `box`, `bag`, and `ref`
+- [ ] `box` and `bag`
 - [ ] `str` and string literal handling (just store immutably in static memory)
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
@@ -75,7 +75,7 @@
 - [ ] Codegen
 
 #### V) Compile Time Constants
-- [ ] `comp` -> support for integral and floating constants
+- [ ] `compt` -> support for integral and floating constants
 - [ ] `enum` -> type-checked scoped constants
 
 - [ ] Parser/Semantic Analysis
@@ -85,7 +85,7 @@
 ## Data-Based
 
 #### I) Basic Structs and Methods; Struct Scope Resolution
-- [ ] `mt`, `fn` (static methods), `ct`/`dt` -> ctor/dtor
+- [ ] `mt`, `fn` (static methods), `dt` -> dtor
 
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
@@ -93,8 +93,8 @@
 - [ ] Runtime Implementation
 
 #### II) More Struct Features
-- [ ] `static` and `hidden` data members
-- [ ] `hidden` functions/methods
+- [ ] `static` and `hid` data members
+- [ ] `hid` functions/methods
 
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
@@ -103,7 +103,7 @@
 
 
 #### III) Advanced Struct Features
-- [ ] `template` -> basic macro-like templates and type-glue semantics
+- [ ] `template` -> basic macro-like templates
 
 - [ ] Parser/Semantic Analysis
 - [ ] AST 
@@ -130,15 +130,3 @@
 - [ ] VSCode Compatible 
 - [ ] NeoVim Compatible 
 - Reuse Compiler Tokens and Diagnostic Emission
-
-#### IV) Bindable to Python?
-- [ ] Outline
-
-- [ ] Parser/Semantic Analysis
-- [ ] AST 
-- [ ] Codegen
-- [ ] Runtime Implementation
-
-## Next
-- [ ] Make a native binary-compiled backend?
-- [ ] Bring other people onboard
