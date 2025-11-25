@@ -139,6 +139,14 @@ struct Thing {
 i32[16] arr;
 i32[]& slice = std..slice(&arr, 8); 
 ```
+#### Optionals
+```
+opt::i32 opt_int; // none, opt_i32.some == false
+opt_i32 = 12;     // some, opt_i32.some == true
+
+res::i32 res_int; // err, res_int.ok == false 
+res_int = 12;     // ok, res_int.ok = true;
+```
 
 #### Templated Types (will be a later addition after the core of the language is built)
 ```

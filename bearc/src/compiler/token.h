@@ -70,10 +70,11 @@ typedef enum token_type {
     TOK_COUT, // example: cout <<- "Hello World";
     TOK_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
               // some_val;
-    // types
+    // built-in constructs
+    TOK_OPT, // example: opt::i32
+    TOK_RES, // example: res::u64
     TOK_BOX, // example: box::i32
     TOK_BAG, // example: bag::i32
-    TOK_MUT, // example: mut i32
     // integers
     TOK_I8,
     TOK_U8,
@@ -98,6 +99,7 @@ typedef enum token_type {
     TOK_COMPT,    // compile-time (like constexpr)
     TOK_HID,      // like private, but with slightly different semantics because BearLang has no
                   // inheritance, so this is really just a hidden data member or function/method
+    TOK_MUT,      // example: mut i32
     TOK_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
                   // smarter macro
     TOK_ENUM,     // scoped/type-checked enums
@@ -118,7 +120,7 @@ typedef enum token_type {
     TOK_RETURN,
 
     // structures (incorp after prodcedural is working)
-    TOK_SELF,
+    TOK_SELF_ID,
     TOK_SELF_TYPE,
     TOK_STRUCT,
 

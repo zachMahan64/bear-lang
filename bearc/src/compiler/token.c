@@ -86,8 +86,13 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "dt", TOK_DT);
         strimap_insert(&map, "cout", TOK_COUT);
         strimap_insert(&map, "cin", TOK_CIN);
+
         strimap_insert(&map, "box", TOK_BOX);
         strimap_insert(&map, "bag", TOK_BAG);
+
+        strimap_insert(&map, "opt", TOK_OPT);
+        strimap_insert(&map, "res", TOK_RES);
+
         strimap_insert(&map, "mut", TOK_MUT);
         strimap_insert(&map, "mark", TOK_MARK);
         strimap_insert(&map, "requires", TOK_REQUIRES);
@@ -128,7 +133,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "return", TOK_RETURN);
 
         // structures
-        strimap_insert(&map, "self", TOK_SELF);
+        strimap_insert(&map, "self", TOK_SELF_ID);
         strimap_insert(&map, "Self", TOK_SELF_TYPE);
         strimap_insert(&map, "struct", TOK_STRUCT);
 
@@ -228,8 +233,13 @@ const char* const* token_to_string_map(void) {
         map[TOK_DT] = "dt";
         map[TOK_COUT] = "cout";
         map[TOK_CIN] = "cin";
+
         map[TOK_BOX] = "box";
         map[TOK_BAG] = "bag";
+
+        map[TOK_OPT] = "opt";
+        map[TOK_RES] = "res";
+
         map[TOK_MUT] = "mut";
         map[TOK_MARK] = "mark";
         map[TOK_REQUIRES] = "requires";
@@ -270,7 +280,7 @@ const char* const* token_to_string_map(void) {
         map[TOK_RETURN] = "return";
 
         // structures
-        map[TOK_SELF] = "self";
+        map[TOK_SELF_ID] = "self";
         map[TOK_SELF_TYPE] = "Self";
         map[TOK_STRUCT] = "struct";
 
