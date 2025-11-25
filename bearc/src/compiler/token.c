@@ -112,7 +112,7 @@ const strimap_t* get_string_to_token_strimap(void) {
         strimap_insert(&map, "str", TOK_STR);
         strimap_insert(&map, "bool", TOK_BOOL);
         strimap_insert(&map, "void", TOK_VOID);
-        strimap_insert(&map, "auto", TOK_AUTO);
+        strimap_insert(&map, "var", TOK_VAR);
         strimap_insert(&map, "static", TOK_STATIC);
         strimap_insert(&map, "compt", TOK_COMPT);
         strimap_insert(&map, "hid", TOK_HID);
@@ -255,7 +255,7 @@ const char* const* token_to_string_map(void) {
         map[TOK_STR] = "str";
         map[TOK_BOOL] = "bool";
         map[TOK_VOID] = "void";
-        map[TOK_AUTO] = "auto";
+        map[TOK_VAR] = "var";
         map[TOK_STATIC] = "static";
         map[TOK_COMPT] = "compt";
         map[TOK_HID] = "hidden";

@@ -30,7 +30,7 @@ fn do_thing() {
 - str (utf-8 string)
 - bool
 #### Type-related features (will come later)
-- type-deduction: `auto x = func_returning_i32(); // x will be i32`
+- type-deduction: `var x = func_returning_i32(); // x will be i32`
 - compt: `compt i32 x = some_compt_func();`
 #### Moves / Copies 
 - All objects are copyable and moveable, unless marked with `NoCopy`, `NoMove`
@@ -66,9 +66,10 @@ fn take_an_arr(i32[10]& arr) -> i32[10]& {
 i32 x = 1;
 i32* x_ptr = &x;  // same as C/C++
 i32& x_ref = &x;  // & borrow syntax
-auto y = &x;      // defaults to reference
-auto& y = &x;     // also fine for getting reference
-auto* y = &x;     // to get a ptr
+var y = &x;       // defaults to reference
+var& y = &x;      // also fine for getting reference
+var* y = &x;      // to get a ptr
+var* z = &z;      // will be deduced to i32**
 
 // East/West rules (mut applies left->right or right->left iff nothing is to the left of the mut)
 mut i32& z = &x;     // (const) ref to mutable i32

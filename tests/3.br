@@ -1,5 +1,5 @@
 main(string[] args) -> int {
-    auto myFoo = Foo..createBoxed(32);
+    var myFoo = Foo..createBoxed(32);
     myFoo.printOut;
     return 0;
 }

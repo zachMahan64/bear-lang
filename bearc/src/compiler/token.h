@@ -94,7 +94,7 @@ typedef enum token_type {
     TOK_BOOL,
     // more special
     TOK_VOID,     // no type
-    TOK_AUTO,     // like cpp auto
+    TOK_VAR,      // like java var
     TOK_COMPT,    // compile-time (like constexpr)
     TOK_HID,      // like private, but with slightly different semantics because BearLang has no
                   // inheritance, so this is really just a hidden data member or function/method

@@ -234,7 +234,7 @@ static const bool parser_builtin_type_map[TOK__NUM] = {
     [TOK_CHAR] = true, [TOK_U8] = true,   [TOK_I8] = true,     [TOK_I32] = true,
     [TOK_U32] = true,  [TOK_I64] = true,  [TOK_U64] = true,    [TOK_F32] = true,
     [TOK_F64] = true,  [TOK_BOOL] = true, [TOK_STR] = true,    [TOK_MODULE] = true,
-    [TOK_FN] = true,   [TOK_MT] = true,   [TOK_DT] = true,     [TOK_AUTO] = true,
+    [TOK_FN] = true,   [TOK_MT] = true,   [TOK_DT] = true,     [TOK_VAR] = true,
     [TOK_VOID] = true, [TOK_ENUM] = true, [TOK_STRUCT] = true,
 };
 
@@ -284,7 +284,7 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
             }
             if (!tkn) {
                 compiler_error_list_emplace(error_list, tkn = parser_eat(&parser),
-                                            ERR_EXPECTED_TYPE);
+                                            ERR_EXPECTED_IDENTIFIER);
             }
 
         }
