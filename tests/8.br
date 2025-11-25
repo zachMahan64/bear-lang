@@ -1,7 +1,7 @@
 // in main.br 
 import my_mod // a module
 
-fn main(i32 argc, str[]& argv) -> i32 {
+fn main(str[]& argv) -> i32 {
     my_mod..do_thing();
     return 0;
 }
@@ -51,3 +51,31 @@ struct Thing {
 #### Templated Types (will come later)
 MyTemplatedType<param1,param2,param3> thing;
 box::MyTemplatedType<param1,param2,param3> boxedThing;
+
+mark Contiguous {
+    fn size();
+    fn data(); 
+}
+
+#[Contiguous]
+struct I32SliceWrapper { 
+    hid usize size;
+    hid i32& data;
+
+    // ctor
+    fn new(i32[]& from_slice) -> Self {
+        Self self = {
+            .size = from_slice.size;
+            .data = from_slice.data;
+        };
+        return self;
+    }
+    
+    // "getters"
+    mt size -> usize {
+        return self.size;
+    }
+    mt data() -> i32& {
+        return self.data;
+    }
+}

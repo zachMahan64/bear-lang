@@ -231,11 +231,11 @@ bool parser_eof(parser_t* parser) {
 
 // map containing look-ups for builtin types
 static const bool parser_builtin_type_map[TOK__NUM] = {
-    [TOK_CHAR] = true, [TOK_U8] = true,   [TOK_I8] = true,     [TOK_I32] = true,
-    [TOK_U32] = true,  [TOK_I64] = true,  [TOK_U64] = true,    [TOK_F32] = true,
-    [TOK_F64] = true,  [TOK_BOOL] = true, [TOK_STR] = true,    [TOK_MODULE] = true,
-    [TOK_FN] = true,   [TOK_MT] = true,   [TOK_DT] = true,     [TOK_VAR] = true,
-    [TOK_VOID] = true, [TOK_ENUM] = true, [TOK_STRUCT] = true,
+    [TOK_CHAR] = true,   [TOK_U8] = true,   [TOK_I8] = true,   [TOK_I32] = true,
+    [TOK_U32] = true,    [TOK_I64] = true,  [TOK_U64] = true,  [TOK_USIZE] = true,
+    [TOK_F32] = true,    [TOK_F64] = true,  [TOK_BOOL] = true, [TOK_STR] = true,
+    [TOK_MODULE] = true, [TOK_FN] = true,   [TOK_MT] = true,   [TOK_DT] = true,
+    [TOK_VAR] = true,    [TOK_VOID] = true, [TOK_ENUM] = true, [TOK_STRUCT] = true,
 };
 
 // match helpers

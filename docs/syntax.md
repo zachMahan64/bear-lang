@@ -8,7 +8,7 @@
 // in main.br 
 import my_mod // a module
 
-fn main(i32 argc, str[]& argv) -> i32 {
+fn main(str[]& argv) -> i32 {
     my_mod..do_thing();
     return 0;
 }
@@ -91,10 +91,41 @@ i32 mut *mut z = &x; // also legal, but not preferred
     - requires Addable, Subtractable, Multipliable, Divisable, Modable, BitShiftable
 - Floating
      - requires Addable, Subtractable, Multipliable, Divisable
+
+```
+mark Contiguous {
+    fn size();
+    fn data(); 
+}
+
+#[Contiguous]
+struct I32SliceWrapper { 
+    hid usize size;
+    hid i32& data;
+
+    // ctor
+    fn new(i32[]& from_slice) -> Self {
+        Self self = {
+            .size = from_slice.size;
+            .data = from_slice.data;
+        };
+        return self;
+    }
+    
+    // "getters"
+    mt size -> usize {
+        return self.size;
+    }
+    mt data() -> i32& {
+        return self.data;
+    }
+}
+```
+
 ```
 #[TriviallyCopyable]
 struct Thing {
-    i32 my_int
+    i32 my_int;
     fn new() -> Thing {
         Thing thing;
         thing.my_int = 42;
@@ -102,7 +133,14 @@ struct Thing {
     }
 }
 ```
-#### Templated Types (will come later)
+### Built-in Constructs
+#### Slices 
+```
+i32[16] arr;
+i32[]& slice = std..slice(&arr, 8); 
+```
+
+#### Templated Types (will be a later addition after the core of the language is built)
 ```
 MyTemplatedType<param1,param2,param3> thing;
 box::MyTemplatedType<param1,param2,param3> boxedThing;

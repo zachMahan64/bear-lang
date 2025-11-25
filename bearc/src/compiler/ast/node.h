@@ -40,8 +40,8 @@ typedef enum {
 
     // Structural / Blocks
     AST_BLOCK,      // {...} sequence of statements
-    AST_STRUCT_DEF, // KW_STRUCT + fields
-    AST_IMPORT,     // IMPORT statements
+    AST_STRUCT_DEF, // TOK_STRUCT + fields
+    AST_IMPORT,     // TOK_IMPORT + module
     AST_MODULE,     // for module blocks
     AST_SELF,       // TOK_SELF keyword
 

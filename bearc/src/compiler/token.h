@@ -119,7 +119,10 @@ typedef enum token_type {
 
     // structures (incorp after prodcedural is working)
     TOK_SELF,
+    TOK_SELF_TYPE,
     TOK_STRUCT,
+
+    // low level heap functions
     TOK_MALLOC,
     TOK_FREE,
 

@@ -129,6 +129,7 @@ const strimap_t* get_string_to_token_strimap(void) {
 
         // structures
         strimap_insert(&map, "self", TOK_SELF);
+        strimap_insert(&map, "Self", TOK_SELF_TYPE);
         strimap_insert(&map, "struct", TOK_STRUCT);
 
         // heap
@@ -270,6 +271,7 @@ const char* const* token_to_string_map(void) {
 
         // structures
         map[TOK_SELF] = "self";
+        map[TOK_SELF_TYPE] = "Self";
         map[TOK_STRUCT] = "struct";
 
         // heap
