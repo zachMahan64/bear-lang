@@ -14,7 +14,7 @@ extern "C" {
 
 typedef enum {
     // Unknown / fallback
-    AST_UNKNOWN,
+    AST_NONE = 0,
     // TODO: very much needs to be updated for newer tokens
     AST_FILE,
     // Expressions
