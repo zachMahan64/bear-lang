@@ -5,7 +5,6 @@
 #include "compiler/ast/node_arena.h"
 #include "compiler/ast/node.h"
 #include "utils/arena.h"
-#include "utils/strimap.h"
 #include <stdarg.h>
 #include <stddef.h>
 
