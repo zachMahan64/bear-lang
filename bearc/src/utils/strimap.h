@@ -5,6 +5,7 @@
 #ifndef UTILS_STRIMAP_H
 #define UTILS_STRIMAP_H
 
+#include "utils/arena.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -23,6 +24,7 @@ typedef struct {
     strimap_entry_t** buckets;
     size_t capacity;
     size_t size;
+    arena_t arena;
 } strimap_t;
 
 // strimap ctor/dtor

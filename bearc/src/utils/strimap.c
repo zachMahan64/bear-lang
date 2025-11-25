@@ -3,18 +3,25 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "strimap.h"
+#include "utils/arena.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define STRIMAP_ARENA_CHUNK_SIZE 32768
 
 // expects either a capacity or NULL for default capacity
 strimap_t strimap_create(size_t capacity) {
     capacity = (capacity > STRIMAP_MINIMUM_CAPACITY) ? capacity : STRIMAP_MINIMUM_CAPACITY;
     strimap_t map;
     map.capacity = capacity;
-    map.buckets = (strimap_entry_t**)calloc(capacity,
-                                            sizeof(strimap_entry_t*)); // init to NULL
+    map.arena = arena_create(STRIMAP_ARENA_CHUNK_SIZE);
+    map.buckets = (strimap_entry_t**)arena_alloc(&map.arena, capacity * sizeof(strimap_entry_t*));
+    // init to NULL
+    for (size_t i = 0; i < capacity; i++) {
+        map.buckets[i] = NULL;
+    }
     map.size = 0;
     return map;
 }
@@ -22,16 +29,7 @@ void strimap_destroy(strimap_t* map) {
     if (!map || !map->buckets) {
         return;
     }
-    for (size_t i = 0; i < map->capacity; i++) {
-        strimap_entry_t* curr = map->buckets[i];
-        while (curr) {
-            strimap_entry_t* next = curr->next;
-            free(curr->key); // since key string was malloc'd
-            free(curr);
-            curr = next;
-        }
-    }
-    free((void*)map->buckets); // free buckets themselves
+    arena_destroy(&map->arena);
     map->buckets = NULL;
     map->size = 0;
     map->capacity = 0;
@@ -55,9 +53,9 @@ void strimap_insert(strimap_t* map, const char* key, int val) {
         curr = curr->next;
     }
     // if we skipped traverse loop because curr bucket is null, just insert straight into the bucket
-    strimap_entry_t* entry = malloc(sizeof(strimap_entry_t));
+    strimap_entry_t* entry = arena_alloc(&map->arena, sizeof(strimap_entry_t));
     size_t key_size = strlen(key) + 1;
-    char* fresh_key = malloc(key_size);
+    char* fresh_key = arena_alloc(&map->arena, key_size);
     memcpy(fresh_key, key, key_size);
     entry->key = fresh_key;
     entry->val = val;
@@ -81,8 +79,6 @@ void strimap_remove(strimap_t* map, const char* key) {
             } else {
                 map->buckets[bucket_idx] = curr->next; // update head
             }
-            free(curr->key); // since key string was malloc'd
-            free(curr);
             --map->size;
             return; // if key already exists remove
         }
@@ -165,7 +161,11 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
         return; // guard
     }
     strimap_entry_t** new_buckets =
-        (strimap_entry_t**)calloc(new_capacity, sizeof(strimap_entry_t*));
+        (strimap_entry_t**)arena_alloc(&map->arena, new_capacity * sizeof(strimap_entry_t*));
+    // init to NULL
+    for (size_t i = 0; i < new_capacity; i++) {
+        new_buckets[i] = NULL;
+    }
 
     for (size_t i = 0; i < map->capacity; i++) {
         strimap_entry_t* curr = map->buckets[i];
@@ -182,7 +182,6 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
             curr = next;
         }
     }
-    free((void*)map->buckets);
     map->buckets = new_buckets;
     map->capacity = new_capacity;
 }
