@@ -18,14 +18,15 @@ typedef enum {
     // TODO: very much needs to be updated for newer tokens
     AST_FILE,
     // Expressions
-    AST_BINARY_OP, // +, -, *, /, %, bitwise, comparison, boolean
-    AST_UNARY_OP,  // unary -, !, ~, ++, --
-    AST_LITERAL,   // INT_LIT, FLOAT_LIT, CHAR_LIT, STRING_LIT
-    AST_VARIABLE,  // SYMBOL
-    AST_ASSIGN,    // = or <- assignment
+    AST_BINARY_OP,   // +, -, *, /, %, bitwise, comparison, boolean
+    AST_UNARY_OP,    // unary -, !, ~, ++, --
+    AST_LITERAL,     // INT_LIT, FLOAT_LIT, CHAR_LIT, STRING_LIT
+    AST_VARIABLE,    // SYMBOL
+    AST_ASSIGN_EQ,   // = or
+    AST_ASSIGN_MOVE, // <- assignment
 
     // Function/Call
-    AST_FUNCTION_DEC,  // KW_FN/MT/CT/DT + params + (body for definitions / null for declarations) +
+    AST_FUNCTION_DEC,  // KW_FN/MT/DT + params + (body for definitions / null for declarations) +
                        // return type
     AST_FUNCTION_CALL, // func(args...)
 
@@ -39,11 +40,10 @@ typedef enum {
 
     // Structural / Blocks
     AST_BLOCK,      // {...} sequence of statements
-    AST_STRUCT_DEF, // KW_STRUCT + fields + optional impl
-    AST_IMPL,       // KW_IMPL for method implementations
+    AST_STRUCT_DEF, // KW_STRUCT + fields
     AST_IMPORT,     // IMPORT statements
     AST_MODULE,     // for module blocks
-    AST_THIS,       // KW_THIS keyword
+    AST_SELF,       // TOK_SELF keyword
 
     // Other / Punctuation / Scope
     AST_TYPE_MOD,  // :: for type modifiers

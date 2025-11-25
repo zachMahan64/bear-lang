@@ -129,7 +129,6 @@ typedef enum token_type {
     // built-in types
     TOK_CHAR_LIT,
     TOK_INT_LIT,
-    TOK_LONG_LIT,
     TOK_DOUB_LIT, // currently float literals not suported, so we would need to downcast at comptime
     TOK_STR_LIT,
     TOK_BOOL_LIT_FALSE,

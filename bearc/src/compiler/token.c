@@ -530,13 +530,8 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
             endptr++;
         }
         if (*endptr == '\0') {
-            if (integral_val > INT_MAX || integral_val < INT_MIN) {
-                tkn->sym = TOK_LONG_LIT;
-                tkn->val.integral = integral_val;
-            } else {
-                tkn->sym = TOK_INT_LIT;
-                tkn->val.integral = integral_val;
-            }
+            tkn->sym = TOK_INT_LIT;
+            tkn->val.integral = integral_val;
             return;
         }
     }
