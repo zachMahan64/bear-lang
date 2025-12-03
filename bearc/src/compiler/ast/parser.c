@@ -260,7 +260,7 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
     ast_t ast;
     ast.arena = ast_node_arena_create_from_token_vec(&token_vec);
     ast.file_name = file_name; // view
-    ast.head = ast_node_arena_new_node(&ast.arena, AST_FILE, NULL, 0);
+    ast.head = ast_node_arena_new_node(&ast.arena, AST_MODULE, NULL, 0);
 
     // TODO, AST building up logic here
     // right now this is just some placeholder logic to test the basic parser functions

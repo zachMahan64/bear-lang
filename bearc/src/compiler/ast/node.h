@@ -15,39 +15,40 @@ extern "C" {
 typedef enum {
     // Unknown / fallback
     AST_NONE = 0,
-    // TODO: very much needs to be updated for newer tokens
-    AST_FILE,
-    // Expressions
-    AST_BINARY_OP,   // +, -, *, /, %, bitwise, comparison, boolean
-    AST_UNARY_OP,    // unary -, !, ~, ++, --
-    AST_LITERAL,     // INT_LIT, FLOAT_LIT, CHAR_LIT, STRING_LIT
-    AST_VARIABLE,    // SYMBOL
-    AST_ASSIGN_EQ,   // = or
-    AST_ASSIGN_MOVE, // <- assignment
+    // Blocks
+    AST_MODULE,      // AST_MODULE_NAME + AST_STMT_BLOCK
+    AST_MODULE_NAME, // for module blocks
+    AST_STMT_BLOCK,  // {...} sequence of statements
+    // expr
+    AST_EXPR_BINARY,      // +, -, *, /, %, bitwise, comparison, boolean
+    AST_EXPR_UNARY,       // unary -, !, ~, ++, --
+    AST_EXPR_ASSIGN_EQ,   // = or
+    AST_EXPR_ASSIGN_MOVE, // <- assignment
+    AST_EXPR_FN_CALL,     // func(args...)
+    // atoms
+    AST_LITERAL,  // INT_LIT, FLOAT_LIT, CHAR_LIT, STRING_LIT
+    AST_VARIABLE, // SCOPE ... + SYMBOL
 
-    // Function/Call
-    AST_FUNCTION_DEC,  // KW_FN/MT/DT + params + (body for definitions / null for declarations) +
-                       // return type
-    AST_FUNCTION_CALL, // func(args...)
+    // statements
+    AST_STMT_FN_DEC, // KW_FN + params + (body for definitions / null for declarations)
+                     // + return type
+    AST_STMT_MT_DEC,
+    AST_STMT_DT_DEC,
 
     // Control Flow
-    AST_IF,     // KW_IF + condition + then + else
-    AST_ELIF,   // KW_ELIF (optional chain)
-    AST_ELSE,   // KW_ELSE (optional branch)
-    AST_WHILE,  // KW_WHILE + condition + body
-    AST_FOR,    // KW_FOR + init + condition + step + body
-    AST_RETURN, // KW_RETURN + value
+    AST_STMT_IF,     // KW_IF + condition + then + else
+    AST_STMT_ELIF,   // KW_ELIF (optional chain)
+    AST_STMT_ELSE,   // KW_ELSE (optional branch)
+    AST_STMT_WHILE,  // KW_WHILE + condition + body
+    AST_STMT_FOR,    // KW_FOR + init stmt + cond stmt + step expr + body stmt
+    AST_STMT_FOR_IN, // KW_FOR + iterable + iterator + body stmt
+    AST_STMT_RETURN, // KW_RETURN + expr
 
-    // Structural / Blocks
-    AST_BLOCK,      // {...} sequence of statements
+    // structs
     AST_STRUCT_DEF, // TOK_STRUCT + fields
-    AST_IMPORT,     // TOK_IMPORT + module
-    AST_MODULE,     // for module blocks
+    AST_IMPORT,     // TOK_IMPORT + AST_MODULE_NAME
     AST_SELF,       // TOK_SELF keyword
 
-    // Other / Punctuation / Scope
-    AST_TYPE_MOD,  // :: for type modifiers
-    AST_SCOPE_RES, // .. scope resolution
 } ast_node_type_e;
 
 typedef struct ast_node {
