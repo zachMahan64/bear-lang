@@ -20,6 +20,8 @@ typedef enum {
     AST_MODULE_NAME, // for module blocks
     AST_STMT_BLOCK,  // {...} sequence of statements
     // expr
+    AST_EXPR_PRIMARY,
+    AST_EXPR_GROUPING,
     AST_EXPR_BINARY,      // +, -, *, /, %, bitwise, comparison, boolean
     AST_EXPR_UNARY,       // unary -, !, ~, ++, --
     AST_EXPR_ASSIGN_EQ,   // = or

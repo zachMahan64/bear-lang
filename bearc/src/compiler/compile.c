@@ -3,9 +3,9 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compile.h"
-#include "compiler/ast/parser.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/lexer.h"
+#include "compiler/parser/parser.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"

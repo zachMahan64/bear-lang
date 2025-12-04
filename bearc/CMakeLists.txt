@@ -20,13 +20,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SRC
     src/compiler/ast/node.c
     src/compiler/ast/node_arena.c
-    src/compiler/ast/parser.c
     src/compiler/compile.c
     src/compiler/lexer.c
     src/compiler/token.c
     src/compiler/diagnostics/error_list.c
     src/compiler/diagnostics/error_codes.c
     src/compiler/diagnostics/src_view.c
+    src/compiler/parser/parser.c
 
     src/utils/strimap.c
     src/utils/vector.c

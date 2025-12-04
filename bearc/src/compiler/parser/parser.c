@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#include "compiler/ast/parser.h"
+#include "compiler/parser/parser.h"
 #include "compiler/ast/node.h"
 #include "compiler/ast/node_arena.h"
 #include "compiler/diagnostics/error_codes.h"
