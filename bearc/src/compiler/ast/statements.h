@@ -10,12 +10,17 @@ typedef enum {
     // blocks
     AST_STMT_BLOCK,  // {...} sequence of statements
     AST_STMT_MODULE, // AST_MODULE_NAME + AST_STMT_BLOCK
-    AST_STMT_FN_DEC, // KW_FN + params + (body for definitions / null for declarations)
-                     // + return type
-    AST_STMT_MT_DEC,
-    AST_STMT_DT_DEC,
 
-    // Control Flow
+    // declarations
+    AST_STMT_FN_DECL,       // fn + params + (body for definitions / null for declarations)
+                            // + return type
+    AST_STMT_MT_DECL,       // mt ^
+    AST_STMT_DT_DECL,       // dt ^
+    AST_STMT_VAR_DECL,      // type var;
+    AST_STMT_VAR_EQ_DECL,   // type name = value
+    AST_STMT_VAR_MOVE_DECL, // type name <- value;
+
+    // control flow
     AST_STMT_IF,     // KW_IF + condition + then + else
     AST_STMT_ELIF,   // KW_ELIF (optional chain)
     AST_STMT_ELSE,   // KW_ELSE (optional branch)
@@ -27,6 +32,9 @@ typedef enum {
     // structs
     AST_STMT_STRUCT_DEF, // TOK_STRUCT + fields
     AST_STMT_IMPORT,     // TOK_IMPORT + AST_MODULE_NAME
+
+    // marks
+    AST_MARK_DECL, // mark Name { functions }
 } ast_stmt_type_e;
 
 // forward decls ~~~~~~~~~~~~~~~~~~

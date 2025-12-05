@@ -1,42 +1,71 @@
 #ifndef AST_EXPRESSIONS_H
 #define AST_EXPRESSIONS_H
 #include "compiler/token.h"
+#include "utils/vector.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef enum {
-    AST_EXPR_MODULE_NAME, // for module blocks
-
-    // expr
-    AST_EXPR_PRIMARY,
-    AST_EXPR_GROUPING,
-    AST_EXPR_BINARY,      // +, -, *, /, %, bitwise, comparison, boolean
-    AST_EXPR_UNARY,       // unary -, !, ~, ++, --
-    AST_EXPR_ASSIGN_EQ,   // = or
-    AST_EXPR_ASSIGN_MOVE, // <- assignment
-    AST_EXPR_FN_CALL,     // func(args...)
-
-    // atoms
-    AST_LITERAL,  // INT_LIT, FLOAT_LIT, CHAR_LIT, STRING_LIT
-    AST_VARIABLE, // SCOPE ... + SYMBOL
-    AST_SELF,     // TOK_SELF keyword
+    // atom aka primary expr
+    AST_EXPR_ATOM,
+    // binary
+    AST_EXPR_BIN_ARITH, // binary arithmetic expression: +, -, *, /, %, bitwise, comparison, boolean
+    AST_EXPR_ASSIGN_EQ, // binary copy assignment: expr = expr
+    AST_EXPR_ASSIGN_MOVE, // binary move assignment: expr <- expr
+    // grouping
+    AST_EXPR_GROUPING, // (<some_expr>)
+    // unary
+    AST_EXPR_PRE_UNARY,  // unary expr: -, !, ~, ++, --
+    AST_EXPR_POST_UNARY, // unary expr: ++, --
+    // func
+    AST_EXPR_FN_CALL, // func(args...), can also be used for methods
 
 } ast_expr_type_e;
 
-typedef struct {
+// main generic expr type
+typedef struct ast_expr ast_expr_t;
+
+// expr types ~~~~~~~~~~~~
+
+typedef struct ast_expr_atom {
     token_t* tkn;
-} ast_expr_module_name;
+    struct ast_expr_atom* scope_qual; // for scoping, null term linked list
+} ast_expr_atom_t;
+
+// resolve through operator token type
+typedef struct {
+    ast_expr_t* lhs;
+    token_t* op;
+    ast_expr_t* rhs;
+} ast_expr_binary_t;
 
 typedef struct {
-    token_t* tkn;
-} ast_expr_primary;
+    ast_expr_t* expr;
+} ast_expr_grouping_t;
+
+// pre/postfix must be determined by the ast_expr_type_e inside the wrapping ast_expr_t
+typedef struct {
+    ast_expr_t* expr;
+    token_t* op;
+} ast_expr_unary_t;
+
+typedef struct {
+    ast_expr_t* expr;  // should resolve to a func/func ptr
+    vector_t args_vec; // of type ast_expr_t
+} ast_expr_fn_call_t;
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
-
+    ast_expr_atom_t atom;
+    ast_expr_binary_t binary;
+    ast_expr_grouping_t grouping;
+    ast_expr_unary_t unary;
+    ast_expr_fn_call_t fn_call;
 } ast_expr_u;
 
-typedef struct {
+typedef struct ast_expr {
     ast_expr_type_e type;
     ast_expr_u expr;
 } ast_expr_t;
