@@ -3,8 +3,6 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/parser/parser.h"
-#include "compiler/ast/node.h"
-#include "compiler/ast/node_arena.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
@@ -121,7 +119,7 @@ typedef struct {
 // consume a token
 token_t* parser_eat(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (tkn->sym != TOK_EOF) {
+    if (tkn->type != TOK_EOF) {
         parser->pos++;
     }
     return tkn;
@@ -156,8 +154,8 @@ token_t* parser_prev(parser_t* parser) {
  */
 token_t* parser_match_token(parser_t* parser, token_type_e type) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (tkn->sym == type) {
-        if (tkn->sym != TOK_EOF) {
+    if (tkn->type == type) {
+        if (tkn->type != TOK_EOF) {
             parser->pos++;
         }
         return tkn;
@@ -177,8 +175,8 @@ bool parser_match_is_builtin_type(token_type_e t);
  */
 token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (match(tkn->sym)) {
-        if (tkn->sym != TOK_EOF) {
+    if (match(tkn->type)) {
+        if (tkn->type != TOK_EOF) {
             parser->pos++;
         }
         return tkn;
@@ -190,7 +188,7 @@ token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) 
 token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
                              compiler_error_list_t* error_list) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (tkn->sym == expected_type) {
+    if (tkn->type == expected_type) {
         parser->pos++;
         return tkn;
     }
@@ -203,7 +201,7 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
 token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expected_type,
                                            compiler_error_list_t* error_list, error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (tkn->sym == expected_type) {
+    if (tkn->type == expected_type) {
         parser->pos++;
         return tkn;
     }
@@ -216,7 +214,7 @@ token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expect
 token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
                                   compiler_error_list_t* error_list, error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    if (match(tkn->sym)) {
+    if (match(tkn->type)) {
         parser->pos++;
         return tkn;
     }
@@ -227,7 +225,7 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
 // returns true when parser is at EOF
 bool parser_eof(parser_t* parser) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
-    return tkn->sym == TOK_EOF;
+    return tkn->type == TOK_EOF;
 }
 
 // map containing look-ups for builtin types
@@ -257,10 +255,7 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
     parser_t parser = {.tokens = token_vec, .pos = 0};
 
     // init ast & node arena
-    ast_t ast;
-    ast.arena = ast_node_arena_create_from_token_vec(&token_vec);
-    ast.file_name = file_name; // view
-    ast.head = ast_node_arena_new_node(&ast.arena, AST_MODULE, NULL, 0);
+    ast_t ast = ast_create(file_name);
 
     // TODO, AST building up logic here
     // right now this is just some placeholder logic to test the basic parser functions
@@ -311,5 +306,3 @@ ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
 
     return ast;
 }
-
-void ast_destroy(ast_t* ast) { ast_node_arena_destroy(&ast->arena); }

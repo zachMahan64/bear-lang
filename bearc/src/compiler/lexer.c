@@ -271,7 +271,7 @@ lex_done:
     // build up eof token manually
     tkn.start = start; // shouldn't be read from, but make sure start isn't null just in case
     tkn.length = 1;
-    tkn.sym = TOK_EOF;
+    tkn.type = TOK_EOF;
     tkn.loc = loc; // set loc to currently tracked loc
     vector_push_back(&tkn_vec, &tkn);
     return tkn_vec;

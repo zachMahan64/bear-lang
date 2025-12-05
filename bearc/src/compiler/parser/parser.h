@@ -4,13 +4,11 @@
 
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "compiler/ast/node.h"
-#include "compiler/ast/node_arena.h"
+#include "compiler/ast/ast.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/token.h"
 #include "utils/vector.h"
@@ -27,18 +25,9 @@ associativity_e associativity_of(uint32_t precedence);
 // find the precendence an operator based on token type
 uint32_t precendence_of_operator(token_type_e type);
 
-typedef struct {
-    ast_node_t* head;
-    const char* file_name;
-    ast_node_arena_t arena;
-} ast_t;
-
 // ctor that builds up an ast from a specified vector of tokens
 ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
                                  compiler_error_list_t* error_list);
-
-// dtor for ast_t
-void ast_destroy(ast_t* ast);
 
 #ifdef __cplusplus
 } // extern "C"

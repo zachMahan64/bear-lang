@@ -1,24 +1,10 @@
-#ifndef AST_NODE_TYPE_H
-#define AST_NODE_TYPE_H
-
-typedef enum {
-    AST_EXPR_MODULE_NAME, // for module blocks
-
-    // expr
-    AST_EXPR_PRIMARY,
-    AST_EXPR_GROUPING,
-    AST_EXPR_BINARY,      // +, -, *, /, %, bitwise, comparison, boolean
-    AST_EXPR_UNARY,       // unary -, !, ~, ++, --
-    AST_EXPR_ASSIGN_EQ,   // = or
-    AST_EXPR_ASSIGN_MOVE, // <- assignment
-    AST_EXPR_FN_CALL,     // func(args...)
-
-    // atoms
-    AST_LITERAL,  // INT_LIT, FLOAT_LIT, CHAR_LIT, STRING_LIT
-    AST_VARIABLE, // SCOPE ... + SYMBOL
-    AST_SELF,     // TOK_SELF keyword
-
-} ast_expr_e;
+#ifndef AST_STATEMENTS_H
+#define AST_STATEMENTS_H
+#include "utils/vector.h"
+#include <stddef.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     // blocks
@@ -40,6 +26,37 @@ typedef enum {
 
     // structs
     AST_STMT_STRUCT_DEF, // TOK_STRUCT + fields
-    AST_IMPORT,          // TOK_IMPORT + AST_MODULE_NAME
-} ast_stmt_e;
+    AST_STMT_IMPORT,     // TOK_IMPORT + AST_MODULE_NAME
+} ast_stmt_type_e;
+
+// forward decls ~~~~~~~~~~~~~~~~~~
+typedef struct ast_stmt ast_stmt_t;
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/**
+ * slice of statements
+ */
+typedef struct {
+    ast_stmt_t* start;
+    size_t len;
+} ast_stmt_slice_t;
+
+// stmt types ~~~~~~~~~~~~~~~~~~~~
+typedef struct {
+    vector_t stmt_vec; // of stmt_vec_t
+} ast_stmt_block;
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+typedef union {
+    ast_stmt_block block;
+} ast_stmt_u;
+
+typedef struct ast_stmt {
+    ast_stmt_type_e type;
+    ast_stmt_u stmt;
+} ast_stmt_t;
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
+#endif // !AST_STATEMENTS_H

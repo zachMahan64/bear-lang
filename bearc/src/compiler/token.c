@@ -425,18 +425,18 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
     // now determine most compilcated fields:
     // keywords and reserved symbols
 
-    tkn.sym = token_determine_token_type_for_fixed_symbols(
+    tkn.type = token_determine_token_type_for_fixed_symbols(
         start,
         length); // will be set to INDETERMINATE if the token could not be resolved as a fixed
                  // symbol
 
-    if (tkn.sym == TOK_INDETERMINATE) {
+    if (tkn.type == TOK_INDETERMINATE) {
         token_check_if_valid_literal_and_set_value(
             &tkn); // will appropriately set literal symbol and values, but will leave sym as
                    // INDETERMINATE if no pattern was matched
     }
 
-    if (tkn.sym == TOK_INDETERMINATE) {
+    if (tkn.type == TOK_INDETERMINATE) {
         token_check_if_valid_symbol_and_set_sym(&tkn);
     }
     return tkn;
@@ -470,7 +470,7 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     if (!tkn || tkn->length == 0) {
         if (tkn) {
-            tkn->sym = TOK_LEX_ERROR_EMPTY_TOKEN;
+            tkn->type = TOK_LEX_ERROR_EMPTY_TOKEN;
         }
         return;
     }
@@ -502,23 +502,23 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
                 c = '\0';
                 break;
             default:
-                tkn->sym = TOK_INDETERMINATE;
+                tkn->type = TOK_INDETERMINATE;
                 return;
             }
         } else if (len == 3) { // simple char
             c = str[1];
         } else {
-            tkn->sym = TOK_INDETERMINATE;
+            tkn->type = TOK_INDETERMINATE;
             return;
         }
-        tkn->sym = TOK_CHAR_LIT;
+        tkn->type = TOK_CHAR_LIT;
         tkn->val.character = c;
         return;
     }
 
     // ~~~ STRING literal: "..." ~~~
     if (len >= 2 && str[0] == '"' && str[len - 1] == '"') {
-        tkn->sym = TOK_STR_LIT;
+        tkn->type = TOK_STR_LIT;
         // value handling / escape sequences deferred
         return;
     }
@@ -527,7 +527,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     // copy to temporary buffer and null-terminate
     char buf[64]; // may need to adjust very long numbers
     if (len >= sizeof(buf)) {
-        tkn->sym = TOK_INDETERMINATE;
+        tkn->type = TOK_INDETERMINATE;
         return;
     }
     memcpy(buf, str, len);
@@ -542,7 +542,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
             endptr++;
         }
         if (*endptr == '\0') {
-            tkn->sym = TOK_INT_LIT;
+            tkn->type = TOK_INT_LIT;
             tkn->val.integral = integral_val;
             return;
         }
@@ -557,13 +557,13 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
             endptr++;
         }
         if (*endptr == '\0') {
-            tkn->sym = TOK_DOUB_LIT;
+            tkn->type = TOK_DOUB_LIT;
             tkn->val.floating = floating_val;
             return;
         }
     }
 
-    tkn->sym = TOK_INDETERMINATE;
+    tkn->type = TOK_INDETERMINATE;
 }
 
 /**
@@ -572,17 +572,17 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
 void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
     // token should never have size zero
     if (tkn->start[0] >= '0' && tkn->start[0] <= '9') {
-        tkn->sym = TOK_INDETERMINATE;
+        tkn->type = TOK_INDETERMINATE;
         return;
     }
     if (tkn->length <= 0) {
-        tkn->sym = TOK_LEX_ERROR_EMPTY_TOKEN;
+        tkn->type = TOK_LEX_ERROR_EMPTY_TOKEN;
         return;
     }
-    tkn->sym = TOK_IDENTIFIER;
+    tkn->type = TOK_IDENTIFIER;
     for (size_t i = 0; i < tkn->length; i++) {
         if (!isalnum(tkn->start[i]) && tkn->start[i] != '_') {
-            tkn->sym = TOK_INDETERMINATE;
+            tkn->type = TOK_INDETERMINATE;
             return;
         }
     }

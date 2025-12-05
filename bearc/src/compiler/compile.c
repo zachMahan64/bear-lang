@@ -79,7 +79,7 @@ void print_out_tkn_table(vector_t* tkn_vec) {
     puts("=============================================");
     for (size_t i = 0; i < tkn_map_size; i++) {
         token_t* tkn = (token_t*)vector_at(tkn_vec, i);
-        printf("%-10s @ %7zu, %-7zu -> [%.*s]\n", tkn_map[tkn->sym], tkn->loc.line, tkn->loc.col,
+        printf("%-10s @ %7zu, %-7zu -> [%.*s]\n", tkn_map[tkn->type], tkn->loc.line, tkn->loc.col,
                (int)tkn->length, tkn->start);
     }
     puts("=============================================");

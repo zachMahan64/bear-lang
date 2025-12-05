@@ -25,6 +25,7 @@ set(SRC
     src/compiler/diagnostics/error_codes.c
     src/compiler/diagnostics/src_view.c
     src/compiler/parser/parser.c
+    src/compiler/ast/ast.c
 
     src/utils/strimap.c
     src/utils/vector.c
