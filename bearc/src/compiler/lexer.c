@@ -33,14 +33,12 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
 #define LEX_KNOWN_LEN_PUSH(N)                                                                      \
     do {                                                                                           \
         if (len != 0) {                                                                            \
-            tkn = token_build(start, len, &loc);                                                   \
-            vector_push_back(&tkn_vec, &tkn);                                                      \
+            *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);              \
             len = 0;                                                                               \
             loc.col = col;                                                                         \
             start = pos;                                                                           \
         }                                                                                          \
-        tkn = token_build(start, N, &loc);                                                         \
-        vector_push_back(&tkn_vec, &tkn);                                                          \
+        *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, N, &loc);                    \
         pos += (N);                                                                                \
         col += (N);                                                                                \
         loc.col = col;                                                                             \
@@ -58,8 +56,7 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
         ++len;                                                                                     \
         ++col;                                                                                     \
         if (c == '\n') {                                                                           \
-            tkn = token_build(start, len, &loc);                                                   \
-            vector_push_back(&tkn_vec, &tkn);                                                      \
+            *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);              \
             len = 0;                                                                               \
             loc.col = 0;                                                                           \
             ++loc.line;                                                                            \
@@ -68,8 +65,7 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
         }                                                                                          \
         if (pos - 1 >= buf->data && c == (D) && *(pos - 1) != '\\') {                              \
             ++len;                                                                                 \
-            tkn = token_build(start, len, &loc);                                                   \
-            vector_push_back(&tkn_vec, &tkn);                                                      \
+            *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);              \
             len = 0;                                                                               \
             loc.col = 0;                                                                           \
             ++pos;                                                                                 \
