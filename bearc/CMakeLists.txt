@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(BearC)
 set(EXECUTABLE bearc)
+set(BEARC_LIB bearc)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -46,6 +47,8 @@ set(TEST_SRC
     ${SRC}
     src/tests/test.c
 )
+
+add_library(BEARC_LIB ${SRC})
 
 set(CMAKE_C_FLAGS_DEBUG
     "-Wall -Wextra -Wpedantic -g -gdwarf-4" CACHE STRING "" FORCE)
