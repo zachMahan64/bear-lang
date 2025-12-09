@@ -8,22 +8,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct arena_chunk;
+typedef struct arena_chunk arena_chunk_t;
 
-// main arena container
+/// main arena container
 typedef struct arena {
-    struct arena_chunk* head;
+    arena_chunk_t* head;
     size_t chunk_size;
 } arena_t;
 
-// arena ctor (init) from a specified standard chunk size.
+/// arena ctor (init) from a specified standard chunk size.
 arena_t arena_create(size_t chunk_cap_bytes);
-// arena dtor (clean up resources)
+
+/// arena dtor (clean up resources)
 void arena_destroy(arena_t* arena);
-// get an allocation from the arena of a specified size
+
+/// get an allocation from the arena of a specified size
 void* arena_alloc(arena_t* arena, size_t req_size_bytes);
 
-// testing
+/// for testing purposes
 void arena_log_debug_info(arena_t* arena);
 
 #endif // !UTILS_ARENA_H

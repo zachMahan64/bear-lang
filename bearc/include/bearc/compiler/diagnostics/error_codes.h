@@ -7,6 +7,10 @@
 
 #include "compiler/token.h"
 
+/**
+ * predefined set of errors, these have associated diagnostics with
+ * the functions in this header
+ */
 typedef enum {
     ERR_NONE = 0,
     ERR_EXPECTED_TOKEN,
@@ -16,6 +20,13 @@ typedef enum {
     ERR__COUNT
 } error_code_e;
 
+/**
+ * compiler error containing the token causing the error w/ its built in meta-data (line & col
+ * number) as well as an error message
+ *
+ * the error message should just explain the error while the final terminal output should be built
+ * from both the token's data as well as the error message
+ */
 typedef struct {
     token_t* token;          // view into a tkn whose resources are externally managed
     error_code_e error_code; // correspond to a type of compilation error
@@ -26,7 +37,8 @@ typedef struct {
 // getting the error message for a given error_code_e
 const char* error_message_for_code(error_code_e error_code);
 
-/* gives addition context for appropriate compiler_error_t's
+/**
+ * gives addition context for appropriate compiler_error_t's
  * this is safe to call on any compiler_error_t, regardless of its error_code
  * primary use is to get this kind of string:
  * Expected token: ->

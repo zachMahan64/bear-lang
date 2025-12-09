@@ -1,7 +1,7 @@
 #ifndef ANSI_CODES_H
 #define ANSI_CODES_H
 
-// escape sequence character
+/// ansi escape sequence character
 #define ESC "\x1b"
 
 // reset

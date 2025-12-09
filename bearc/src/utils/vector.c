@@ -100,6 +100,21 @@ bool vector_push_back(vector_t* vector, const void* elem) {
     return resize;
 }
 
+void* vector_touch_back(vector_t* vector) {
+    if (vector->size == vector->capacity) {
+        size_t new_capacity = (vector->capacity == 0) ? 1 : vector->capacity * 2;
+        void* temp = realloc(vector->data, new_capacity * vector->elem_size);
+        if (!temp) {
+            LOG_ERR("[ERROR|vector_push_back] reallocation failed when increasing capacity");
+            return false; // vector still valid, but push back fails w/ msg
+        }
+        vector->data = temp;
+        vector->capacity = new_capacity;
+    }
+    ++vector->size;
+    return vector_at(vector, vector->size - 1);
+}
+
 // removes last element of vector
 void vector_remove_back(vector_t* vector) {
     if (vector->size == 0) {

@@ -5,6 +5,11 @@
 #ifndef COMPILE_H
 #define COMPILE_H
 
+/**
+ * Compiles a source file given the file_name
+ *
+ * returns an error code
+ */
 int compile_file(const char* file_name);
 
 #endif // !COMPILE_H

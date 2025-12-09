@@ -8,16 +8,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// CHAR BUFFER FROM FILE STRUCT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// a string buffer, created from a file
 typedef struct {
-    const char* file_name; // non-owning view into filename
-    char* data;            // owns, freed by destroy_char_buffer_from_file
-    size_t size;           // size of char buffer, in bytes/chars
+    /// non-owning view into filename
+    const char* file_name;
+    /// owns, freed by destroy_char_buffer_from_file
+    char* data;
+    // size of char buffer, in bytes/chars
+    size_t size;
 } src_buffer_t;
 
+/// creates an src_buffer_t from a file,
+/// - must call src_buffer_destroy(src_buffer_t*) to free resources
 src_buffer_t src_buffer_from_file_create(const char* file_name);
+/// frees the underlying buffer
 void src_buffer_destroy(src_buffer_t* buffer);
-char* src_buffer_get(src_buffer_t* buffer);
+/// gets a ptr to the underlying string buffer of the src file
+const char* src_buffer_get(src_buffer_t* buffer);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 bool file_exists(const char* file_name);

@@ -8,7 +8,8 @@
 #include "utils/file_io.h"
 #include "utils/string.h"
 #include "utils/string_view.h"
-/*
+
+/**
  * builds a string view that displays source code
  */
 string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn);
