@@ -68,7 +68,7 @@ else()
 endif()
 
 target_include_directories(${EXECUTABLE} PRIVATE src)
-target_include_directories(${EXECUTABLE} PUBLIC include)
+target_include_directories(${EXECUTABLE} PUBLIC include/bearc)
 
 
 #LLVM
