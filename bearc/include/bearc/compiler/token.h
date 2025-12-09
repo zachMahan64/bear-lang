@@ -231,9 +231,11 @@ const char* get_always_one_char_to_token_map(void);
 /// returns a ptr to a map indicating whether a given char is the first char in a multichar operator
 /// (e.g.: ==)
 const char* get_first_char_in_multichar_operator_token_map(void);
-/// builds a token given it's start, length, and a provided src_loc_t
-/// this function does NOT set most token_type_e's, but it does for symbols, keywords, and literals
-/// all other token type setting is done directly inside the lexer's FSM loop
+/**
+ * builds token according to a starting ptr and length into src as well as an src_loc_t that
+ * indicates row/col number for debugging purposes. This function assumes that the lexer has already
+ * correctly determined the string that needs to be tokenized.
+ */
 token_t token_build(const char* start, size_t length, src_loc_t* loc);
 
 #endif // !COMPILER_TOKEN_H

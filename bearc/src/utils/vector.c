@@ -105,8 +105,8 @@ void* vector_touch_back(vector_t* vector) {
         size_t new_capacity = (vector->capacity == 0) ? 1 : vector->capacity * 2;
         void* temp = realloc(vector->data, new_capacity * vector->elem_size);
         if (!temp) {
-            LOG_ERR("[ERROR|vector_push_back] reallocation failed when increasing capacity");
-            return false; // vector still valid, but push back fails w/ msg
+            LOG_ERR("[ERROR|vector_touch_back] reallocation failed when increasing capacity");
+            return NULL; // vector still valid, but push back fails w/ msg
         }
         vector->data = temp;
         vector->capacity = new_capacity;
