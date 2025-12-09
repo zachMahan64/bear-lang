@@ -2,7 +2,7 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
-#include "bearc/bearc.h"
+#include "bearc.h"
 #include "cli/args.h"
 #include "compiler/compile.h"
 #include "utils/ansi_codes.h"

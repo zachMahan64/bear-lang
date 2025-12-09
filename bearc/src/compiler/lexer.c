@@ -3,7 +3,7 @@
 // Licensed under the GNU GPL v3. See LICENSE.md for details.
 
 #include "compiler/lexer.h"
-#include "token.h"
+#include "compiler/token.h"
 #include "utils/log.h"
 #include "utils/vector.h"
 #include <stddef.h>
