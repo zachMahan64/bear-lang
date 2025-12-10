@@ -6,6 +6,7 @@
 
 # build dirs
 build*/
+docs-build/
 
 # caches
 .cache*/
