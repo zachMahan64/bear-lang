@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(BearC)
 set(EXECUTABLE bearc)
-set(BEARC_LIB bearc)
-set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+set(BEARC_LIB libbearc)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -52,18 +52,26 @@ set(TEST_SRC
 
 set(CMAKE_C_FLAGS_DEBUG
     "-Wall -Wextra -Wpedantic -g -gdwarf-4" CACHE STRING "" FORCE)
-set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(DEBUG_BUILD)
 endif()
 
-option(TEST "Build tests instead of main" OFF)
+option(BUILD_LIB "Build a static archive: libbearc" OFF)
 if(BUILD_LIB)
+    message(STATUS "libbearc build enabled.")
     add_library(${BEARC_LIB} ${SRC})
-elseif(TEST)
+    target_include_directories(${BEARC_LIB} PRIVATE src)
+    target_include_directories(${BEARC_LIB} PUBLIC include)
+    target_include_directories(${BEARC_LIB} PUBLIC include/bearc)
+endif()
+option(TEST "build tests instead of main" OFF)
+if(TEST)
+    message(STATUS "test build enabled.")
     add_executable(${EXECUTABLE} ${TEST_SRC})
 else()
+    message(STATUS "bearc executable build enabled.")
     add_executable(${EXECUTABLE} ${NO_TEST_SRC})
 endif()
 

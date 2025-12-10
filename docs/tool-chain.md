@@ -1,4 +1,4 @@
-### Rough Tool-Chain Structure
+### Tool-Chain File Structure
 ```
 bearc/
     bin/

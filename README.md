@@ -14,7 +14,7 @@
 - With git, gcc or clang, CMake, and Ninja installed, you can use these scripts: 
 ```
 ./scripts/llvm-install.sh          # for installing the LLVM distribution
-./scripts/clean.sh [Release|Debug] # builds bearc; defaults to Debug with no args
+./scripts/clean-all.sh [Release|Debug] # builds bearc; defaults to Debug with no args
 ```
 #### Run 
 ```
