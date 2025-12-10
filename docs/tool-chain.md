@@ -1,4 +1,4 @@
-### Tool-Chain File Structure
+### Tool-chain package file structure
 ```
 bearc/
     bin/
