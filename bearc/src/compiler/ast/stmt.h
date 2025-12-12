@@ -10,6 +10,7 @@ typedef enum {
     // blocks
     AST_STMT_BLOCK,  // {...} sequence of statements
     AST_STMT_MODULE, // AST_MODULE_NAME + AST_STMT_BLOCK
+    AST_STMT_FILE,
 
     // declarations
     AST_STMT_FN_DECL,       // fn + params + (body for definitions / null for declarations)
@@ -52,11 +53,19 @@ typedef struct {
 // stmt types ~~~~~~~~~~~~~~~~~~~~
 typedef struct {
     vector_t stmt_vec; // of stmt_vec_t
-} ast_stmt_block;
+} ast_stmt_block_t;
+
+typedef struct {
+    const char* file_name;
+    vector_t stmt_vec; // of stmt_vec_t
+} ast_stmt_file_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+// TODO, WIP
 typedef union {
-    ast_stmt_block block;
+    ast_stmt_block_t block;
+    ast_stmt_file_t file;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

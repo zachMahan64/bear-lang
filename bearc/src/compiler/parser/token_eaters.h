@@ -1,0 +1,60 @@
+#ifndef COMPILER_PARSER_TOKEN_EATERS_H
+#define COMPILER_PARSER_TOKEN_EATERS_H
+#include "compiler/diagnostics/error_codes.h"
+#include "compiler/diagnostics/error_list.h"
+#include "compiler/parser/parser.h"
+#include "compiler/token.h"
+#include "utils/vector.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+/// consume a token
+token_t* parser_eat(parser_t* parser);
+
+/// peek current uneaten token without consuming it
+token_t* parser_peek(parser_t* parser);
+
+token_t* parser_peek_n(parser_t* parser, size_t n);
+
+/// see last eaten token
+token_t* parser_prev(parser_t* parser);
+/**
+ * peek then conditionally eat
+ * \return token_t* to consumed token or NULL if not matched
+ */
+token_t* parser_match_token(parser_t* parser, token_type_e type);
+
+/**
+ * peek then conditionally eat based on a match function call, which takes a token_type_e and
+ * returns bool if valid, else false
+ * \return token_t* to consumed token or NULL if not matched
+ */
+token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e));
+
+/// eat if current token matches specified type or return NULL and add to error_list
+token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
+                             compiler_error_list_t* error_list);
+
+/// eat or return NULL and add a specific error to error_list (not just Expected token: __)
+/// - matches based on a specified token_type_e
+token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expected_type,
+                                           compiler_error_list_t* error_list, error_code_e code);
+
+/// eat or return NULL and add a specific error to error_list (not just Expected token: __)
+/// uses a match call that returns bool based on a token_type_e
+token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
+                                  compiler_error_list_t* error_list, error_code_e code);
+
+// returns true when parser is at EOF
+bool parser_eof(parser_t* parser);
+
+/// match helpers
+
+/// returns true when tkn type is builtin
+bool parser_match_is_builtin_type(token_type_e t);
+/// returns true when tkn type is builtin or an id
+bool parser_match_is_builtin_type_or_id(token_type_e t);
+/// returns true when tkn type is builtin type mod (box, bag, etc)
+bool parser_match_is_builtin_type_mod(token_type_e t);
+#endif

@@ -26,9 +26,12 @@ set(SRC
     src/compiler/diagnostics/error_list.c
     src/compiler/diagnostics/error_codes.c
     src/compiler/diagnostics/src_view.c
-    src/compiler/parser/parser.c
+
+    src/compiler/parser/token_eaters.c
     src/compiler/parser/rules.c
-    src/compiler/ast/ast.c
+    src/compiler/parser/expr.c
+    src/compiler/parser/stmt.c
+    src/compiler/parser/parser.c
 
     src/utils/strimap.c
     src/utils/vector.c

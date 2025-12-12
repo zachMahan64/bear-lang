@@ -1,12 +1,15 @@
 // BearLang
 // Copyright (C) 2025 Zachary Mahan
-// Licensed under the GNU GPL v3. See LICENSE.md for details.
+// Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/compile.h"
+#include "compiler/ast/stmt.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/lexer.h"
 #include "compiler/parser/parser.h"
+#include "compiler/parser/stmt.h"
 #include "utils/ansi_codes.h"
+#include "utils/arena.h"
 #include "utils/file_io.h"
 #include "utils/vector.h"
 #include <stddef.h>
@@ -39,7 +42,10 @@ int compile_file(const char* file_name) {
     // ---------------------- PARSING ---------------------
     // init error list for error tracking
     compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
-    ast_t ast = parser_build_ast_from_file(src_buffer.file_name, tkn_vec, &error_list);
+    const size_t PARSER_ARENA_CHUNK_SIZE = 0x10000;
+    arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE);
+    parser_create(&tkn_vec, &arena);
+    ast_stmt_file_t file_stmt = parser_file(src_buffer.file_name, tkn_vec, &error_list);
     // ----------------------------------------------------
 
     /* TODO:
@@ -54,13 +60,12 @@ int compile_file(const char* file_name) {
 
     if (compiler_error_list_empty(&error_list)) {
         // codegen here
-        printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, src_buffer.file_name);
+        printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_stmt.file_name);
     } else {
-        printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, src_buffer.file_name);
+        printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_stmt.file_name);
     }
 
     // clean up resources
-    ast_destroy(&ast);
     compiler_error_list_destroy(&error_list);
     vector_destroy(&tkn_vec);
     src_buffer_destroy(&src_buffer);

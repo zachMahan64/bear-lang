@@ -1,22 +1,29 @@
 // BearLang
 // Copyright (C) 2025 Zachary Mahan
-// Licensed under the GNU GPL v3. See LICENSE.md for details.
+// Licensed under the GNU GPL v3. See LICENSE for details.
 
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
+#include "utils/arena.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "compiler/ast/ast.h"
-#include "compiler/diagnostics/error_list.h"
-#include "compiler/token.h"
 #include "utils/vector.h"
 #include <stdint.h>
 
-// ctor that builds up an ast from a specified vector of tokens
-ast_t parser_build_ast_from_file(const char* file_name, vector_t token_vec,
-                                 compiler_error_list_t* error_list);
+/**
+ * primary parser structure
+ * tracks a position ptr along a vector of token_t
+ * -
+ */
+typedef struct {
+    vector_t tokens;
+    size_t pos;
+    arena_t arena;
+} parser_t;
+
+parser_t parser_create(vector_t* tokens, arena_t* arena);
 
 #ifdef __cplusplus
 } // extern "C"
