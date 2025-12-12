@@ -2,10 +2,10 @@
 #define COMPILER_PARSER_STMT
 
 #include "compiler/ast/stmt.h"
-#include "compiler/diagnostics/error_list.h"
+#include "compiler/parser/parser.h"
 
-/// ctor that builds up an ast from a specified vector of tokens
-ast_stmt_file_t parser_file(const char* file_name, vector_t token_vec,
-                            compiler_error_list_t* error_list);
+/// builds up an ast in the form of a file stmt which contains a file_name and a vector of
+/// ast_stmt_t's
+ast_stmt_file_t parser_file(parser_t* parser, const char* file_name, vector_t token_vec);
 
 #endif

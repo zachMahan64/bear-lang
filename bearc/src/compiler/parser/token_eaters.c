@@ -79,40 +79,40 @@ token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) 
 }
 
 // eat if current token matches specified type or return NULL and add to error_list
-token_t* parser_expect_token(parser_t* parser, token_type_e expected_type,
-                             compiler_error_list_t* error_list) {
+token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->type == expected_type) {
         parser->pos++;
         return tkn;
     }
-    compiler_error_list_emplace_expected_token(error_list, tkn, ERR_EXPECTED_TOKEN, expected_type);
+    compiler_error_list_emplace_expected_token(parser->error_list, tkn, ERR_EXPECTED_TOKEN,
+                                               expected_type);
     return NULL;
 }
 
 // eat or return NULL and add a specific error to error_list (not just Expected token: __)
 // matches based on a specified token_type_e
 token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expected_type,
-                                           compiler_error_list_t* error_list, error_code_e code) {
+                                           error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (tkn->type == expected_type) {
         parser->pos++;
         return tkn;
     }
-    compiler_error_list_emplace(error_list, tkn, code);
+    compiler_error_list_emplace(parser->error_list, tkn, code);
     return NULL;
 }
 
 // eat or return NULL and add a specific error to error_list (not just Expected token: __)
 // uses a match call that returns bool based on a token_type_e
 token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
-                                  compiler_error_list_t* error_list, error_code_e code) {
+                                  error_code_e code) {
     token_t* tkn = vector_at(&parser->tokens, parser->pos);
     if (match(tkn->type)) {
         parser->pos++;
         return tkn;
     }
-    compiler_error_list_emplace(error_list, tkn, code);
+    compiler_error_list_emplace(parser->error_list, tkn, code);
     return NULL;
 }
 

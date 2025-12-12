@@ -44,8 +44,8 @@ int compile_file(const char* file_name) {
     compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
     const size_t PARSER_ARENA_CHUNK_SIZE = 0x10000;
     arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE);
-    parser_create(&tkn_vec, &arena);
-    ast_stmt_file_t file_stmt = parser_file(src_buffer.file_name, tkn_vec, &error_list);
+    parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
+    ast_stmt_file_t file_stmt = parser_file(&parser, src_buffer.file_name, tkn_vec);
     // ----------------------------------------------------
 
     /* TODO:
@@ -66,6 +66,7 @@ int compile_file(const char* file_name) {
     }
 
     // clean up resources
+    arena_destroy(&arena);
     compiler_error_list_destroy(&error_list);
     vector_destroy(&tkn_vec);
     src_buffer_destroy(&src_buffer);

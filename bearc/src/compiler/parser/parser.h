@@ -4,6 +4,7 @@
 
 #ifndef COMPILER_PARSER_H
 #define COMPILER_PARSER_H
+#include "compiler/diagnostics/error_list.h"
 #include "utils/arena.h"
 #ifdef __cplusplus
 extern "C" {
@@ -15,15 +16,16 @@ extern "C" {
 /**
  * primary parser structure
  * tracks a position ptr along a vector of token_t
- * -
+ * - does not own anything!
  */
 typedef struct {
     vector_t tokens;
     size_t pos;
     arena_t arena;
+    compiler_error_list_t* error_list;
 } parser_t;
 
-parser_t parser_create(vector_t* tokens, arena_t* arena);
+parser_t parser_create(vector_t* tokens, arena_t* arena, compiler_error_list_t* error_list);
 
 #ifdef __cplusplus
 } // extern "C"

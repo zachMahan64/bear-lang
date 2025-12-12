@@ -10,17 +10,13 @@ size_t parser_estimate_stmt_cnt(vector_t* tkn_vec) {
     return tkn->loc.line + 1; // since zero-indexed
 }
 
-ast_stmt_file_t parser_file(const char* file_name, vector_t token_vec,
-                            compiler_error_list_t* error_list) {
+ast_stmt_file_t parser_file(parser_t parser, const char* file_name, vector_t token_vec) {
 
     ast_stmt_file_t file = {
         .stmt_vec =
             vector_create_and_reserve(sizeof(ast_stmt_t), parser_estimate_stmt_cnt(&token_vec)),
         .file_name = file_name,
     };
-
-    // position tracking, consuming tokens, etc
-    parser_t parser = {.tokens = token_vec, .pos = 0};
 
     // TODO, AST building up logic here
     // right now this is just some placeholder logic to test the basic parser functions
@@ -29,7 +25,7 @@ ast_stmt_file_t parser_file(const char* file_name, vector_t token_vec,
     while (!parser_eof(&parser)) {
         tkn = parser_match_token(&parser, TOK_INDETERMINATE);
         if (tkn) {
-            compiler_error_list_emplace(error_list, tkn, ERR_ILLEGAL_IDENTIFER);
+            compiler_error_list_emplace(parser.error_list, tkn, ERR_ILLEGAL_IDENTIFER);
         }
         // expect id or other after builtin type
         else if (parser_match_token_call(&parser, &parser_match_is_builtin_type)) {
@@ -51,7 +47,7 @@ ast_stmt_file_t parser_file(const char* file_name, vector_t token_vec,
             }
 
             if (!tkn) {
-                compiler_error_list_emplace(error_list, tkn = parser_eat(&parser),
+                compiler_error_list_emplace(parser.error_list, tkn = parser_eat(&parser),
                                             ERR_EXPECTED_IDENTIFIER);
             }
 
@@ -59,7 +55,7 @@ ast_stmt_file_t parser_file(const char* file_name, vector_t token_vec,
 
         // expect type after rarrow
         else if (parser_match_token(&parser, TOK_RARROW)) {
-            parser_expect_token_call(&parser, &parser_match_is_builtin_type_or_id, error_list,
+            parser_expect_token_call(&parser, &parser_match_is_builtin_type_or_id,
                                      ERR_EXPECTED_TYPE);
         }
 
