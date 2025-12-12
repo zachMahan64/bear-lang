@@ -9,4 +9,5 @@
 - *Crafting Interprets* by Robert Nystrom
 - *Engineering a Compiler* by Keith D. Cooper and Linda Torczon
 - [This Simple Algorithm Powers Real Interpreters: Pratt Parsing](https://www.youtube.com/watch?v=0c8b7YfsBKs)
+- [Simple but Powerful Pratt Parsing](https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
 
