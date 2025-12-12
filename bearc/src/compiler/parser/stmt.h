@@ -6,6 +6,6 @@
 
 /// builds up an ast in the form of a file stmt which contains a file_name and a vector of
 /// ast_stmt_t's
-ast_stmt_file_t parser_file(parser_t* parser, const char* file_name, vector_t token_vec);
+ast_stmt_file_t parser_file(parser_t* parser, const char* file_name);
 
 #endif

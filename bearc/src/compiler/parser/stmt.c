@@ -10,11 +10,11 @@ size_t parser_estimate_stmt_cnt(vector_t* tkn_vec) {
     return tkn->loc.line + 1; // since zero-indexed
 }
 
-ast_stmt_file_t parser_file(parser_t parser, const char* file_name, vector_t token_vec) {
+ast_stmt_file_t parser_file(parser_t parser, const char* file_name) {
 
     ast_stmt_file_t file = {
         .stmt_vec =
-            vector_create_and_reserve(sizeof(ast_stmt_t), parser_estimate_stmt_cnt(&token_vec)),
+            vector_create_and_reserve(sizeof(ast_stmt_t), parser_estimate_stmt_cnt(&parser.tokens)),
         .file_name = file_name,
     };
 
