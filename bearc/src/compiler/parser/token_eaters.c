@@ -12,7 +12,7 @@
 
 // consume a token
 token_t* parser_eat(parser_t* parser) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type != TOK_EOF) {
         parser->pos++;
     }
@@ -21,16 +21,16 @@ token_t* parser_eat(parser_t* parser) {
 
 // peek current uneaten token without consuming it
 token_t* parser_peek(parser_t* parser) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     return tkn;
 }
 
 token_t* parser_peek_n(parser_t* parser, size_t n) {
     size_t idx = parser->pos + n;
-    if (idx >= parser->tokens.size) {
+    if (idx >= parser->tokens->size) {
         return parser_peek(parser); // return EOF
     }
-    return vector_at(&parser->tokens, idx);
+    return vector_at(parser->tokens, idx);
 }
 
 // see last eaten token
@@ -38,7 +38,7 @@ token_t* parser_prev(parser_t* parser) {
     if (parser->pos == 0) {
         return NULL;
     }
-    token_t* tkn = vector_at(&parser->tokens, parser->pos - 1);
+    token_t* tkn = vector_at(parser->tokens, parser->pos - 1);
     return tkn;
 }
 
@@ -47,7 +47,7 @@ token_t* parser_prev(parser_t* parser) {
  * \return token_t* to consumed token or NULL if not matched
  */
 token_t* parser_match_token(parser_t* parser, token_type_e type) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type == type) {
         if (tkn->type != TOK_EOF) {
             parser->pos++;
@@ -68,7 +68,7 @@ bool parser_match_is_builtin_type(token_type_e t);
  * \return token_t* to consumed token or NULL if not matched
  */
 token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (match(tkn->type)) {
         if (tkn->type != TOK_EOF) {
             parser->pos++;
@@ -80,7 +80,7 @@ token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) 
 
 // eat if current token matches specified type or return NULL and add to error_list
 token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type == expected_type) {
         parser->pos++;
         return tkn;
@@ -94,7 +94,7 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
 // matches based on a specified token_type_e
 token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expected_type,
                                            error_code_e code) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type == expected_type) {
         parser->pos++;
         return tkn;
@@ -107,7 +107,7 @@ token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expect
 // uses a match call that returns bool based on a token_type_e
 token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
                                   error_code_e code) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (match(tkn->type)) {
         parser->pos++;
         return tkn;
@@ -118,7 +118,7 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
 
 // returns true when parser is at EOF
 bool parser_eof(parser_t* parser) {
-    token_t* tkn = vector_at(&parser->tokens, parser->pos);
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
     return tkn->type == TOK_EOF;
 }
 

@@ -1,5 +1,6 @@
 #ifndef AST_STATEMENTS_H
 #define AST_STATEMENTS_H
+#include "compiler/parser/parser.h"
 #include "utils/vector.h"
 #include <stddef.h>
 #ifdef __cplusplus
@@ -23,7 +24,6 @@ typedef enum {
 
     // control flow
     AST_STMT_IF,     // KW_IF + condition + then + else
-    AST_STMT_ELIF,   // KW_ELIF (optional chain)
     AST_STMT_ELSE,   // KW_ELSE (optional branch)
     AST_STMT_WHILE,  // KW_WHILE + condition + body
     AST_STMT_FOR,    // KW_FOR + init stmt + cond stmt + step expr + body stmt
@@ -46,18 +46,18 @@ typedef struct ast_stmt ast_stmt_t;
  * slice of statements
  */
 typedef struct {
-    ast_stmt_t* start;
-    size_t len;
-} ast_stmt_slice_t;
+    ast_stmt_t* const start;
+    const size_t len;
+} ast_slice_of_stmts_t;
 
 // stmt types ~~~~~~~~~~~~~~~~~~~~
 typedef struct {
-    vector_t stmt_vec; // of stmt_vec_t
+    ast_slice_of_stmts_t stmts;
 } ast_stmt_block_t;
 
 typedef struct {
     const char* file_name;
-    vector_t stmt_vec; // of stmt_vec_t
+    ast_slice_of_stmts_t stmts;
 } ast_stmt_file_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

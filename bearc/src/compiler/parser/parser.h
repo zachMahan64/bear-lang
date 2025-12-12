@@ -19,9 +19,9 @@ extern "C" {
  * - does not own anything!
  */
 typedef struct {
-    vector_t tokens;
+    vector_t* tokens;
     size_t pos;
-    arena_t arena;
+    arena_t* arena;
     compiler_error_list_t* error_list;
 } parser_t;
 

@@ -16,7 +16,7 @@
 ## Procedural
 
 #### I) Control Flow (branches, loops) and basic console-out stream
-- `if`, `elif`, `else`
+- `if`, `else`
 - `while`, `for`, `for ... in ...`
 - `cout <<- ...` or prints
 

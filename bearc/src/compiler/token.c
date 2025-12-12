@@ -127,7 +127,6 @@ const strimap_t* get_string_to_token_strimap(void) {
         // control flow
         strimap_insert(&map, "if", TOK_IF);
         strimap_insert(&map, "else", TOK_ELSE);
-        strimap_insert(&map, "elif", TOK_ELIF);
         strimap_insert(&map, "while", TOK_WHILE);
         strimap_insert(&map, "for", TOK_FOR);
         strimap_insert(&map, "return", TOK_RETURN);
@@ -274,7 +273,6 @@ const char* const* token_to_string_map(void) {
 
         map[TOK_IF] = "if";
         map[TOK_ELSE] = "else";
-        map[TOK_ELIF] = "elif";
         map[TOK_WHILE] = "while";
         map[TOK_FOR] = "for";
         map[TOK_RETURN] = "return";

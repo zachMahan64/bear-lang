@@ -114,7 +114,6 @@ typedef enum token_type {
     // comparison
     TOK_IF,
     TOK_ELSE,
-    TOK_ELIF,
     TOK_WHILE,
     TOK_FOR,
     TOK_IN, // example: for (int a in myArr) {...}
@@ -217,6 +216,11 @@ typedef struct {
     /// line & col, for error messages
     src_loc_t loc;
 } token_t;
+
+typedef struct {
+    token_t** start;
+    size_t len;
+} token_ptr_slice_t;
 
 /// returns a ptr to a char-to token map, used for mono-char tokens (e.g.: +), indexed by char
 /// values!

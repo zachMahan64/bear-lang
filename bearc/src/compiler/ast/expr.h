@@ -28,10 +28,13 @@ typedef struct ast_expr ast_expr_t;
 
 // expr types ~~~~~~~~~~~~
 
-typedef struct ast_expr_atom {
+typedef struct {
+    token_ptr_slice_t ids;
+} ast_expr_id_t;
+
+typedef struct ast_expr_literal {
     token_t* tkn;
-    struct ast_expr_atom* scope_qual; // for scoping, null term linked list
-} ast_expr_atom_t;
+} ast_expr_literal_t;
 
 // resolve through operator token type
 typedef struct {
@@ -58,7 +61,7 @@ typedef struct {
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
-    ast_expr_atom_t atom;
+    ast_expr_id_t atom;
     ast_expr_binary_t binary;
     ast_expr_grouping_t grouping;
     ast_expr_unary_t unary;
