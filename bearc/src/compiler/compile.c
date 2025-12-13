@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+// TODO move this to a print_outs file
 // print out contents of src in debug builds
 void print_out_src_buffer(src_buffer_t* src_buffer);
 // print out lexed token tablw in debug builds
