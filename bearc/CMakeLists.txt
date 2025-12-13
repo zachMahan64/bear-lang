@@ -29,8 +29,8 @@ set(SRC
 
     src/compiler/parser/token_eaters.c
     src/compiler/parser/rules.c
-    src/compiler/parser/expr.c
-    src/compiler/parser/stmt.c
+    src/compiler/parser/parse_expr.c
+    src/compiler/parser/parse_stmt.c
     src/compiler/parser/parser.c
 
     src/utils/strimap.c

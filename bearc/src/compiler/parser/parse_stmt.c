@@ -1,7 +1,7 @@
 // primary function for parsing a file into an ast
+#include "compiler/parser/parse_stmt.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/parser/parser.h"
-#include "compiler/parser/stmt.h"
 #include "compiler/parser/token_eaters.h"
 #include "utils/arena.h"
 #include "utils/vector.h"
