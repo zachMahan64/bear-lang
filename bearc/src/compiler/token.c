@@ -7,399 +7,365 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * returns a view into statically allocated map of char -> token_type_e
- */
-const char* get_char_to_token_map(void) {
-    static bool initialized = false;
-    static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
-    if (!initialized) {
-        // delimiters
-        char_to_token_map['('] = TOK_LPAREN;
-        char_to_token_map[')'] = TOK_RPAREN;
-        char_to_token_map['{'] = TOK_LBRACE;
-        char_to_token_map['}'] = TOK_RBRACE;
-        char_to_token_map['['] = TOK_LBRACK;
-        char_to_token_map[']'] = TOK_RBRACK;
+static unsigned char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE] = {
+    // delimiters
+    ['('] = TOK_LPAREN,
+    [')'] = TOK_RPAREN,
+    ['{'] = TOK_LBRACE,
+    ['}'] = TOK_RBRACE,
+    ['['] = TOK_LBRACK,
+    [']'] = TOK_RBRACK,
 
-        // punctuation
-        char_to_token_map[';'] = TOK_SEMICOLON;
-        char_to_token_map[':'] = TOK_COLON;
-        char_to_token_map['.'] = TOK_DOT;
-        char_to_token_map[','] = TOK_COMMA;
+    // punctuation
+    [';'] = TOK_SEMICOLON,
+    [':'] = TOK_COLON,
+    ['.'] = TOK_DOT,
+    [','] = TOK_COMMA,
 
-        // at invoke
-        char_to_token_map['#'] = TOK_HASH_INVOKE;
+    // at invoke
+    ['#'] = TOK_HASH_INVOKE,
 
-        // assignment
-        char_to_token_map['='] = TOK_ASSIGN_EQ;
+    // assignment
+    ['='] = TOK_ASSIGN_EQ,
 
-        // arithmetic
-        char_to_token_map['+'] = TOK_PLUS;
-        char_to_token_map['-'] = TOK_MINUS;
-        char_to_token_map['*'] = TOK_STAR;
-        char_to_token_map['/'] = TOK_DIVIDE;
-        char_to_token_map['%'] = TOK_MODULO;
+    // arithmetic
+    ['+'] = TOK_PLUS,
+    ['-'] = TOK_MINUS,
+    ['*'] = TOK_STAR,
+    ['/'] = TOK_DIVIDE,
+    ['%'] = TOK_MODULO,
 
-        // bitwise
-        char_to_token_map['|'] = TOK_BAR;
-        char_to_token_map['&'] = TOK_AMPER;
-        char_to_token_map['~'] = TOK_BIT_NOT;
-        char_to_token_map['^'] = TOK_BIT_XOR;
+    // bitwise
+    ['|'] = TOK_BAR,
+    ['&'] = TOK_AMPER,
+    ['~'] = TOK_BIT_NOT,
+    ['^'] = TOK_BIT_XOR,
 
-        // boolean
-        char_to_token_map['!'] = TOK_BOOL_NOT;
+    // boolean
+    ['!'] = TOK_BOOL_NOT,
 
-        // comparison
-        char_to_token_map['>'] = TOK_GT;
-        char_to_token_map['<'] = TOK_LT;
+    // comparison
+    ['>'] = TOK_GT,
+    ['<'] = TOK_LT,
+};
+const unsigned char* get_char_to_token_map(void) { return char_to_token_map; }
 
-        initialized = true;
-    }
-    return char_to_token_map;
+static pthread_once_t string_to_token_map_once = PTHREAD_ONCE_INIT;
+static strimap_t string_to_token_map;
+static void string_to_token_map_init(void) {
+    string_to_token_map =
+        strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
+
+    // bool literals
+    strimap_insert(&string_to_token_map, "true", TOK_BOOL_LIT_TRUE);
+    strimap_insert(&string_to_token_map, "false", TOK_BOOL_LIT_FALSE);
+
+    // file
+    strimap_insert(&string_to_token_map, "import", TOK_IMPORT);
+
+    // keywords
+    strimap_insert(&string_to_token_map, "mod", TOK_MODULE);
+    strimap_insert(&string_to_token_map, "fn", TOK_FN);
+    strimap_insert(&string_to_token_map, "mt", TOK_MT);
+    strimap_insert(&string_to_token_map, "dt", TOK_DT);
+    strimap_insert(&string_to_token_map, "cout", TOK_COUT);
+    strimap_insert(&string_to_token_map, "cin", TOK_CIN);
+
+    strimap_insert(&string_to_token_map, "box", TOK_BOX);
+    strimap_insert(&string_to_token_map, "bag", TOK_BAG);
+
+    strimap_insert(&string_to_token_map, "opt", TOK_OPT);
+    strimap_insert(&string_to_token_map, "res", TOK_RES);
+
+    strimap_insert(&string_to_token_map, "mut", TOK_MUT);
+    strimap_insert(&string_to_token_map, "mark", TOK_MARK);
+    strimap_insert(&string_to_token_map, "requires", TOK_REQUIRES);
+
+    strimap_insert(&string_to_token_map, "i8", TOK_I8);
+    strimap_insert(&string_to_token_map, "u8", TOK_U8);
+
+    strimap_insert(&string_to_token_map, "i16", TOK_I16);
+    strimap_insert(&string_to_token_map, "u16", TOK_U16);
+
+    strimap_insert(&string_to_token_map, "i32", TOK_I32);
+    strimap_insert(&string_to_token_map, "u32", TOK_U32);
+
+    strimap_insert(&string_to_token_map, "i64", TOK_I64);
+    strimap_insert(&string_to_token_map, "u64", TOK_U64);
+
+    strimap_insert(&string_to_token_map, "usize", TOK_USIZE);
+
+    strimap_insert(&string_to_token_map, "char", TOK_CHAR);
+    strimap_insert(&string_to_token_map, "f32", TOK_F32);
+    strimap_insert(&string_to_token_map, "f64", TOK_F64);
+    strimap_insert(&string_to_token_map, "str", TOK_STR);
+    strimap_insert(&string_to_token_map, "bool", TOK_BOOL);
+    strimap_insert(&string_to_token_map, "void", TOK_VOID);
+    strimap_insert(&string_to_token_map, "var", TOK_VAR);
+    strimap_insert(&string_to_token_map, "static", TOK_STATIC);
+    strimap_insert(&string_to_token_map, "compt", TOK_COMPT);
+    strimap_insert(&string_to_token_map, "hid", TOK_HID);
+    strimap_insert(&string_to_token_map, "template", TOK_TEMPLATE);
+    strimap_insert(&string_to_token_map, "enum", TOK_ENUM);
+
+    // control flow
+    strimap_insert(&string_to_token_map, "if", TOK_IF);
+    strimap_insert(&string_to_token_map, "else", TOK_ELSE);
+    strimap_insert(&string_to_token_map, "while", TOK_WHILE);
+    strimap_insert(&string_to_token_map, "for", TOK_FOR);
+    strimap_insert(&string_to_token_map, "return", TOK_RETURN);
+
+    // structures
+    strimap_insert(&string_to_token_map, "self", TOK_SELF_ID);
+    strimap_insert(&string_to_token_map, "Self", TOK_SELF_TYPE);
+    strimap_insert(&string_to_token_map, "struct", TOK_STRUCT);
+
+    // heap
+    strimap_insert(&string_to_token_map, "malloc", TOK_MALLOC);
+    strimap_insert(&string_to_token_map, "free", TOK_FREE);
+
+    // operators / symbols (multi-char tokens)
+    strimap_insert(&string_to_token_map, "->", TOK_RARROW);
+    strimap_insert(&string_to_token_map, "..", TOK_SCOPE_RES);
+    strimap_insert(&string_to_token_map, "::", TOK_TYPE_MOD);
+    strimap_insert(&string_to_token_map, "<-", TOK_ASSIGN_MOVE);
+    strimap_insert(&string_to_token_map, "<<-", TOK_STREAM);
+    strimap_insert(&string_to_token_map, "++", TOK_INC);
+    strimap_insert(&string_to_token_map, "--", TOK_DEC);
+    strimap_insert(&string_to_token_map, "<<", TOK_LSH);
+    strimap_insert(&string_to_token_map, ">>", TOK_RSHL);
+    strimap_insert(&string_to_token_map, ">>>", TOK_RSHA);
+    strimap_insert(&string_to_token_map, "||", TOK_BOOL_OR);
+    strimap_insert(&string_to_token_map, "&&", TOK_BOOL_AND);
+    strimap_insert(&string_to_token_map, ">=", TOK_GE);
+    strimap_insert(&string_to_token_map, "<=", TOK_LE);
+    strimap_insert(&string_to_token_map, "==", TOK_BOOL_EQ);
+    strimap_insert(&string_to_token_map, "!=", TOK_NE);
+
+    // compound assignment operators
+    strimap_insert(&string_to_token_map, "+=", TOK_ASSIGN_PLUS_EQ);
+    strimap_insert(&string_to_token_map, "-=", TOK_ASSIGN_MINUS_EQ);
+    strimap_insert(&string_to_token_map, "*=", TOK_ASSIGN_MULT_EQ);
+    strimap_insert(&string_to_token_map, "/=", TOK_ASSIGN_DIV_EQ);
+    strimap_insert(&string_to_token_map, "%=", TOK_ASSIGN_MOD_EQ);
+    strimap_insert(&string_to_token_map, "&=", TOK_ASSIGN_AND_EQ);
+    strimap_insert(&string_to_token_map, "|=", TOK_ASSIGN_OR_EQ);
+    strimap_insert(&string_to_token_map, "^=", TOK_ASSIGN_XOR_EQ);
+    strimap_insert(&string_to_token_map, "<<=", TOK_ASSIGN_LSH_EQ);
+    strimap_insert(&string_to_token_map, ">>=", TOK_ASSIGN_RSHL_EQ);
+    strimap_insert(&string_to_token_map, ">>>=", TOK_ASSIGN_RSHA_EQ);
 }
 
-// returns a view into statically allocated map of string -> token_type_e
 const strimap_t* get_string_to_token_strimap(void) {
-    static bool initialized = false;
-    static strimap_t map;
-
-    if (!initialized) {
-        map = strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
-
-        // bool literals
-        strimap_insert(&map, "true", TOK_BOOL_LIT_TRUE);
-        strimap_insert(&map, "false", TOK_BOOL_LIT_FALSE);
-
-        // file
-        strimap_insert(&map, "import", TOK_IMPORT);
-
-        // keywords
-        strimap_insert(&map, "mod", TOK_MODULE);
-        strimap_insert(&map, "fn", TOK_FN);
-        strimap_insert(&map, "mt", TOK_MT);
-        strimap_insert(&map, "dt", TOK_DT);
-        strimap_insert(&map, "cout", TOK_COUT);
-        strimap_insert(&map, "cin", TOK_CIN);
-
-        strimap_insert(&map, "box", TOK_BOX);
-        strimap_insert(&map, "bag", TOK_BAG);
-
-        strimap_insert(&map, "opt", TOK_OPT);
-        strimap_insert(&map, "res", TOK_RES);
-
-        strimap_insert(&map, "mut", TOK_MUT);
-        strimap_insert(&map, "mark", TOK_MARK);
-        strimap_insert(&map, "requires", TOK_REQUIRES);
-
-        strimap_insert(&map, "i8", TOK_I8);
-        strimap_insert(&map, "u8", TOK_U8);
-
-        strimap_insert(&map, "i16", TOK_I16);
-        strimap_insert(&map, "u16", TOK_U16);
-
-        strimap_insert(&map, "i32", TOK_I32);
-        strimap_insert(&map, "u32", TOK_U32);
-
-        strimap_insert(&map, "i64", TOK_I64);
-        strimap_insert(&map, "u64", TOK_U64);
-
-        strimap_insert(&map, "usize", TOK_USIZE);
-
-        strimap_insert(&map, "char", TOK_CHAR);
-        strimap_insert(&map, "f32", TOK_F32);
-        strimap_insert(&map, "f64", TOK_F64);
-        strimap_insert(&map, "str", TOK_STR);
-        strimap_insert(&map, "bool", TOK_BOOL);
-        strimap_insert(&map, "void", TOK_VOID);
-        strimap_insert(&map, "var", TOK_VAR);
-        strimap_insert(&map, "static", TOK_STATIC);
-        strimap_insert(&map, "compt", TOK_COMPT);
-        strimap_insert(&map, "hid", TOK_HID);
-        strimap_insert(&map, "template", TOK_TEMPLATE);
-        strimap_insert(&map, "enum", TOK_ENUM);
-
-        // control flow
-        strimap_insert(&map, "if", TOK_IF);
-        strimap_insert(&map, "else", TOK_ELSE);
-        strimap_insert(&map, "while", TOK_WHILE);
-        strimap_insert(&map, "for", TOK_FOR);
-        strimap_insert(&map, "return", TOK_RETURN);
-
-        // structures
-        strimap_insert(&map, "self", TOK_SELF_ID);
-        strimap_insert(&map, "Self", TOK_SELF_TYPE);
-        strimap_insert(&map, "struct", TOK_STRUCT);
-
-        // heap
-        strimap_insert(&map, "malloc", TOK_MALLOC);
-        strimap_insert(&map, "free", TOK_FREE);
-
-        // operators / symbols (multi-char tokens)
-        strimap_insert(&map, "->", TOK_RARROW);
-        strimap_insert(&map, "..", TOK_SCOPE_RES);
-        strimap_insert(&map, "::", TOK_TYPE_MOD);
-        strimap_insert(&map, "<-", TOK_ASSIGN_MOVE);
-        strimap_insert(&map, "<<-", TOK_STREAM);
-        strimap_insert(&map, "++", TOK_INC);
-        strimap_insert(&map, "--", TOK_DEC);
-        strimap_insert(&map, "<<", TOK_LSH);
-        strimap_insert(&map, ">>", TOK_RSHL);
-        strimap_insert(&map, ">>>", TOK_RSHA);
-        strimap_insert(&map, "||", TOK_BOOL_OR);
-        strimap_insert(&map, "&&", TOK_BOOL_AND);
-        strimap_insert(&map, ">=", TOK_GE);
-        strimap_insert(&map, "<=", TOK_LE);
-        strimap_insert(&map, "==", TOK_BOOL_EQ);
-        strimap_insert(&map, "!=", TOK_NE);
-
-        // compound assignment operators
-        strimap_insert(&map, "+=", TOK_ASSIGN_PLUS_EQ);
-        strimap_insert(&map, "-=", TOK_ASSIGN_MINUS_EQ);
-        strimap_insert(&map, "*=", TOK_ASSIGN_MULT_EQ);
-        strimap_insert(&map, "/=", TOK_ASSIGN_DIV_EQ);
-        strimap_insert(&map, "%=", TOK_ASSIGN_MOD_EQ);
-        strimap_insert(&map, "&=", TOK_ASSIGN_AND_EQ);
-        strimap_insert(&map, "|=", TOK_ASSIGN_OR_EQ);
-        strimap_insert(&map, "^=", TOK_ASSIGN_XOR_EQ);
-        strimap_insert(&map, "<<=", TOK_ASSIGN_LSH_EQ);
-        strimap_insert(&map, ">>=", TOK_ASSIGN_RSHL_EQ);
-        strimap_insert(&map, ">>>=", TOK_ASSIGN_RSHA_EQ);
-
-        initialized = true;
-    }
-
-    return &map;
+    pthread_once(&string_to_token_map_once, &string_to_token_map_init);
+    return &string_to_token_map;
 }
 
-/**
- * returns a view into statically allocated map of token_type_e -> string
- */
-const char* const* token_to_string_map(void) {
-    static bool initialized = false;
-    static const char* map[TOK__NUM] = {0};
+static const char* token_to_string_map[TOK__NUM] = {
+    [TOK_INDETERMINATE] = "INDETER.",
 
-    if (!initialized) {
-        map[TOK_NONE] = "";
-        map[TOK_INDETERMINATE] = "INDETER.";
+    // mono-char tokens
+    [TOK_LPAREN] = "(",
+    [TOK_RPAREN] = ")",
+    [TOK_LBRACE] = "{",
+    [TOK_RBRACE] = "}",
+    [TOK_LBRACK] = "[",
+    [TOK_RBRACK] = "]",
 
-        // mono-char tokens
-        map[TOK_LPAREN] = "(";
-        map[TOK_RPAREN] = ")";
-        map[TOK_LBRACE] = "{";
-        map[TOK_RBRACE] = "}";
-        map[TOK_LBRACK] = "[";
-        map[TOK_RBRACK] = "]";
+    // punctuation
+    [TOK_SEMICOLON] = ";",
+    [TOK_COLON] = ":",
+    [TOK_DOT] = ".",
+    [TOK_COMMA] = ",",
+    [TOK_HASH_INVOKE] = "#",
 
-        // punctuation
-        map[TOK_SEMICOLON] = ";";
-        map[TOK_COLON] = ":";
-        map[TOK_DOT] = ".";
-        map[TOK_COMMA] = ",";
-        map[TOK_HASH_INVOKE] = "#";
+    // assignment / operators
+    [TOK_ASSIGN_EQ] = "=",
+    [TOK_PLUS] = "+",
+    [TOK_MINUS] = "-",
+    [TOK_STAR] = "*",
+    [TOK_DIVIDE] = "/",
+    [TOK_MODULO] = "%",
 
-        // assignment / operators
-        map[TOK_ASSIGN_EQ] = "=";
-        map[TOK_PLUS] = "+";
-        map[TOK_MINUS] = "-";
-        map[TOK_STAR] = "*";
-        map[TOK_DIVIDE] = "/";
-        map[TOK_MODULO] = "%";
+    // bitwise
+    [TOK_BAR] = "|",
+    [TOK_AMPER] = "&",
+    [TOK_BIT_NOT] = "~",
+    [TOK_BIT_XOR] = "^",
 
-        // bitwise
-        map[TOK_BAR] = "|";
-        map[TOK_AMPER] = "&";
-        map[TOK_BIT_NOT] = "~";
-        map[TOK_BIT_XOR] = "^";
+    // boolean
+    [TOK_BOOL_NOT] = "!",
 
-        // boolean
-        map[TOK_BOOL_NOT] = "!";
+    // comparison
+    [TOK_GT] = ">",
+    [TOK_LT] = "<",
 
-        // comparison
-        map[TOK_GT] = ">";
-        map[TOK_LT] = "<";
+    // file / keywords
+    [TOK_IMPORT] = "import",
+    [TOK_MODULE] = "mod",
+    [TOK_FN] = "fn",
+    [TOK_MT] = "mt",
+    [TOK_DT] = "dt",
+    [TOK_COUT] = "cout",
+    [TOK_CIN] = "cin",
 
-        // file / keywords
-        map[TOK_IMPORT] = "import";
-        map[TOK_MODULE] = "mod";
-        map[TOK_FN] = "fn";
-        map[TOK_MT] = "mt";
-        map[TOK_DT] = "dt";
-        map[TOK_COUT] = "cout";
-        map[TOK_CIN] = "cin";
+    [TOK_BOX] = "box",
+    [TOK_BAG] = "bag",
 
-        map[TOK_BOX] = "box";
-        map[TOK_BAG] = "bag";
+    [TOK_OPT] = "opt",
+    [TOK_RES] = "res",
 
-        map[TOK_OPT] = "opt";
-        map[TOK_RES] = "res";
+    [TOK_MUT] = "mut",
+    [TOK_MARK] = "mark",
+    [TOK_REQUIRES] = "requires",
 
-        map[TOK_MUT] = "mut";
-        map[TOK_MARK] = "mark";
-        map[TOK_REQUIRES] = "requires";
+    [TOK_I8] = "i8",
+    [TOK_U8] = "u8",
 
-        map[TOK_I8] = "i8";
-        map[TOK_U8] = "u8";
+    [TOK_I16] = "i16",
+    [TOK_U16] = "u16",
 
-        map[TOK_I16] = "i16";
-        map[TOK_U16] = "u16";
+    [TOK_I32] = "i32",
+    [TOK_U32] = "u32",
 
-        map[TOK_I32] = "i32";
-        map[TOK_U32] = "u32";
+    [TOK_I64] = "i64",
+    [TOK_U64] = "u64",
 
-        map[TOK_I64] = "i64";
-        map[TOK_U64] = "u64";
+    [TOK_USIZE] = "usize",
 
-        map[TOK_USIZE] = "usize";
+    [TOK_CHAR] = "char",
 
-        map[TOK_CHAR] = "char";
+    [TOK_F32] = "f32",
+    [TOK_F64] = "doub",
 
-        map[TOK_F32] = "f32";
-        map[TOK_F64] = "doub";
+    [TOK_STR] = "str",
+    [TOK_BOOL] = "bool",
+    [TOK_VOID] = "void",
+    [TOK_VAR] = "var",
+    [TOK_STATIC] = "static",
+    [TOK_COMPT] = "compt",
+    [TOK_HID] = "hidden",
+    [TOK_TEMPLATE] = "template",
 
-        map[TOK_STR] = "str";
-        map[TOK_BOOL] = "bool";
-        map[TOK_VOID] = "void";
-        map[TOK_VAR] = "var";
-        map[TOK_STATIC] = "static";
-        map[TOK_COMPT] = "compt";
-        map[TOK_HID] = "hidden";
-        map[TOK_TEMPLATE] = "template";
+    [TOK_IF] = "if",
+    [TOK_ELSE] = "else",
+    [TOK_WHILE] = "while",
+    [TOK_FOR] = "for",
+    [TOK_RETURN] = "return",
 
-        map[TOK_IF] = "if";
-        map[TOK_ELSE] = "else";
-        map[TOK_WHILE] = "while";
-        map[TOK_FOR] = "for";
-        map[TOK_RETURN] = "return";
+    // structures
+    [TOK_SELF_ID] = "self",
+    [TOK_SELF_TYPE] = "Self",
+    [TOK_STRUCT] = "struct",
 
-        // structures
-        map[TOK_SELF_ID] = "self";
-        map[TOK_SELF_TYPE] = "Self";
-        map[TOK_STRUCT] = "struct";
+    // heap
+    [TOK_MALLOC] = "malloc",
+    [TOK_FREE] = "free",
 
-        // heap
-        map[TOK_MALLOC] = "malloc";
-        map[TOK_FREE] = "free";
+    // variable / literal types
+    [TOK_IDENTIFIER] = "id",
+    [TOK_CHAR_LIT] = "char_lit",
+    [TOK_INT_LIT] = "int_lit",
+    [TOK_DOUB_LIT] = "doub_lit",
+    [TOK_STR_LIT] = "str_lit",
+    [TOK_BOOL_LIT_TRUE] = "true_lit",
+    [TOK_BOOL_LIT_FALSE] = "false_lit",
 
-        // variable / literal types
-        map[TOK_IDENTIFIER] = "id";
-        map[TOK_CHAR_LIT] = "char_lit";
-        map[TOK_INT_LIT] = "int_lit";
-        map[TOK_DOUB_LIT] = "doub_lit";
-        map[TOK_STR_LIT] = "str_lit";
-        map[TOK_BOOL_LIT_TRUE] = "true_lit";
-        map[TOK_BOOL_LIT_FALSE] = "false_lit";
+    // special punctuation
+    [TOK_RARROW] = "->",
+    [TOK_SCOPE_RES] = "..",
+    [TOK_TYPE_MOD] = "::",
 
-        // special punctuation
-        map[TOK_RARROW] = "->";
-        map[TOK_SCOPE_RES] = "..";
-        map[TOK_TYPE_MOD] = "::";
+    // operators
+    [TOK_ASSIGN_MOVE] = "<-",
+    [TOK_STREAM] = "<<-",
+    [TOK_INC] = "++",
+    [TOK_DEC] = "--",
+    [TOK_LSH] = "<<",
+    [TOK_RSHL] = ">>",
+    [TOK_RSHA] = ">>>",
+    [TOK_BOOL_OR] = "||",
+    [TOK_BOOL_AND] = "&&",
+    [TOK_GE] = ">=",
+    [TOK_LE] = "<=",
+    [TOK_BOOL_EQ] = "==",
+    [TOK_NE] = "!=",
 
-        // operators
-        map[TOK_ASSIGN_MOVE] = "<-";
-        map[TOK_STREAM] = "<<-";
-        map[TOK_INC] = "++";
-        map[TOK_DEC] = "--";
-        map[TOK_LSH] = "<<";
-        map[TOK_RSHL] = ">>";
-        map[TOK_RSHA] = ">>>";
-        map[TOK_BOOL_OR] = "||";
-        map[TOK_BOOL_AND] = "&&";
-        map[TOK_GE] = ">=";
-        map[TOK_LE] = "<=";
-        map[TOK_BOOL_EQ] = "==";
-        map[TOK_NE] = "!=";
+    // --------------- compound assignment -----------------
+    // arithmetic
+    [TOK_ASSIGN_PLUS_EQ] = "+=",
+    [TOK_ASSIGN_MINUS_EQ] = "-=",
+    [TOK_ASSIGN_MULT_EQ] = "*=",
+    [TOK_ASSIGN_DIV_EQ] = "/=",
+    [TOK_ASSIGN_MOD_EQ] = "%=",
 
-        // --------------- compound assignment -----------------
-        // arithmetic
-        map[TOK_ASSIGN_PLUS_EQ] = "+=";
-        map[TOK_ASSIGN_MINUS_EQ] = "-=";
-        map[TOK_ASSIGN_MULT_EQ] = "*=";
-        map[TOK_ASSIGN_DIV_EQ] = "/=";
-        map[TOK_ASSIGN_MOD_EQ] = "%=";
+    // bitwise
+    [TOK_ASSIGN_AND_EQ] = "&=",
+    [TOK_ASSIGN_OR_EQ] = "|=",
+    [TOK_ASSIGN_XOR_EQ] = "^=",
+    [TOK_ASSIGN_LSH_EQ] = "<<=",
+    [TOK_ASSIGN_RSHL_EQ] = ">>=",
+    [TOK_ASSIGN_RSHA_EQ] = ">>>=",
 
-        // bitwise
-        map[TOK_ASSIGN_AND_EQ] = "&=";
-        map[TOK_ASSIGN_OR_EQ] = "|=";
-        map[TOK_ASSIGN_XOR_EQ] = "^=";
-        map[TOK_ASSIGN_LSH_EQ] = "<<=";
-        map[TOK_ASSIGN_RSHL_EQ] = ">>=";
-        map[TOK_ASSIGN_RSHA_EQ] = ">>>=";
+    // EOF
+    [TOK_EOF] = "eof",
+    [TOK_LEX_ERROR_EMPTY_TOKEN] = "err_empty_token",
+};
 
-        // EOF
-        map[TOK_EOF] = "eof";
-        map[TOK_LEX_ERROR_EMPTY_TOKEN] = "err_empty_token";
+const char* const* get_token_to_string_map(void) { return token_to_string_map; }
 
-        initialized = true;
-    }
-    return map;
-}
+static char always_one_char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE] = {
+    // delimiters
+    ['('] = TOK_LPAREN,
+    [')'] = TOK_RPAREN,
+    ['{'] = TOK_LBRACE,
+    ['}'] = TOK_RBRACE,
+    ['['] = TOK_LBRACK,
+    [']'] = TOK_RBRACK,
+    // punctuation
+    [';'] = TOK_SEMICOLON,
+    [','] = TOK_COMMA,
+    ['#'] = TOK_HASH_INVOKE,
+};
+const char* get_always_one_char_to_token_map(void) { return always_one_char_to_token_map; }
 
-/**
- * get map that contains always mono-char : token
- */
-const char* get_always_one_char_to_token_map(void) {
-    static bool initialized = false;
-    static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
-    if (!initialized) {
-        // delimiters
-        char_to_token_map['('] = TOK_LPAREN;
-        char_to_token_map[')'] = TOK_RPAREN;
-        char_to_token_map['{'] = TOK_LBRACE;
-        char_to_token_map['}'] = TOK_RBRACE;
-        char_to_token_map['['] = TOK_LBRACK;
-        char_to_token_map[']'] = TOK_RBRACK;
+static char first_char_in_mc_op_tok_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE] = {
+    // punctuation
+    ['.'] = TOK_DOT,
+    [':'] = TOK_COLON,
 
-        // punctuation
-        char_to_token_map[';'] = TOK_SEMICOLON;
-        char_to_token_map[','] = TOK_COMMA;
+    // assignment
+    ['='] = TOK_ASSIGN_EQ,
 
-        char_to_token_map['#'] = TOK_HASH_INVOKE;
+    // arithmetic
+    ['+'] = TOK_PLUS,
+    ['-'] = TOK_MINUS,
+    ['*'] = TOK_STAR,
+    ['/'] = TOK_DIVIDE,
+    ['%'] = TOK_MODULO,
 
-        initialized = true;
-    }
-    return char_to_token_map;
-}
+    // bitwise
+    ['|'] = TOK_BAR,
+    ['&'] = TOK_AMPER,
+    ['~'] = TOK_BIT_NOT,
+    ['^'] = TOK_BIT_XOR,
 
+    // boolean
+    ['!'] = TOK_BOOL_NOT,
+
+    // comparison
+    ['>'] = TOK_GT,
+    ['<'] = TOK_LT,
+};
 const char* get_first_char_in_multichar_operator_token_map(void) {
-    static bool initialized = false;
-    static char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE]; // ASCII lookup
-    if (!initialized) {
-        // punctuation
-        char_to_token_map['.'] = TOK_DOT;
-        char_to_token_map[':'] = TOK_COLON;
 
-        // assignment
-        char_to_token_map['='] = TOK_ASSIGN_EQ;
-
-        // arithmetic
-        char_to_token_map['+'] = TOK_PLUS;
-        char_to_token_map['-'] = TOK_MINUS;
-        char_to_token_map['*'] = TOK_STAR;
-        char_to_token_map['/'] = TOK_DIVIDE;
-        char_to_token_map['%'] = TOK_MODULO;
-
-        // bitwise
-        char_to_token_map['|'] = TOK_BAR;
-        char_to_token_map['&'] = TOK_AMPER;
-        char_to_token_map['~'] = TOK_BIT_NOT;
-        char_to_token_map['^'] = TOK_BIT_XOR;
-
-        // boolean
-        char_to_token_map['!'] = TOK_BOOL_NOT;
-
-        // comparison
-        char_to_token_map['>'] = TOK_GT;
-        char_to_token_map['<'] = TOK_LT;
-
-        initialized = true;
-    }
-    return char_to_token_map; // return the map itself for faster look-up
+    return first_char_in_mc_op_tok_map; // return the map itself for faster look-up
 }
 
 // helper

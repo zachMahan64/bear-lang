@@ -224,11 +224,11 @@ typedef struct {
 
 /// returns a ptr to a char-to token map, used for mono-char tokens (e.g.: +), indexed by char
 /// values!
-const char* get_char_to_token_map(void);
+const unsigned char* get_char_to_token_map(void);
 /// returns a ptr to a strimap_t {const char*, token_type_e}
 const strimap_t* get_string_to_token_strimap(void);
 /// returns a ptr to a map for token_type_e -> const char*, indexed by token_type_e's!
-const char* const* token_to_string_map(void);
+const char* const* get_token_to_string_map(void);
 /// returns a ptr to a map indicated whether a given char is always associated with a mono-char
 /// token
 const char* get_always_one_char_to_token_map(void);
