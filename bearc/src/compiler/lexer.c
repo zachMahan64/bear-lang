@@ -210,7 +210,7 @@ lex_multichar_operator:
 
 lex_whitespace:
     if (len != 0) {
-        *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);
+        *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);
         len = 0;
     }
     ++col;
@@ -222,7 +222,7 @@ lex_whitespace:
 lex_newline:
     // pushes any in-progress token, this part may break
     if (len != 0) {
-        *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);
+        *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);
         len = 0;
     }
     ++loc.line;
@@ -234,7 +234,7 @@ lex_newline:
 
 lex_inline_comment:
     if (len != 0) {
-        *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);
+        *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);
         len = 0;
         loc.col = col;
         start = pos;
@@ -257,7 +257,7 @@ lex_inline_comment:
 
 lex_end:
     if (len != 0) {
-        *((token_t*)vector_touch_back(&tkn_vec)) = token_build(start, len, &loc);
+        *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);
     }
 lex_done:
     // build up eof token manually

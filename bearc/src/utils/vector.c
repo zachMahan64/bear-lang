@@ -100,7 +100,7 @@ bool vector_push_back(vector_t* vector, const void* elem) {
     return resize;
 }
 
-void* vector_touch_back(vector_t* vector) {
+void* vector_emplace_back(vector_t* vector) {
     if (vector->size == vector->capacity) {
         size_t new_capacity = (vector->capacity == 0) ? 1 : vector->capacity * 2;
         void* temp = realloc(vector->data, new_capacity * vector->elem_size);

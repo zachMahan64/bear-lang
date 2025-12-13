@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/// the values should match their token_type_e counterparts
 static unsigned char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE] = {
     // delimiters
     ['('] = TOK_LPAREN,

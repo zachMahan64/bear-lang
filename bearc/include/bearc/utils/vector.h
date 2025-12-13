@@ -50,9 +50,9 @@ void* vector_last(const vector_t* vector);
 
 /// push back an element onto the vector, copies by value, but you still need to pass in a pointer
 bool vector_push_back(vector_t* vector, const void* elem);
-/// rrows the vector by one element and returns a pointer to the uninitialized slot at the back.
+/// grows the vector by one element and returns a pointer to the uninitialized slot at the back.
 /// caller writes the element directly.
-void* vector_touch_back(vector_t* vector);
+void* vector_emplace_back(vector_t* vector);
 
 /// removes the last element
 void vector_remove_back(vector_t* vector);
