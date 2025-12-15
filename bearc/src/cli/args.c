@@ -1,4 +1,8 @@
-// BearLang
+//     /                              /
+//    /                              /
+//   /_____  _____  _____  _____    /  _____   _  _  _____
+//  /     / /____  /____/ /____/   /  /____/  /\  / /  __
+// /_____/ /____  /    / /   \    /  /    /  /  \/ /____/
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
@@ -8,7 +12,6 @@
 #include <string.h>
 
 // LONG FLAG NAME MAP
-
 cli_flag_long_mapping_t cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES] = {
     {"help", HELP}, {"version", VERSION}};
 
