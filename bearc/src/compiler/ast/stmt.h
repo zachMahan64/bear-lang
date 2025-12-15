@@ -21,17 +21,22 @@ typedef enum {
     AST_STMT_MODULE, // AST_MODULE_NAME + AST_STMT_BLOCK
     AST_STMT_FILE,
 
-    // declarations
-    AST_STMT_FN_DECL,       // fn + params + (body for definitions / null for declarations)
-                            // + return type
-    AST_STMT_MT_DECL,       // mt ^
-    AST_STMT_DT_DECL,       // dt ^
-    AST_STMT_VAR_DECL,      // type var;
-    AST_STMT_VAR_EQ_DECL,   // type name = value
-    AST_STMT_VAR_MOVE_DECL, // type name <- value;
+    // import
+    AST_STMT_IMPORT, // TOK_IMPORT + AST_MODULE_NAME
+
+    // statement expr
+    AST_SMTT_EXPR,
+
+    // function declarations
+    AST_STMT_FN_DECL, // fn + params + (body for definitions / null for declarations)
+                      // + return type
+    AST_STMT_MT_DECL, // mt ^
+    AST_STMT_DT_DECL, // dt ^
+    // var decls
+    AST_STMT_VAR_DECL, // type var;
 
     // control flow
-    AST_STMT_IF,     // KW_IF + condition + then + else
+    AST_STMT_IF,     // KW_IF + condition + statement
     AST_STMT_ELSE,   // KW_ELSE (optional branch)
     AST_STMT_WHILE,  // KW_WHILE + condition + body
     AST_STMT_FOR,    // KW_FOR + init stmt + cond stmt + step expr + body stmt
@@ -40,14 +45,15 @@ typedef enum {
 
     // structs
     AST_STMT_STRUCT_DEF, // TOK_STRUCT + fields
-    AST_STMT_IMPORT,     // TOK_IMPORT + AST_MODULE_NAME
 
     // marks
+    AST_MARK_PREAMBLE,
     AST_MARK_DECL, // mark Name { functions }
 } ast_stmt_type_e;
 
 // forward decls ~~~~~~~~~~~~~~~~~~
 typedef struct ast_stmt ast_stmt_t;
+typedef struct ast_stmt_else ast_stmt_else_t;
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /**
@@ -59,6 +65,10 @@ typedef struct {
 } ast_slice_of_stmts_t;
 
 // stmt types ~~~~~~~~~~~~~~~~~~~~
+/**
+ * represents block statements
+ * {...series of statements...}
+ */
 typedef struct {
     token_t* left_delim;
     ast_slice_of_stmts_t stmts;
@@ -71,6 +81,26 @@ typedef struct {
 } ast_stmt_file_t;
 
 typedef struct {
+    ast_expr_id_t* id;
+    /// NULLable if whole file should be internal to a module
+    ast_stmt_block_t* block;
+    /// NULLable if block != NULL
+    token_t* terminator;
+} ast_stmt_module_t;
+
+typedef struct {
+    token_t* import;
+    ast_expr_id_t* file_id;
+} ast_stmt_import_t;
+
+typedef struct {
+    /// sole-expr of this statement
+    ast_expr_t* expr;
+    /// ;
+    token_t* terminator;
+} ast_stmt_expr_t;
+
+typedef struct {
     /// fn, mt, or dt
     token_t* kw;
     token_t* left_paren;
@@ -78,20 +108,108 @@ typedef struct {
     token_t* right_paren;
     /// NULLable if no return type
     token_t* rarrow;
+    /// NULLable if no return type
     ast_expr_id_t* return_type;
+    ast_stmt_block_t block;
 } ast_stmt_fn_decl_t;
+
+typedef struct {
+    ast_expr_id_t* type;
+    ast_expr_id_t* id;
+    /// NULLable if pure decl (zero-init)
+    token_t* assign_op;
+    /// NULLable if pure decl (zero-init)
+    ast_expr_t* rhs;
+    /// ;
+    token_t* terminator;
+} ast_stmt_var_decl_t;
+
+typedef struct {
+    token_t* if_tkn;
+    ast_stmt_t* stmt;
+    /// NULLable if there's no (more) elses
+    ast_stmt_else_t* else_stmt;
+} ast_stmt_if_t;
+
+typedef struct ast_stmt_else {
+    token_t* else_tkn;
+    ast_stmt_t* stmt;
+    /// NULLable if there's no (more) elses
+} ast_stmt_else_t;
+
+typedef struct {
+    token_t* while_tkn;
+    ast_stmt_t* stmt;
+} ast_stmt_while_t;
+
+typedef struct {
+    token_t* for_tkn;
+    ast_stmt_t* init;
+    ast_stmt_t* condition;
+    ast_expr_t* step;
+    ast_stmt_t* body;
+} ast_stmt_for_t;
+
+typedef struct {
+    token_t* for_tkn;
+    ast_expr_id_t* type;
+    ast_expr_t* iterable;
+    token_t* in;
+    ast_expr_t* iterator;
+    ast_stmt_t* body;
+} ast_stmt_for_in_t;
+
+typedef struct {
+    token_t* return_tkn;
+    ast_expr_t* expr;
+} ast_stmt_return_t;
+
+typedef struct {
+    token_t* struct_tkn;
+    ast_expr_id_t* name;
+    ast_stmt_block_t* fields;
+} ast_stmt_struct_decl_t;
+
+typedef struct {
+    token_t* mark_tkn;
+    ast_expr_id_t* name;
+    ast_stmt_block_t* funcs;
+} ast_stmt_mark_decl_t;
+
+typedef struct {
+    token_t* hash_tkn;
+    token_t* left_bracket;
+    ast_slice_of_exprs_t marks;
+    token_t* right_bracket;
+} ast_stmt_mark_preamble_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-// TODO, WIP
+/// union of all stmt types
 typedef union {
     ast_stmt_block_t block;
     ast_stmt_file_t file;
+    ast_stmt_module_t module;
+    ast_stmt_import_t import;
+    ast_stmt_expr_t stmt_expr;
+    ast_stmt_fn_decl_t fn_decl;
+    ast_stmt_var_decl_t decl;
+    ast_stmt_if_t if_stmt;
+    ast_stmt_else_t else_stmt;
+    ast_stmt_while_t while_stmt;
+    ast_stmt_for_t for_stmt;
+    ast_stmt_for_in_t for_in_stmt;
+    ast_stmt_return_t return_stmt;
+    ast_stmt_struct_decl_t struct_decl;
+    ast_stmt_mark_decl_t mark_decl;
+    ast_stmt_mark_preamble_t mark_preamble;
 } ast_stmt_u;
 
 typedef struct ast_stmt {
-    ast_stmt_type_e type;
     ast_stmt_u stmt;
+    ast_stmt_type_e type;
+    token_t* start;
+    token_t* end;
 } ast_stmt_t;
 
 #ifdef __cplusplus

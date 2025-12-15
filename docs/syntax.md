@@ -1,4 +1,4 @@
-### BearLang Syntax
+### Bear Lang Syntax
 - **Work In Progress:** this document will be the main syntax reference before moving to a more rigorous system of seperate documents for each language feature.
 - BearLang is a C-Like language inspired by elements of Rust, and C++.
 #### Project structure:
@@ -6,7 +6,7 @@
 - This is the basics of the system:
 ```
 // in main.br 
-import my_mod // a module
+import my_mod // a file containing a module
 
 fn main(str[]& argv) -> i32 {
     my_mod..do_thing();

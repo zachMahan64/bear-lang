@@ -65,7 +65,9 @@ typedef struct {
 } ast_expr_assign_t;
 
 typedef struct {
+    token_t* left_paren;
     ast_expr_t* expr;
+    token_t* right_paren;
 } ast_expr_grouping_t;
 
 // pre/postfix must be determined by the ast_expr_type_e inside the wrapping ast_expr_t
@@ -75,8 +77,10 @@ typedef struct {
 } ast_expr_unary_t;
 
 typedef struct {
-    ast_expr_t* expr;  // should resolve to a func/func ptr
-    vector_t args_vec; // of type ast_expr_t
+    ast_expr_t* expr; // should resolve to a func/func ptr
+    token_t* left_paren;
+    ast_slice_of_exprs_t args_vec; // of type ast_expr_t
+    token_t* right_paren;
 } ast_expr_fn_call_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,6 +98,8 @@ typedef union {
 typedef struct ast_expr {
     ast_expr_u expr;
     ast_expr_type_e type;
+    token_t* start;
+    token_t* end;
 } ast_expr_t;
 
 #ifdef __cplusplus
