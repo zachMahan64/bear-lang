@@ -75,12 +75,24 @@ typedef struct {
     token_t* right_delim;
 } ast_stmt_block_t;
 
+/**
+ * represents a top level sequence of statements in a file
+ * this is the highest-order statement construct
+ */
 typedef struct {
     const char* file_name;
     ast_slice_of_stmts_t stmts;
 } ast_stmt_file_t;
 
+/**
+ * represents a module decl or insertion in a module
+ * either
+ * mod my_mod; // makes the whole file apart of the module
+ * or:
+ * mod my_mod {...} // module will enclosed
+ */
 typedef struct {
+    token_t* mod_tkn;
     ast_expr_id_t* id;
     /// NULLable if whole file should be internal to a module
     ast_stmt_block_t* block;
@@ -88,11 +100,15 @@ typedef struct {
     token_t* terminator;
 } ast_stmt_module_t;
 
+/**
+ * imports a file given my a path as my.path.to.file
+ */
 typedef struct {
     token_t* import;
     ast_expr_id_t* file_id;
 } ast_stmt_import_t;
 
+/// a statement expr, like `foo();`
 typedef struct {
     /// sole-expr of this statement
     ast_expr_t* expr;
