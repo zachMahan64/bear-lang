@@ -21,6 +21,6 @@ token_ptr_slice_t parser_freeze_token_handle_slice(parser_t* p, vector_t* vec);
 
 /// for adding contents of the vector to the arena, and freeing the vector
 /// - vector must contain type ast_expr_t
-ast_slice_of_exprs_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec);
+ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec);
 
 #endif
