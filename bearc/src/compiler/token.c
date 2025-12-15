@@ -412,7 +412,7 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
  * using different look ups for optimization
  */
 token_type_e token_determine_token_type_for_fixed_symbols(const char* start, size_t length) {
-    const char* char_to_token_map = get_char_to_token_map();
+    const unsigned char* char_to_token_map = get_char_to_token_map();
     if (length == 1) {
         return char_to_token_map[(
             unsigned char)start[0]]; // return token indexed at the mono-char literal, any

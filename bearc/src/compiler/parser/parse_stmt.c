@@ -1,4 +1,12 @@
-// primary function for parsing a file into an ast
+//
+//     /                              /
+//    /                              /
+//   /_____  _____  _____  _____    /  _____   _  _  _____
+//  /     / /____  /____/ /____/   /  /____/  /\  / /____/
+// /_____/ /____  /    / /   \    /  /    /  /  \/  ____/
+// Copyright (C) 2025 Zachary Mahan
+// Licensed under the GNU GPL v3. See LICENSE for details.
+
 #include "compiler/parser/parse_stmt.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/parser/parser.h"

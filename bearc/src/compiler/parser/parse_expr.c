@@ -12,3 +12,13 @@ token_ptr_slice_t parser_freeze_token_handle_slice(parser_t* p, vector_t* vec) {
     vector_destroy(vec);
     return slice;
 }
+
+ast_slice_of_exprs_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec) {
+    ast_slice_of_exprs_t slice = {
+        .start = arena_alloc(p->arena, vec->size * vec->elem_size),
+        .len = vec->size,
+    };
+    memcpy(slice.start, vec->data, vec->size * vec->elem_size);
+    vector_destroy(vec);
+    return slice;
+}

@@ -1,7 +1,16 @@
+//
+//     /                              /
+//    /                              /
+//   /_____  _____  _____  _____    /  _____   _  _  _____
+//  /     / /____  /____/ /____/   /  /____/  /\  / /____/
+// /_____/ /____  /    / /   \    /  /    /  /  \/  ____/
+// Copyright (C) 2025 Zachary Mahan
+// Licensed under the GNU GPL v3. See LICENSE for details.
+
 #ifndef AST_STATEMENTS_H
 #define AST_STATEMENTS_H
-#include "compiler/parser/parser.h"
-#include "utils/vector.h"
+#include "compiler/ast/expr.h"
+#include "compiler/token.h"
 #include <stddef.h>
 #ifdef __cplusplus
 extern "C" {
@@ -52,13 +61,26 @@ typedef struct {
 
 // stmt types ~~~~~~~~~~~~~~~~~~~~
 typedef struct {
+    token_t* left_delim;
     ast_slice_of_stmts_t stmts;
+    token_t* right_delim;
 } ast_stmt_block_t;
 
 typedef struct {
     const char* file_name;
     ast_slice_of_stmts_t stmts;
 } ast_stmt_file_t;
+
+typedef struct {
+    /// fn, mt, or dt
+    token_t* kw;
+    token_t* left_paren;
+    ast_slice_of_exprs_t args;
+    token_t* right_paren;
+    /// NULLable if no return type
+    token_t* rarrow;
+    ast_expr_id_t* return_type;
+} ast_stmt_fn_decl_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

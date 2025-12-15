@@ -1,3 +1,12 @@
+//
+//     /                              /
+//    /                              /
+//   /_____  _____  _____  _____    /  _____   _  _  _____
+//  /     / /____  /____/ /____/   /  /____/  /\  / /____/
+// /_____/ /____  /    / /   \    /  /    /  /  \/  ____/
+// Copyright (C) 2025 Zachary Mahan
+// Licensed under the GNU GPL v3. See LICENSE for details.
+
 #ifndef AST_EXPRESSIONS_H
 #define AST_EXPRESSIONS_H
 #include "compiler/token.h"
@@ -11,7 +20,8 @@ typedef enum {
     AST_EXPR_ATOM,
     // binary
     AST_EXPR_BIN_ARITH, // binary arithmetic expression: +, -, *, /, %, bitwise, comparison, boolean
-    AST_EXPR_ASSIGN_EQ, // binary copy assignment: expr = expr
+    // assign
+    AST_EXPR_ASSIGN_EQ,   // binary copy assignment: expr = expr
     AST_EXPR_ASSIGN_MOVE, // binary move assignment: expr <- expr
     // grouping
     AST_EXPR_GROUPING, // (<some_expr>)
@@ -25,6 +35,12 @@ typedef enum {
 
 // main generic expr type
 typedef struct ast_expr ast_expr_t;
+
+/// slice of ast_expr_t
+typedef struct {
+    ast_expr_t* start;
+    size_t len;
+} ast_slice_of_exprs_t;
 
 // expr types ~~~~~~~~~~~~
 
@@ -42,6 +58,12 @@ typedef struct {
     token_t* op;
     ast_expr_t* rhs;
 } ast_expr_binary_t;
+
+typedef struct {
+    ast_expr_t* lval;
+    token_t* assign_op;
+    ast_expr_t* rhs;
+} ast_expr_assign_t;
 
 typedef struct {
     ast_expr_t* expr;
@@ -63,14 +85,16 @@ typedef struct {
 typedef union {
     ast_expr_id_t atom;
     ast_expr_binary_t binary;
+    ast_expr_assign_t assign;
     ast_expr_grouping_t grouping;
     ast_expr_unary_t unary;
     ast_expr_fn_call_t fn_call;
 } ast_expr_u;
 
+/// underlying expr is 0-offset alligned so this struct can be safely downcasted
 typedef struct ast_expr {
-    ast_expr_type_e type;
     ast_expr_u expr;
+    ast_expr_type_e type;
 } ast_expr_t;
 
 #ifdef __cplusplus
