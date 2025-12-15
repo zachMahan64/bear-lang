@@ -39,6 +39,8 @@ set(SRC
     src/utils/string.c
     src/utils/file_io.c
 
+    src/compiler/debug.c
+
     src/cli/bearc.c
     src/cli/args.c
 )
