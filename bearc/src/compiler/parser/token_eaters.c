@@ -66,7 +66,7 @@ token_t* parser_match_token(parser_t* parser, token_type_e type) {
 }
 
 //------------- match forward decls --------------
-bool parser_match_is_builtin_type(token_type_e t);
+bool token_is_builtin_type(token_type_e t);
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -132,20 +132,25 @@ bool parser_eof(parser_t* parser) {
 
 // map containing look-ups for builtin types
 static const bool parser_builtin_type_map[TOK__NUM] = {
-    [TOK_CHAR] = true,     [TOK_U8] = true,  [TOK_I8] = true,   [TOK_I32] = true,
-    [TOK_U32] = true,      [TOK_I64] = true, [TOK_U64] = true,  [TOK_USIZE] = true,
-    [TOK_F32] = true,      [TOK_F64] = true, [TOK_BOOL] = true, [TOK_STR] = true,
-    [TOK_MODULE] = true,   [TOK_FN] = true,  [TOK_VAR] = true,  [TOK_VOID] = true,
-    [TOK_SELF_TYPE] = true};
+    [TOK_CHAR] = true, [TOK_U8] = true,    [TOK_I8] = true,       [TOK_I16] = true,
+    [TOK_U16] = true,  [TOK_I32] = true,   [TOK_U32] = true,      [TOK_I64] = true,
+    [TOK_U64] = true,  [TOK_USIZE] = true, [TOK_F32] = true,      [TOK_F64] = true,
+    [TOK_BOOL] = true, [TOK_STR] = true,   [TOK_MODULE] = true,   [TOK_FN] = true,
+    [TOK_VAR] = true,  [TOK_VOID] = true,  [TOK_SELF_TYPE] = true};
 
 static const bool parser_builtin_type_mod_map[TOK__NUM] = {
     [TOK_BOX] = true, [TOK_BAG] = true, [TOK_OPT] = true, [TOK_RES] = true};
 
 // match helpers
-bool parser_match_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
-bool parser_match_is_builtin_type_or_id(token_type_e t) {
-    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER;
+bool token_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
+bool token_is_builtin_type_or_id(token_type_e t) {
+    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER || parser_builtin_type_map[t];
 }
-bool parser_match_is_builtin_type_mod(token_type_e t) { return parser_builtin_type_mod_map[t]; }
+bool token_is_builtin_type_mod(token_type_e t) { return parser_builtin_type_mod_map[t]; }
+
+bool token_is_literal(token_type_e t) {
+    return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_TRUE || t == TOK_INT_LIT ||
+           t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT;
+}
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^

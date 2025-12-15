@@ -45,7 +45,7 @@ int compile_file(const char* file_name) {
     const size_t PARSER_ARENA_CHUNK_SIZE = 0x10000;
     arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE);
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
-    ast_stmt_file_t file_stmt = parser_file(&parser, src_buffer.file_name);
+    ast_stmt_file_t file_stmt = parse_file(&parser, src_buffer.file_name);
     // ----------------------------------------------------
 
     /* TODO:

@@ -21,6 +21,7 @@ typedef enum {
     ERR_ILLEGAL_IDENTIFER,
     ERR_EXPECTED_IDENTIFIER,
     ERR_EXPECTED_TYPE,
+    ERR_EXPECTED_EXPRESSION,
     ERR__COUNT
 } error_code_e;
 

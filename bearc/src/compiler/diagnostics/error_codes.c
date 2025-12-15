@@ -10,11 +10,12 @@
 #include "compiler/token.h"
 
 const char* error_message_for_code(error_code_e error_code) {
-    static const char* error_messages[ERR__COUNT] = {[ERR_ILLEGAL_IDENTIFER] = "illegal identifier",
-                                                     [ERR_EXPECTED_TOKEN] = "expected token: ",
-                                                     [ERR_EXPECTED_IDENTIFIER] =
-                                                         "expected identifier",
-                                                     [ERR_EXPECTED_TYPE] = "expected type"};
+    static const char* error_messages[ERR__COUNT] = {
+        [ERR_ILLEGAL_IDENTIFER] = "illegal identifier",
+        [ERR_EXPECTED_TOKEN] = "expected token: ",
+        [ERR_EXPECTED_IDENTIFIER] = "expected identifier",
+        [ERR_EXPECTED_TYPE] = "expected type",
+        [ERR_EXPECTED_EXPRESSION] = "expected expression"};
     return error_messages[error_code];
 }
 

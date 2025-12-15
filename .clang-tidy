@@ -8,7 +8,8 @@ Checks: >
   -readability-magic-numbers,
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
-  -bugprone-easily-swappable-parameters
+  -bugprone-easily-swappable-parameters,
+  -bugprone-assignment-in-if-condition
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none

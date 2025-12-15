@@ -9,14 +9,14 @@
 #ifndef AST_EXPRESSIONS_H
 #define AST_EXPRESSIONS_H
 #include "compiler/token.h"
-#include "utils/vector.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef enum {
-    // atom aka primary expr
-    AST_EXPR_ATOM,
+    // atoms/primary exprs
+    AST_EXPR_ID,
+    AST_EXPR_LITERAL,
     // binary
     AST_EXPR_BIN_ARITH, // binary arithmetic expression: +, -, *, /, %, bitwise, comparison, boolean
     // assign
@@ -25,7 +25,7 @@ typedef enum {
     // grouping
     AST_EXPR_GROUPING, // (<some_expr>)
     // unary
-    AST_EXPR_PRE_UNARY,  // unary expr: -, !, ~, ++, --
+    AST_EXPR_PRE_UNARY,  // unary expr: -, +, !, ~, ++, --
     AST_EXPR_POST_UNARY, // unary expr: ++, --
     // func
     AST_EXPR_FN_CALL, // func(args...), can also be used for methods
@@ -44,7 +44,7 @@ typedef struct {
 // expr types ~~~~~~~~~~~~
 
 typedef struct {
-    token_ptr_slice_t ids;
+    token_ptr_slice_t slice;
 } ast_expr_id_t;
 
 typedef struct ast_expr_literal {
@@ -86,7 +86,8 @@ typedef struct {
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
-    ast_expr_id_t atom;
+    ast_expr_id_t id;
+    ast_expr_literal_t literal;
     ast_expr_binary_t binary;
     ast_expr_assign_t assign;
     ast_expr_grouping_t grouping;
@@ -98,8 +99,8 @@ typedef union {
 typedef struct ast_expr {
     ast_expr_u expr;
     ast_expr_type_e type;
-    token_t* start;
-    token_t* end;
+    token_t* first;
+    token_t* last;
 } ast_expr_t;
 
 #ifdef __cplusplus

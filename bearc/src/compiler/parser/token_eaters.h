@@ -56,9 +56,11 @@ bool parser_eof(parser_t* parser);
 /// match helpers
 
 /// returns true when tkn type is builtin
-bool parser_match_is_builtin_type(token_type_e t);
+bool token_is_builtin_type(token_type_e t);
 /// returns true when tkn type is builtin or an id
-bool parser_match_is_builtin_type_or_id(token_type_e t);
+bool token_is_builtin_type_or_id(token_type_e t);
 /// returns true when tkn type is builtin type mod (box, bag, etc)
-bool parser_match_is_builtin_type_mod(token_type_e t);
+bool token_is_builtin_type_mod(token_type_e t);
+/// returns true when tkn type is a literal
+bool token_is_literal(token_type_e t);
 #endif
