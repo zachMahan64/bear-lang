@@ -263,12 +263,14 @@ lex_end:
     if (len != 0) {
         *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);
     }
-lex_done:
-    // build up eof token manually
-    tkn.start = start; // shouldn't be read from, but make sure start isn't null just in case
-    tkn.length = 1;
+lex_done:;
+    // build up eof token manually, we have to do this for pretty error messages
+    token_t* prev = (token_t*)vector_last(&tkn_vec);
+    tkn.start = prev->start; // set to prev's start!
+    tkn.length = 1;          // this is safe since we use prev loc
     tkn.type = TOK_EOF;
-    tkn.loc = loc; // set loc to currently tracked loc
+    tkn.loc = prev->loc; // set loc to prev valid loc!
+    ++tkn.loc.col;
     vector_push_back(&tkn_vec, &tkn);
     return tkn_vec;
 }

@@ -125,7 +125,7 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
 }
 
 // returns true when parser is at EOF
-bool parser_eof(parser_t* parser) {
+bool parser_eof(const parser_t* parser) {
     token_t* tkn = vector_at(parser->tokens, parser->pos);
     return tkn->type == TOK_EOF;
 }

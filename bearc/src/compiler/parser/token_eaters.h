@@ -51,7 +51,7 @@ token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expect
 token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e), error_code_e code);
 
 // returns true when parser is at EOF
-bool parser_eof(parser_t* parser);
+bool parser_eof(const parser_t* parser);
 
 /// match helpers
 

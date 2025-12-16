@@ -30,6 +30,9 @@ typedef enum {
     // func
     AST_EXPR_FN_CALL, // func(args...), can also be used for methods
 
+    // error
+    AST_INVALID,
+
 } ast_expr_type_e;
 
 // main generic expr type

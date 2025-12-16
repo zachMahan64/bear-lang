@@ -48,20 +48,25 @@ ast_expr_t* parse_expr(parser_t* p) {
     if (token_is_literal(first_type)) {
         lhs = parse_literal(p);
         if (token_is_binary_op(parser_peek(p)->type)) {
-            parse_binary(p, lhs);
+            return parse_binary(p, lhs);
         }
-    } else if (token_is_builtin_type_or_id(first_type) || first_type == TOK_IDENTIFIER) {
+        return lhs;
+    }
+    if (token_is_builtin_type_or_id(first_type) || first_type == TOK_IDENTIFIER) {
         lhs = parse_id(p);
         if (token_is_binary_op(parser_peek(p)->type)) {
-            parse_binary(p, lhs);
+            return parse_binary(p, lhs);
         }
-    } else if (token_is_preunary_op(first_type)) {
+        return lhs;
+    }
+    if (token_is_preunary_op(first_type)) {
         return parse_preunary_expr(p);
     }
     // complete failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
-    printf("%.*s\n", (int)first_tkn->length, first_tkn->start);
-    return NULL;
+    // printf("%.*s\n", (int)first_tkn->length, first_tkn->start);
+
+    return parser_sync(p);
 }
 
 ast_expr_t* parse_preunary_expr(parser_t* p) {
@@ -118,4 +123,22 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs) {
     binary_expr->first = binary_expr->expr.binary.lhs->first;
     binary_expr->last = binary_expr->expr.binary.rhs->last;
     return binary_expr;
+}
+
+ast_expr_t* parser_sync(parser_t* p) {
+    token_t* first_tkn = parser_eat(p);
+    token_t* last_tkn = first_tkn; // init in case loop never runs!
+    while (!parser_eof(p)) {
+        token_t* curr = parser_eat(p);
+        token_type_e t = curr->type;
+        if (t == TOK_SEMICOLON || t == TOK_LBRACE || t == TOK_RBRACE) {
+            last_tkn = curr;
+            break;
+        }
+    }
+    ast_expr_t* dummy_expr = parser_alloc_expr(p);
+    dummy_expr->type = AST_INVALID;
+    dummy_expr->first = first_tkn;
+    dummy_expr->last = last_tkn;
+    return dummy_expr;
 }
