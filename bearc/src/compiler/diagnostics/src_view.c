@@ -36,8 +36,8 @@ string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn)
 
 string_t get_cursor_string(string_view_t line_view, token_t* tkn, const char* ansi_color) {
     string_t str = string_create_and_reserve(line_view.len + 20); // room for ansi strings
-    string_push_cstring(&str, ansi_color);
-    string_push_cstring(&str, ANSI_BOLD);
+    string_push_cstr(&str, ansi_color);
+    string_push_cstr(&str, ANSI_BOLD);
     for (size_t i = 0; i < line_view.len; i++) {
         if (i >= tkn->loc.col && i < tkn->loc.col + tkn->len) {
             string_push_char(&str, '^');
@@ -48,6 +48,6 @@ string_t get_cursor_string(string_view_t line_view, token_t* tkn, const char* an
         }
         string_push_char(&str, ' ');
     }
-    string_push_cstring(&str, ANSI_RESET);
+    string_push_cstr(&str, ANSI_RESET);
     return str;
 }

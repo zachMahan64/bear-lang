@@ -9,6 +9,7 @@
 #ifndef UTILS_STRING
 #define UTILS_STRING
 #include "utils/vector.h"
+#include <stddef.h>
 
 /**
  * string type that owns its own resources. string_destory(string_t) before a string goes out of
@@ -31,11 +32,11 @@ string_t string_create_and_fill(size_t len, char c);
 void string_destroy(string_t* string);
 
 /// gets underlying data mutably
-char* string_get_data(const string_t* string);
+char* string_data(const string_t* string);
 /// gets the size, in bytes
-size_t string_get_size(const string_t* string);
+size_t string_size(const string_t* string);
 /// gets the capacity, in bytes
-size_t string_get_capacity(const string_t* string);
+size_t string_capacity(const string_t* string);
 
 /// get the char* at an index witin the underlying char[]
 char* string_at_ptr(const string_t* string, size_t idx);
@@ -49,12 +50,15 @@ bool string_push_char(string_t* string, char c);
 /// push a string_t onto a string_t
 void string_push_string(string_t* dest, const string_t* src);
 /// push a standard C-string onto a string_t
-void string_push_cstring(string_t* string, const char* cstr);
+void string_push_cstr(string_t* string, const char* cstr);
 /// push a char* with a specified length
 void string_push_strn(string_t* string, const char* str, size_t len);
 /// pops a char of the back of the string
 char string_pop_char(string_t* string);
 /// reserves some capacity in the string, does nothing if the new_capacity is less than the size
 void string_reserve(string_t* string, size_t new_capacity);
+
+/// removes a specified number of chars from the back of the string
+void string_shrink_by(string_t* string, size_t n);
 
 #endif // !UTILS_STRING

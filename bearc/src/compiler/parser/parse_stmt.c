@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/parser/parse_stmt.h"
+#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parser.h"
@@ -31,6 +32,8 @@ ast_stmt_file_t parse_file(parser_t* p, const char* file_name) {
         vector_create_and_reserve(sizeof(ast_stmt_t), parser_estimate_stmt_cnt(p->tokens));
     // temp_eat(p); // temp logic
     ast_expr_t* expr = parse_expr(p);
+    // TODO debug
+    print_expr(expr);
     ast_stmt_file_t file = {
         .file_name = file_name,
         .stmts = parser_freeze_stmt_vec(p, &stmt_vec),

@@ -52,9 +52,9 @@ string_t string_create_and_fill(size_t len, char c) {
 void string_destroy(string_t* string) { vector_destroy(&string->vec); }
 
 // getters
-char* string_get_data(const string_t* string) { return string->vec.data; }
-size_t string_get_size(const string_t* string) { return string->vec.size; }
-size_t string_get_capacity(const string_t* string) { return string->vec.capacity; }
+char* string_data(const string_t* string) { return string->vec.data; }
+size_t string_size(const string_t* string) { return string->vec.size; }
+size_t string_capacity(const string_t* string) { return string->vec.capacity; }
 
 // idx
 char* string_at_ptr(const string_t* string, size_t idx) { return vector_at(&string->vec, idx); }
@@ -75,12 +75,12 @@ bool string_push_char(string_t* string, char c) {
 }
 
 void string_push_string(string_t* dest, const string_t* src) {
-    for (size_t i = 0; i < string_get_size(src); i++) {
+    for (size_t i = 0; i < string_size(src); i++) {
         string_push_char(dest, string_at(src, i));
     }
 }
 
-void string_push_cstring(string_t* string, const char* cstr) {
+void string_push_cstr(string_t* string, const char* cstr) {
     if (!cstr) {
         return;
     }
@@ -104,4 +104,9 @@ char string_pop_char(string_t* string) {
 }
 void string_reserve(string_t* string, size_t new_capacity) {
     vector_reserve(&string->vec, new_capacity);
+}
+
+void string_shrink_by(string_t* string, size_t n) {
+    string->vec.size -= n;
+    ((char*)string->vec.data)[string->vec.size] = '\0'; // guranteed safe indexing since we shrunk
 }

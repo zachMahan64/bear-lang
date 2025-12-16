@@ -64,11 +64,11 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     char line_num_buf[LINE_NUM_BUF_SIZE] = {0};
     snprintf(line_num_buf, LINE_NUM_BUF_SIZE, "%zu", line);
     string_t line_num_str = string_create_and_reserve(LINE_NUM_BUF_SIZE + 4); // for spaces
-    string_push_cstring(&line_num_str, "  ");
-    string_push_cstring(&line_num_str, line_num_buf);
-    string_t line_under_num_str = string_create_and_fill(string_get_size(&line_num_str), ' ');
-    string_push_cstring(&line_num_str, "  |");
-    string_push_cstring(&line_under_num_str, "  |");
+    string_push_cstr(&line_num_str, "  ");
+    string_push_cstr(&line_num_str, line_num_buf);
+    string_t line_under_num_str = string_create_and_fill(string_size(&line_num_str), ' ');
+    string_push_cstr(&line_num_str, "  |");
+    string_push_cstr(&line_under_num_str, "  |");
 
     // do printing now that we have all strings setup
     printf(ANSI_BOLD "\'%s\': line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
@@ -92,11 +92,11 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     revised_tkn.loc.col -= LINE_LEN_CRIT_VAL * len_factor;
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    printf("%s %.*s\n", string_get_data(&line_num_str), (int)line_preview.len, line_preview.start);
+    printf("%s %.*s\n", string_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
     string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, ANSI_RED_FG);
 
-    printf("%s %s\n", string_get_data(&line_under_num_str), string_get_data(&cursor_string));
+    printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
 
     // free resources
     string_destroy(&cursor_string);

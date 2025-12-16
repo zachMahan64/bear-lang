@@ -55,13 +55,13 @@ void vector_destroy(vector_t* vector) {
 }
 
 // gets ptr to underlying data
-void* vector_get_data(const vector_t* vector) { return vector->data; }
+void* vector_data(const vector_t* vector) { return vector->data; }
 // gets size of vector
-size_t vector_get_size(const vector_t* vector) { return vector->size; }
+size_t vector_size(const vector_t* vector) { return vector->size; }
 // gets capacity of vector
-size_t vector_get_capacity(const vector_t* vector) { return vector->capacity; }
+size_t vector_capacity(const vector_t* vector) { return vector->capacity; }
 // gets element size of vector
-size_t vector_get_elem_size(const vector_t* vector) { return vector->elem_size; }
+size_t vector_elem_size(const vector_t* vector) { return vector->elem_size; }
 
 // gets value at specified index
 void* vector_at(const vector_t* vector, size_t idx) {

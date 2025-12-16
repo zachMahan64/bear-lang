@@ -22,7 +22,7 @@ typedef struct {
     void* data;
     size_t size;
     size_t capacity;
-    const size_t elem_size;
+    size_t elem_size;
 } vector_t;
 
 /// ctor
@@ -35,13 +35,13 @@ vector_t vector_create_and_init(size_t elem_size, size_t size);
 void vector_destroy(vector_t* vector);
 
 /// gets the underlying data ptr
-void* vector_get_data(const vector_t* vector);
+void* vector_data(const vector_t* vector);
 /// gets size
-size_t vector_get_size(const vector_t* vector);
+size_t vector_size(const vector_t* vector);
 /// gets capacity
-size_t vector_get_capacity(const vector_t* vector);
+size_t vector_capacity(const vector_t* vector);
 /// gets element size
-size_t vector_get_elem_size(const vector_t* vector);
+size_t vector_elem_size(const vector_t* vector);
 
 /// get void* at some idx, cast this!
 void* vector_at(const vector_t* vector, size_t idx);
