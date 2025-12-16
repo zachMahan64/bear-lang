@@ -14,6 +14,7 @@
 #include "utils/arena.h"
 #include "utils/vector.h"
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
 
 token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
@@ -39,22 +40,27 @@ ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec) {
 ast_expr_t* parser_alloc_expr(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_expr_t)); }
 
 ast_expr_t* parse_expr(parser_t* p) {
-    token_t* first_tkn = parser_peek(p);
-    token_type_e tkn_type = first_tkn->type;
-    if (token_is_literal(tkn_type)) {
-        return parse_literal(p);
-    }
-    if (token_is_builtin_type_or_id(tkn_type) || tkn_type == TOK_IDENTIFIER) {
-        return parse_id(p);
-    }
 
-    // ++, etc.
-    if (tkn_type == TOK_PLUS || tkn_type == TOK_MINUS || tkn_type == TOK_DEC ||
-        tkn_type == TOK_INC || tkn_type == TOK_BIT_NOT || tkn_type == TOK_BOOL_NOT) {
+    token_t* first_tkn = parser_peek(p);
+    token_type_e first_type = first_tkn->type;
+
+    ast_expr_t* lhs;
+    if (token_is_literal(first_type)) {
+        lhs = parse_literal(p);
+        if (token_is_binary_op(parser_peek(p)->type)) {
+            parse_binary(p, lhs);
+        }
+    } else if (token_is_builtin_type_or_id(first_type) || first_type == TOK_IDENTIFIER) {
+        lhs = parse_id(p);
+        if (token_is_binary_op(parser_peek(p)->type)) {
+            parse_binary(p, lhs);
+        }
+    } else if (token_is_preunary_op(first_type)) {
         return parse_preunary_expr(p);
     }
     // complete failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
+    printf("%.*s\n", (int)first_tkn->length, first_tkn->start);
     return NULL;
 }
 
@@ -99,4 +105,17 @@ ast_expr_t* parse_id(parser_t* p) {
     id_expr->first = id_expr->expr.id.slice.start[0];
     id_expr->last = id_expr->expr.id.slice.start[id_expr->expr.id.slice.len - 1];
     return id_expr;
+}
+
+ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs) {
+    /// TODO handle terms/factors
+    ast_expr_t* binary_expr = parser_alloc_expr(p);
+    token_t* op = parser_eat(p); // already verfied legit
+    binary_expr->type = AST_EXPR_BINARY;
+    binary_expr->expr.binary.lhs = lhs;
+    binary_expr->expr.binary.op = op;
+    binary_expr->expr.binary.rhs = parse_expr(p);
+    binary_expr->first = binary_expr->expr.binary.lhs->first;
+    binary_expr->last = binary_expr->expr.binary.rhs->last;
+    return binary_expr;
 }

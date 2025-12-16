@@ -153,4 +153,33 @@ bool token_is_literal(token_type_e t) {
            t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT;
 }
 
+bool token_is_preunary_op(token_type_e t) {
+    return t == TOK_PLUS || t == TOK_MINUS || t == TOK_DEC || t == TOK_INC || t == TOK_BIT_NOT ||
+           t == TOK_BOOL_NOT;
+}
+
+bool token_is_binary_op(token_type_e t) {
+    return t == TOK_PLUS ||   // +
+           t == TOK_MINUS ||  // -
+           t == TOK_STAR ||   // *
+           t == TOK_DIVIDE || // /
+           t == TOK_MODULO || // %
+           t == TOK_STREAM ||
+
+           // bitwise
+           t == TOK_BAR ||      // |
+           t == TOK_AMPER ||    // & ------> means bitwise and, also means reference
+           t == TOK_BIT_NOT ||  // ~
+           t == TOK_BIT_XOR ||  // ^
+                                // bitwise
+           t == TOK_LSH ||      // <<
+           t == TOK_RSHL ||     // >>
+           t == TOK_RSHA ||     // >>>
+                                // bool
+           t == TOK_BOOL_OR ||  // ||
+           t == TOK_BOOL_AND || // &&
+                                // comparison
+           t == TOK_GE || t == TOK_LE || t == TOK_BOOL_EQ || t == TOK_NE;
+}
+
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^

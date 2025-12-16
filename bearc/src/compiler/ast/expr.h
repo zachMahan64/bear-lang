@@ -18,7 +18,7 @@ typedef enum {
     AST_EXPR_ID,
     AST_EXPR_LITERAL,
     // binary
-    AST_EXPR_BIN_ARITH, // binary arithmetic expression: +, -, *, /, %, bitwise, comparison, boolean
+    AST_EXPR_BINARY, // binary arithmetic expression: +, -, *, /, %, bitwise, comparison, boolean
     // assign
     AST_EXPR_ASSIGN_EQ,   // binary copy assignment: expr = expr
     AST_EXPR_ASSIGN_MOVE, // binary move assignment: expr <- expr

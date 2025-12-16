@@ -17,7 +17,7 @@ string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn)
     // find start of line
     ptrdiff_t diff_to_line_start = 0;
     while (*(tkn->start - diff_to_line_start) != '\n' &&
-           tkn->start - diff_to_line_start != src_buffer->data) {
+           tkn->start - diff_to_line_start >= src_buffer->data) {
         diff_to_line_start++;
     }
     diff_to_line_start--; // backtrack once because we overshot in the final increment
@@ -25,9 +25,10 @@ string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn)
     // find end of line
     ptrdiff_t diff_to_line_end = 0;
     while (*(tkn->start + diff_to_line_end) != '\n' && *(tkn->start + diff_to_line_end) != '\0' &&
-           tkn->start + diff_to_line_end != src_buffer->data) {
+           tkn->start + diff_to_line_end < src_buffer->data + src_buffer->size) {
         diff_to_line_end++;
     }
+
     string_view_t string_view = {.start = tkn->start - diff_to_line_start,
                                  .len = diff_to_line_start + diff_to_line_end};
     return string_view;

@@ -63,4 +63,7 @@ bool token_is_builtin_type_or_id(token_type_e t);
 bool token_is_builtin_type_mod(token_type_e t);
 /// returns true when tkn type is a literal
 bool token_is_literal(token_type_e t);
+
+bool token_is_preunary_op(token_type_e t);
+bool token_is_binary_op(token_type_e t);
 #endif

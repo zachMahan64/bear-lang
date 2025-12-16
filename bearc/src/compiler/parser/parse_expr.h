@@ -32,4 +32,6 @@ ast_expr_t* parse_literal(parser_t* p);
 
 ast_expr_t* parse_id(parser_t* p);
 
+ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs);
+
 #endif
