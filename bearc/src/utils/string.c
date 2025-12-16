@@ -107,6 +107,9 @@ void string_reserve(string_t* string, size_t new_capacity) {
 }
 
 void string_shrink_by(string_t* string, size_t n) {
+    if (string->vec.size < n) {
+        return;
+    }
     string->vec.size -= n;
     ((char*)string->vec.data)[string->vec.size] = '\0'; // guranteed safe indexing since we shrunk
 }

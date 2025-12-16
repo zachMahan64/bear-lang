@@ -41,4 +41,7 @@
 #define ANSI_CYAN_BG ESC "[46m"
 #define ANSI_WHITE_BG ESC "[47m"
 
+// more
+#define ANSI_BOLD_GREEN ANSI_BOLD ANSI_GREEN_FG
+
 #endif // ANSI_CODES_H

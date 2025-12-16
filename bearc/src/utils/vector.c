@@ -69,7 +69,7 @@ void* vector_at(const vector_t* vector, size_t idx) {
         LOG_ERR("[ERROR|vector_at] out of range")
         return NULL; // out of bounds
     }
-    return (void*)((char*)vector->data + (idx * vector->elem_size));
+    return (void*)((unsigned char*)vector->data + (idx * vector->elem_size));
 }
 // gets ptr to start of vector
 void* vector_start(const vector_t* vector) { return vector->data; }
@@ -99,7 +99,8 @@ bool vector_push_back(vector_t* vector, const void* elem) {
         vector->capacity = new_capacity;
         resize = true;
     }
-    memcpy((char*)vector->data + (vector->size * vector->elem_size), elem, vector->elem_size);
+    memcpy((unsigned char*)vector->data + (vector->size * vector->elem_size), elem,
+           vector->elem_size);
     ++vector->size;
     return resize;
 }

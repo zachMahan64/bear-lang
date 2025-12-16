@@ -13,6 +13,7 @@
 #include "compiler/token.h"
 #include "utils/arena.h"
 #include "utils/vector.h"
+#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +24,8 @@ token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
         .len = vec->size,
     };
     memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
+
+    token_t* tkn = slice.start[0];
     vector_destroy(vec);
     return slice;
 }
@@ -41,33 +44,30 @@ ast_expr_t* parser_alloc_expr(parser_t* p) { return arena_alloc(p->arena, sizeof
 
 ast_expr_t* parse_expr(parser_t* p) {
 
+    /// TODO handle precedence
+    ast_expr_t* lhs = parse_primary_expr(p);
+    if (token_is_binary_op(parser_peek(p)->type)) {
+        return parse_binary(p, lhs);
+    }
+
+    return lhs;
+}
+
+ast_expr_t* parse_primary_expr(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
 
-    ast_expr_t* lhs;
-    if (token_is_builtin_type_or_id(first_type) || first_type == TOK_IDENTIFIER) {
-        lhs = parse_id(p);
-        if (token_is_binary_op(parser_peek(p)->type)) {
-            return parse_binary(p, lhs);
-        }
-        return lhs;
+    if (token_is_builtin_type_or_id(first_type)) {
+        return parse_id(p);
     }
     if (token_is_literal(first_type)) {
-        lhs = parse_literal(p);
-        if (token_is_binary_op(parser_peek(p)->type)) {
-            return parse_binary(p, lhs);
-        }
-        return lhs;
+        return parse_literal(p);
     }
     if (first_type == TOK_LPAREN) {
         return parse_grouping(p);
     }
     if (token_is_preunary_op(first_type)) {
-        lhs = parse_preunary_expr(p);
-        if (token_is_binary_op(parser_peek(p)->type)) {
-            return parse_binary(p, lhs);
-        }
-        return lhs;
+        return parse_preunary_expr(p);
     }
     // complete failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
@@ -105,11 +105,12 @@ ast_expr_t* parse_id(parser_t* p) {
     ast_expr_t* id_expr = parser_alloc_expr(p);
     vector_t id_vec = vector_create_and_reserve(sizeof(token_t*), PARSER_EXPR_ID_VEC_CAP);
     token_type_e type;
-    while ((type = token_is_builtin_type_or_id(parser_peek(p)->type)) || (type == TOK_SCOPE_RES)) {
+    while (type = parser_peek(p)->type,
+           (token_is_builtin_type_or_id(type) || (type == TOK_SCOPE_RES))) {
         if (type == TOK_SCOPE_RES) {
             parser_eat(p);
         } else {
-            vector_push_back(&id_vec, parser_eat(p));
+            *((token_t**)vector_emplace_back(&id_vec)) = parser_eat(p);
         }
     }
     id_expr->type = AST_EXPR_ID;
@@ -120,7 +121,6 @@ ast_expr_t* parse_id(parser_t* p) {
 }
 
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs) {
-    /// TODO handle precedence
     ast_expr_t* binary_expr = parser_alloc_expr(p);
     token_t* op = parser_eat(p); // already verfied legit
     binary_expr->type = AST_EXPR_BINARY;
@@ -136,12 +136,11 @@ ast_expr_t* parser_sync(parser_t* p) {
     token_t* first_tkn = parser_eat(p);
     token_t* last_tkn = first_tkn; // init in case loop never runs!
     while (!parser_eof(p)) {
-        token_t* curr = parser_eat(p);
-        token_type_e t = curr->type;
-        if (t == TOK_SEMICOLON || t == TOK_LBRACE || t == TOK_RBRACE) {
-            last_tkn = curr;
+        token_t* curr = parser_peek(p);
+        if (curr->type == TOK_SEMICOLON || curr->type == TOK_LBRACE || curr->type == TOK_RBRACE) {
             break;
         }
+        last_tkn = parser_eat(p);
     }
     ast_expr_t* dummy_expr = parser_alloc_expr(p);
     dummy_expr->type = AST_INVALID;
@@ -152,6 +151,7 @@ ast_expr_t* parser_sync(parser_t* p) {
 
 ast_expr_t* parse_grouping(parser_t* p) {
     ast_expr_t* grouping = parser_alloc_expr(p);
+    grouping->type = AST_EXPR_GROUPING;
     token_t* lparen = parser_eat(p);
     grouping->expr.grouping.left_paren = lparen;
     grouping->expr.grouping.expr = parse_expr(p);
