@@ -29,7 +29,7 @@ associativity_e associativity_of(uint32_t precedence) {
     return map[precedence];
 }
 // TODO, need to implement some logic to handle operators with multiple variants (unary vs binary
-// +/-)
+// +/-), probably just use seperate tables depening binary, preunary, and post unary
 uint32_t precendence_of_operator(token_type_e type) {
     const uint32_t NONE = 0; // TODO, resolve if any of these shouldn't be none
     static bool initialized = false;
