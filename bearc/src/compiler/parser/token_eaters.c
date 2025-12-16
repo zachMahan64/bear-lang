@@ -155,7 +155,7 @@ bool token_is_literal(token_type_e t) {
 
 bool token_is_preunary_op(token_type_e t) {
     return t == TOK_PLUS || t == TOK_MINUS || t == TOK_DEC || t == TOK_INC || t == TOK_BIT_NOT ||
-           t == TOK_BOOL_NOT;
+           t == TOK_BOOL_NOT || t == TOK_STAR || t == TOK_AMPER;
 }
 
 bool token_is_binary_op(token_type_e t) {

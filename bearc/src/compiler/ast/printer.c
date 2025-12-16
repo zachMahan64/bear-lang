@@ -77,7 +77,14 @@ void print_expr(ast_expr_t* expression) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
-    case AST_EXPR_PRE_UNARY:
+    case AST_EXPR_PRE_UNARY: {
+        token_t* op = expr.expr.unary.op;
+        puts("pre-unary: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_indent(), printf("  op: "), print_tkn(op), puts(",");
+        print_expr(expr.expr.unary.expr);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
     case AST_EXPR_POST_UNARY:
     case AST_EXPR_FN_CALL:
     case AST_INVALID:
