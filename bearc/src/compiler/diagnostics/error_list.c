@@ -77,9 +77,25 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
            error_message_context_for(err));
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
+
+// ADJUST for beauty's sake
+#define LINE_LEN_CRIT_VAL 32 // this is pretty long
+
+    token_t revised_tkn = *err->token;
+
+    // shenanigans, but it's worth it ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // this shifts the view down by appropriate factors of LINE_LEN_CRIT_VAL
+    size_t len_factor = revised_tkn.loc.col / LINE_LEN_CRIT_VAL;
+    line_preview.start += LINE_LEN_CRIT_VAL * len_factor;
+    line_preview.len -= LINE_LEN_CRIT_VAL * len_factor;
+    revised_tkn.start += LINE_LEN_CRIT_VAL * len_factor;
+    revised_tkn.loc.col -= LINE_LEN_CRIT_VAL * len_factor;
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     printf("%s %.*s\n", string_get_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
-    string_t cursor_string = get_cursor_string(line_preview, err->token, ANSI_RED_FG);
+    string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, ANSI_RED_FG);
+
     printf("%s %s\n", string_get_data(&line_under_num_str), string_get_data(&cursor_string));
 
     // free resources

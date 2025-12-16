@@ -213,7 +213,7 @@ typedef struct {
     /// NOT NULL-TERMINATED; non-owning view into source buffer
     const char* start;
     /// len in source
-    size_t length;
+    size_t len;
     token_type_e type;
     /// get value using sym, only valid for numeric literals
     token_value_u val;

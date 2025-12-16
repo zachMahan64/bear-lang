@@ -389,7 +389,7 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
     token_t tkn;
     // init provided values
     tkn.start = start;
-    tkn.length = length;
+    tkn.len = length;
     tkn.loc = *loc;
     // now determine most compilcated fields:
     // keywords and reserved symbols
@@ -437,7 +437,7 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
 }
 
 void token_check_if_valid_literal_and_set_value(token_t* tkn) {
-    if (!tkn || tkn->length == 0) {
+    if (!tkn || tkn->len == 0) {
         if (tkn) {
             tkn->type = TOK_LEX_ERROR_EMPTY_TOKEN;
         }
@@ -445,7 +445,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     }
 
     const char* str = tkn->start;
-    size_t len = tkn->length;
+    size_t len = tkn->len;
 
     // ~~~ CHAR literal: 'a' or escaped like '\n' ~~~
     if (len >= 3 && str[0] == '\'' && str[len - 1] == '\'') {
@@ -544,12 +544,12 @@ void token_check_if_valid_symbol_and_set_sym(token_t* tkn) {
         tkn->type = TOK_INDETERMINATE;
         return;
     }
-    if (tkn->length <= 0) {
+    if (tkn->len <= 0) {
         tkn->type = TOK_LEX_ERROR_EMPTY_TOKEN;
         return;
     }
     tkn->type = TOK_IDENTIFIER;
-    for (size_t i = 0; i < tkn->length; i++) {
+    for (size_t i = 0; i < tkn->len; i++) {
         if (!isalnum(tkn->start[i]) && tkn->start[i] != '_') {
             tkn->type = TOK_INDETERMINATE;
             return;
