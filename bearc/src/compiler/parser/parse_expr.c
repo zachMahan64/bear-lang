@@ -45,13 +45,6 @@ ast_expr_t* parse_expr(parser_t* p) {
     token_type_e first_type = first_tkn->type;
 
     ast_expr_t* lhs;
-    if (token_is_literal(first_type)) {
-        lhs = parse_literal(p);
-        if (token_is_binary_op(parser_peek(p)->type)) {
-            return parse_binary(p, lhs);
-        }
-        return lhs;
-    }
     if (token_is_builtin_type_or_id(first_type) || first_type == TOK_IDENTIFIER) {
         lhs = parse_id(p);
         if (token_is_binary_op(parser_peek(p)->type)) {
@@ -59,8 +52,22 @@ ast_expr_t* parse_expr(parser_t* p) {
         }
         return lhs;
     }
+    if (token_is_literal(first_type)) {
+        lhs = parse_literal(p);
+        if (token_is_binary_op(parser_peek(p)->type)) {
+            return parse_binary(p, lhs);
+        }
+        return lhs;
+    }
+    if (first_type == TOK_LPAREN) {
+        return parse_grouping(p);
+    }
     if (token_is_preunary_op(first_type)) {
-        return parse_preunary_expr(p);
+        lhs = parse_preunary_expr(p);
+        if (token_is_binary_op(parser_peek(p)->type)) {
+            return parse_binary(p, lhs);
+        }
+        return lhs;
     }
     // complete failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
@@ -113,7 +120,7 @@ ast_expr_t* parse_id(parser_t* p) {
 }
 
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs) {
-    /// TODO handle terms/factors
+    /// TODO handle precedence
     ast_expr_t* binary_expr = parser_alloc_expr(p);
     token_t* op = parser_eat(p); // already verfied legit
     binary_expr->type = AST_EXPR_BINARY;
@@ -141,4 +148,15 @@ ast_expr_t* parser_sync(parser_t* p) {
     dummy_expr->first = first_tkn;
     dummy_expr->last = last_tkn;
     return dummy_expr;
+}
+
+ast_expr_t* parse_grouping(parser_t* p) {
+    ast_expr_t* grouping = parser_alloc_expr(p);
+    token_t* lparen = parser_eat(p);
+    grouping->expr.grouping.left_paren = lparen;
+    grouping->expr.grouping.expr = parse_expr(p);
+    grouping->expr.grouping.right_paren = parser_expect_token(p, TOK_RPAREN);
+    grouping->first = lparen;
+    grouping->last = grouping->expr.grouping.right_paren;
+    return grouping;
 }

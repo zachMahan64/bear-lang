@@ -35,16 +35,9 @@ uint32_t precendence_of_operator(token_type_e type) {
     static bool initialized = false;
     static uint32_t map[TOK__NUM];
     if (!initialized) {
-        map[TOK_LPAREN] = NONE;
-        map[TOK_RPAREN] = NONE;
-
-        map[TOK_LBRACE] = NONE;
-        map[TOK_RBRACE] = NONE;
-
         map[TOK_LBRACK] = NONE;
         map[TOK_RBRACK] = NONE;
 
-        map[TOK_SEMICOLON] = NONE;
         map[TOK_DOT] = 2;
         map[TOK_COMMA] = 17;
 

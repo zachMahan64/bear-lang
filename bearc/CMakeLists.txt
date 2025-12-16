@@ -23,6 +23,9 @@ set(SRC
     src/compiler/compile.c
     src/compiler/lexer.c
     src/compiler/token.c
+
+    src/compiler/ast/printer.c
+
     src/compiler/diagnostics/error_list.c
     src/compiler/diagnostics/error_codes.c
     src/compiler/diagnostics/src_view.c

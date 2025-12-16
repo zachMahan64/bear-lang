@@ -36,4 +36,6 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs);
 
 ast_expr_t* parser_sync(parser_t* p);
 
+ast_expr_t* parse_grouping(parser_t* p);
+
 #endif

@@ -29,7 +29,7 @@ size_t parser_estimate_stmt_cnt(vector_t* tkn_vec) {
 ast_stmt_file_t parse_file(parser_t* p, const char* file_name) {
     vector_t stmt_vec =
         vector_create_and_reserve(sizeof(ast_stmt_t), parser_estimate_stmt_cnt(p->tokens));
-    // temp_eat(p); // TODO temp logic
+    // temp_eat(p); // temp logic
     ast_expr_t* expr = parse_expr(p);
     ast_stmt_file_t file = {
         .file_name = file_name,

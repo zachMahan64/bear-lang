@@ -6,10 +6,11 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef AST_PRINT_OUT_H
-#define AST_PRINT_OUT_H
+#ifndef COMPILER_AST_PRINTER_H
+#define COMPILER_AST_PRINTER_H
 
 #include "compiler/ast/stmt.h"
 void print_out_ast(ast_stmt_t* stmt);
+void print_expr(ast_expr_t* expr);
 
 #endif
