@@ -24,8 +24,6 @@ token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
         .len = vec->size,
     };
     memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
-
-    token_t* tkn = slice.start[0];
     vector_destroy(vec);
     return slice;
 }

@@ -21,6 +21,6 @@ typedef enum {
 associativity_e associativity_of(uint32_t precedence);
 
 // find the precendence an operator based on token type
-uint32_t precendence_of_operator(token_type_e type);
+uint32_t prec_binary(token_type_e type);
 
 #endif // !COMPILER_PARSER_RULES
