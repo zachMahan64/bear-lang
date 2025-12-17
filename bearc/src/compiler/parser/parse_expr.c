@@ -187,6 +187,7 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
 
     vector_t args_vec = vector_create_and_reserve(sizeof(ast_expr_t*), PARSER_EXPR_ID_VEC_CAP);
 
+    // skip the args parsing loop if the struct is foo()
     if (!(parser_peek(p)->type == TOK_RPAREN)) {
         do {
             *((ast_expr_t**)vector_emplace_back(&args_vec)) = parse_expr(p);

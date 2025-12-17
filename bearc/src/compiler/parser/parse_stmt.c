@@ -71,7 +71,7 @@ ast_stmt_t* parse_stmt_expr(parser_t* p) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
     stmt->stmt.stmt_expr.expr = parse_expr(p);
     stmt->stmt.stmt_expr.terminator = parser_expect_token(p, TOK_SEMICOLON);
-    stmt->type = AST_SMTT_EXPR;
+    stmt->type = AST_STMT_EXPR;
     stmt->first = stmt->stmt.stmt_expr.expr->first;
     stmt->last = stmt->stmt.stmt_expr.terminator;
     return stmt;

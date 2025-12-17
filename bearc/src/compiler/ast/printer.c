@@ -155,7 +155,8 @@ void print_stmt(ast_stmt_t* stmt) {
     print_indent();
     switch (stmt->type) {
     case AST_STMT_BLOCK:
-    case AST_STMT_MODULE:
+    case AST_STMT_MODULE_BLOCK:
+    case AST_STMT_MODULE_FLAT:
     case AST_STMT_FILE:
         printf("file '%s': " ANSI_BOLD_GREEN "{\n" ANSI_RESET, stmt->stmt.file.file_name);
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
@@ -164,7 +165,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_IMPORT:
-    case AST_SMTT_EXPR:
+    case AST_STMT_EXPR:
         puts("expression statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(stmt->stmt.stmt_expr.expr);
         print_terminator(stmt->stmt.stmt_expr.terminator);
@@ -173,6 +174,7 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_STMT_FN_DECL:
     case AST_STMT_MT_DECL:
     case AST_STMT_DT_DECL:
+    case AST_STMT_VAR_INIT_DECL:
     case AST_STMT_VAR_DECL:
     case AST_STMT_IF:
     case AST_STMT_ELSE:

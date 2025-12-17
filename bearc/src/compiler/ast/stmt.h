@@ -17,15 +17,16 @@ extern "C" {
 
 typedef enum {
     // blocks
-    AST_STMT_BLOCK,  // {...} sequence of statements
-    AST_STMT_MODULE, // AST_MODULE_NAME + AST_STMT_BLOCK
+    AST_STMT_BLOCK,        // {...} sequence of statements
+    AST_STMT_MODULE_BLOCK, // AST_MODULE_NAME + AST_STMT_BLOCK
+    AST_STMT_MODULE_FLAT,
     AST_STMT_FILE,
 
     // import
     AST_STMT_IMPORT, // TOK_IMPORT + AST_MODULE_NAME
 
     // statement expr
-    AST_SMTT_EXPR,
+    AST_STMT_EXPR,
 
     // function declarations
     AST_STMT_FN_DECL, // fn + params + (body for definitions / null for declarations)
@@ -33,7 +34,8 @@ typedef enum {
     AST_STMT_MT_DECL, // mt ^
     AST_STMT_DT_DECL, // dt ^
     // var decls
-    AST_STMT_VAR_DECL, // type var;
+    AST_STMT_VAR_INIT_DECL, // type foo = something;
+    AST_STMT_VAR_DECL,      // type foo;
 
     // control flow
     AST_STMT_IF,     // KW_IF + condition + statement
@@ -86,9 +88,6 @@ typedef struct {
 
 /**
  * represents a module decl or insertion in a module
- * either
- * mod my_mod; // makes the whole file apart of the module
- * or:
  * mod my_mod {...} // module will enclosed
  */
 typedef struct {
@@ -97,8 +96,15 @@ typedef struct {
     /// NULLable if whole file should be internal to a module
     ast_stmt_block_t* block;
     /// NULLable if block != NULL
-    token_t* terminator;
-} ast_stmt_module_t;
+} ast_stmt_module_block_t;
+
+typedef struct {
+    token_t* mod_tkn;
+    ast_expr_id_t* id;
+    /// NULLable if whole file should be internal to a module
+    ast_slice_of_stmts_t statements;
+    /// NULLable if block != NULL
+} ast_stmt_module_flat_t;
 
 /**
  * imports a file given my a path as my.path.to.file
@@ -120,6 +126,7 @@ typedef struct {
     /// fn, mt, or dt
     token_t* kw;
     token_t* left_paren;
+    // TODO, this doesn't work since we need to worry about types
     ast_slice_of_exprs_t args;
     token_t* right_paren;
     /// NULLable if no return type
@@ -132,11 +139,14 @@ typedef struct {
 typedef struct {
     ast_expr_id_t* type;
     ast_expr_id_t* id;
-    /// NULLable if pure decl (zero-init)
     token_t* assign_op;
-    /// NULLable if pure decl (zero-init)
     ast_expr_t* rhs;
-    /// ;
+    token_t* terminator;
+} ast_stmt_var_decl_init_t;
+
+typedef struct {
+    ast_expr_id_t* type;
+    ast_expr_id_t* id;
     token_t* terminator;
 } ast_stmt_var_decl_t;
 
@@ -205,11 +215,13 @@ typedef struct {
 typedef union {
     ast_stmt_block_t block;
     ast_stmt_file_t file;
-    ast_stmt_module_t module;
+    ast_stmt_module_block_t module_block;
+    ast_stmt_module_flat_t module_flat;
     ast_stmt_import_t import;
     ast_stmt_expr_t stmt_expr;
     ast_stmt_fn_decl_t fn_decl;
-    ast_stmt_var_decl_t decl;
+    ast_stmt_var_decl_init_t var_init_decl;
+    ast_stmt_var_decl_t var_decl;
     ast_stmt_if_t if_stmt;
     ast_stmt_else_t else_stmt;
     ast_stmt_while_t while_stmt;
