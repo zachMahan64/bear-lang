@@ -74,8 +74,6 @@ void print_expr(ast_expr_t* expression) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
-    case AST_EXPR_ASSIGN_EQ:
-    case AST_EXPR_ASSIGN_MOVE:
     case AST_EXPR_GROUPING: {
         puts("grouping: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(expr.expr.grouping.expr);

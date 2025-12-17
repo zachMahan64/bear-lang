@@ -59,7 +59,7 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_GT] = 9,
     [TOK_LT] = 9,
 
-    [TOK_STREAM] = 16,
+    [TOK_STREAM] = 7,
 
     [TOK_LSH] = 7,
     [TOK_RSHL] = 7,
@@ -72,6 +72,8 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_LE] = 9,
     [TOK_BOOL_EQ] = 10,
     [TOK_NE] = 10,
+
+    [TOK_ASSIGN_MOVE] = 16,
 
     [TOK_ASSIGN_PLUS_EQ] = 16,
     [TOK_ASSIGN_MINUS_EQ] = 16,
