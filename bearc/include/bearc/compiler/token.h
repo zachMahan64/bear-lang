@@ -113,6 +113,7 @@ typedef enum token_type {
 
     // more operators
     TOK_SIZEOF,
+    TOK_AS,
 
     // marks
     TOK_MARK, // marks (like traits)

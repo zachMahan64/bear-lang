@@ -36,8 +36,12 @@ static uint8_t preunary_prec_map[TOK__NUM] = {
 uint8_t prec_preunary(token_type_e type) { return preunary_prec_map[type]; }
 
 static uint8_t binary_prec_map[TOK__NUM] = {
+    [TOK_TYPE_MOD] = 1,
+
     [TOK_DOT] = 2,
     [TOK_RARROW] = 2,
+
+    [TOK_AS] = 3,
 
     [TOK_ASSIGN_EQ] = 16,
 

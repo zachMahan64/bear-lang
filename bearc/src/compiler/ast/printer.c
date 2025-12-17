@@ -77,7 +77,9 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_LITERAL: {
         token_t* tkn = expr.expr.literal.tkn;
         const char* lit_type_str = get_token_to_string_map()[tkn->type];
-        printf("literal (%s): %.*s", lit_type_str, (int)tkn->len, tkn->start);
+        printf("literal (%s): " ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_BLUE "%.*s" ANSI_BOLD_GREEN
+               "`" ANSI_RESET,
+               lit_type_str, (int)tkn->len, tkn->start);
         break;
     }
     case AST_EXPR_BINARY: {
