@@ -154,7 +154,6 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     token_type_e next_op = parser_peek(p)->type;
 
     while (binary_bind_right(curr_op, next_op)) {
-        printf("right assoc: %d", is_right_assoc_from_prec(prec_binary(curr_op)));
         rhs = parse_expr_prec(p, rhs, prec_binary(next_op));
         curr_op = next_op, next_op = parser_peek(p)->type;
     }
