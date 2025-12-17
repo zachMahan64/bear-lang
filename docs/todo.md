@@ -1,6 +1,7 @@
 #### Short-term
-- [ ] cast parsing (decide between c-style vs as)
+- [x] cast parsing (decide between c-style vs as)
 - [x] fn calls
+- [ ] statement parsing
 
 #### Medium-term
 - [ ] Get a solid subset of the parser working on building an AST
