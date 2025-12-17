@@ -84,6 +84,10 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
     if (lhs && parser_peek(p)->type == TOK_LPAREN) {
         return parse_fn_call(p, lhs);
     }
+    // try subscript
+    if (lhs && parser_peek(p)->type == TOK_LBRACK) {
+        return parse_subscript(p, lhs);
+    }
     if (is_preunary_op(first_type)) {
         return parse_expr_prec(p, NULL, PREC_INIT);
     }
@@ -231,4 +235,16 @@ ast_expr_t* parse_grouping(parser_t* p) {
     grouping->first = lparen;
     grouping->last = grouping->expr.grouping.right_paren;
     return grouping;
+}
+
+ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_SUBSCRIPT;
+    s->expr.subscript.lhs = lhs;
+    parser_expect_token(p, TOK_LBRACK);
+    s->expr.subscript.subexpr = parse_expr(p);
+    token_t* rbrack = parser_expect_token(p, TOK_RBRACK);
+    s->first = s->expr.subscript.lhs->first;
+    s->last = rbrack;
+    return s;
 }

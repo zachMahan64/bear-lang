@@ -48,4 +48,6 @@ ast_expr_t* parse_grouping(parser_t* p);
 
 ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs);
 
+ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs);
+
 #endif

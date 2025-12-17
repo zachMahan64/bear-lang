@@ -24,6 +24,8 @@ typedef enum {
     // unary
     AST_EXPR_PRE_UNARY,  // unary expr: -, +, !, ~, ++, --
     AST_EXPR_POST_UNARY, // unary expr: ++, --
+    // subscript
+    AST_EXPR_SUBSCRIPT,
     // func
     AST_EXPR_FN_CALL, // func(args...), can also be used for methods
 
@@ -59,6 +61,11 @@ typedef struct {
 } ast_expr_binary_t;
 
 typedef struct {
+    ast_expr_t* lhs;
+    ast_expr_t* subexpr;
+} ast_expr_subscript_t;
+
+typedef struct {
     token_t* left_paren;
     ast_expr_t* expr;
     token_t* right_paren;
@@ -86,6 +93,7 @@ typedef union {
     ast_expr_grouping_t grouping;
     ast_expr_unary_t unary;
     ast_expr_fn_call_t fn_call;
+    ast_expr_subscript_t subscript;
 } ast_expr_u;
 
 /// underlying expr is 0-offset alligned so this struct can be safely downcasted

@@ -56,6 +56,20 @@ static void print_closing_delim(token_t* delim) {
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
+static void print_opening_delim_from_type(token_type_e delim) {
+    printer_do_indent(), print_indent(),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s",
+               get_token_to_string_map()[delim]),
+        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+}
+
+static void print_closing_delim_from_type(token_type_e delim) {
+    print_indent(),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s",
+               get_token_to_string_map()[delim]),
+        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+}
+
 static void print_terminator(token_t* term) {
     if (!term) {
         print_indent(), puts(ANSI_BOLD_RED "missing terminator" ANSI_RESET);
@@ -145,6 +159,14 @@ void print_expr(ast_expr_t* expression) {
     case AST_INVALID:
         printf(ANSI_BOLD_RED "invalid expr" ANSI_RESET);
         break;
+    case AST_EXPR_SUBSCRIPT:
+        puts("subscript: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_expr(expr.expr.subscript.lhs);
+        print_opening_delim_from_type(TOK_LBRACK);
+        print_expr(expr.expr.subscript.subexpr);
+        print_closing_delim_from_type(TOK_RBRACK);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
     }
     puts(",");
     printer_deindent();
@@ -166,7 +188,7 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_IMPORT:
     case AST_STMT_EXPR:
-        puts("expression statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        puts("expression-statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(stmt->stmt.stmt_expr.expr);
         print_terminator(stmt->stmt.stmt_expr.terminator);
         print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
