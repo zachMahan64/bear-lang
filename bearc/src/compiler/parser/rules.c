@@ -18,7 +18,7 @@ static bool right_assoc_map[MAX_ASSOCIATIVITY + 1] = {
     [16] = true,
     [18] = true,
 };
-bool is_right_assoc(uint32_t precedence) { return right_assoc_map[precedence]; }
+bool is_right_assoc_from_prec(uint8_t precedence) { return right_assoc_map[precedence]; }
 
 static uint8_t postunary_prec_map[TOK__NUM] = {
     [TOK_INC] = 2,

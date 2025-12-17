@@ -136,21 +136,32 @@ ast_expr_t* parse_id(parser_t* p) {
     return id_expr;
 }
 
+static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {
+    return (is_binary_op(next_op) && (prec_binary(next_op) < prec_binary(curr_op))) ||
+           (is_binary_op(next_op) && (prec_binary(next_op) < prec_binary(curr_op)) &&
+            is_right_assoc_from_prec(prec_binary(curr_op)));
+}
+
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     ast_expr_t* binary_expr = parser_alloc_expr(p);
-    token_t* op = parser_eat(p); // already verfied legit
+    token_t* op_tkn = parser_eat(p); // already verfied legit
     binary_expr->type = AST_EXPR_BINARY;
     binary_expr->expr.binary.lhs = lhs;
-    binary_expr->expr.binary.op = op;
+    binary_expr->expr.binary.op = op_tkn;
+    max_prec = (max_prec >= prec_binary(op_tkn->type)) ? max_prec : prec_binary(op_tkn->type);
+    ast_expr_t* rhs = parse_primary_expr(p);
+    token_type_e curr_op = op_tkn->type;
+    token_type_e next_op = parser_peek(p)->type;
 
-    max_prec = (max_prec >= prec_binary(op->type)) ? max_prec : prec_binary(op->type);
-
-    // ast_expr_t* rhs = parse_primary_expr(p);
-    // while ()
-    binary_expr->expr.binary.rhs = parse_expr_prec(p, NULL, max_prec);
+    while (binary_bind_right(curr_op, next_op)) {
+        printf("right assoc: %d", is_right_assoc_from_prec(prec_binary(curr_op)));
+        rhs = parse_expr_prec(p, rhs, prec_binary(next_op));
+        curr_op = next_op, next_op = parser_peek(p)->type;
+    }
+    binary_expr->expr.binary.rhs = rhs;
     binary_expr->first = binary_expr->expr.binary.lhs->first;
     binary_expr->last = binary_expr->expr.binary.rhs->last;
-    return binary_expr;
+    return parse_expr_prec(p, binary_expr, prec_binary(curr_op));
 }
 
 ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs) {

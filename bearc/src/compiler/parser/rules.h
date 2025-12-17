@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 /// defines the associativity of an operator based on precedence (C++ style)
-bool is_right_assoc(uint32_t precedence);
+bool is_right_assoc_from_prec(uint8_t precedence);
 
 bool is_binary_op(token_type_e type);
 bool is_preunary_op(token_type_e type);
