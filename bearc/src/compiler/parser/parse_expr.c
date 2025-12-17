@@ -45,8 +45,6 @@ ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec) {
 ast_expr_t* parser_alloc_expr(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_expr_t)); }
 
 ast_expr_t* parse_expr(parser_t* p) {
-
-    /// TODO handle precedence
     ast_expr_t* lhs = parse_primary_expr(p);
     return parse_expr_prec(p, lhs, PREC_INIT);
 }
@@ -70,6 +68,7 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
     ast_expr_t* lhs = NULL;
+    // try to parse atoms as lhs ~~~~~~~~~~~~~~~~~~~
     if (token_is_builtin_type_or_id(first_type)) {
         lhs = parse_id(p);
     } else if (token_is_literal(first_type)) {
@@ -77,19 +76,24 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
     } else if (first_type == TOK_LPAREN) {
         lhs = parse_grouping(p);
     }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // if atom, try to parse postunary, since postunary prec > preunary prec
     if (lhs && is_postunary_op(parser_peek(p)->type)) {
         return parse_postunary(p, lhs);
+    }
+    // try fn call too
+    if (lhs && parser_peek(p)->type == TOK_LPAREN) {
+        return parse_fn_call(p, lhs);
     }
     if (is_preunary_op(first_type)) {
         return parse_expr_prec(p, NULL, PREC_INIT);
     }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (lhs) {
         return lhs;
     }
-    // complete failure case
+    // failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
-    // printf("%.*s\n", (int)first_tkn->length, first_tkn->start);
-
     return parser_sync(p);
 }
 
@@ -173,6 +177,29 @@ ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs) {
     postunary_expr->first = postunary_expr->expr.unary.expr->first;
     postunary_expr->last = op;
     return postunary_expr;
+}
+
+ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
+    ast_expr_t* call_expr = parser_alloc_expr(p);
+    token_t* lparen = parser_eat(p); // already verfied legit
+    call_expr->type = AST_EXPR_FN_CALL;
+    call_expr->expr.fn_call.left_expr = lhs;
+    call_expr->expr.fn_call.left_paren = lparen;
+
+    vector_t args_vec = vector_create_and_reserve(sizeof(ast_expr_t*), PARSER_EXPR_ID_VEC_CAP);
+
+    do {
+        *((ast_expr_t**)vector_emplace_back(&args_vec)) = parse_expr(p);
+    } while (parser_match_token(p, TOK_COMMA));
+
+    token_t* rparen = parser_expect_token(p, TOK_RPAREN);
+    call_expr->expr.fn_call.right_paren = rparen;
+
+    call_expr->expr.fn_call.args = parser_freeze_expr_vec(p, &args_vec);
+
+    call_expr->first = call_expr->expr.fn_call.left_expr->first;
+    call_expr->last = rparen;
+    return call_expr;
 }
 
 ast_expr_t* parser_sync(parser_t* p) {

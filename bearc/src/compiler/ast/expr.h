@@ -71,9 +71,9 @@ typedef struct {
 } ast_expr_unary_t;
 
 typedef struct {
-    ast_expr_t* expr; // should resolve to a func/func ptr
+    ast_expr_t* left_expr; // should resolve to a func/func ptr
     token_t* left_paren;
-    ast_slice_of_exprs_t args_vec; // of type ast_expr_t
+    ast_slice_of_exprs_t args; // of type ast_expr_t
     token_t* right_paren;
 } ast_expr_fn_call_t;
 

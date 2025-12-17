@@ -33,8 +33,13 @@ void print_out_ast(ast_stmt_t* stmt) {
 static void print_tkn(token_t* tkn) { printf("%.*s", (int)tkn->len, tkn->start); }
 
 static void print_op(token_t* op) {
-    printer_do_indent(), print_indent(), printf("op: "), print_tkn(op), puts(","),
-        printer_deindent();
+    printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_MAGENTA),
+        print_tkn(op), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+}
+
+static void print_grammatical_delim(token_t* delim) {
+    printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW),
+        print_tkn(delim), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
 void print_expr(ast_expr_t* expression) {
@@ -97,7 +102,14 @@ void print_expr(ast_expr_t* expression) {
         break;
     }
     case AST_EXPR_FN_CALL:
+        puts("function call: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_expr(expr.expr.fn_call.left_expr);
+        print_grammatical_delim(expr.expr.fn_call.left_paren);
+        print_grammatical_delim(expr.expr.fn_call.right_paren);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
     case AST_INVALID:
+        printf(ANSI_BOLD_RED "invalid expr" ANSI_RESET);
         break;
     }
     puts(",");
