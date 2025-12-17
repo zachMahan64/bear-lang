@@ -16,7 +16,11 @@
 #include "utils/vector.h"
 #include <assert.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+
+#define PREC_INIT UINT8_MAX
 
 token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
     token_ptr_slice_t slice = {
@@ -44,13 +48,24 @@ ast_expr_t* parse_expr(parser_t* p) {
 
     /// TODO handle precedence
     ast_expr_t* lhs = parse_primary_expr(p);
-    return parse_expr_prec(p, lhs, UINT8_MAX);
+    return parse_expr_prec(p, lhs, PREC_INIT);
 }
 
 ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
-    if (is_binary_op(parser_peek(p)->type)) {
-        return parse_binary(p, lhs);
+    token_type_e op = parser_peek(p)->type;
+    if (!lhs && is_preunary_op(op)) {
+        return parse_preunary_expr(p);
     }
+    if (is_binary_op(parser_peek(p)->type)) {
+        return parse_binary(p, lhs, prec);
+    }
+    if (is_postunary_op(op)) {
+        return parse_postunary(p, lhs);
+    }
+    if (!lhs) {
+        return parse_expr(p);
+    }
+    assert(lhs != NULL && "[parse_expr.c|parse_expr_prec] lhs is NULL");
     return lhs;
 }
 
@@ -68,7 +83,7 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
         return parse_grouping(p);
     }
     if (is_preunary_op(first_type)) {
-        return parse_preunary_expr(p);
+        return parse_expr_prec(p, NULL, PREC_INIT);
     }
     // complete failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
@@ -85,7 +100,7 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
     preunary_expr->first = op;
     preunary_expr->expr.unary.op = op;
     // get and set sub expression
-    ast_expr_t* sub_expr = parse_expr(p);
+    ast_expr_t* sub_expr = parse_expr_prec(p, NULL, prec_preunary(op->type));
     preunary_expr->expr.unary.expr = sub_expr;
     preunary_expr->last = sub_expr->last;
     return preunary_expr;
@@ -121,16 +136,32 @@ ast_expr_t* parse_id(parser_t* p) {
     return id_expr;
 }
 
-ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs) {
+ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     ast_expr_t* binary_expr = parser_alloc_expr(p);
     token_t* op = parser_eat(p); // already verfied legit
     binary_expr->type = AST_EXPR_BINARY;
     binary_expr->expr.binary.lhs = lhs;
     binary_expr->expr.binary.op = op;
-    binary_expr->expr.binary.rhs = parse_expr(p);
+
+    max_prec = (max_prec >= prec_binary(op->type)) ? max_prec : prec_binary(op->type);
+
+    // ast_expr_t* rhs = parse_primary_expr(p);
+    // while ()
+    binary_expr->expr.binary.rhs = parse_expr_prec(p, NULL, max_prec);
     binary_expr->first = binary_expr->expr.binary.lhs->first;
     binary_expr->last = binary_expr->expr.binary.rhs->last;
     return binary_expr;
+}
+
+ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs) {
+    ast_expr_t* postunary_expr = parser_alloc_expr(p);
+    token_t* op = parser_eat(p); // already verfied legit
+    postunary_expr->type = AST_EXPR_POST_UNARY;
+    postunary_expr->expr.unary.expr = lhs;
+    postunary_expr->expr.unary.op = op;
+    postunary_expr->first = postunary_expr->expr.unary.expr->first;
+    postunary_expr->last = op;
+    return postunary_expr;
 }
 
 ast_expr_t* parser_sync(parser_t* p) {

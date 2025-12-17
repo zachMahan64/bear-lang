@@ -57,6 +57,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
 
     // line is zero-indexed inside of token_t, so adjust
     size_t line = err->token->loc.line + 1;
+    size_t col = err->token->loc.col + 1;
 
 // setup " | <line num> strings"
 // max buf of size 21 since size_t max is 18'446'744'073'709'551'615
@@ -71,9 +72,9 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstr(&line_under_num_str, "  |");
 
     // do printing now that we have all strings setup
-    printf(ANSI_BOLD "\'%s\': line %zu: " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
+    printf(ANSI_BOLD "\'%s\': at (line %zu,%zu): " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
                      "%s%s" ANSI_RESET "\n",
-           list->src_buffer.file_name, line, error_message_for_code(err->error_code),
+           list->src_buffer.file_name, line, col, error_message_for_code(err->error_code),
            error_message_context_for(err));
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);

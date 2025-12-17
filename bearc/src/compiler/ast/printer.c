@@ -85,7 +85,14 @@ void print_expr(ast_expr_t* expression) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
-    case AST_EXPR_POST_UNARY:
+    case AST_EXPR_POST_UNARY: {
+        token_t* op = expr.expr.unary.op;
+        puts("post-unary: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_expr(expr.expr.unary.expr);
+        print_indent(), printf("  op: "), print_tkn(op), puts(",");
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
     case AST_EXPR_FN_CALL:
     case AST_INVALID:
         break;

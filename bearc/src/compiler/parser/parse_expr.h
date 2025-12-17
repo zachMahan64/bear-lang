@@ -11,6 +11,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/parser/parser.h"
 #include "utils/vector.h"
+#include <stdint.h>
 
 /// for adding contents of the vector to the arena, and freeing the vector
 /// - vector must contain type token_t*
@@ -26,6 +27,7 @@ ast_expr_t* parser_alloc_expr(parser_t* p);
 /// parse an expr
 ast_expr_t* parse_expr(parser_t* p);
 
+/// lhs is NULLable
 ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec);
 
 ast_expr_t* parse_primary_expr(parser_t* p);
@@ -36,7 +38,9 @@ ast_expr_t* parse_literal(parser_t* p);
 
 ast_expr_t* parse_id(parser_t* p);
 
-ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs);
+ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec);
+
+ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs);
 
 ast_expr_t* parser_sync(parser_t* p);
 

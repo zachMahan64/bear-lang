@@ -32,7 +32,7 @@ ast_stmt_file_t parse_file(parser_t* p, const char* file_name) {
         vector_create_and_reserve(sizeof(ast_stmt_t), parser_estimate_stmt_cnt(p->tokens));
     // temp_eat(p); // temp logic
     ast_expr_t* expr = parse_expr(p);
-    // TODO debug
+    //  TODO debug
     print_expr(expr);
     ast_stmt_file_t file = {
         .file_name = file_name,
