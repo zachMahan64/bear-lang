@@ -31,13 +31,11 @@ size_t parser_estimate_stmt_cnt(vector_t* tkn_vec) {
 ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
     vector_t stmt_vec =
         vector_create_and_reserve(sizeof(ast_stmt_t*), parser_estimate_stmt_cnt(p->tokens));
-    // while (!parser_eof(p)) {
-    //    *((ast_stmt_t**)vector_emplace_back(&stmt_vec)) = parse_stmt(p);
-    //}
-    //  TODO debug
-    ast_stmt_t* file = parse_stmt(p);
-    print_stmt(file);
-    /*
+
+    while (!parser_eof(p)) {
+        *((ast_stmt_t**)vector_emplace_back(&stmt_vec)) = parse_stmt(p);
+    }
+
     ast_stmt_t* file = parser_alloc_stmt(p);
     file->type = AST_STMT_FILE;
     file->stmt.file.file_name = file_name;
@@ -51,7 +49,7 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
         file->first = parser_eat(p);
     }
     print_stmt(file);
-    */
+
     return file;
 }
 
