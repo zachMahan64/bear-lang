@@ -29,17 +29,10 @@ size_t parser_estimate_stmt_cnt(vector_t* tkn_vec) {
 }
 
 ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
-    vector_t stmt_vec =
-        vector_create_and_reserve(sizeof(ast_stmt_t*), parser_estimate_stmt_cnt(p->tokens));
-
-    while (!parser_eof(p)) {
-        *((ast_stmt_t**)vector_emplace_back(&stmt_vec)) = parse_stmt(p);
-    }
-
     ast_stmt_t* file = parser_alloc_stmt(p);
     file->type = AST_STMT_FILE;
     file->stmt.file.file_name = file_name;
-    file->stmt.file.stmts = parser_freeze_stmt_vec(p, &stmt_vec);
+    file->stmt.file.stmts = parse_slice_of_stmts(p, TOK_EOF);
     if (file->stmt.file.stmts.len != 0) {
         file->first = file->stmt.file.stmts.start[0]->first;
         file->last = file->stmt.file.stmts.start[file->stmt.file.stmts.len - 1]->last;
@@ -48,9 +41,18 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
         file->last = parser_eat(p);
         file->first = parser_eat(p);
     }
-    print_stmt(file);
-
     return file;
+}
+
+ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
+    vector_t stmt_vec =
+        vector_create_and_reserve(sizeof(ast_stmt_t*), parser_estimate_stmt_cnt(p->tokens));
+
+    while (!(parser_peek(p)->type == until_tkn)) {
+        *((ast_stmt_t**)vector_emplace_back(&stmt_vec)) = parse_stmt(p);
+    }
+
+    return parser_freeze_stmt_vec(p, &stmt_vec);
 }
 
 ast_slice_of_stmts_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec) {

@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/compile.h"
+#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/debug.h"
 #include "compiler/diagnostics/error_list.h"
@@ -39,8 +40,10 @@ int compile_file(const char* file_name) {
         goto empty_file_clean_up;
     }
 
+#ifdef DEBUG_BUILD
     print_out_src_buffer(&src_buffer);
     print_out_tkn_table(&tkn_vec);
+#endif
 
     // ----------------------------------------------------
 
@@ -51,6 +54,10 @@ int compile_file(const char* file_name) {
     arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE);
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
     ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);
+
+#ifdef DEBUG_BUILD
+    print_stmt(file_stmt);
+#endif
     // ----------------------------------------------------
 
     /* TODO:

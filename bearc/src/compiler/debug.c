@@ -13,7 +13,6 @@
 
 // private debug helper
 void print_out_tkn_table(vector_t* tkn_vec) {
-#ifdef DEBUG_BUILD
     const char* const* tkn_map = get_token_to_string_map();
     size_t tkn_map_size = tkn_vec->size;
     puts("                  Lexed tokens");
@@ -26,17 +25,14 @@ void print_out_tkn_table(vector_t* tkn_vec) {
                (int)tkn->len, tkn->start);
     }
     puts("=============================================");
-#endif
 }
 
 // private debug helper
 void print_out_src_buffer(src_buffer_t* src_buffer) {
-#ifdef DEBUG_BUILD
     printf("\n"
            " Contents of [%s]\n"
            "=============================================\n"
            "%s\n"
            "=============================================\n",
            src_buffer->file_name, src_buffer->data);
-#endif
 }

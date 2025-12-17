@@ -20,6 +20,8 @@ ast_stmt_t* parse_file(parser_t* parser, const char* file_name);
 /// - vector must contain type ast_stmt_t
 ast_slice_of_stmts_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec);
 
+ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until);
+
 ast_stmt_t* parser_alloc_stmt(parser_t* p);
 
 ast_stmt_t* parse_stmt(parser_t* p);
