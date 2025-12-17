@@ -60,8 +60,8 @@ typedef struct ast_stmt_else ast_stmt_else_t;
  * slice of statements
  */
 typedef struct {
-    ast_stmt_t* const start;
-    const size_t len;
+    ast_stmt_t** start;
+    size_t len;
 } ast_slice_of_stmts_t;
 
 // stmt types ~~~~~~~~~~~~~~~~~~~~
@@ -224,8 +224,8 @@ typedef union {
 typedef struct ast_stmt {
     ast_stmt_u stmt;
     ast_stmt_type_e type;
-    token_t* start;
-    token_t* end;
+    token_t* first;
+    token_t* last;
 } ast_stmt_t;
 
 #ifdef __cplusplus

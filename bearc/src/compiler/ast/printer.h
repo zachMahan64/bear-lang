@@ -10,7 +10,7 @@
 #define COMPILER_AST_PRINTER_H
 
 #include "compiler/ast/stmt.h"
-void print_out_ast(ast_stmt_t* stmt);
+void print_stmt(ast_stmt_t* stmt);
 void print_expr(ast_expr_t* expr);
 
 #endif

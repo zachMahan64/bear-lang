@@ -17,7 +17,6 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #define PREC_INIT UINT8_MAX
@@ -34,10 +33,10 @@ token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
 
 ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec) {
     ast_slice_of_exprs_t slice = {
-        .start = arena_alloc(p->arena, vec->size * vec->elem_size),
+        .start = (ast_expr_t**)arena_alloc(p->arena, vec->size * vec->elem_size),
         .len = vec->size,
     };
-    memcpy(slice.start, vec->data, vec->size * vec->elem_size);
+    memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
     vector_destroy(vec);
     return slice;
 }

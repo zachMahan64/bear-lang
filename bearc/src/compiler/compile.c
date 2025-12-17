@@ -50,7 +50,7 @@ int compile_file(const char* file_name) {
     const size_t PARSER_ARENA_CHUNK_SIZE = 0x10000;
     arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE);
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
-    ast_stmt_file_t file_stmt = parse_file(&parser, src_buffer.file_name);
+    ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);
     // ----------------------------------------------------
 
     /* TODO:
@@ -65,9 +65,9 @@ int compile_file(const char* file_name) {
 
     if (compiler_error_list_empty(&error_list)) {
         // codegen here
-        printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_stmt.file_name);
+        printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
     } else {
-        printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_stmt.file_name);
+        printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
     }
 
     // clean up resources

@@ -26,10 +26,6 @@ static void printer_deindent(void) { string_shrink_by(&indent_str, PRINTER_INDEN
 
 static void print_indent(void) { printf("%s", string_data(&indent_str)); }
 
-void print_out_ast(ast_stmt_t* stmt) {
-    // TODO
-}
-
 static void print_tkn(token_t* tkn) { printf("%.*s", (int)tkn->len, tkn->start); }
 
 static void print_op(token_t* op) {
@@ -52,6 +48,11 @@ static void print_opening_delim(token_t* delim) {
 static void print_closing_delim(token_t* delim) {
     print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(delim),
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+}
+
+static void print_terminator(token_t* term) {
+    print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(term),
+        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
 }
 
 void print_expr(ast_expr_t* expression) {
@@ -137,4 +138,35 @@ void print_expr(ast_expr_t* expression) {
     }
     puts(",");
     printer_deindent();
+}
+
+void print_stmt(ast_stmt_t* stmt) {
+    printer_try_init();
+    print_indent();
+    switch (stmt->type) {
+    case AST_STMT_BLOCK:
+    case AST_STMT_MODULE:
+    case AST_STMT_FILE:
+    case AST_STMT_IMPORT:
+    case AST_SMTT_EXPR:
+        puts("statement expr: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_expr(stmt->stmt.stmt_expr.expr);
+        print_terminator(stmt->stmt.stmt_expr.terminator);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
+    case AST_STMT_FN_DECL:
+    case AST_STMT_MT_DECL:
+    case AST_STMT_DT_DECL:
+    case AST_STMT_VAR_DECL:
+    case AST_STMT_IF:
+    case AST_STMT_ELSE:
+    case AST_STMT_WHILE:
+    case AST_STMT_FOR:
+    case AST_STMT_FOR_IN:
+    case AST_STMT_RETURN:
+    case AST_STMT_STRUCT_DEF:
+    case AST_MARK_PREAMBLE:
+    case AST_MARK_DECL:
+        break;
+    }
 }
