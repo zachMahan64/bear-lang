@@ -187,9 +187,11 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
 
     vector_t args_vec = vector_create_and_reserve(sizeof(ast_expr_t*), PARSER_EXPR_ID_VEC_CAP);
 
-    do {
-        *((ast_expr_t**)vector_emplace_back(&args_vec)) = parse_expr(p);
-    } while (parser_match_token(p, TOK_COMMA));
+    if (!(parser_peek(p)->type == TOK_RPAREN)) {
+        do {
+            *((ast_expr_t**)vector_emplace_back(&args_vec)) = parse_expr(p);
+        } while (parser_match_token(p, TOK_COMMA));
+    }
 
     token_t* rparen = parser_expect_token(p, TOK_RPAREN);
     call_expr->expr.fn_call.right_paren = rparen;

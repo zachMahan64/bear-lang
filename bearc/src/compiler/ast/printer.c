@@ -26,14 +26,20 @@ static void printer_deindent(void) { string_shrink_by(&indent_str, PRINTER_INDEN
 
 static void print_indent(void) { printf("%s", string_data(&indent_str)); }
 
-static void print_tkn(token_t* tkn) { printf("%.*s", (int)tkn->len, tkn->start); }
+static void print_tkn(token_t* tkn) {
+    if (!tkn) {
+        printf(ANSI_BOLD_RED "missing tkn" ANSI_RESET);
+        return;
+    }
+    printf("%.*s", (int)tkn->len, tkn->start);
+}
 
 static void print_op(token_t* op) {
     printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_MAGENTA),
         print_tkn(op), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
-static void print_comma() {
+static void print_comma(void) {
     printer_do_indent(), print_indent(),
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "," ANSI_BOLD_GREEN "`" ANSI_RESET
                                ",\n"),
@@ -51,6 +57,10 @@ static void print_closing_delim(token_t* delim) {
 }
 
 static void print_terminator(token_t* term) {
+    if (!term) {
+        print_indent(), puts(ANSI_BOLD_RED "missing terminator" ANSI_RESET);
+        return;
+    }
     print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(term),
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
 }
