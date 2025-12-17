@@ -10,7 +10,7 @@ static string_t indent_str;
 static const char* indent = "|   ";
 #define PRINTER_INDENT_LEN 4
 
-void printer_try_init(void) {
+static void printer_try_init(void) {
     static bool initialized;
     if (!initialized) {
         indent_str = string_create_and_reserve(36);
@@ -18,13 +18,13 @@ void printer_try_init(void) {
     }
 }
 
-void printer_do_indent(void) { string_push_cstr(&indent_str, indent); }
+static void printer_do_indent(void) { string_push_cstr(&indent_str, indent); }
 
-const char* printer_indent(void) { return string_data(&indent_str); }
+static const char* printer_indent(void) { return string_data(&indent_str); }
 
-void printer_deindent(void) { string_shrink_by(&indent_str, PRINTER_INDENT_LEN); }
+static void printer_deindent(void) { string_shrink_by(&indent_str, PRINTER_INDENT_LEN); }
 
-void print_indent(void) { printf("%s", string_data(&indent_str)); }
+static void print_indent(void) { printf("%s", string_data(&indent_str)); }
 
 void print_out_ast(ast_stmt_t* stmt) {
     // TODO

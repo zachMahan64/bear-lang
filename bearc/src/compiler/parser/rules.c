@@ -90,4 +90,4 @@ uint8_t prec_binary(token_type_e type) { return binary_prec_map[type]; }
 
 bool is_binary_op(token_type_e type) { return binary_prec_map[type]; }
 bool is_preunary_op(token_type_e type) { return preunary_prec_map[type]; }
-bool is_postunary_op(token_type_e type) { return preunary_prec_map[type]; }
+bool is_postunary_op(token_type_e type) { return postunary_prec_map[type]; }

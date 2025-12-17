@@ -34,6 +34,11 @@ int compile_file(const char* file_name) {
     vector_t tkn_vec = lexer_tokenize_src_buffer(&src_buffer);
     // detect errors in lexing
 
+    // if ONLY EOF TKN
+    if (vector_size(&tkn_vec) == 1) {
+        goto empty_file_clean_up;
+    }
+
     print_out_src_buffer(&src_buffer);
     print_out_tkn_table(&tkn_vec);
 
@@ -68,6 +73,7 @@ int compile_file(const char* file_name) {
     // clean up resources
     arena_destroy(&arena);
     compiler_error_list_destroy(&error_list);
+empty_file_clean_up:
     vector_destroy(&tkn_vec);
     src_buffer_destroy(&src_buffer);
     return error_code;

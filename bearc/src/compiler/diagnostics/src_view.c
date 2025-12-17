@@ -9,11 +9,16 @@
 #include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
+#include "utils/arena.h"
 #include "utils/file_io.h"
 #include "utils/string.h"
 #include "utils/string_view.h"
 
 string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn) {
+    if (tkn == NULL) {
+        string_view_t sv = {.start = src_buffer->data, .len = 1};
+        return sv;
+    }
     // find start of line
     ptrdiff_t diff_to_line_start = 0;
     while (*(tkn->start - diff_to_line_start) != '\n' &&

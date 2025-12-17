@@ -59,9 +59,6 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
     if (is_binary_op(parser_peek(p)->type)) {
         return parse_binary(p, lhs, prec);
     }
-    if (is_postunary_op(op)) {
-        return parse_postunary(p, lhs);
-    }
     if (!lhs) {
         return parse_expr(p);
     }
@@ -72,18 +69,22 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
 ast_expr_t* parse_primary_expr(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
-
+    ast_expr_t* lhs = NULL;
     if (token_is_builtin_type_or_id(first_type)) {
-        return parse_id(p);
+        lhs = parse_id(p);
+    } else if (token_is_literal(first_type)) {
+        lhs = parse_literal(p);
+    } else if (first_type == TOK_LPAREN) {
+        lhs = parse_grouping(p);
     }
-    if (token_is_literal(first_type)) {
-        return parse_literal(p);
-    }
-    if (first_type == TOK_LPAREN) {
-        return parse_grouping(p);
+    if (lhs && is_postunary_op(parser_peek(p)->type)) {
+        return parse_postunary(p, lhs);
     }
     if (is_preunary_op(first_type)) {
         return parse_expr_prec(p, NULL, PREC_INIT);
+    }
+    if (lhs) {
+        return lhs;
     }
     // complete failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
