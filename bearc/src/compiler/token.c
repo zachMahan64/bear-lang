@@ -126,6 +126,9 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "for", TOK_FOR);
     strimap_insert(&string_to_token_map, "return", TOK_RETURN);
 
+    // more operators
+    strimap_insert(&string_to_token_map, "sizeof", TOK_SIZEOF);
+
     // structures
     strimap_insert(&string_to_token_map, "self", TOK_SELF_ID);
     strimap_insert(&string_to_token_map, "Self", TOK_SELF_TYPE);
@@ -263,6 +266,9 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_WHILE] = "while",
     [TOK_FOR] = "for",
     [TOK_RETURN] = "return",
+
+    // more operators
+    [TOK_SIZEOF] = "sizeof",
 
     // structures
     [TOK_SELF_ID] = "self",

@@ -9,13 +9,13 @@
 #include "compiler/parser/parse_expr.h"
 #include "compiler/ast/expr.h"
 #include "compiler/diagnostics/error_codes.h"
+#include "compiler/parser/rules.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include "utils/arena.h"
 #include "utils/vector.h"
 #include <assert.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 
 token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
@@ -44,10 +44,13 @@ ast_expr_t* parse_expr(parser_t* p) {
 
     /// TODO handle precedence
     ast_expr_t* lhs = parse_primary_expr(p);
-    if (token_is_binary_op(parser_peek(p)->type)) {
+    return parse_expr_prec(p, lhs, UINT8_MAX);
+}
+
+ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
+    if (is_binary_op(parser_peek(p)->type)) {
         return parse_binary(p, lhs);
     }
-
     return lhs;
 }
 
@@ -64,7 +67,7 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
     if (first_type == TOK_LPAREN) {
         return parse_grouping(p);
     }
-    if (token_is_preunary_op(first_type)) {
+    if (is_preunary_op(first_type)) {
         return parse_preunary_expr(p);
     }
     // complete failure case

@@ -26,6 +26,8 @@ ast_expr_t* parser_alloc_expr(parser_t* p);
 /// parse an expr
 ast_expr_t* parse_expr(parser_t* p);
 
+ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec);
+
 ast_expr_t* parse_primary_expr(parser_t* p);
 
 ast_expr_t* parse_preunary_expr(parser_t* p);

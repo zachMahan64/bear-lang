@@ -111,6 +111,9 @@ typedef enum token_type {
     // memory location identifiers
     TOK_STATIC,
 
+    // more operators
+    TOK_SIZEOF,
+
     // marks
     TOK_MARK, // marks (like traits)
     TOK_REQUIRES,

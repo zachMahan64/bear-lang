@@ -62,12 +62,6 @@ typedef struct {
 } ast_expr_binary_t;
 
 typedef struct {
-    ast_expr_t* lval;
-    token_t* assign_op;
-    ast_expr_t* rhs;
-} ast_expr_assign_t;
-
-typedef struct {
     token_t* left_paren;
     ast_expr_t* expr;
     token_t* right_paren;
@@ -92,7 +86,6 @@ typedef union {
     ast_expr_id_t id;
     ast_expr_literal_t literal;
     ast_expr_binary_t binary;
-    ast_expr_assign_t assign;
     ast_expr_grouping_t grouping;
     ast_expr_unary_t unary;
     ast_expr_fn_call_t fn_call;
