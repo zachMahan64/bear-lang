@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 static string_t indent_str;
-static const char* indent = "  ";
-#define PRINTER_INDENT_LEN 2
+static const char* indent = "|   ";
+#define PRINTER_INDENT_LEN 4
 
 void printer_try_init(void) {
     static bool initialized;
@@ -31,6 +31,11 @@ void print_out_ast(ast_stmt_t* stmt) {
 }
 
 static void print_tkn(token_t* tkn) { printf("%.*s", (int)tkn->len, tkn->start); }
+
+static void print_op(token_t* op) {
+    printer_do_indent(), print_indent(), printf("op: "), print_tkn(op), puts(","),
+        printer_deindent();
+}
 
 void print_expr(ast_expr_t* expression) {
     printer_try_init();
@@ -64,7 +69,7 @@ void print_expr(ast_expr_t* expression) {
         token_t* op = expr.expr.binary.op;
         ast_expr_t* rhs = expr.expr.binary.rhs;
         print_expr(lhs);
-        print_indent(), printf("  op: "), print_tkn(op), puts(",");
+        print_op(op);
         print_expr(rhs);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
@@ -80,7 +85,7 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_PRE_UNARY: {
         token_t* op = expr.expr.unary.op;
         puts("pre-unary: " ANSI_BOLD_GREEN "{" ANSI_RESET);
-        print_indent(), printf("  op: "), print_tkn(op), puts(",");
+        print_op(op);
         print_expr(expr.expr.unary.expr);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
@@ -89,7 +94,7 @@ void print_expr(ast_expr_t* expression) {
         token_t* op = expr.expr.unary.op;
         puts("post-unary: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(expr.expr.unary.expr);
-        print_indent(), printf("  op: "), print_tkn(op), puts(",");
+        print_op(op);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
