@@ -37,9 +37,21 @@ static void print_op(token_t* op) {
         print_tkn(op), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
-static void print_grammatical_delim(token_t* delim) {
+static void print_comma() {
+    printer_do_indent(), print_indent(),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "," ANSI_BOLD_GREEN "`" ANSI_RESET
+                               ",\n"),
+        printer_deindent();
+}
+
+static void print_opening_delim(token_t* delim) {
     printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW),
-        print_tkn(delim), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+        print_tkn(delim), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+}
+
+static void print_closing_delim(token_t* delim) {
+    print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(delim),
+        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
 void print_expr(ast_expr_t* expression) {
@@ -54,7 +66,7 @@ void print_expr(ast_expr_t* expression) {
         for (size_t i = 0; i < ids.len; i++) {
             int len = (int)ids.start[i]->len;
             const char* start = ids.start[i]->start;
-            printf("%.*s", len, start);
+            printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
             if (ids.len != 1 && i != ids.len - 1) {
                 printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
             }
@@ -104,8 +116,17 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_FN_CALL:
         puts("function call: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(expr.expr.fn_call.left_expr);
-        print_grammatical_delim(expr.expr.fn_call.left_paren);
-        print_grammatical_delim(expr.expr.fn_call.right_paren);
+        print_opening_delim(expr.expr.fn_call.left_paren);
+
+        ast_slice_of_exprs_t args = expr.expr.fn_call.args;
+        for (size_t i = 0; i < args.len; i++) {
+            print_expr(args.start[i]);
+            if (i != args.len - 1) {
+                print_comma();
+            }
+        }
+
+        print_closing_delim(expr.expr.fn_call.right_paren);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     case AST_INVALID:

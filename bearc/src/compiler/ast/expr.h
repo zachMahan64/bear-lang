@@ -37,7 +37,7 @@ typedef struct ast_expr ast_expr_t;
 
 /// slice of ast_expr_t
 typedef struct {
-    ast_expr_t* start;
+    ast_expr_t** start;
     size_t len;
 } ast_slice_of_exprs_t;
 
