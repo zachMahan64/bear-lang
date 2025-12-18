@@ -2,7 +2,7 @@
 - [x] cast parsing (decide between c-style vs as)
 - [x] fn calls
 - [x] expression-statement parsing
-- [ ] subscript expr parsing
+- [x] subscript expr parsing
 - [ ] other statement parsing
 
 #### Medium-term

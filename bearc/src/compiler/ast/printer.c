@@ -20,8 +20,6 @@ static void printer_try_init(void) {
 
 static void printer_do_indent(void) { string_push_cstr(&indent_str, indent); }
 
-static const char* printer_indent(void) { return string_data(&indent_str); }
-
 static void printer_deindent(void) { string_shrink_by(&indent_str, PRINTER_INDENT_LEN); }
 
 static void print_indent(void) { printf("%s", string_data(&indent_str)); }
@@ -177,6 +175,14 @@ void print_stmt(ast_stmt_t* stmt) {
     print_indent();
     switch (stmt->type) {
     case AST_STMT_BLOCK:
+        printf("block: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
+        print_opening_delim_from_type(TOK_LBRACE);
+        for (size_t i = 0; i < stmt->stmt.block.stmts.len; i++) {
+            print_stmt(stmt->stmt.block.stmts.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RBRACE);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     case AST_STMT_MODULE_BLOCK:
     case AST_STMT_MODULE_FLAT:
     case AST_STMT_FILE:

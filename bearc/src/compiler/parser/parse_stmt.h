@@ -28,4 +28,6 @@ ast_stmt_t* parse_stmt(parser_t* p);
 
 ast_stmt_t* parse_stmt_expr(parser_t* p);
 
+ast_stmt_t* parse_stmt_block(parser_t* p);
+
 #endif

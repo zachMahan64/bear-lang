@@ -7,7 +7,6 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/parser/parse_stmt.h"
-#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parser.h"
@@ -67,7 +66,14 @@ ast_slice_of_stmts_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec) {
 
 ast_stmt_t* parser_alloc_stmt(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_stmt_t)); }
 
-ast_stmt_t* parse_stmt(parser_t* p) { return parse_stmt_expr(p); }
+ast_stmt_t* parse_stmt(parser_t* p) {
+    token_type_e first_type = parser_peek(p)->type;
+
+    if (first_type == TOK_LBRACE) {
+        return parse_stmt_block(p);
+    }
+    return parse_stmt_expr(p);
+}
 
 ast_stmt_t* parse_stmt_expr(parser_t* p) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
@@ -79,49 +85,14 @@ ast_stmt_t* parse_stmt_expr(parser_t* p) {
     return stmt;
 }
 
-/// right now this is just some placeholder logic to test the basic parser functions
-/// no ast is being raised, we're just running through the tokens
-void temp_eat(parser_t* p) {
-    token_t* tkn = NULL; // scratch token
-    while (!parser_eof(p)) {
-        tkn = parser_match_token(p, TOK_INDETERMINATE);
-        if (tkn) {
-            compiler_error_list_emplace(p->error_list, tkn, ERR_ILLEGAL_IDENTIFER);
-        }
-        // expect id or other after builtin type
-        else if (parser_match_token_call(p, &token_is_builtin_type)) {
-            tkn = parser_match_token(p, TOK_IDENTIFIER);
-            if (!tkn) {
-                tkn = parser_match_token(p, TOK_SELF_ID);
-            }
-            if (!tkn) {
-                tkn = parser_match_token(p, TOK_MUT);
-            }
-            if (!tkn) {
-                tkn = parser_match_token(p, TOK_STAR);
-            }
-            if (!tkn) {
-                tkn = parser_match_token(p, TOK_AMPER);
-            }
-            if (!tkn) {
-                tkn = parser_match_token(p, TOK_LBRACK);
-            }
-
-            if (!tkn) {
-                compiler_error_list_emplace(p->error_list, tkn = parser_eat(p),
-                                            ERR_EXPECTED_IDENTIFIER);
-            }
-
-        }
-
-        // expect type after rarrow
-        else if (parser_match_token(p, TOK_RARROW)) {
-            parser_expect_token_call(p, &token_is_builtin_type_or_id, ERR_EXPECTED_TYPE);
-        }
-
-        // just consume
-        else {
-            parser_eat(p);
-        }
-    }
+ast_stmt_t* parse_stmt_block(parser_t* p) {
+    ast_stmt_t* stmt = parser_alloc_stmt(p);
+    stmt->type = AST_STMT_BLOCK;
+    token_t* lbrace = parser_expect_token(p, TOK_LBRACE);
+    stmt->stmt.block.left_delim = lbrace;
+    stmt->stmt.block.stmts = parse_slice_of_stmts(p, TOK_RBRACE);
+    token_t* rbrace = parser_expect_token(p, TOK_RBRACE);
+    stmt->first = rbrace;
+    stmt->last = rbrace;
+    return stmt;
 }
