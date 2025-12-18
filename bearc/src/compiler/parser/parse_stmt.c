@@ -77,6 +77,7 @@ ast_stmt_t* parse_stmt(parser_t* p) {
     // parse things that have a leading expr
     ast_expr_t* leading_expr = parse_expr(p);
     first_type = parser_peek(p)->type;
+    // TODO use the token_is_type_indicator
     if (first_type == TOK_IDENTIFIER) {
         return parse_var_decl(p, leading_expr); // leading expr as type
     }

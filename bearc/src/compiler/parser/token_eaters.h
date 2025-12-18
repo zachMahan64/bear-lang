@@ -72,4 +72,6 @@ bool token_is_syncable_delim(token_type_e t);
 
 bool token_is_assignment_init(token_type_e t);
 
+bool token_is_type_indicator(token_type_e t);
+
 #endif
