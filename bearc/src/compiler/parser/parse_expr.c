@@ -88,7 +88,7 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
     }
     // failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
-    return parser_sync(p);
+    return parser_sync_expr(p);
 }
 
 ast_expr_t* parse_preunary_expr(parser_t* p) {
@@ -136,7 +136,7 @@ ast_expr_t* parse_type(parser_t* p) {
         return parse_id(p);
     }
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_TYPE);
-    return parser_sync(p);
+    return parser_sync_expr(p);
 }
 
 token_t* parse_var_name(parser_t* p) {
@@ -207,7 +207,7 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     return call_expr;
 }
 
-ast_expr_t* parser_sync(parser_t* p) {
+ast_expr_t* parser_sync_expr(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     token_t* last_tkn = first_tkn; // init in case loop never runs!
     while (!parser_eof(p)) {
@@ -218,7 +218,7 @@ ast_expr_t* parser_sync(parser_t* p) {
         last_tkn = parser_eat(p);
     }
     ast_expr_t* dummy_expr = parser_alloc_expr(p);
-    dummy_expr->type = AST_INVALID;
+    dummy_expr->type = AST_EXPR_INVALID;
     dummy_expr->first = first_tkn;
     dummy_expr->last = last_tkn;
     return dummy_expr;

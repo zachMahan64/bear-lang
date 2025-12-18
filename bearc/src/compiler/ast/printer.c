@@ -178,7 +178,7 @@ void print_expr(ast_expr_t* expression) {
         print_closing_delim(expr.expr.fn_call.right_paren);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
-    case AST_INVALID:
+    case AST_EXPR_INVALID:
         printf(ANSI_BOLD_RED "invalid expr" ANSI_RESET);
         break;
     case AST_EXPR_SUBSCRIPT:
