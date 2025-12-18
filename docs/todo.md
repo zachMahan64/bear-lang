@@ -3,6 +3,7 @@
 - [x] fn calls
 - [x] expression-statement parsing
 - [x] subscript expr parsing
+- [ ] proper type parsing (with dedicated ast_type_t nodes)
 - [ ] other statement parsing
 
 #### Medium-term

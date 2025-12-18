@@ -124,6 +124,7 @@ ast_expr_t* parse_id(parser_t* p) {
     return id_expr;
 }
 
+// TODO stop using this once actual type parsing is done
 ast_expr_t* parse_type_expr(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     if (token_is_builtin_type_or_id((first_tkn->type))) {
