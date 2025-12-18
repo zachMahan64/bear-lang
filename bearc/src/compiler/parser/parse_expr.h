@@ -34,7 +34,7 @@ ast_expr_t* parse_literal(parser_t* p);
 
 ast_expr_t* parse_id(parser_t* p);
 
-ast_expr_t* parse_type(parser_t* p);
+ast_expr_t* parse_type_expr(parser_t* p);
 
 token_t* parse_var_name(parser_t* p);
 

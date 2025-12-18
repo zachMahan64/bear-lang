@@ -34,6 +34,7 @@ set(SRC
     src/compiler/parser/rules.c
     src/compiler/parser/parse_expr.c
     src/compiler/parser/parse_stmt.c
+    src/compiler/parser/parse_type.c
     src/compiler/parser/parse_token_slice.c
     src/compiler/parser/parser.c
 

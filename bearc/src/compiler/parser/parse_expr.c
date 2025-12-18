@@ -116,21 +116,15 @@ ast_expr_t* parse_literal(parser_t* p) {
 }
 
 ast_expr_t* parse_id(parser_t* p) {
-#define PARSER_EXPR_ID_VEC_CAP 16 // pretty safe
     ast_expr_t* id_expr = parser_alloc_expr(p);
-    vector_t id_vec = vector_create_and_reserve(sizeof(token_t*), PARSER_EXPR_ID_VEC_CAP);
-    do {
-        parser_match_token(p, TOK_SCOPE_RES);
-        *((token_t**)vector_emplace_back(&id_vec)) = parser_eat(p);
-    } while (parser_peek(p)->type == TOK_SCOPE_RES);
-    id_expr->expr.id.slice = parser_freeze_token_ptr_slice(p, &id_vec);
+    id_expr->expr.id.slice = parse_token_ptr_slice(p, TOK_SCOPE_RES);
     id_expr->type = AST_EXPR_ID;
     id_expr->first = id_expr->expr.id.slice.start[0];
     id_expr->last = id_expr->expr.id.slice.start[id_expr->expr.id.slice.len - 1];
     return id_expr;
 }
 
-ast_expr_t* parse_type(parser_t* p) {
+ast_expr_t* parse_type_expr(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     if (token_is_builtin_type_or_id((first_tkn->type))) {
         return parse_id(p);
@@ -188,7 +182,8 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     call_expr->expr.fn_call.left_expr = lhs;
     call_expr->expr.fn_call.left_paren = lparen;
 
-    vector_t args_vec = vector_create_and_reserve(sizeof(ast_expr_t*), PARSER_EXPR_ID_VEC_CAP);
+#define FN_CALL_ARGS_VEC_LEN 32
+    vector_t args_vec = vector_create_and_reserve(sizeof(ast_expr_t*), FN_CALL_ARGS_VEC_LEN);
 
     // skip the args parsing loop if the struct is foo()
     if (!(parser_peek(p)->type == TOK_RPAREN)) {
@@ -208,19 +203,11 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
 }
 
 ast_expr_t* parser_sync_expr(parser_t* p) {
-    token_t* first_tkn = parser_peek(p);
-    token_t* last_tkn = first_tkn; // init in case loop never runs!
-    while (!parser_eof(p)) {
-        token_t* curr = parser_peek(p);
-        if (token_is_syncable_delim(curr->type)) {
-            break;
-        }
-        last_tkn = parser_eat(p);
-    }
+    token_range_t range = parser_sync(p);
     ast_expr_t* dummy_expr = parser_alloc_expr(p);
     dummy_expr->type = AST_EXPR_INVALID;
-    dummy_expr->first = first_tkn;
-    dummy_expr->last = last_tkn;
+    dummy_expr->first = range.first;
+    dummy_expr->last = range.last;
     return dummy_expr;
 }
 

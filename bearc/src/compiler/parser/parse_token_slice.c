@@ -7,6 +7,7 @@
 
 #include "compiler/parser/parse_token_slice.h"
 #include "compiler/parser/parser.h"
+#include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include "utils/vector.h"
 #include <string.h>
@@ -19,4 +20,14 @@ token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
     memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
     vector_destroy(vec);
     return slice;
+}
+
+token_ptr_slice_t parse_token_ptr_slice(parser_t* p, token_type_e divider) {
+#define PARSER_EXPR_ID_VEC_CAP 16 // pretty safe
+    vector_t id_vec = vector_create_and_reserve(sizeof(token_t*), PARSER_EXPR_ID_VEC_CAP);
+    do {
+        parser_match_token(p, divider);
+        *((token_t**)vector_emplace_back(&id_vec)) = parser_eat(p);
+    } while (parser_peek(p)->type == divider);
+    return parser_freeze_token_ptr_slice(p, &id_vec);
 }

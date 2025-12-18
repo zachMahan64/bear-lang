@@ -230,6 +230,11 @@ typedef struct {
     size_t len;
 } token_ptr_slice_t;
 
+typedef struct {
+    token_t* first;
+    token_t* last;
+} token_range_t;
+
 /// returns a ptr to a char-to token map, used for mono-char tokens (e.g.: +), indexed by char
 /// values!
 const unsigned char* get_char_to_token_map(void);

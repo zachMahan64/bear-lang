@@ -130,6 +130,25 @@ bool parser_eof(const parser_t* parser) {
     return tkn->type == TOK_EOF;
 }
 
+bool token_is_syncable_delim(token_type_e t);
+
+token_range_t parser_sync(parser_t* p) {
+    token_t* first_tkn = parser_peek(p);
+    token_t* last_tkn = first_tkn; // init in case loop never runs!
+    while (!parser_eof(p)) {
+        token_t* curr = parser_peek(p);
+        if (token_is_syncable_delim(curr->type)) {
+            break;
+        }
+        last_tkn = parser_eat(p);
+    }
+    token_range_t range = {
+        .first = first_tkn,
+        .last = last_tkn,
+    };
+    return range;
+}
+
 // map containing look-ups for builtin types
 static const bool parser_builtin_type_map[TOK__NUM] = {
     [TOK_CHAR] = true,     [TOK_U8] = true,    [TOK_I8] = true,  [TOK_I16] = true,

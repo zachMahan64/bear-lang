@@ -13,6 +13,7 @@ typedef enum {
     AST_TYPE_BASE,
     AST_TYPE_REF,
     AST_TYPE_PTR,
+    AST_TYPE_INVALID,
 } ast_type_e;
 
 typedef struct ast_type ast_type_t;
@@ -36,7 +37,7 @@ typedef union {
 } ast_type_u;
 
 typedef struct ast_type {
-    ast_type_u type_un;
+    ast_type_u type;
     ast_type_e tag;
     token_t* first;
     token_t* last;

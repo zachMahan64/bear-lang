@@ -53,6 +53,9 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
 // returns true when parser is at EOF
 bool parser_eof(const parser_t* parser);
 
+// sync the parser and returns a range of tokens consumed while syncing
+token_range_t parser_sync(parser_t* p);
+
 /// match helpers
 
 /// returns true when tkn type is builtin
