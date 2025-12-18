@@ -12,6 +12,7 @@
 #include "compiler/parser/rules.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
+#include "parse_token_slice.h"
 #include "utils/arena.h"
 #include "utils/vector.h"
 #include <assert.h>
@@ -20,16 +21,6 @@
 #include <string.h>
 
 #define PREC_INIT UINT8_MAX
-
-token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, vector_t* vec) {
-    token_ptr_slice_t slice = {
-        .start = (token_t**)arena_alloc(p->arena, vec->size * vec->elem_size),
-        .len = vec->size,
-    };
-    memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
-    vector_destroy(vec);
-    return slice;
-}
 
 ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec) {
     ast_slice_of_exprs_t slice = {
@@ -132,8 +123,8 @@ ast_expr_t* parse_id(parser_t* p) {
         parser_match_token(p, TOK_SCOPE_RES);
         *((token_t**)vector_emplace_back(&id_vec)) = parser_eat(p);
     } while (parser_peek(p)->type == TOK_SCOPE_RES);
-    id_expr->type = AST_EXPR_ID;
     id_expr->expr.id.slice = parser_freeze_token_ptr_slice(p, &id_vec);
+    id_expr->type = AST_EXPR_ID;
     id_expr->first = id_expr->expr.id.slice.start[0];
     id_expr->last = id_expr->expr.id.slice.start[id_expr->expr.id.slice.len - 1];
     return id_expr;
