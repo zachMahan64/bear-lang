@@ -209,11 +209,11 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
 }
 
 ast_expr_t* parser_sync(parser_t* p) {
-    token_t* first_tkn = parser_eat(p);
+    token_t* first_tkn = parser_peek(p);
     token_t* last_tkn = first_tkn; // init in case loop never runs!
     while (!parser_eof(p)) {
         token_t* curr = parser_peek(p);
-        if (curr->type == TOK_SEMICOLON || curr->type == TOK_LBRACE || curr->type == TOK_RBRACE) {
+        if (token_is_syncable_delim(curr->type)) {
             break;
         }
         last_tkn = parser_eat(p);
@@ -243,6 +243,7 @@ ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs) {
     s->expr.subscript.lhs = lhs;
     parser_expect_token(p, TOK_LBRACK);
     s->expr.subscript.subexpr = parse_expr(p);
+    printf("PEEK: %s\n", get_token_to_string_map()[parser_peek(p)->type]);
     token_t* rbrack = parser_expect_token(p, TOK_RBRACK);
     s->first = s->expr.subscript.lhs->first;
     s->last = rbrack;

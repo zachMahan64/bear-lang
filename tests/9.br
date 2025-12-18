@@ -4,4 +4,4 @@ a..b.c + std..some_call(5);
 
 call();
 
-hi[a];
+hi[];

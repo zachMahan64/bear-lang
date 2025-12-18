@@ -63,5 +63,8 @@ bool token_is_builtin_type_or_id(token_type_e t);
 bool token_is_builtin_type_mod(token_type_e t);
 /// returns true when tkn type is a literal
 bool token_is_literal(token_type_e t);
+/// returns true when tkn type is a delimiter which the parser can sync to, like a parenthesis or
+/// brace
+bool token_is_syncable_delim(token_type_e t);
 
 #endif
