@@ -128,15 +128,10 @@ ast_expr_t* parse_id(parser_t* p) {
 #define PARSER_EXPR_ID_VEC_CAP 16 // pretty safe
     ast_expr_t* id_expr = parser_alloc_expr(p);
     vector_t id_vec = vector_create_and_reserve(sizeof(token_t*), PARSER_EXPR_ID_VEC_CAP);
-    token_type_e type;
-    while (type = parser_peek(p)->type,
-           (token_is_builtin_type_or_id(type) || (type == TOK_SCOPE_RES))) {
-        if (type == TOK_SCOPE_RES) {
-            parser_eat(p);
-        } else {
-            *((token_t**)vector_emplace_back(&id_vec)) = parser_eat(p);
-        }
-    }
+    do {
+        parser_match_token(p, TOK_SCOPE_RES);
+        *((token_t**)vector_emplace_back(&id_vec)) = parser_eat(p);
+    } while (parser_peek(p)->type == TOK_SCOPE_RES);
     id_expr->type = AST_EXPR_ID;
     id_expr->expr.id.slice = parser_freeze_token_ptr_slice(p, &id_vec);
     id_expr->first = id_expr->expr.id.slice.start[0];
@@ -151,6 +146,10 @@ ast_expr_t* parse_type(parser_t* p) {
     }
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_TYPE);
     return parser_sync(p);
+}
+
+token_t* parse_var_name(parser_t* p) {
+    return parser_expect_token_with_err_code(p, TOK_IDENTIFIER, ERR_ILLEGAL_IDENTIFER);
 }
 
 static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {

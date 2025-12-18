@@ -1,6 +1,14 @@
+// tests/9.br
+
 73.0 as u8 + std..something(arg1++, --arg2);
 
 a..b.c + std..some_call(5);
 
 hi[a];
 {call();}
+
+i32 a;
+
+a = 42;
+
+i32 b = a;

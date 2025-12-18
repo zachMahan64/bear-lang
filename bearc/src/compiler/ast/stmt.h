@@ -17,10 +17,16 @@ extern "C" {
 
 typedef enum {
     // blocks
-    AST_STMT_BLOCK,        // {...} sequence of statements
+    AST_STMT_BLOCK, // {...} sequence of statements
+    AST_STMT_FILE,
+
+    // var decls
+    AST_STMT_VAR_DECL,      // type foo;
+    AST_STMT_VAR_INIT_DECL, // type foo = something;
+
+    // module stuff
     AST_STMT_MODULE_BLOCK, // AST_MODULE_NAME + AST_STMT_BLOCK
     AST_STMT_MODULE_FLAT,
-    AST_STMT_FILE,
 
     // import
     AST_STMT_IMPORT, // TOK_IMPORT + AST_MODULE_NAME
@@ -33,9 +39,6 @@ typedef enum {
                       // + return type
     AST_STMT_MT_DECL, // mt ^
     AST_STMT_DT_DECL, // dt ^
-    // var decls
-    AST_STMT_VAR_INIT_DECL, // type foo = something;
-    AST_STMT_VAR_DECL,      // type foo;
 
     // control flow
     AST_STMT_IF,     // KW_IF + condition + statement
@@ -137,16 +140,16 @@ typedef struct {
 } ast_stmt_fn_decl_t;
 
 typedef struct {
-    ast_expr_id_t* type;
-    ast_expr_id_t* id;
+    ast_expr_t* type;
+    token_t* name;
     token_t* assign_op;
     ast_expr_t* rhs;
     token_t* terminator;
 } ast_stmt_var_decl_init_t;
 
 typedef struct {
-    ast_expr_id_t* type;
-    ast_expr_id_t* id;
+    ast_expr_t* type;
+    token_t* name;
     token_t* terminator;
 } ast_stmt_var_decl_t;
 

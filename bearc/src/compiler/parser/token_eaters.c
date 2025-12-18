@@ -158,4 +158,6 @@ bool token_is_syncable_delim(token_type_e t) {
            t == TOK_RBRACK;
 }
 
+bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t == TOK_ASSIGN_EQ; }
+
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -40,6 +40,8 @@ ast_expr_t* parse_id(parser_t* p);
 
 ast_expr_t* parse_type(parser_t* p);
 
+token_t* parse_var_name(parser_t* p);
+
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec);
 
 ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs);

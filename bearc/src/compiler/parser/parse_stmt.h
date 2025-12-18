@@ -26,8 +26,10 @@ ast_stmt_t* parser_alloc_stmt(parser_t* p);
 
 ast_stmt_t* parse_stmt(parser_t* p);
 
-ast_stmt_t* parse_stmt_expr(parser_t* p);
+ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr);
 
 ast_stmt_t* parse_stmt_block(parser_t* p);
+
+ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* type);
 
 #endif

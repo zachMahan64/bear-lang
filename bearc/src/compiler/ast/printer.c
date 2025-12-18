@@ -1,4 +1,5 @@
 #include "compiler/ast/printer.h"
+#include "compiler/ast/expr.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/string.h"
@@ -35,6 +36,12 @@ static void print_tkn(token_t* tkn) {
 static void print_op(token_t* op) {
     printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_MAGENTA),
         print_tkn(op), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+}
+
+static void print_var_name(token_t* name) {
+    printer_do_indent(), print_indent(),
+        printf("name: " ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_CYAN), print_tkn(name),
+        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
 static void print_comma(void) {
@@ -75,6 +82,23 @@ static void print_terminator(token_t* term) {
     }
     print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(term),
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+}
+
+static void print_type(ast_expr_t* type) {
+    printer_do_indent();
+    print_indent();
+    token_ptr_slice_t ids = type->expr.id.slice;
+    printf("type: " ANSI_BOLD_GREEN "`" ANSI_RESET);
+    for (size_t i = 0; i < ids.len; i++) {
+        int len = (int)ids.start[i]->len;
+        const char* start = ids.start[i]->start;
+        printf(ANSI_BOLD_YELLOW "%.*s" ANSI_RESET, len, start);
+        if (ids.len != 1 && i != ids.len - 1) {
+            printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+        }
+    }
+    printf(ANSI_BOLD_GREEN "`,\n" ANSI_RESET);
+    printer_deindent();
 }
 
 void print_expr(ast_expr_t* expression) {
@@ -203,7 +227,21 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_STMT_MT_DECL:
     case AST_STMT_DT_DECL:
     case AST_STMT_VAR_INIT_DECL:
+        puts("variable initialization: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(stmt->stmt.var_init_decl.type);
+        print_var_name(stmt->stmt.var_init_decl.name);
+        print_op(stmt->stmt.var_init_decl.assign_op);
+        print_expr(stmt->stmt.var_init_decl.rhs);
+        print_terminator(stmt->stmt.var_init_decl.terminator);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     case AST_STMT_VAR_DECL:
+        puts("variable declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(stmt->stmt.var_decl.type);
+        print_var_name(stmt->stmt.var_decl.name);
+        print_terminator(stmt->stmt.var_decl.terminator);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     case AST_STMT_IF:
     case AST_STMT_ELSE:
     case AST_STMT_WHILE:
