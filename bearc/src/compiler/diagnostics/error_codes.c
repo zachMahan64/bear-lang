@@ -15,7 +15,9 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECTED_TOKEN] = "expected token: ",
         [ERR_EXPECTED_IDENTIFIER] = "expected identifier",
         [ERR_EXPECTED_TYPE] = "expected type",
-        [ERR_EXPECTED_EXPRESSION] = "expected expression"};
+        [ERR_EXPECTED_EXPRESSION] = "expected expression",
+        [ERR_EXPECTED_STATEMENT] = "expected statement",
+    };
     return error_messages[error_code];
 }
 

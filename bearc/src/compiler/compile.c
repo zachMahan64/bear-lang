@@ -50,7 +50,7 @@ int compile_file(const char* file_name) {
     // ---------------------- PARSING ---------------------
     // init error list for error tracking
     compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
-    const size_t PARSER_ARENA_CHUNK_SIZE = 0x10000;
+#define PARSER_ARENA_CHUNK_SIZE 0x20000
     arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE);
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
     ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);

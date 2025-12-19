@@ -82,6 +82,7 @@ void* arena_alloc(arena_t* arena, size_t req_size_bytes) {
     size_t new_used = aligned + req_size_bytes;
     if (new_used < aligned || new_used > curr->cap) {
         // failure/invalidate state
+        printf("[arena_alloc] alloc failed");
         return NULL;
     }
     curr->used = new_used;

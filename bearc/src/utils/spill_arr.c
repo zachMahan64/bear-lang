@@ -7,10 +7,12 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "utils/spill_arr.h"
+#include "compiler/ast/printer.h"
 #include "utils/vector.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 /// makes a spill_arr_8_t of internal default capacity
@@ -38,6 +40,8 @@ void** spill_arr_ptr_emplace(spill_arr_ptr_t* sarr) {
     return (void**)vector_emplace_back(&sarr->vec);
 }
 
+void spill_arr_ptr_push(spill_arr_ptr_t* sarr, void* ptr) { *spill_arr_ptr_emplace(sarr) = ptr; }
+
 void** spill_arr_ptr_at(spill_arr_ptr_t* sarr, size_t n) {
     if (n >= sarr->size) {
         return NULL;
@@ -58,12 +62,15 @@ void spill_arr_ptr_destroy(spill_arr_ptr_t* sarr) {
     }
 }
 
+void spill_copy(void** dest, spill_arr_ptr_t* sarr) {
+    memcpy((void*)dest, (void*)sarr->data, sarr->arr_cap * sizeof(void*));
+    memcpy((void*)(dest + sarr->arr_cap), sarr->vec.data, sarr->vec.size * sizeof(void*));
+}
+
 void spill_arr_ptr_flat_copy(void** dest, spill_arr_ptr_t* sarr) {
     if (sarr->size <= sarr->arr_cap) {
         memcpy((void*)dest, (void*)sarr->data, sarr->size * sizeof(void*));
     } else {
-        memcpy((void*)dest, (void*)sarr->data, sarr->arr_cap * sizeof(void*));
-        memcpy((void*)(dest + sarr->arr_cap), sarr->vec.data,
-               (sarr->size - sarr->arr_cap) * sizeof(void*));
+        spill_copy(dest, sarr);
     }
 }

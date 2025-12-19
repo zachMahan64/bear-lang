@@ -4,7 +4,6 @@
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/string.h"
-#include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -281,8 +280,10 @@ void print_stmt(ast_stmt_t* stmt) {
         print_opening_delim(fn.left_paren);
         print_closing_delim(fn.right_paren);
         if (fn.rarrow) {
-            print_op(fn.rarrow);
-            print_type(fn.return_type);
+            if (fn.rarrow->type == TOK_RARROW) {
+                print_op(fn.rarrow);
+                print_type(fn.return_type);
+            }
         }
         printer_do_indent();
         print_stmt(fn.block);

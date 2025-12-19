@@ -8,6 +8,7 @@
 
 #include "compiler/parser/parse_stmt.h"
 #include "compiler/ast/expr.h"
+#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parse_type.h"
@@ -15,6 +16,7 @@
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include "utils/arena.h"
+#include "utils/spill_arr.h"
 #include "utils/vector.h"
 #include <string.h>
 
@@ -46,23 +48,22 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
 }
 
 ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
-    vector_t stmt_vec =
-        vector_create_and_reserve(sizeof(ast_stmt_t*), parser_estimate_stmt_cnt(p->tokens));
+    spill_arr_ptr_t sarr = spill_arr_ptr_create();
 
-    while (!(parser_peek(p)->type == until_tkn)) {
-        *((ast_stmt_t**)vector_emplace_back(&stmt_vec)) = parse_stmt(p);
+    while (!(parser_peek(p)->type == until_tkn) && !parser_eof(p)) {
+        spill_arr_ptr_push(&sarr, parse_stmt(p));
     }
 
-    return parser_freeze_stmt_vec(p, &stmt_vec);
+    return parser_freeze_stmt_spill_arr(p, &sarr);
 }
 
-ast_slice_of_stmts_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec) {
+ast_slice_of_stmts_t parser_freeze_stmt_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
     ast_slice_of_stmts_t slice = {
-        .start = (ast_stmt_t**)arena_alloc(p->arena, vec->size * vec->elem_size),
-        .len = vec->size,
+        .start = (ast_stmt_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_stmt_t*)),
+        .len = sarr->size,
     };
-    memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
-    vector_destroy(vec);
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
+    spill_arr_ptr_destroy(sarr);
     return slice;
 }
 
@@ -88,7 +89,8 @@ static ast_stmt_t* parser_sync_stmt(parser_t* p) {
 }
 
 ast_stmt_t* parse_stmt(parser_t* p) {
-    token_type_e next_type = parser_peek(p)->type;
+    token_t* first_tkn = parser_peek(p);
+    token_type_e next_type = first_tkn->type;
 
     // parse things that lead with a token (easier)
     if (next_type == TOK_LBRACE) {
@@ -114,13 +116,21 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_var_decl(p, leading_expr, NULL); // leading expr as type
     }
 
+    if (leading_expr->type == AST_EXPR_INVALID) {
+        return parser_sync_stmt(p);
+    }
+
     return parse_stmt_expr(p, leading_expr);
 }
 
 ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
     stmt->stmt.stmt_expr.expr = expr;
-    stmt->stmt.stmt_expr.terminator = parser_expect_token(p, TOK_SEMICOLON);
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (!term) {
+        return parser_sync_stmt(p);
+    }
+    stmt->stmt.stmt_expr.terminator = term;
     stmt->type = AST_STMT_EXPR;
     stmt->first = stmt->stmt.stmt_expr.expr->first;
     stmt->last = stmt->stmt.stmt_expr.terminator;

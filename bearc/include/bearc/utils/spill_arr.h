@@ -26,6 +26,8 @@ spill_arr_ptr_t spill_arr_ptr_create(void);
 
 void** spill_arr_ptr_emplace(spill_arr_ptr_t* sarr);
 
+void spill_arr_ptr_push(spill_arr_ptr_t* sarr, void* ptr);
+
 void** spill_arr_ptr_at(spill_arr_ptr_t* sarr, size_t n);
 
 void spill_arr_ptr_destroy(spill_arr_ptr_t* sarr);
