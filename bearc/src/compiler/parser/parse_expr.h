@@ -10,12 +10,12 @@
 #define COMPILER_PARSER_EXPR_H
 #include "compiler/ast/expr.h"
 #include "compiler/parser/parser.h"
-#include "utils/vector.h"
+#include "utils/spill_arr.h"
 #include <stdint.h>
 
 /// for adding contents of the vector to the arena, and freeing the vector
 /// - vector must contain type ast_expr_t
-ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec);
+ast_slice_of_exprs_t parser_freeze_expr_spill_arr(parser_t* p, spill_arr_ptr_t* sarr);
 
 /// allocs an ast_expr_t using the parser's internal arena
 ast_expr_t* parser_alloc_expr(parser_t* p);

@@ -14,7 +14,7 @@
 #include "compiler/token.h"
 #include "parse_token_slice.h"
 #include "utils/arena.h"
-#include "utils/vector.h"
+#include "utils/spill_arr.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -22,13 +22,13 @@
 
 #define PREC_INIT UINT8_MAX
 
-ast_slice_of_exprs_t parser_freeze_expr_vec(parser_t* p, vector_t* vec) {
+ast_slice_of_exprs_t parser_freeze_expr_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
     ast_slice_of_exprs_t slice = {
-        .start = (ast_expr_t**)arena_alloc(p->arena, vec->size * vec->elem_size),
-        .len = vec->size,
+        .start = (ast_expr_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_expr_t*)),
+        .len = sarr->size,
     };
-    memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
-    vector_destroy(vec);
+    memcpy((void*)slice.start, (void*)sarr->data, sarr->size * sizeof(ast_expr_t*));
+    spill_arr_ptr_destroy(sarr);
     return slice;
 }
 
@@ -173,13 +173,12 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     call_expr->expr.fn_call.left_expr = lhs;
     call_expr->expr.fn_call.left_paren = lparen;
 
-#define FN_CALL_ARGS_VEC_LEN 32
-    vector_t args_vec = vector_create_and_reserve(sizeof(ast_expr_t*), FN_CALL_ARGS_VEC_LEN);
+    spill_arr_ptr_t args = spill_arr_ptr_create();
 
     // skip the args parsing loop if the struct is foo()
     if (!(parser_peek(p)->type == TOK_RPAREN)) {
         do {
-            *((ast_expr_t**)vector_emplace_back(&args_vec)) = parse_expr(p);
+            *((ast_expr_t**)spill_arr_ptr_emplace(&args)) = parse_expr(p);
         } while (parser_match_token(p, TOK_COMMA));
     }
 
@@ -189,7 +188,7 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     }
     call_expr->expr.fn_call.right_paren = rparen;
 
-    call_expr->expr.fn_call.args = parser_freeze_expr_vec(p, &args_vec);
+    call_expr->expr.fn_call.args = parser_freeze_expr_spill_arr(p, &args);
 
     call_expr->first = call_expr->expr.fn_call.left_expr->first;
     call_expr->last = rparen;
