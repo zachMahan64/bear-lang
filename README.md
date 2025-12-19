@@ -21,107 +21,120 @@
 bearc --help          # to see CLI usage
 ```
 #### Preview
-- Heres a preview of my AST pretty-printer as of 20251218:
+- Heres a preview of my AST pretty-printer as of 20251219:
 ```
-// tests/9.br
+// tests/11.br
 
-73.0 as u8 + std..something(arg1++, --arg2);
+fn main() {
+    foo();
+}
 
-a..b.c + std..some_call(5);
+fn foo() -> i32 { 
+    i32 a = 2;
+    a += 4;
+    b = 4;
+    c <- b;
+    return c;
+}
 
-hi[a];
-{call();}
-
-i32 a;
-
-a = 42;
-
-i32 b = a;
+fn bar() {
+    waste_effort();
+    return;
+}
 ```
 ```
-file 'tests/9.br': {
-expression-statement: {
-|   binary op: {
-|   |   binary op: {
-|   |   |   literal (doub_lit): `73.0`,
-|   |   |   `as`,
-|   |   |   identifer: `u8`,
-|   |   },
-|   |   `+`,
-|   |   function call: {
-|   |   |   identifer: `std..something`,
-|   |   |   `(`,
-|   |   |   |   post-unary: {
-|   |   |   |   |   identifer: `arg1`,
-|   |   |   |   |   `++`,
-|   |   |   |   },
-|   |   |   |   `,`,
-|   |   |   |   pre-unary: {
-|   |   |   |   |   `--`,
-|   |   |   |   |   identifer: `arg2`,
-|   |   |   |   },
-|   |   |   `)`,
-|   |   },
-|   },
-`;`,
-}
-expression-statement: {
-|   binary op: {
-|   |   binary op: {
-|   |   |   identifer: `a..b`,
-|   |   |   `.`,
-|   |   |   identifer: `c`,
-|   |   },
-|   |   `+`,
-|   |   function call: {
-|   |   |   identifer: `std..some_call`,
-|   |   |   `(`,
-|   |   |   |   literal (int_lit): `5`,
-|   |   |   `)`,
-|   |   },
-|   },
-`;`,
-}
-expression-statement: {
-|   subscript: {
-|   |   identifer: `hi`,
-|   |   `[`,
-|   |   |   identifer: `a`,
-|   |   `]`,
-|   },
-`;`,
-}
-block: {
-|   `{`,
-|   expression-statement: {
-|   |   function call: {
-|   |   |   identifer: `call`,
-|   |   |   `(`,
-|   |   |   `)`,
-|   |   },
-|   `;`,
+file 'tests/11.br': {
+function declaration: {
+|   `fn`,
+|   `main`,
+|   `(`,
+|   `)`,
+|   block: {
+|   |   `{`,
+|   |   expression-statement: {
+|   |   |   function call: {
+|   |   |   |   identifer: `foo`,
+|   |   |   |   `(`,
+|   |   |   |   `)`,
+|   |   |   },
+|   |   `;`,
+|   |   }
+|   |   `}`,
 |   }
-|   `}`,
 }
-variable declaration: {
-|   type: `i32`,
-|   name: `a`,
-`;`,
+function declaration: {
+|   `fn`,
+|   `foo`,
+|   `(`,
+|   `)`,
+|   `->`,
+|   base type: {
+|   |   `i32`,
+|   }
+|   block: {
+|   |   `{`,
+|   |   variable initialization: {
+|   |   |   base type: {
+|   |   |   |   `i32`,
+|   |   |   }
+|   |   |   name: `a`,
+|   |   |   `=`,
+|   |   |   literal (int_lit): `2`,
+|   |   `;`,
+|   |   }
+|   |   expression-statement: {
+|   |   |   binary op: {
+|   |   |   |   identifer: `a`,
+|   |   |   |   `+=`,
+|   |   |   |   literal (int_lit): `4`,
+|   |   |   },
+|   |   `;`,
+|   |   }
+|   |   expression-statement: {
+|   |   |   binary op: {
+|   |   |   |   identifer: `b`,
+|   |   |   |   `=`,
+|   |   |   |   literal (int_lit): `4`,
+|   |   |   },
+|   |   `;`,
+|   |   }
+|   |   expression-statement: {
+|   |   |   binary op: {
+|   |   |   |   identifer: `c`,
+|   |   |   |   `<-`,
+|   |   |   |   identifer: `b`,
+|   |   |   },
+|   |   `;`,
+|   |   }
+|   |   return statement: {
+|   |   |   `return`,
+|   |   |   identifer: `c`,
+|   |   `;`,
+|   |   }
+|   |   `}`,
+|   }
 }
-expression-statement: {
-|   binary op: {
-|   |   identifer: `a`,
-|   |   `=`,
-|   |   literal (int_lit): `42`,
-|   },
-`;`,
-}
-variable initialization: {
-|   type: `i32`,
-|   name: `b`,
-|   `=`,
-|   identifer: `a`,
-`;`,
+function declaration: {
+|   `fn`,
+|   `bar`,
+|   `(`,
+|   `)`,
+|   block: {
+|   |   `{`,
+|   |   expression-statement: {
+|   |   |   function call: {
+|   |   |   |   identifer: `waste_effort`,
+|   |   |   |   `(`,
+|   |   |   |   `)`,
+|   |   |   },
+|   |   `;`,
+|   |   }
+|   |   return statement: {
+|   |   |   `return`,
+|   |   `;`,
+|   |   }
+|   |   `}`,
+|   }
 }
 }
 ```
