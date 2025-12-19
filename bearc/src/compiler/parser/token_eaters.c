@@ -163,7 +163,7 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
         parser->prev_discarded = false;
         return tkn;
     }
-    if (parser->prev_discarded && parser_prev(parser)->type == match(tkn->type)) {
+    if (parser->prev_discarded && match(parser_prev(parser)->type)) {
         parser->prev_discarded = false;
         return parser_prev(parser);
     }
