@@ -4,6 +4,7 @@
 - [x] expression-statement parsing
 - [x] subscript expr parsing
 - [x] proper type parsing (with dedicated ast_type_t nodes)
+- [ ] fix right assoc bug
 - [ ] add alignof
 - [ ] parameter parsing when parsing functions
 - [ ] generic type parsing and array type parsing
