@@ -11,9 +11,12 @@
 
 #include "compiler/ast/type.h"
 #include "compiler/parser/parse_token_slice.h"
+#include "compiler/parser/parser.h"
 
 ast_type_t* parse_type_with_leading_mut(parser_t* p);
 
 ast_type_t* parse_type_with_leading_id(parser_t* p, token_ptr_slice_t id_slice);
+
+ast_type_t* parse_type(parser_t* p);
 
 #endif // ! COMPILER_PARSER_PARSE_TYPE

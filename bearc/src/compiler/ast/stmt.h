@@ -38,8 +38,6 @@ typedef enum {
     // function declarations
     AST_STMT_FN_DECL, // fn + params + (body for definitions / null for declarations)
                       // + return type
-    AST_STMT_MT_DECL, // mt ^
-    AST_STMT_DT_DECL, // dt ^
 
     // control flow
     AST_STMT_IF,     // KW_IF + condition + statement
@@ -96,15 +94,15 @@ typedef struct {
  */
 typedef struct {
     token_t* mod_tkn;
-    ast_expr_id_t* id;
+    ast_expr_t* id;
     /// NULLable if whole file should be internal to a module
-    ast_stmt_block_t* block;
+    ast_stmt_t* block;
     /// NULLable if block != NULL
 } ast_stmt_module_block_t;
 
 typedef struct {
     token_t* mod_tkn;
-    ast_expr_id_t* id;
+    ast_expr_t* id;
     /// NULLable if whole file should be internal to a module
     ast_slice_of_stmts_t statements;
     /// NULLable if block != NULL
@@ -115,7 +113,7 @@ typedef struct {
  */
 typedef struct {
     token_t* import;
-    ast_expr_id_t* file_id;
+    ast_expr_t* file_id;
 } ast_stmt_import_t;
 
 /// a statement expr, like `foo();`
@@ -129,15 +127,15 @@ typedef struct {
 typedef struct {
     /// fn, mt, or dt
     token_t* kw;
+    token_ptr_slice_t name;
     token_t* left_paren;
-    // TODO, this doesn't work since we need to worry about types
-    ast_slice_of_exprs_t args;
+    ast_slice_of_params_t params;
     token_t* right_paren;
     /// NULLable if no return type
     token_t* rarrow;
     /// NULLable if no return type
-    ast_expr_id_t* return_type;
-    ast_stmt_block_t block;
+    ast_type_t* return_type;
+    ast_stmt_t* block;
 } ast_stmt_fn_decl_t;
 
 typedef struct {

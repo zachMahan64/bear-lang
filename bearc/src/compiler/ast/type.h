@@ -45,4 +45,14 @@ typedef struct ast_type {
     token_t* last;
 } ast_type_t;
 
+typedef struct {
+    ast_type_t type;
+    token_t* name;
+} ast_param_t;
+
+typedef struct {
+    ast_param_t* start;
+    size_t len;
+} ast_slice_of_params_t;
+
 #endif // !COMPILER_AST_TYPE

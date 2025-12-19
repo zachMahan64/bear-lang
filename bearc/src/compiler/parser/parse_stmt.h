@@ -22,6 +22,10 @@ ast_slice_of_stmts_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec);
 
 ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until);
 
+/// for adding contents of the vector to the arena, and freeing the vector
+/// - vector must contain type ast_param_t
+ast_slice_of_params_t parser_freeze_params_vec(parser_t* p, vector_t* vec);
+
 ast_stmt_t* parser_alloc_stmt(parser_t* p);
 
 ast_stmt_t* parse_stmt(parser_t* p);
@@ -31,5 +35,7 @@ ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr);
 ast_stmt_t* parse_stmt_block(parser_t* p);
 
 ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr, bool leading_mut);
+
+ast_stmt_t* parse_fn_decl(parser_t* p);
 
 #endif

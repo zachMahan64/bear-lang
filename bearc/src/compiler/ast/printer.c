@@ -259,8 +259,30 @@ void print_stmt(ast_stmt_t* stmt) {
         print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_FN_DECL:
-    case AST_STMT_MT_DECL:
-    case AST_STMT_DT_DECL:
+        puts("function declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_fn_decl_t fn = stmt->stmt.fn_decl;
+        print_op(fn.kw);
+        print_indent();
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+        token_ptr_slice_t ids = fn.name;
+        for (size_t i = 0; i < ids.len; i++) {
+            int len = (int)ids.start[i]->len;
+            const char* start = ids.start[i]->start;
+            printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
+            if (ids.len != 1 && i != ids.len - 1) {
+                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+            }
+        }
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+        printf(",\n");
+        print_opening_delim(fn.left_paren);
+        print_closing_delim(fn.right_paren);
+        print_op(fn.rarrow);
+        print_type(fn.return_type);
+        printer_do_indent();
+        print_stmt(fn.block);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     case AST_STMT_VAR_INIT_DECL:
         puts("variable initialization: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_type(stmt->stmt.var_init_decl.type);
@@ -288,4 +310,5 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_MARK_DECL:
         break;
     }
+    printer_deindent();
 }

@@ -76,4 +76,6 @@ bool token_is_type_indicator(token_type_e t);
 
 bool token_is_ref_or_ptr(token_type_e t);
 
+bool token_is_function_leading_kw(token_type_e t);
+
 #endif

@@ -66,21 +66,35 @@ ast_slice_of_stmts_t parser_freeze_stmt_vec(parser_t* p, vector_t* vec) {
     return slice;
 }
 
+ast_slice_of_params_t parser_freeze_params_vec(parser_t* p, vector_t* vec) {
+    ast_slice_of_params_t slice = {
+        .start = (ast_param_t*)arena_alloc(p->arena, vec->size * vec->elem_size),
+        .len = vec->size,
+    };
+    memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
+    vector_destroy(vec);
+    return slice;
+}
+
 ast_stmt_t* parser_alloc_stmt(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_stmt_t)); }
 
 ast_stmt_t* parse_stmt(parser_t* p) {
     token_type_e next_type = parser_peek(p)->type;
 
-    // parse things that lead with a token
+    // parse things that lead with a token (easier)
     if (next_type == TOK_LBRACE) {
         return parse_stmt_block(p);
+    }
+
+    if (token_is_function_leading_kw(next_type)) {
+        return parse_fn_decl(p);
     }
 
     if (next_type == TOK_MUT) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
     }
 
-    // parse things that have a leading expr
+    // parse things that have a leading expr or identifier (trickier)
     ast_expr_t* leading_expr = parse_expr(p);
     next_type = parser_peek(p)->type;
     if (token_is_type_indicator(next_type) && leading_expr->type == AST_EXPR_ID) {
@@ -142,4 +156,20 @@ ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr, bool leading_mut) {
     stmt->first = type->first;
     stmt->last = stmt->stmt.var_decl.terminator;
     return stmt;
+}
+
+ast_stmt_t* parse_fn_decl(parser_t* p) {
+    ast_stmt_t* decl = parser_alloc_stmt(p);
+    decl->type = AST_STMT_FN_DECL;
+    decl->stmt.fn_decl.kw = parser_eat(p); // fine because we knew to enter this function
+    decl->stmt.fn_decl.name = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+    decl->stmt.fn_decl.left_paren = parser_expect_token(p, TOK_LPAREN);
+    decl->stmt.fn_decl.right_paren = parser_expect_token(p, TOK_RPAREN);
+    decl->stmt.fn_decl.rarrow = parser_expect_token(p, TOK_RARROW);
+    decl->stmt.fn_decl.return_type = parse_type(p);
+    decl->stmt.fn_decl.block = parse_stmt_block(p);
+
+    decl->first = decl->stmt.fn_decl.kw;
+    decl->last = decl->stmt.fn_decl.block->last;
+    return decl;
 }

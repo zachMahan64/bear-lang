@@ -185,4 +185,8 @@ bool token_is_type_indicator(token_type_e t) {
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }
 
+bool token_is_function_leading_kw(token_type_e t) {
+    return t == TOK_FN || t == TOK_MT || t == TOK_DT;
+}
+
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^
