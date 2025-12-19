@@ -147,8 +147,7 @@ token_t* parse_var_name(parser_t* p) {
 }
 
 static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {
-    return (is_binary_op(next_op) && (prec_binary(next_op) < prec_binary(curr_op))) ||
-           (is_binary_op(next_op) && (prec_binary(next_op) < prec_binary(curr_op)) &&
+    return (is_binary_op(next_op) && (prec_binary(next_op) < prec_binary(curr_op)) &&
             is_right_assoc_from_prec(prec_binary(curr_op)));
 }
 
