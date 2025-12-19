@@ -1,1 +1,7 @@
-fn foo() -> void {}
+fn foo() -> void {
+    i32 a = 2;
+    a += 4;
+    b = 4;
+    c <- b;
+
+}
