@@ -9,6 +9,7 @@
 #ifndef AST_STATEMENTS_H
 #define AST_STATEMENTS_H
 #include "compiler/ast/expr.h"
+#include "compiler/ast/type.h"
 #include "compiler/token.h"
 #include <stddef.h>
 #ifdef __cplusplus
@@ -140,7 +141,7 @@ typedef struct {
 } ast_stmt_fn_decl_t;
 
 typedef struct {
-    ast_expr_t* type;
+    ast_type_t* type;
     token_t* name;
     token_t* assign_op;
     ast_expr_t* rhs;
@@ -148,7 +149,7 @@ typedef struct {
 } ast_stmt_var_decl_init_t;
 
 typedef struct {
-    ast_expr_t* type;
+    ast_type_t* type;
     token_t* name;
     token_t* terminator;
 } ast_stmt_var_decl_t;

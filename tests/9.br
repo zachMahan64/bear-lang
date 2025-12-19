@@ -7,8 +7,10 @@ a..b.c + std..some_call(5);
 hi[a];
 {call();}
 
-i32 a;
+mut i32 a;
 
 a = 42;
+
+std..string my_string = "Hello, World!";
 
 i32 b = a;

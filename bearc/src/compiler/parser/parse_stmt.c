@@ -10,6 +10,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/parser/parse_expr.h"
+#include "compiler/parser/parse_type.h"
 #include "compiler/parser/parser.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
@@ -75,12 +76,15 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_block(p);
     }
 
+    if (next_type == TOK_MUT) {
+        return parse_var_decl(p, NULL, true); // leading_mut = true
+    }
+
     // parse things that have a leading expr
     ast_expr_t* leading_expr = parse_expr(p);
     next_type = parser_peek(p)->type;
-    // TODO use the token_is_type_indicator
     if (token_is_type_indicator(next_type) && leading_expr->type == AST_EXPR_ID) {
-        return parse_var_decl(p, leading_expr); // leading expr as type
+        return parse_var_decl(p, leading_expr, NULL); // leading expr as type
     }
 
     return parse_stmt_expr(p, leading_expr);
@@ -108,27 +112,34 @@ ast_stmt_t* parse_stmt_block(parser_t* p) {
     return stmt;
 }
 
-ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr) {
+ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr, bool leading_mut) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
-    token_t* name = parse_var_name(p);
 
+    ast_type_t* type;
+    if (leading_mut) {
+        type = parse_type_with_leading_mut(p);
+    } else {
+        type = parse_type_with_leading_id(p, id_expr->expr.id.slice);
+    }
+
+    token_t* name = parse_var_name(p);
     token_type_e next_type = parser_peek(p)->type;
 
     if (next_type == TOK_SEMICOLON) {
         stmt->type = AST_STMT_VAR_DECL;
-        stmt->stmt.var_decl.type = id_expr;
+        stmt->stmt.var_decl.type = type;
         stmt->stmt.var_decl.name = name;
         stmt->stmt.var_decl.terminator = parser_expect_token(p, TOK_SEMICOLON);
     } else if (token_is_assignment_init(next_type)) {
         stmt->type = AST_STMT_VAR_INIT_DECL;
-        stmt->stmt.var_decl.type = id_expr;
+        stmt->stmt.var_init_decl.type = type;
         stmt->stmt.var_init_decl.name = name;
         // we already know next type is an assignment init token
         stmt->stmt.var_init_decl.assign_op = parser_eat(p);
         stmt->stmt.var_init_decl.rhs = parse_expr(p);
         stmt->stmt.var_init_decl.terminator = parser_expect_token(p, TOK_SEMICOLON);
     }
-    stmt->first = id_expr->first;
+    stmt->first = type->first;
     stmt->last = stmt->stmt.var_decl.terminator;
     return stmt;
 }

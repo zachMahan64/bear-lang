@@ -1,5 +1,6 @@
 #include "compiler/ast/printer.h"
 #include "compiler/ast/expr.h"
+#include "compiler/ast/stmt.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/string.h"
@@ -84,20 +85,54 @@ static void print_terminator(token_t* term) {
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
 }
 
-static void print_type(ast_expr_t* type) {
+static void print_mut(void) {
+    print_indent(),
+        printf(ANSI_BOLD_GREEN "`" ANSI_BOLD_MAGENTA "mut" ANSI_BOLD_GREEN "`" ANSI_RESET ",\n");
+}
+
+static void print_type(ast_type_t* type) {
     printer_do_indent();
     print_indent();
-    token_ptr_slice_t ids = type->expr.id.slice;
-    printf("type: " ANSI_BOLD_GREEN "`" ANSI_RESET);
-    for (size_t i = 0; i < ids.len; i++) {
-        int len = (int)ids.start[i]->len;
-        const char* start = ids.start[i]->start;
-        printf(ANSI_BOLD_YELLOW "%.*s" ANSI_RESET, len, start);
-        if (ids.len != 1 && i != ids.len - 1) {
-            printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+
+    switch (type->tag) {
+    case AST_TYPE_BASE: {
+        token_ptr_slice_t ids = type->type.base.id;
+        puts("base type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_indent();
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+        for (size_t i = 0; i < ids.len; i++) {
+            int len = (int)ids.start[i]->len;
+            const char* start = ids.start[i]->start;
+            printf(ANSI_BOLD_YELLOW "%.*s" ANSI_RESET, len, start);
+            if (ids.len != 1 && i != ids.len - 1) {
+                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+            }
         }
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+        printf(",\n");
+        if (type->type.base.mut) {
+            print_mut();
+        }
+        printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     }
-    printf(ANSI_BOLD_GREEN "`,\n" ANSI_RESET);
+    case AST_TYPE_REF_PTR: {
+        puts("ref/ptr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(type->type.ref.inner);
+        print_op(type->type.ref.modifier);
+        if (type->type.ref.mut) {
+            printer_do_indent();
+            print_mut();
+            printer_deindent();
+        }
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
+    }
+    case AST_TYPE_INVALID:
+        break;
+    }
     printer_deindent();
 }
 

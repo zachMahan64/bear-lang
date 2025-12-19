@@ -9,10 +9,12 @@
 #include "compiler/token.h"
 #include <stdbool.h>
 
+#ifndef COMPILER_AST_TYPE
+#define COMPILER_AST_TYPE
+
 typedef enum {
     AST_TYPE_BASE,
-    AST_TYPE_REF,
-    AST_TYPE_PTR,
+    AST_TYPE_REF_PTR,
     AST_TYPE_INVALID,
 } ast_type_e;
 
@@ -42,3 +44,5 @@ typedef struct ast_type {
     token_t* first;
     token_t* last;
 } ast_type_t;
+
+#endif // !COMPILER_AST_TYPE

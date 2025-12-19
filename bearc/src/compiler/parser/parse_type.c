@@ -28,10 +28,9 @@ ast_type_t* parser_sync_type(parser_t* p) {
 static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_slice_t id_slice) {
     ast_type_t* base = parser_alloc_type(p);
     // handle pre-mut
-    base->type.base.mut = pre_mut;
-    token_t* mut_tkn = NULL;
+    token_t* pre_mut_tkn = NULL;
     if (pre_mut) {
-        mut_tkn = parser_eat(p);
+        pre_mut_tkn = parser_eat(p);
         base->type.base.id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
     } else {
         // base id must already be parsed and passed in
@@ -40,17 +39,21 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
     // handle post-mut
     bool post_mut = parser_match_token(p, TOK_MUT); // optionally consume post-mut as bool
 
+    base->type.base.mut = pre_mut || post_mut;
+
     // handle tkn ordering due to mut order
-    base->type.base.mut = post_mut;
     if (post_mut && !pre_mut) {
         base->first = base->type.base.id.start[0];
         base->last = parser_prev(p); // gets post mut token
     } else if (post_mut && pre_mut) {
-        assert(mut_tkn != NULL && "[parse_type_base] mut_tkn must not be NULL");
-        base->first = mut_tkn;
+        assert(pre_mut_tkn != NULL && "[parse_type_base] mut_tkn must not be NULL");
+        base->first = pre_mut_tkn;
         base->last = parser_prev(p); // gets post mut token
-    } else {
+    } else if (!post_mut && !pre_mut) {
         base->first = base->type.base.id.start[0];
+        base->last = base->type.base.id.start[base->type.base.id.len - 1];
+    } else {
+        base->first = pre_mut_tkn;
         base->last = base->type.base.id.start[base->type.base.id.len - 1];
     }
     base->tag = AST_TYPE_BASE;
@@ -58,7 +61,7 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
 }
 
 ast_type_t* parse_type_base_with_leading_id(parser_t* p, token_ptr_slice_t id_slice) {
-    return parse_type_base_impl(p, true, id_slice);
+    return parse_type_base_impl(p, false, id_slice);
 }
 
 ast_type_t* parse_type_base_with_leading_mut(parser_t* p) {
@@ -66,21 +69,28 @@ ast_type_t* parse_type_base_with_leading_mut(parser_t* p) {
     return parse_type_base_impl(p, true, dummy);
 }
 
+ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner);
+
 static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bool has_leading_id) {
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
 
-    ast_type_t* base = NULL;
+    ast_type_t* inner = NULL;
 
     if (has_leading_id) {
-        base = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
+        inner = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
     } else if (first_type == TOK_MUT) {
-        base = parse_type_base_with_leading_mut(p);
+        inner = parse_type_base_with_leading_mut(p);
     } else {
         leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
-        base = parse_type_base_with_leading_id(p, leading_id);
+        inner = parse_type_base_with_leading_id(p, leading_id);
     }
-    // TODO parse refs & qualifiers from base
+    while (token_is_ref_or_ptr(parser_peek(p)->type)) {
+        inner = parse_type_ref(p, inner);
+    }
+    if (inner) {
+        return inner;
+    }
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_TYPE);
     return parser_sync_type(p);
 }
@@ -97,5 +107,21 @@ ast_type_t* parse_type_with_leading_mut(parser_t* p) {
 // TODO
 ast_type_t* parse_type(parser_t* p) {
     token_ptr_slice_t dummy = {.start = NULL, .len = 0};
-    return parse_type_impl(p, dummy, false);
+    return parse_type_impl(p, dummy, false); //! has_leading_id
+}
+
+ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner) {
+    ast_type_t* outer = parser_alloc_type(p);
+    outer->type.ref.modifier = parser_eat(p); // definitely fine because we know to be in this func
+    outer->type.ref.mut = parser_match_token(p, TOK_MUT); // match into bool
+    if (inner->tag == AST_TYPE_BASE) {
+        outer->type.ref.canonical_base = inner;
+    } else {
+        outer->type.ref.canonical_base = inner->type.ref.canonical_base;
+    }
+    outer->type.ref.inner = inner;
+    outer->tag = AST_TYPE_REF_PTR;
+    outer->first = inner->first;
+    outer->last = parser_prev(p);
+    return outer;
 }

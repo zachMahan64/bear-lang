@@ -74,4 +74,6 @@ bool token_is_assignment_init(token_type_e t);
 
 bool token_is_type_indicator(token_type_e t);
 
+bool token_is_ref_or_ptr(token_type_e t);
+
 #endif
