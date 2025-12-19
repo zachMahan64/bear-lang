@@ -8,4 +8,7 @@
 
 #include "compiler/ast/type.h"
 #include "compiler/parser/parse_token_slice.h"
-#include "compiler/parser/token_eaters.h"
+
+ast_type_t* parse_type_with_leading_mut(parser_t* p);
+
+ast_type_t* parse_type_with_leading_id(parser_t* p, token_ptr_slice_t id_slice);
