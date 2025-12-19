@@ -1,3 +1,8 @@
-i32 a = 12;
+fn waste_effort() {
+    ;
+    ;
+    ; 
+    a
+}
 
-;
+fn bob() {}

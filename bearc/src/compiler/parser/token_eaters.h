@@ -18,9 +18,16 @@
 /// consume a token
 token_t* parser_eat(parser_t* parser);
 
+/// discard/toss out a token
+void parser_toss(parser_t* p);
+
 /// peek current uneaten token without consuming it
 token_t* parser_peek(parser_t* parser);
 
+/// peek current uneaten token only if it matches the specified type
+token_t* parser_peek_match(parser_t* parser, token_type_e type);
+
+/// peek a specified number of tokens ahead
 token_t* parser_peek_n(parser_t* parser, size_t n);
 
 /// see last eaten token
@@ -30,6 +37,9 @@ token_t* parser_prev(parser_t* parser);
  * \return token_t* to consumed token or NULL if not matched
  */
 token_t* parser_match_token(parser_t* parser, token_type_e type);
+
+/// match prev token only if it was tossed
+token_t* parser_match_tossed(parser_t* parser, token_type_e type);
 
 /**
  * peek then conditionally eat based on a match function call, which takes a token_type_e and

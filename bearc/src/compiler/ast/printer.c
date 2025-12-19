@@ -328,8 +328,9 @@ void print_stmt(ast_stmt_t* stmt) {
         puts(ANSI_BOLD_RED "invalid statement" ANSI_RESET);
         break;
     case AST_STMT_EMPTY:
-        puts("emptys statement:");
+        puts("empty statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_terminator(stmt->stmt.empty.terminator);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     }
 }

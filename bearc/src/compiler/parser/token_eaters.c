@@ -23,8 +23,14 @@ token_t* parser_eat(parser_t* parser) {
     token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type != TOK_EOF) {
         parser->pos++;
+        parser->prev_discarded = false;
     }
     return tkn;
+}
+
+void parser_toss(parser_t* p) {
+    parser_eat(p);
+    p->prev_discarded = true;
 }
 
 // peek current uneaten token without consuming it
@@ -50,19 +56,38 @@ token_t* parser_prev(parser_t* parser) {
     return tkn;
 }
 
+/**
+ * undiscards the last tossed token if it matches, think of this like a reverse match, but safe,
+ * since it will only fire if the last token was certainly tossed an not used
+ */
+token_t* parser_match_tossed(parser_t* parser, token_type_e type) {
+    if (parser->prev_discarded && parser_prev(parser)->type == type) {
+        parser->prev_discarded = false;
+        --parser->pos;
+        return parser_prev(parser);
+    }
+    return NULL;
+}
+
+token_t* parser_peek_match(parser_t* parser, token_type_e type) {
+    token_t* tkn = vector_at(parser->tokens, parser->pos);
+    if (tkn->type == type && type != TOK_EOF) {
+        return tkn;
+    }
+    return parser_match_tossed(parser, type); // NULL or good if match
+}
+
 /*
  * peek then conditionally eat
  * \return token_t* to consumed token or NULL if not matched
  */
 token_t* parser_match_token(parser_t* parser, token_type_e type) {
-    token_t* tkn = vector_at(parser->tokens, parser->pos);
-    if (tkn->type == type) {
-        if (tkn->type != TOK_EOF) {
-            parser->pos++;
-        }
-        return tkn;
+    token_t* tkn = parser_peek_match(parser, type);
+    if (tkn) {
+        ++parser->pos;
+        parser->prev_discarded = false; // ensure
     }
-    return NULL;
+    return tkn;
 }
 
 //------------- match forward decls --------------
@@ -70,7 +95,7 @@ bool token_is_builtin_type(token_type_e t);
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-/*
+/**
  * peek then conditionally eat based on a match function call, which takes a token_type_e and
  * returns bool if valid, else false
  * \return token_t* to consumed token or NULL if not matched
@@ -80,6 +105,7 @@ token_t* parser_match_token_call(parser_t* parser, bool (*match)(token_type_e)) 
     if (match(tkn->type)) {
         if (tkn->type != TOK_EOF) {
             parser->pos++;
+            parser->prev_discarded = false;
         }
         return tkn;
     }
@@ -91,7 +117,18 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
     token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type == expected_type) {
         parser->pos++;
+        parser->prev_discarded = false;
         return tkn;
+    }
+    if (expected_type == TOK_RBRACE) {
+        printf("EXPECTEDING '}', previous: %s\n",
+               get_token_to_string_map()[parser_prev(parser)->type]);
+        printf("prev_discarded: %d\n", parser->prev_discarded);
+    }
+    if (parser->prev_discarded && parser_prev(parser)->type == expected_type) {
+        parser->prev_discarded = false;
+        printf("taking discarded prev!");
+        return parser_prev(parser);
     }
     compiler_error_list_emplace_expected_token(parser->error_list, tkn, ERR_EXPECTED_TOKEN,
                                                expected_type);
@@ -105,7 +142,12 @@ token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expect
     token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (tkn->type == expected_type) {
         parser->pos++;
+        parser->prev_discarded = false;
         return tkn;
+    }
+    if (parser->prev_discarded && parser_prev(parser)->type == expected_type) {
+        parser->prev_discarded = false;
+        return parser_prev(parser);
     }
     compiler_error_list_emplace(parser->error_list, tkn, code);
     return NULL;
@@ -118,7 +160,12 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
     token_t* tkn = vector_at(parser->tokens, parser->pos);
     if (match(tkn->type)) {
         parser->pos++;
+        parser->prev_discarded = false;
         return tkn;
+    }
+    if (parser->prev_discarded && parser_prev(parser)->type == match(tkn->type)) {
+        parser->prev_discarded = false;
+        return parser_prev(parser);
     }
     compiler_error_list_emplace(parser->error_list, tkn, code);
     return NULL;
@@ -131,6 +178,7 @@ bool parser_eof(const parser_t* parser) {
 }
 
 bool token_is_syncable_delim(token_type_e t);
+bool token_is_closing_region_delim(token_type_e t);
 
 token_range_t parser_sync(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
@@ -140,11 +188,14 @@ token_range_t parser_sync(parser_t* p) {
         if (token_is_syncable_delim(curr->type)) {
             break;
         }
-        last_tkn = parser_eat(p);
+        parser_toss(p);
+        last_tkn = parser_prev(p);
     }
-    // prevents stalling infinitely!
+    // prevents stalling infinitely when the parser's handling is incomplete, but results in
+    // otherwise worse recovery
+    // TODO remove this guard or narrow down which tokens it is necessary for ASAP
     if (first_tkn == last_tkn) {
-        parser_eat(p);
+        parser_toss(p);
     }
     token_range_t range = {
         .first = first_tkn,
@@ -177,10 +228,16 @@ bool token_is_literal(token_type_e t) {
            t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT;
 }
 
+bool token_is_function_leading_kw(token_type_e t) {
+    return t == TOK_FN || t == TOK_MT || t == TOK_DT;
+}
+
 bool token_is_syncable_delim(token_type_e t) {
     return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
-           t == TOK_RBRACK;
+           t == TOK_RBRACK || token_is_function_leading_kw(t);
 }
+
+bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }
 
 bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t == TOK_ASSIGN_EQ; }
 
@@ -189,9 +246,5 @@ bool token_is_type_indicator(token_type_e t) {
 }
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }
-
-bool token_is_function_leading_kw(token_type_e t) {
-    return t == TOK_FN || t == TOK_MT || t == TOK_DT;
-}
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^

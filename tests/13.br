@@ -1,0 +1,22 @@
+fn bar() {
+    i32 a = 5;
+    var b <- a;
+}
+
+i32 a = 12;
+
+;
+
+fn main() -> i32 {
+    return foo();
+}
+
+fn foo() -> i32 {
+    ;
+    ;
+    ;
+    waste_effort();
+    waste_more_effort();
+    return 42;
+}
+

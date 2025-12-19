@@ -10,6 +10,7 @@
 #define COMPILER_PARSER_H
 #include "compiler/diagnostics/error_list.h"
 #include "utils/arena.h"
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +28,7 @@ typedef struct {
     size_t pos;
     arena_t* arena;
     compiler_error_list_t* error_list;
+    bool prev_discarded;
 } parser_t;
 
 parser_t parser_create(vector_t* tokens, arena_t* arena, compiler_error_list_t* error_list);

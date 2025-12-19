@@ -50,7 +50,10 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
 ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
     spill_arr_ptr_t sarr = spill_arr_ptr_create();
 
-    while (!(parser_peek(p)->type == until_tkn) && !parser_eof(p)) {
+    while (!(parser_peek(p)->type == until_tkn)  // while curr uneaten != until (intended behavior)
+           && !parser_match_tossed(p, until_tkn) // while prev tossed != until (edge-case handling)
+           && !parser_eof(p)                     // while !eof (edge-case handling)
+    ) {
         spill_arr_ptr_push(&sarr, parse_stmt(p));
     }
 
@@ -128,10 +131,11 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         leading_expr = parse_expr(p);
     }
 
+    // handle invalid leading expr
     if (leading_expr->type == AST_EXPR_INVALID) {
         return parser_sync_stmt(p);
     }
-
+    // else interpret as expression-statement
     return parse_stmt_expr(p, leading_expr);
 }
 
@@ -145,7 +149,7 @@ ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr) {
     stmt->stmt.stmt_expr.terminator = term;
     stmt->type = AST_STMT_EXPR;
     stmt->first = stmt->stmt.stmt_expr.expr->first;
-    stmt->last = stmt->stmt.stmt_expr.terminator;
+    stmt->last = term;
     return stmt;
 }
 
@@ -187,7 +191,11 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
         stmt->type = AST_STMT_VAR_DECL;
         stmt->stmt.var_decl.type = type;
         stmt->stmt.var_decl.name = name;
-        stmt->stmt.var_decl.terminator = parser_expect_token(p, TOK_SEMICOLON);
+        token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+        if (!term) {
+            return parser_sync_stmt(p);
+        }
+        stmt->stmt.var_decl.terminator = term;
     } else if (token_is_assignment_init(next_type)) {
         stmt->type = AST_STMT_VAR_INIT_DECL;
         stmt->stmt.var_init_decl.type = type;
@@ -195,7 +203,11 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
         // we already know next type is an assignment init token
         stmt->stmt.var_init_decl.assign_op = parser_eat(p);
         stmt->stmt.var_init_decl.rhs = parse_expr(p);
-        stmt->stmt.var_init_decl.terminator = parser_expect_token(p, TOK_SEMICOLON);
+        token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+        if (!term) {
+            return parser_sync_stmt(p);
+        }
+        stmt->stmt.var_init_decl.terminator = term;
     }
     stmt->first = type->first;
     stmt->last = stmt->stmt.var_decl.terminator;
