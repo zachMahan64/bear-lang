@@ -5,4 +5,7 @@ fn waste_effort() {
     a
 }
 
-fn bob() {}
+fn bar() {
+    usize;
+    i32
+}
