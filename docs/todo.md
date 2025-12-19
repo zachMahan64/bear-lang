@@ -5,7 +5,7 @@
 - [x] subscript expr parsing
 - [x] proper type parsing (with dedicated ast_type_t nodes)
 - [ ] parameter parsing when parsing functions
-- [ ] generic type parsing
+- [ ] generic type parsing and array type parsing
 - [ ] other statement parsing
 
 #### Medium-term
