@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 /// makes a spill_arr_8_t of internal default capacity
 spill_arr_ptr_t spill_arr_ptr_create(void) {
@@ -54,5 +55,15 @@ void** spill_arr_ptr_at(spill_arr_ptr_t* sarr, size_t n) {
 void spill_arr_ptr_destroy(spill_arr_ptr_t* sarr) {
     if (sarr->size > sarr->arr_cap) {
         vector_destroy(&sarr->vec);
+    }
+}
+
+void spill_arr_ptr_flat_copy(void** dest, spill_arr_ptr_t* sarr) {
+    if (sarr->size <= sarr->arr_cap) {
+        memcpy((void*)dest, (void*)sarr->data, sarr->size * sizeof(void*));
+    } else {
+        memcpy((void*)dest, (void*)sarr->data, sarr->arr_cap * sizeof(void*));
+        memcpy((void*)(dest + sarr->arr_cap), sarr->vec.data,
+               (sarr->size - sarr->arr_cap) * sizeof(void*));
     }
 }

@@ -27,7 +27,7 @@ ast_slice_of_exprs_t parser_freeze_expr_spill_arr(parser_t* p, spill_arr_ptr_t* 
         .start = (ast_expr_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_expr_t*)),
         .len = sarr->size,
     };
-    memcpy((void*)slice.start, (void*)sarr->data, sarr->size * sizeof(ast_expr_t*));
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
     spill_arr_ptr_destroy(sarr);
     return slice;
 }

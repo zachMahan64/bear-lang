@@ -30,4 +30,6 @@ void** spill_arr_ptr_at(spill_arr_ptr_t* sarr, size_t n);
 
 void spill_arr_ptr_destroy(spill_arr_ptr_t* sarr);
 
+void spill_arr_ptr_flat_copy(void** dest, spill_arr_ptr_t* sarr);
+
 #endif // !UTILS_SPILL_ARR
