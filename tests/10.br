@@ -1,1 +1,7 @@
-mut i32 & mut a;
+mut i32& mut a;
+
+mut str && b = &b;
+
+mysuperlongandannoyingspace..mysuperlongandannoyingname a;
+
+var b = &a;
