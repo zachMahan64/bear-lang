@@ -191,9 +191,6 @@ token_range_t parser_sync(parser_t* p) {
         parser_toss(p);
         last_tkn = parser_prev(p);
     }
-    // prevents stalling infinitely when the parser's handling is incomplete, but results in
-    // otherwise worse recovery
-    // TODO remove this guard or narrow down which tokens it is necessary for ASAP
     if (first_tkn == last_tkn) {
         parser_toss(p);
     }
