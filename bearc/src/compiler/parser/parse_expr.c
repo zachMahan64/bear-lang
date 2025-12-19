@@ -184,6 +184,9 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     }
 
     token_t* rparen = parser_expect_token(p, TOK_RPAREN);
+    if (!rparen) {
+        return parser_sync_expr(p);
+    }
     call_expr->expr.fn_call.right_paren = rparen;
 
     call_expr->expr.fn_call.args = parser_freeze_expr_vec(p, &args_vec);
@@ -208,7 +211,12 @@ ast_expr_t* parse_grouping(parser_t* p) {
     token_t* lparen = parser_eat(p);
     grouping->expr.grouping.left_paren = lparen;
     grouping->expr.grouping.expr = parse_expr(p);
-    grouping->expr.grouping.right_paren = parser_expect_token(p, TOK_RPAREN);
+    token_t* rparen = parser_expect_token(p, TOK_RPAREN);
+    if (!rparen) {
+        return parser_sync_expr(p);
+    }
+
+    grouping->expr.grouping.right_paren = rparen;
     grouping->first = lparen;
     grouping->last = grouping->expr.grouping.right_paren;
     return grouping;
@@ -218,9 +226,15 @@ ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs) {
     ast_expr_t* s = parser_alloc_expr(p);
     s->type = AST_EXPR_SUBSCRIPT;
     s->expr.subscript.lhs = lhs;
-    parser_expect_token(p, TOK_LBRACK);
+    token_t* lbrack = parser_expect_token(p, TOK_LBRACK);
+    if (!lbrack) {
+        return parser_sync_expr(p);
+    }
     s->expr.subscript.subexpr = parse_expr(p);
     token_t* rbrack = parser_expect_token(p, TOK_RBRACK);
+    if (!rbrack) {
+        return parser_sync_expr(p);
+    }
     s->first = s->expr.subscript.lhs->first;
     s->last = rbrack;
     return s;

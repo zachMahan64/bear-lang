@@ -53,6 +53,7 @@ typedef enum {
     // marks
     AST_MARK_PREAMBLE,
     AST_MARK_DECL, // mark Name { functions }
+    AST_STMT_INVALID,
 } ast_stmt_type_e;
 
 // forward decls ~~~~~~~~~~~~~~~~~~

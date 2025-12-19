@@ -78,6 +78,15 @@ ast_slice_of_params_t parser_freeze_params_vec(parser_t* p, vector_t* vec) {
 
 ast_stmt_t* parser_alloc_stmt(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_stmt_t)); }
 
+static ast_stmt_t* parser_sync_stmt(parser_t* p) {
+    token_range_t range = parser_sync(p);
+    ast_stmt_t* dummy_stmt = parser_alloc_stmt(p);
+    dummy_stmt->type = AST_STMT_INVALID;
+    dummy_stmt->first = range.first;
+    dummy_stmt->last = range.last;
+    return dummy_stmt;
+}
+
 ast_stmt_t* parse_stmt(parser_t* p) {
     token_type_e next_type = parser_peek(p)->type;
 
@@ -118,9 +127,15 @@ ast_stmt_t* parse_stmt_block(parser_t* p) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
     stmt->type = AST_STMT_BLOCK;
     token_t* lbrace = parser_expect_token(p, TOK_LBRACE);
+    if (!lbrace) {
+        return parser_sync_stmt(p);
+    }
     stmt->stmt.block.left_delim = lbrace;
     stmt->stmt.block.stmts = parse_slice_of_stmts(p, TOK_RBRACE);
     token_t* rbrace = parser_expect_token(p, TOK_RBRACE);
+    if (!rbrace) {
+        return parser_sync_stmt(p);
+    }
     stmt->first = lbrace;
     stmt->last = rbrace;
     return stmt;
@@ -163,10 +178,24 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     decl->type = AST_STMT_FN_DECL;
     decl->stmt.fn_decl.kw = parser_eat(p); // fine because we knew to enter this function
     decl->stmt.fn_decl.name = parse_token_ptr_slice(p, TOK_SCOPE_RES);
-    decl->stmt.fn_decl.left_paren = parser_expect_token(p, TOK_LPAREN);
-    decl->stmt.fn_decl.right_paren = parser_expect_token(p, TOK_RPAREN);
-    decl->stmt.fn_decl.rarrow = parser_expect_token(p, TOK_RARROW);
-    decl->stmt.fn_decl.return_type = parse_type(p);
+
+    token_t* lparen = parser_expect_token(p, TOK_LPAREN);
+    if (!lparen) {
+        return parser_sync_stmt(p);
+    }
+    decl->stmt.fn_decl.left_paren = lparen;
+
+    token_t* rparen = parser_expect_token(p, TOK_RPAREN);
+    if (!rparen) {
+        return parser_sync_stmt(p);
+    }
+    decl->stmt.fn_decl.right_paren = rparen;
+
+    token_t* rarrow = parser_match_token(p, TOK_RARROW);
+    if (rarrow) {
+        decl->stmt.fn_decl.rarrow = rarrow;
+        decl->stmt.fn_decl.return_type = parse_type(p);
+    }
     decl->stmt.fn_decl.block = parse_stmt_block(p);
 
     decl->first = decl->stmt.fn_decl.kw;

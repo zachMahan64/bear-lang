@@ -214,7 +214,7 @@ void print_expr(ast_expr_t* expression) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     case AST_EXPR_INVALID:
-        printf(ANSI_BOLD_RED "invalid expr" ANSI_RESET);
+        printf(ANSI_BOLD_RED "invalid expression" ANSI_RESET);
         break;
     case AST_EXPR_SUBSCRIPT:
         puts("subscript: " ANSI_BOLD_GREEN "{" ANSI_RESET);
@@ -279,8 +279,10 @@ void print_stmt(ast_stmt_t* stmt) {
         printf(",\n");
         print_opening_delim(fn.left_paren);
         print_closing_delim(fn.right_paren);
-        print_op(fn.rarrow);
-        print_type(fn.return_type);
+        if (fn.rarrow) {
+            print_op(fn.rarrow);
+            print_type(fn.return_type);
+        }
         printer_do_indent();
         print_stmt(fn.block);
         printer_deindent();
@@ -311,6 +313,8 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_STMT_STRUCT_DEF:
     case AST_MARK_PREAMBLE:
     case AST_MARK_DECL:
+    case AST_STMT_INVALID:
+        puts(ANSI_BOLD_RED "invalid statement" ANSI_RESET);
         break;
     }
 }
