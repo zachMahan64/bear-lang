@@ -9,3 +9,10 @@ fn bar() {
     usize;
     i32
 }
+
+fn foo() {
+    i32 a;
+    var b;
+    var c;
+    c <- b <- a;
+}
