@@ -24,16 +24,16 @@ spill_arr_ptr_t spill_arr_ptr_create(void) {
 }
 
 void** spill_arr_ptr_emplace(spill_arr_ptr_t* sarr) {
-    // emplace into internal buffer unless size >= cap
-    if (sarr->size < sarr->arr_cap) {
-        ++sarr->size;
-        return (sarr->data + (sarr->size - 1));
+    size_t idx = sarr->size++;
+
+    if (idx < sarr->arr_cap) {
+        return sarr->data + idx;
     }
-    ++sarr->size;
-    // critical point
-    if (sarr->size == sarr->arr_cap) {
+
+    if (idx == sarr->arr_cap) {
         sarr->vec = vector_create_and_reserve(sizeof(void*), SPILL_ARR_SIZE_8_T_ARR_CAP);
     }
+
     return (void**)vector_emplace_back(&sarr->vec);
 }
 
@@ -52,8 +52,7 @@ void** spill_arr_ptr_at(spill_arr_ptr_t* sarr, size_t n) {
 }
 
 void spill_arr_ptr_destroy(spill_arr_ptr_t* sarr) {
-    if (sarr->size < sarr->arr_cap) {
-        return;
+    if (sarr->size > sarr->arr_cap) {
+        vector_destroy(&sarr->vec);
     }
-    vector_destroy(&sarr->vec);
 }
