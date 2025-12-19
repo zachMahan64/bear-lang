@@ -41,4 +41,6 @@ ast_stmt_t* parse_fn_decl(parser_t* p);
 
 ast_stmt_t* parse_stmt_return(parser_t* p);
 
+ast_stmt_t* parse_stmt_empty(parser_t* p);
+
 #endif

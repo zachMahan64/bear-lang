@@ -35,6 +35,9 @@ typedef enum {
     // statement expr
     AST_STMT_EXPR,
 
+    // statement empty
+    AST_STMT_EMPTY,
+
     // function declarations
     AST_STMT_FN_DECL, // fn + params + (body for definitions / null for declarations)
                       // + return type
@@ -214,6 +217,10 @@ typedef struct {
     token_t* right_bracket;
 } ast_stmt_mark_preamble_t;
 
+typedef struct {
+    token_t* terminator;
+} ast_stmt_empty_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// union of all stmt types
@@ -236,6 +243,7 @@ typedef union {
     ast_stmt_struct_decl_t struct_decl;
     ast_stmt_mark_decl_t mark_decl;
     ast_stmt_mark_preamble_t mark_preamble;
+    ast_stmt_empty_t empty;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

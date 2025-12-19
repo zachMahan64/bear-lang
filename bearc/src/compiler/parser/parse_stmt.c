@@ -108,6 +108,11 @@ ast_stmt_t* parse_stmt(parser_t* p) {
     if (next_type == TOK_RETURN) {
         return parse_stmt_return(p);
     }
+
+    if (next_type == TOK_SEMICOLON) {
+        return parse_stmt_empty(p);
+    }
+
     ast_expr_t* leading_expr = NULL;
     // parse things with a leading id (varname or type)
     if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
@@ -244,4 +249,14 @@ ast_stmt_t* parse_stmt_return(parser_t* p) {
     ret_stmt->first = ret_stmt->stmt.return_stmt.return_tkn;
     ret_stmt->last = term;
     return ret_stmt;
+}
+
+ast_stmt_t* parse_stmt_empty(parser_t* p) {
+    ast_stmt_t* empty = parser_alloc_stmt(p);
+    empty->type = AST_STMT_EMPTY;
+    token_t* term = parser_eat(p); // fine becuz we knew to enter this function
+    empty->stmt.empty.terminator = term;
+    empty->first = term;
+    empty->last = term;
+    return empty;
 }

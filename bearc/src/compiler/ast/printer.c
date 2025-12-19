@@ -327,5 +327,9 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_STMT_INVALID:
         puts(ANSI_BOLD_RED "invalid statement" ANSI_RESET);
         break;
+    case AST_STMT_EMPTY:
+        puts("emptys statement:");
+        print_terminator(stmt->stmt.empty.terminator);
+        break;
     }
 }
