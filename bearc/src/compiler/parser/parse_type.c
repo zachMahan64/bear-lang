@@ -11,6 +11,7 @@
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 ast_type_t* parser_alloc_type(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_type_t)); }
@@ -68,7 +69,9 @@ ast_type_t* parse_type_base_with_leading_mut(parser_t* p) {
 static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bool has_leading_id) {
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
+
     ast_type_t* base = NULL;
+
     if (has_leading_id) {
         base = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
     } else if (first_type == TOK_MUT) {
@@ -92,4 +95,7 @@ ast_type_t* parse_type_with_leading_mut(parser_t* p) {
 }
 
 // TODO
-// ast_type_t* parse_type(parser_t* p) { return parse_type_impl(p, ) }
+ast_type_t* parse_type(parser_t* p) {
+    token_ptr_slice_t dummy = {.start = NULL, .len = 0};
+    return parse_type_impl(p, dummy, false);
+}
