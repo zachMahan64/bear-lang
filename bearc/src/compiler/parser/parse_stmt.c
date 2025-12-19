@@ -8,8 +8,8 @@
 
 #include "compiler/parser/parse_stmt.h"
 #include "compiler/ast/expr.h"
-#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
+#include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parse_type.h"
 #include "compiler/parser/parser.h"
@@ -108,12 +108,19 @@ ast_stmt_t* parse_stmt(parser_t* p) {
     if (next_type == TOK_RETURN) {
         return parse_stmt_return(p);
     }
+    ast_expr_t* leading_expr = NULL;
+    // parse things with a leading id (varname or type)
+    if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
 
-    // parse things that have a leading expr or identifier (trickier)
-    ast_expr_t* leading_expr = parse_expr(p);
-    next_type = parser_peek(p)->type;
-    if (token_is_type_indicator(next_type) && leading_expr->type == AST_EXPR_ID) {
-        return parse_var_decl(p, leading_expr, NULL); // leading expr as type
+        token_ptr_slice_t leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+        next_type = parser_peek(p)->type;
+        if (token_is_type_indicator(next_type)) {
+            return parse_var_decl(p, &leading_id, NULL);
+        }
+        leading_expr = parse_expr_from_id_slice(p, leading_id);
+    } else {
+        // parse things that have a leading expr
+        leading_expr = parse_expr(p);
     }
 
     if (leading_expr->type == AST_EXPR_INVALID) {
@@ -155,14 +162,17 @@ ast_stmt_t* parse_stmt_block(parser_t* p) {
     return stmt;
 }
 
-ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr, bool leading_mut) {
+ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool leading_mut) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
 
     ast_type_t* type;
     if (leading_mut) {
         type = parse_type_with_leading_mut(p);
+    } else if (opt_id_slice) {
+        type = parse_type_with_leading_id(p, *opt_id_slice);
     } else {
-        type = parse_type_with_leading_id(p, id_expr->expr.id.slice);
+        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_EXPECTED_STATEMENT);
+        return parser_sync_stmt(p);
     }
 
     token_t* name = parse_var_name(p);

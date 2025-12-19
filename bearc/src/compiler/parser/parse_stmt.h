@@ -35,7 +35,7 @@ ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr);
 
 ast_stmt_t* parse_stmt_block(parser_t* p);
 
-ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr, bool leading_mut);
+ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool leading_mut);
 
 ast_stmt_t* parse_fn_decl(parser_t* p);
 

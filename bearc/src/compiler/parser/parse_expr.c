@@ -34,39 +34,21 @@ ast_slice_of_exprs_t parser_freeze_expr_spill_arr(parser_t* p, spill_arr_ptr_t* 
 
 ast_expr_t* parser_alloc_expr(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_expr_t)); }
 
-ast_expr_t* parse_expr(parser_t* p) {
-    ast_expr_t* lhs = parse_primary_expr(p);
-    return parse_expr_prec(p, lhs, PREC_INIT);
-}
-
-ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
-    token_type_e op = parser_peek(p)->type;
-    if (!lhs && is_preunary_op(op)) {
-        return parse_preunary_expr(p);
-    }
-    if (is_binary_op(parser_peek(p)->type)) {
-        return parse_binary(p, lhs, prec);
-    }
-    if (!lhs) {
-        return parse_expr(p);
-    }
-    assert(lhs != NULL && "[parse_expr.c|parse_expr_prec] lhs is NULL");
-    return lhs;
-}
-
-ast_expr_t* parse_primary_expr(parser_t* p) {
+static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
-    ast_expr_t* lhs = NULL;
-    // try to parse atoms as lhs ~~~~~~~~~~~~~~~~~~~
-    if (token_is_builtin_type_or_id(first_type)) {
-        lhs = parse_id(p);
-    } else if (token_is_literal(first_type)) {
-        lhs = parse_literal(p);
-    } else if (first_type == TOK_LPAREN) {
-        lhs = parse_grouping(p);
+    ast_expr_t* lhs = opt_atom;
+    // if no atoms, try to parse atoms as lhs ~~~~~~~~~~~~~~~~~~~
+    if (!lhs) {
+        if (token_is_builtin_type_or_id(first_type)) {
+            lhs = parse_id(p);
+        } else if (token_is_literal(first_type)) {
+            lhs = parse_literal(p);
+        } else if (first_type == TOK_LPAREN) {
+            lhs = parse_grouping(p);
+        }
     }
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // if atom, try to parse postunary, since postunary prec > preunary prec
     if (lhs && is_postunary_op(parser_peek(p)->type)) {
         return parse_postunary(p, lhs);
@@ -89,6 +71,28 @@ ast_expr_t* parse_primary_expr(parser_t* p) {
     // failure case
     compiler_error_list_emplace(p->error_list, first_tkn, ERR_EXPECTED_EXPRESSION);
     return parser_sync_expr(p);
+}
+
+ast_expr_t* parse_primary_expr(parser_t* p) { return parse_primary_expr_impl(p, NULL); }
+
+ast_expr_t* parse_expr(parser_t* p) {
+    ast_expr_t* lhs = parse_primary_expr_impl(p, NULL);
+    return parse_expr_prec(p, lhs, PREC_INIT);
+}
+
+ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
+    token_type_e op = parser_peek(p)->type;
+    if (!lhs && is_preunary_op(op)) {
+        return parse_preunary_expr(p);
+    }
+    if (is_binary_op(parser_peek(p)->type)) {
+        return parse_binary(p, lhs, prec);
+    }
+    if (!lhs) {
+        return parse_expr(p);
+    }
+    assert(lhs != NULL && "[parse_expr.c|parse_expr_prec] lhs is NULL");
+    return lhs;
 }
 
 ast_expr_t* parse_preunary_expr(parser_t* p) {
@@ -124,6 +128,16 @@ ast_expr_t* parse_id(parser_t* p) {
     return id_expr;
 }
 
+ast_expr_t* parse_expr_from_id_slice(parser_t* p, token_ptr_slice_t id_slice) {
+    ast_expr_t* id_expr = parser_alloc_expr(p);
+    id_expr->expr.id.slice = id_slice;
+    id_expr->type = AST_EXPR_ID;
+    id_expr->first = id_expr->expr.id.slice.start[0];
+    id_expr->last = id_expr->expr.id.slice.start[id_expr->expr.id.slice.len - 1];
+    ast_expr_t* lhs = parse_primary_expr_impl(p, id_expr);
+    return parse_expr_prec(p, lhs, PREC_INIT);
+}
+
 token_t* parse_var_name(parser_t* p) {
     return parser_expect_token_with_err_code(p, TOK_IDENTIFIER, ERR_ILLEGAL_IDENTIFER);
 }
@@ -141,7 +155,7 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     binary_expr->expr.binary.lhs = lhs;
     binary_expr->expr.binary.op = op_tkn;
     max_prec = (max_prec >= prec_binary(op_tkn->type)) ? max_prec : prec_binary(op_tkn->type);
-    ast_expr_t* rhs = parse_primary_expr(p);
+    ast_expr_t* rhs = parse_primary_expr_impl(p, NULL);
     token_type_e curr_op = op_tkn->type;
     token_type_e next_op = parser_peek(p)->type;
 

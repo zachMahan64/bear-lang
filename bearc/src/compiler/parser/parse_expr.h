@@ -26,6 +26,11 @@ ast_expr_t* parse_expr(parser_t* p);
 /// lhs is NULLable
 ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec);
 
+/// lhs is not NULLable
+ast_expr_t* parse_expr_with_leading_id_expr(parser_t* p, ast_expr_t* lhs);
+
+ast_expr_t* parse_expr_from_id_slice(parser_t* p, token_ptr_slice_t id_slice);
+
 ast_expr_t* parse_primary_expr(parser_t* p);
 
 ast_expr_t* parse_preunary_expr(parser_t* p);
