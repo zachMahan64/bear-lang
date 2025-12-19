@@ -103,6 +103,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
     }
 
+    if (next_type == TOK_RETURN) {
+        return parse_stmt_return(p);
+    }
+
     // parse things that have a leading expr or identifier (trickier)
     ast_expr_t* leading_expr = parse_expr(p);
     next_type = parser_peek(p)->type;
@@ -201,4 +205,23 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     decl->first = decl->stmt.fn_decl.kw;
     decl->last = decl->stmt.fn_decl.block->last;
     return decl;
+}
+
+ast_stmt_t* parse_stmt_return(parser_t* p) {
+    ast_stmt_t* ret_stmt = parser_alloc_stmt(p);
+    ret_stmt->type = AST_STMT_RETURN;
+    ret_stmt->stmt.return_stmt.return_tkn =
+        parser_eat(p); // safe becuz we knew to enter this function
+    // check if we should parse an expr
+    if (!(parser_peek(p)->type == TOK_SEMICOLON)) {
+        ret_stmt->stmt.return_stmt.expr = parse_expr(p);
+    }
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (!term) {
+        return parser_sync_stmt(p);
+    }
+    ret_stmt->stmt.return_stmt.terminator = term;
+    ret_stmt->first = ret_stmt->stmt.return_stmt.return_tkn;
+    ret_stmt->last = term;
+    return ret_stmt;
 }

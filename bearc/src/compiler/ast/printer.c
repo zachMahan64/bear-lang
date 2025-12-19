@@ -4,6 +4,7 @@
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/string.h"
+#include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -310,6 +311,15 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_STMT_FOR:
     case AST_STMT_FOR_IN:
     case AST_STMT_RETURN:
+        puts("return statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_op(stmt->stmt.return_stmt.return_tkn);
+        ast_expr_t* expr = stmt->stmt.return_stmt.expr;
+        if (expr) {
+            print_expr(expr);
+        }
+        print_terminator(stmt->stmt.return_stmt.terminator);
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     case AST_STMT_STRUCT_DEF:
     case AST_MARK_PREAMBLE:
     case AST_MARK_DECL:

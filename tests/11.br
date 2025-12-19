@@ -1,6 +1,16 @@
-fn foo() oops { 
+fn main() {
+    foo();
+}
+
+fn foo() -> i32 { 
     i32 a = 2;
     a += 4;
     b = 4;
     c <- b;
+    return c;
+}
+
+fn bar() {
+    waste_effort();
+    return;
 }

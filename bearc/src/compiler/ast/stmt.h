@@ -190,7 +190,9 @@ typedef struct {
 
 typedef struct {
     token_t* return_tkn;
+    // optional
     ast_expr_t* expr;
+    token_t* terminator;
 } ast_stmt_return_t;
 
 typedef struct {

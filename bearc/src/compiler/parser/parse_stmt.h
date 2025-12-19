@@ -38,4 +38,6 @@ ast_stmt_t* parse_var_decl(parser_t* p, ast_expr_t* id_expr, bool leading_mut);
 
 ast_stmt_t* parse_fn_decl(parser_t* p);
 
+ast_stmt_t* parse_stmt_return(parser_t* p);
+
 #endif
