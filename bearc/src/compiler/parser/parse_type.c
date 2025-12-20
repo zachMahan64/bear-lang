@@ -99,11 +99,6 @@ ast_type_t* parse_type_with_leading_id(parser_t* p, token_ptr_slice_t id_slice) 
     return parse_type_impl(p, id_slice, true);
 }
 
-ast_type_t* parse_type_with_leading_mut(parser_t* p) {
-    token_ptr_slice_t dummy = {.start = NULL, .len = 0};
-    return parse_type_impl(p, dummy, false);
-}
-
 ast_type_t* parse_type(parser_t* p) {
     token_ptr_slice_t dummy = {.start = NULL, .len = 0};
     return parse_type_impl(p, dummy, false); //! has_leading_id

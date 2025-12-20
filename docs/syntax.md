@@ -152,4 +152,14 @@ res_int = 12;     // ok, res_int.ok = true;
 ```
 MyTemplatedType<param1,param2,param3> thing;
 box::MyTemplatedType<param1,param2,param3> boxedThing;
+
+template<A, B, C>
+fn foo() -> bar<A, B, C> {
+    do_work();
+}
+
+template
+struct Foo<A, B, C> {
+
+}
 ```

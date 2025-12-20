@@ -167,7 +167,7 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
 
     ast_type_t* type;
     if (leading_mut) {
-        type = parse_type_with_leading_mut(p);
+        type = parse_type(p);
     } else if (opt_id_slice) {
         type = parse_type_with_leading_id(p, *opt_id_slice);
     } else {
