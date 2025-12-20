@@ -301,27 +301,3 @@ ast_param_t* parse_param(parser_t* p) {
     }
     return param;
 }
-
-ast_slice_of_params_t parser_freeze_params_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
-    ast_slice_of_params_t slice = {
-        .start = (ast_param_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_param_t*)),
-        .len = sarr->size,
-    };
-    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
-    spill_arr_ptr_destroy(sarr);
-    return slice;
-}
-
-ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
-                                            token_type_e terminator) {
-    spill_arr_ptr_t sarr = spill_arr_ptr_create();
-
-    while (!parser_peek_match(p, terminator) && !parser_eof(p)) {
-        spill_arr_ptr_push(&sarr, parse_param(p));
-        if (!parser_peek_match(p, terminator)) {
-            parser_expect_token(p, divider);
-        }
-    }
-
-    return parser_freeze_params_spill_arr(p, &sarr);
-}

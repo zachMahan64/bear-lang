@@ -1,0 +1,3 @@
+mut i32[16][16] mut int_arr;
+
+i32 x;

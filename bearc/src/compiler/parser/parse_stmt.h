@@ -43,9 +43,4 @@ ast_stmt_t* parse_stmt_return(parser_t* p);
 
 ast_stmt_t* parse_stmt_empty(parser_t* p);
 
-ast_param_t* parse_param(parser_t* p);
-
-ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
-                                            token_type_e terminator);
-
 #endif

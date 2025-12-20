@@ -115,7 +115,7 @@ static void print_type(ast_type_t* type) {
             print_mut();
         }
         printer_deindent();
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
     case AST_TYPE_REF_PTR: {
@@ -127,12 +127,29 @@ static void print_type(ast_type_t* type) {
             print_mut();
             printer_deindent();
         }
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
+    case AST_TYPE_ARR:
+        puts("arr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(type->type.arr.inner);
+        print_opening_delim(type->type.arr.lbrack);
+        print_expr(type->type.arr.size_expr);
+        print_closing_delim(type->type.arr.rbrack);
+        if (type->type.arr.mut) {
+            printer_do_indent();
+            print_mut();
+            printer_deindent();
+        }
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+
+        break;
     case AST_TYPE_INVALID:
+        print_indent();
+        printf(ANSI_BOLD_RED "invalid type" ANSI_RESET);
         break;
     }
+    puts(",");
     printer_deindent();
 }
 

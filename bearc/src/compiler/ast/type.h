@@ -6,6 +6,7 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
+#include "compiler/ast/expr.h"
 #include "compiler/token.h"
 #include <stdbool.h>
 
@@ -15,6 +16,7 @@
 typedef enum {
     AST_TYPE_BASE,
     AST_TYPE_REF_PTR,
+    AST_TYPE_ARR,
     AST_TYPE_INVALID,
 } ast_type_e;
 
@@ -33,9 +35,19 @@ typedef struct {
     bool mut;
 } ast_type_ref_t;
 
+typedef struct {
+    ast_type_t* inner;
+    ast_type_t* canonical_base;
+    token_t* lbrack;
+    ast_expr_t* size_expr;
+    token_t* rbrack;
+    bool mut;
+} ast_type_arr_t;
+
 typedef union {
     ast_type_base_t base;
     ast_type_ref_t ref;
+    ast_type_arr_t arr;
 } ast_type_u;
 
 typedef struct ast_type {

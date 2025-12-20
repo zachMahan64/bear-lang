@@ -6,8 +6,9 @@
 - [x] proper type parsing (with dedicated ast_type_t nodes)
 - [x] fix right assoc bug
 - [x] add alignof
-- [ ] parameter parsing when parsing functions
-- [ ] generic type parsing and array type parsing
+- [x] parameter parsing when parsing functions
+- [x] array type parsing
+- [ ] generic type parsing
 - [ ] other statement parsing
 
 #### Medium-term

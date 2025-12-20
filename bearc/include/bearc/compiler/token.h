@@ -99,11 +99,12 @@ typedef enum token_type {
     TOK_STR, // utf8 str
     TOK_BOOL,
     // more special
-    TOK_VOID,     // no type
-    TOK_VAR,      // like java var
-    TOK_COMPT,    // compile-time (like constexpr)
-    TOK_HID,      // like private, but with slightly different semantics because BearLang has no
-                  // inheritance, so this is really just a hidden data member or function/method
+    TOK_VOID,  // no type
+    TOK_VAR,   // like java var
+    TOK_COMPT, // compile-time (like constexpr)
+    TOK_HID,   // like private, but with slightly different semantics because BearLang has no
+               // inheritance, so this is really just a hidden data member or function/method
+    TOK_PUB,
     TOK_MUT,      // example: mut i32
     TOK_TEMPLATE, // like a C++ template, with much more basic features (for), just like a
                   // smarter macro

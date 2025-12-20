@@ -7,9 +7,12 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/parser/parse_type.h"
+#include "compiler/ast/expr.h"
+#include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parser.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
+#include "utils/spill_arr.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -23,6 +26,30 @@ ast_type_t* parser_sync_type(parser_t* p) {
     dummy_type->first = range.first;
     dummy_type->last = range.last;
     return dummy_type;
+}
+
+ast_slice_of_params_t parser_freeze_params_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
+    ast_slice_of_params_t slice = {
+        .start = (ast_param_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_param_t*)),
+        .len = sarr->size,
+    };
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
+    spill_arr_ptr_destroy(sarr);
+    return slice;
+}
+
+ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
+                                            token_type_e terminator) {
+    spill_arr_ptr_t sarr = spill_arr_ptr_create();
+
+    while (!parser_peek_match(p, terminator) && !parser_eof(p)) {
+        spill_arr_ptr_push(&sarr, parse_param(p));
+        if (!parser_peek_match(p, terminator)) {
+            parser_expect_token(p, divider);
+        }
+    }
+
+    return parser_freeze_params_spill_arr(p, &sarr);
 }
 
 static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_slice_t id_slice) {
@@ -77,6 +104,7 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
 
     ast_type_t* inner = NULL;
 
+    // parse base types
     if (has_leading_id) {
         inner = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
     } else if (first_type == TOK_MUT) {
@@ -85,8 +113,13 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
         leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
         inner = parse_type_base_with_leading_id(p, leading_id);
     }
+
+    // parse type modifiers
     while (token_is_ref_or_ptr(parser_peek(p)->type)) {
         inner = parse_type_ref(p, inner);
+    }
+    while (parser_peek(p)->type == TOK_LBRACK) {
+        inner = parse_type_arr(p, inner);
     }
     if (inner) {
         return inner;
@@ -115,6 +148,35 @@ ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner) {
     }
     outer->type.ref.inner = inner;
     outer->tag = AST_TYPE_REF_PTR;
+    outer->first = inner->first;
+    outer->last = parser_prev(p);
+    return outer;
+}
+
+ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner) {
+    ast_type_t* outer = parser_alloc_type(p);
+    outer->tag = AST_TYPE_ARR;
+
+    // handle canonical base
+    if (inner->tag == AST_TYPE_BASE) {
+        outer->type.arr.canonical_base = inner;
+    } else {
+        outer->type.arr.canonical_base = inner->type.ref.canonical_base;
+    }
+    // handle [size_expr]
+    outer->type.arr.lbrack = parser_eat(p); // definitely fine because we know to be in this func
+    ast_expr_t* size_expr = parse_expr(p);
+    if (size_expr->type == AST_EXPR_INVALID) {
+        return parser_sync_type(p);
+    }
+    outer->type.arr.size_expr = size_expr;
+    token_t* rbrack = parser_expect_token(p, TOK_RBRACK);
+    if (!rbrack) {
+        return parser_sync_type(p);
+    }
+    outer->type.arr.rbrack = rbrack;
+    outer->type.arr.mut = parser_match_token(p, TOK_MUT); // match into bool
+    outer->type.arr.inner = inner;
     outer->first = inner->first;
     outer->last = parser_prev(p);
     return outer;
