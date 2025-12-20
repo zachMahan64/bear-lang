@@ -120,18 +120,11 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
         parser->prev_discarded = false;
         return tkn;
     }
-    if (expected_type == TOK_RBRACE) {
-        printf("EXPECTEDING '}', previous: %s\n",
-               get_token_to_string_map()[parser_prev(parser)->type]);
-        printf("prev_discarded: %d\n", parser->prev_discarded);
-    }
     if (parser->prev_discarded && parser_prev(parser)->type == expected_type) {
         parser->prev_discarded = false;
-        printf("taking discarded prev!");
         return parser_prev(parser);
     }
-    compiler_error_list_emplace_expected_token(parser->error_list, tkn, ERR_EXPECTED_TOKEN,
-                                               expected_type);
+    compiler_error_list_emplace(parser->error_list, tkn, ERR_INCOMPLETE_VAR_DECLARATION);
     return NULL;
 }
 

@@ -17,7 +17,7 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECTED_TYPE] = "expected type",
         [ERR_EXPECTED_EXPRESSION] = "expected expression",
         [ERR_EXPECTED_STATEMENT] = "expected statement",
-    };
+        [ERR_INCOMPLETE_VAR_DECLARATION] = "expected ';' or assignment operator"};
     return error_messages[error_code];
 }
 

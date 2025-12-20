@@ -1,13 +1,6 @@
-fn waste_effort() {
-    ;
-    ;
-    ; 
-    a
-}
-
 fn bar() {
-    usize;
-    i32
+    usize foobar;
+    i32 barfoo
 }
 
 fn foo() {

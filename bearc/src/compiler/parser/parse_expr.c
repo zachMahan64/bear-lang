@@ -147,8 +147,10 @@ token_t* parse_var_name(parser_t* p) {
 }
 
 static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {
-    return (is_binary_op(next_op) && (prec_binary(next_op) < prec_binary(curr_op)) &&
-            is_right_assoc_from_prec(prec_binary(curr_op)));
+    uint8_t curr_prec = prec_binary(curr_op);
+    uint8_t next_prec = prec_binary(next_op);
+    return (next_prec < curr_prec) ||
+           (next_prec == curr_prec && is_right_assoc_from_prec(curr_prec));
 }
 
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {

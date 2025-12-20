@@ -9,6 +9,7 @@
 #include "compiler/parser/parse_stmt.h"
 #include "compiler/ast/expr.h"
 #include "compiler/ast/stmt.h"
+#include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parse_type.h"
@@ -185,18 +186,10 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
     }
 
     token_t* name = parse_var_name(p);
-    token_type_e next_type = parser_peek(p)->type;
+    token_t* next_tkn = parser_peek(p);
+    token_type_e next_type = next_tkn->type;
 
-    if (next_type == TOK_SEMICOLON) {
-        stmt->type = AST_STMT_VAR_DECL;
-        stmt->stmt.var_decl.type = type;
-        stmt->stmt.var_decl.name = name;
-        token_t* term = parser_expect_token(p, TOK_SEMICOLON);
-        if (!term) {
-            return parser_sync_stmt(p);
-        }
-        stmt->stmt.var_decl.terminator = term;
-    } else if (token_is_assignment_init(next_type)) {
+    if (token_is_assignment_init(next_type)) {
         stmt->type = AST_STMT_VAR_INIT_DECL;
         stmt->stmt.var_init_decl.type = type;
         stmt->stmt.var_init_decl.name = name;
@@ -208,7 +201,20 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
             return parser_sync_stmt(p);
         }
         stmt->stmt.var_init_decl.terminator = term;
+    } else if (next_type == TOK_SEMICOLON) {
+        stmt->type = AST_STMT_VAR_DECL;
+        stmt->stmt.var_decl.type = type;
+        stmt->stmt.var_decl.name = name;
+        token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+        if (!term) {
+            return parser_sync_stmt(p);
+        }
+        stmt->stmt.var_decl.terminator = term;
+    } else {
+        compiler_error_list_emplace(p->error_list, next_tkn, ERR_INCOMPLETE_VAR_DECLARATION);
+        return parser_sync_stmt(p);
     }
+
     stmt->first = type->first;
     stmt->last = stmt->stmt.var_decl.terminator;
     return stmt;
