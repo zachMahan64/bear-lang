@@ -85,7 +85,7 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
     if (!lhs && is_preunary_op(op)) {
         return parse_preunary_expr(p);
     }
-    if (is_binary_op(parser_peek(p)->type)) {
+    if (is_legal_binary_op(p, parser_peek(p)->type)) {
         return parse_binary(p, lhs, prec);
     }
     if (!lhs) {
@@ -129,10 +129,11 @@ ast_expr_t* parse_id(parser_t* p) {
 }
 
 ast_expr_t* parse_expr_from_id_slice(parser_t* p, token_ptr_slice_t id_slice) {
-    if (token_is_builtin_type(id_slice.start[0]->type) && id_slice.len > 0) {
-        compiler_error_list_emplace(p->error_list, id_slice.start[0], ERR_EXPECTED_EXPRESSION);
-        return parser_sync_expr(p);
-    }
+    // consider this, but parser may be overstepping boundaries here
+    // if (token_is_builtin_type(id_slice.start[0]->type) && id_slice.len > 0) {
+    //    compiler_error_list_emplace(p->error_list, id_slice.start[0], ERR_EXPECTED_EXPRESSION);
+    //    return parser_sync_expr(p);
+    //}
     ast_expr_t* id_expr = parser_alloc_expr(p);
     id_expr->expr.id.slice = id_slice;
     id_expr->type = AST_EXPR_ID;

@@ -29,6 +29,7 @@ typedef struct {
     arena_t* arena;
     compiler_error_list_t* error_list;
     bool prev_discarded;
+    bool bool_comparisions_disabled;
 } parser_t;
 
 parser_t parser_create(vector_t* tokens, arena_t* arena, compiler_error_list_t* error_list);

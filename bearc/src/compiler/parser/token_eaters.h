@@ -66,7 +66,14 @@ bool parser_eof(const parser_t* parser);
 // sync the parser and returns a range of tokens consumed while syncing
 token_range_t parser_sync(parser_t* p);
 
-/// match helpers
+/// disable bool comparisions (helpful parsing generics)
+void parser_disable_bool_comparision(parser_t* p);
+/// enable bool comparisions (helpful parsing generics)
+void parser_enable_bool_comparision(parser_t* p);
+/// ensure binary op is legal
+bool is_legal_binary_op(parser_t* p, token_type_e type);
+
+// match helpers
 
 /// returns true when tkn type is builtin
 bool token_is_builtin_type(token_type_e t);
@@ -82,10 +89,14 @@ bool token_is_syncable_delim(token_type_e t);
 
 bool token_is_assignment_init(token_type_e t);
 
-bool token_is_type_indicator(token_type_e t);
+bool token_is_posttype_indicator(token_type_e t);
 
 bool token_is_ref_or_ptr(token_type_e t);
 
 bool token_is_function_leading_kw(token_type_e t);
+
+bool token_is_pretype_idicator(token_type_e t);
+
+bool token_is_generic_opener(token_type_e t);
 
 #endif

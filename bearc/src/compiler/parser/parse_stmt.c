@@ -113,7 +113,7 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 
         token_ptr_slice_t leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
         next_type = parser_peek(p)->type;
-        if (token_is_type_indicator(next_type)) {
+        if (token_is_posttype_indicator(next_type)) {
             return parse_var_decl(p, &leading_id, NULL);
         }
         leading_expr = parse_expr_from_id_slice(p, leading_id);

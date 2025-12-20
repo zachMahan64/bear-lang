@@ -76,6 +76,15 @@ static void print_closing_delim_from_type(token_type_e delim) {
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
+static void print_delineator_from_type(token_type_e delin) {
+    printer_do_indent();
+    print_indent(),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s",
+               get_token_to_string_map()[delin]),
+        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+    printer_deindent();
+}
+
 static void print_terminator(token_t* term) {
     if (!term) {
         print_indent(), puts(ANSI_BOLD_RED "missing terminator" ANSI_RESET);
@@ -88,6 +97,22 @@ static void print_terminator(token_t* term) {
 static void print_mut(void) {
     print_indent(),
         printf(ANSI_BOLD_GREEN "`" ANSI_BOLD_MAGENTA "mut" ANSI_BOLD_GREEN "`" ANSI_RESET ",\n");
+}
+
+static void print_type(ast_type_t* type);
+
+static void print_generic_type_arg(ast_generic_arg_t* arg) {
+    if (arg->valid) {
+        if (arg->tag == AST_GENERIC_ARG_TYPE) {
+            print_type(arg->arg.type);
+        } else if (arg->tag == AST_GENERIC_ARG_EXPR) {
+            print_expr(arg->arg.expr);
+        }
+    } else {
+        printer_do_indent();
+        print_indent(), printf(ANSI_BOLD_RED "invalid template arg" ANSI_RESET ",\n");
+        printer_deindent();
+    }
 }
 
 static void print_type(ast_type_t* type) {
@@ -143,6 +168,17 @@ static void print_type(ast_type_t* type) {
         }
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
 
+        break;
+    case AST_TYPE_GENERIC:
+        puts("template type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(type->type.generic.inner);
+        print_delineator_from_type(TOK_TYPE_MOD);
+        print_opening_delim_from_type(TOK_LT);
+        for (size_t i = 0; i < type->type.generic.generic_args.len; i++) {
+            print_generic_type_arg(type->type.generic.generic_args.start[i]);
+        }
+        print_closing_delim_from_type(TOK_GT);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     case AST_TYPE_INVALID:
         print_indent();

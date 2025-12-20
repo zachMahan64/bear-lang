@@ -12,6 +12,7 @@
 #include "compiler/parser/parser.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
+#include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include <assert.h>
 #include <stdbool.h>
@@ -114,6 +115,10 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
         inner = parse_type_base_with_leading_id(p, leading_id);
     }
 
+    if (token_is_generic_opener(parser_peek(p)->type)) {
+        inner = parse_type_generic(p, inner);
+    }
+
     // parse type modifiers
     while (token_is_ref_or_ptr(parser_peek(p)->type)) {
         inner = parse_type_ref(p, inner);
@@ -177,6 +182,121 @@ ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner) {
     outer->type.arr.rbrack = rbrack;
     outer->type.arr.mut = parser_match_token(p, TOK_MUT); // match into bool
     outer->type.arr.inner = inner;
+    outer->first = inner->first;
+    outer->last = parser_prev(p);
+    return outer;
+}
+
+ast_generic_arg_t* parse_generic_arg(parser_t* p) {
+    ast_generic_arg_t* arg = arena_alloc(p->arena, sizeof(ast_generic_arg_t));
+    token_type_e next_type = parser_peek(p)->type;
+    ast_expr_t* expr = NULL;
+    ast_type_t* type = NULL;
+
+    bool is_type = false;
+    // parse as type or id ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
+        token_ptr_slice_t leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+        next_type = parser_peek(p)->type;
+        if (token_is_posttype_indicator(next_type)) {
+            is_type = true;
+            type = parse_type_with_leading_id(p, leading_id);
+        } else {
+            is_type = false;
+            expr = parse_expr_from_id_slice(p, leading_id);
+        }
+    } else {
+        // parse things that have a leading expr
+        is_type = false;
+        expr = parse_expr(p);
+    }
+    if (token_is_pretype_idicator(parser_peek(p)->type)) {
+        is_type = true;
+        type = parse_type(p);
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // set according to is_type
+    arg->valid = true;
+    if (is_type) {
+        if (type->tag == AST_TYPE_INVALID) {
+            arg->valid = false;
+        }
+        arg->tag = AST_GENERIC_ARG_TYPE;
+        assert(type != NULL && "[parse_generic_arg] arg type must not be NULL");
+        arg->arg.type = type;
+    } else {
+        // handle invalid leading expr
+        if (expr->type == AST_EXPR_INVALID) {
+            arg->valid = false;
+        }
+        arg->tag = AST_GENERIC_ARG_EXPR;
+        assert(expr != NULL && "[parse_generic_arg] arg expr must not be NULL");
+        arg->arg.expr = expr;
+    }
+    return arg;
+}
+
+ast_generic_arg_slice_t parser_freeze_generic_arg_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
+    ast_generic_arg_slice_t slice = {
+        .start =
+            (ast_generic_arg_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_generic_arg_t*)),
+        .len = sarr->size,
+    };
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
+    spill_arr_ptr_destroy(sarr);
+    return slice;
+}
+
+ast_generic_arg_slice_t parse_generic_arg_slice(parser_t* p) {
+
+    spill_arr_ptr_t sarr = spill_arr_ptr_create();
+
+    token_t* opener =
+        parser_expect_token_call(p, &token_is_generic_opener, ERR_EXPECT_GENERIC_OPENER);
+    // when just, ::, just expect one thing, like box::thing
+    ast_generic_arg_t* arg = NULL;
+    bool valid = false;
+    if (opener->type == TOK_TYPE_MOD && !parser_match_token(p, TOK_LT)) {
+        arg = parse_generic_arg(p);
+        valid |= arg->valid;
+        spill_arr_ptr_push(&sarr, arg);
+    }
+    // otherwise expect foo::<garg1, garg2> or foo<garg1, garg2>
+    else {
+        while (!parser_peek_match(p, TOK_GT) && !parser_eof(p)) {
+            arg = parse_generic_arg(p);
+            valid |= arg->valid;
+            spill_arr_ptr_push(&sarr, arg);
+            if (!parser_peek_match(p, TOK_GT) && !parser_peek_match(p, TOK_TYPE_MOD)) {
+                parser_expect_token(p, TOK_COMMA);
+            }
+        }
+        token_t* gt = parser_expect_token(p, TOK_GT);
+        valid = gt; // false if gt == NULL
+    }
+    ast_generic_arg_slice_t args = parser_freeze_generic_arg_spill_arr(p, &sarr);
+    args.valid = valid;
+    return args;
+}
+
+ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
+    ast_type_t* outer = parser_alloc_type(p);
+    outer->tag = AST_TYPE_GENERIC;
+
+    // handle canonical base
+    if (!(inner->tag == AST_TYPE_BASE)) {
+        compiler_error_list_emplace(p->error_list, inner->first, ERR_EXPECTED_BASE_TYPE_IN_GENERIC);
+        return parser_sync_type(p);
+    }
+    outer->type.generic.inner = inner;
+    parser_disable_bool_comparision(p); // cleaner template parsing from < and > issues
+    ast_generic_arg_slice_t args = parse_generic_arg_slice(p);
+    parser_enable_bool_comparision(p); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    if (!args.valid) {
+        return parser_sync_type(p);
+    }
+    outer->type.generic.generic_args = args;
     outer->first = inner->first;
     outer->last = parser_prev(p);
     return outer;

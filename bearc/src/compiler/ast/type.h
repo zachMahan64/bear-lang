@@ -9,6 +9,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/token.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 #ifndef COMPILER_AST_TYPE
 #define COMPILER_AST_TYPE
@@ -17,6 +18,7 @@ typedef enum {
     AST_TYPE_BASE,
     AST_TYPE_REF_PTR,
     AST_TYPE_ARR,
+    AST_TYPE_GENERIC,
     AST_TYPE_INVALID,
 } ast_type_e;
 
@@ -44,10 +46,40 @@ typedef struct {
     bool mut;
 } ast_type_arr_t;
 
+// generics ~~~~~~~~~~~~~~~~~~
+typedef struct {
+    ast_expr_t* expr;
+    ast_type_t* type;
+} ast_generic_arg_u;
+
+typedef enum {
+    AST_GENERIC_ARG_TYPE,
+    AST_GENERIC_ARG_EXPR,
+} ast_generic_arg_e;
+
+typedef struct {
+    ast_generic_arg_u arg;
+    ast_generic_arg_e tag;
+    bool valid;
+} ast_generic_arg_t;
+
+typedef struct {
+    ast_generic_arg_t** start;
+    size_t len;
+    bool valid;
+} ast_generic_arg_slice_t;
+
+typedef struct {
+    ast_type_t* inner;
+    ast_generic_arg_slice_t generic_args;
+} ast_type_generic_t;
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 typedef union {
     ast_type_base_t base;
     ast_type_ref_t ref;
     ast_type_arr_t arr;
+    ast_type_generic_t generic;
 } ast_type_u;
 
 typedef struct ast_type {

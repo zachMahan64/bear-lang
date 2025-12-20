@@ -14,6 +14,7 @@ parser_t parser_create(vector_t* tokens, arena_t* arena, compiler_error_list_t* 
                        .pos = 0,
                        .arena = arena,
                        .error_list = error_list,
-                       .prev_discarded = false};
+                       .prev_discarded = false,
+                       .bool_comparisions_disabled = false};
     return parser;
 }

@@ -18,7 +18,11 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECTED_TYPE] = "expected type",
         [ERR_EXPECTED_EXPRESSION] = "expected expression",
         [ERR_EXPECTED_STATEMENT] = "expected statement",
-        [ERR_INCOMPLETE_VAR_DECLARATION] = "expected ';' or assignment operator"};
+        [ERR_INCOMPLETE_VAR_DECLARATION] = "expected ';' or assignment operator",
+        [ERR_EXPECT_GENERIC_OPENER] = "expected '::' or '<' in generic type",
+        [ERR_EXPECTED_BASE_TYPE_IN_GENERIC] =
+            "templated can only be applied to base types (not &, *, or arrays)",
+    };
     return error_messages[error_code];
 }
 

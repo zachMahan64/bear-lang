@@ -9,6 +9,7 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parser.h"
+#include "compiler/parser/rules.h"
 #include "compiler/token.h"
 #include "utils/vector.h"
 #include <stdbool.h>
@@ -194,6 +195,15 @@ token_range_t parser_sync(parser_t* p) {
     return range;
 }
 
+/// disable bool comparisions (helpful parsing generics)
+void parser_disable_bool_comparision(parser_t* p) { p->bool_comparisions_disabled = true; }
+/// enable bool comparisions (helpful parsing generics)
+void parser_enable_bool_comparision(parser_t* p) { p->bool_comparisions_disabled = false; }
+
+bool is_legal_binary_op(parser_t* p, token_type_e type) {
+    return is_binary_op(type) && (!p->bool_comparisions_disabled && is_bool_comparision(type));
+}
+
 // map containing look-ups for builtin types
 static const bool parser_builtin_type_map[TOK__NUM] = {
     [TOK_CHAR] = true,     [TOK_U8] = true,    [TOK_I8] = true,  [TOK_I16] = true,
@@ -231,10 +241,17 @@ bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }
 
 bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t == TOK_ASSIGN_EQ; }
 
-bool token_is_type_indicator(token_type_e t) {
-    return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR;
+bool token_is_posttype_indicator(token_type_e t) {
+    return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR || t == TOK_LT ||
+           t == TOK_TYPE_MOD || t == TOK_GT;
 }
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }
+
+bool token_is_pretype_idicator(token_type_e t) {
+    return t == TOK_MUT || t == TOK_PUB || t == TOK_HID;
+}
+
+bool token_is_generic_opener(token_type_e t) { return t == TOK_TYPE_MOD || t == TOK_LT; }
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^
