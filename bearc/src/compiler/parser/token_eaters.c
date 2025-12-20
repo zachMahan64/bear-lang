@@ -215,7 +215,7 @@ bool token_is_builtin_type_mod(token_type_e t) { return parser_builtin_type_mod_
 
 bool token_is_literal(token_type_e t) {
     return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_TRUE || t == TOK_INT_LIT ||
-           t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT;
+           t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT || t == TOK_NULL_LIT;
 }
 
 bool token_is_function_leading_kw(token_type_e t) {
@@ -224,7 +224,7 @@ bool token_is_function_leading_kw(token_type_e t) {
 
 bool token_is_syncable_delim(token_type_e t) {
     return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
-           t == TOK_RBRACK || token_is_function_leading_kw(t);
+           t == TOK_RBRACK || token_is_function_leading_kw(t) || t == TOK_COMMA;
 }
 
 bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }

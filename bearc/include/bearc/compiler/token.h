@@ -147,6 +147,7 @@ typedef enum token_type {
     TOK_STR_LIT,
     TOK_BOOL_LIT_FALSE,
     TOK_BOOL_LIT_TRUE,
+    TOK_NULL_LIT,
 
     // punc
     TOK_RARROW,    // -> for return types

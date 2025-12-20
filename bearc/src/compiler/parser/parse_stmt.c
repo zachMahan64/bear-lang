@@ -71,16 +71,6 @@ ast_slice_of_stmts_t parser_freeze_stmt_spill_arr(parser_t* p, spill_arr_ptr_t* 
     return slice;
 }
 
-ast_slice_of_params_t parser_freeze_params_vec(parser_t* p, vector_t* vec) {
-    ast_slice_of_params_t slice = {
-        .start = (ast_param_t*)arena_alloc(p->arena, vec->size * vec->elem_size),
-        .len = vec->size,
-    };
-    memcpy((void*)slice.start, vec->data, vec->size * vec->elem_size);
-    vector_destroy(vec);
-    return slice;
-}
-
 ast_stmt_t* parser_alloc_stmt(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_stmt_t)); }
 
 static ast_stmt_t* parser_sync_stmt(parser_t* p) {
@@ -232,6 +222,10 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     }
     decl->stmt.fn_decl.left_paren = lparen;
 
+    if (parser_peek(p)->type != TOK_RPAREN) {
+        decl->stmt.fn_decl.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
+    }
+
     token_t* rparen = parser_expect_token(p, TOK_RPAREN);
     if (!rparen) {
         return parser_sync_stmt(p);
@@ -281,8 +275,53 @@ ast_stmt_t* parse_stmt_empty(parser_t* p) {
 
 ast_param_t* parse_param(parser_t* p) {
     ast_param_t* param = arena_alloc(p->arena, sizeof(ast_param_t));
+    // set type
     param->type = parse_type(p);
-    token_t* name = parser_match_token(p, TOK_IDENTIFIER);
-    // TODO
+    // try set name
+    token_t* next = parser_peek(p);
+    bool match = next->type == TOK_IDENTIFIER;
+    if (!match) {
+        compiler_error_list_emplace(p->error_list, next, ERR_EXPECTED_PARAMETER_IDENTIFIER);
+        param->name = NULL;
+    } else {
+        param->name = parser_eat(p);
+    }
+    // set valid
+    if (!match || param->type->tag == AST_TYPE_INVALID) {
+        param->valid = false;
+    } else {
+        param->valid = true;
+    }
+    // set fir/last
+    param->first = param->type->first;
+    if (next) {
+        param->last = next;
+    } else {
+        param->last = parser_prev(p);
+    }
     return param;
+}
+
+ast_slice_of_params_t parser_freeze_params_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
+    ast_slice_of_params_t slice = {
+        .start = (ast_param_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_param_t*)),
+        .len = sarr->size,
+    };
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
+    spill_arr_ptr_destroy(sarr);
+    return slice;
+}
+
+ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
+                                            token_type_e terminator) {
+    spill_arr_ptr_t sarr = spill_arr_ptr_create();
+
+    while (!parser_peek_match(p, terminator) && !parser_eof(p)) {
+        spill_arr_ptr_push(&sarr, parse_param(p));
+        if (!parser_peek_match(p, terminator)) {
+            parser_expect_token(p, divider);
+        }
+    }
+
+    return parser_freeze_params_spill_arr(p, &sarr);
 }

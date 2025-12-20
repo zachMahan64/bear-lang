@@ -70,6 +70,7 @@ static void string_to_token_map_init(void) {
     // bool literals
     strimap_insert(&string_to_token_map, "true", TOK_BOOL_LIT_TRUE);
     strimap_insert(&string_to_token_map, "false", TOK_BOOL_LIT_FALSE);
+    strimap_insert(&string_to_token_map, "null", TOK_NULL_LIT);
 
     // file
     strimap_insert(&string_to_token_map, "import", TOK_IMPORT);
@@ -291,6 +292,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_STR_LIT] = "str_lit",
     [TOK_BOOL_LIT_TRUE] = "true_lit",
     [TOK_BOOL_LIT_FALSE] = "false_lit",
+    [TOK_NULL_LIT] = "null",
 
     // special punctuation
     [TOK_RARROW] = "->",

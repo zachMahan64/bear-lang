@@ -136,6 +136,18 @@ static void print_type(ast_type_t* type) {
     printer_deindent();
 }
 
+static void print_param(ast_param_t* param) {
+    print_indent();
+    if (!param->valid) {
+        printf(ANSI_BOLD_RED "invalid parameter,\n" ANSI_RESET);
+        return;
+    }
+    puts("parameter: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    print_type(param->type);
+    print_var_name(param->name);
+    print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
+}
+
 void print_expr(ast_expr_t* expression) {
     printer_try_init();
     printer_do_indent();
@@ -278,6 +290,9 @@ void print_stmt(ast_stmt_t* stmt) {
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
         printf(",\n");
         print_opening_delim(fn.left_paren);
+        for (size_t i = 0; i < fn.params.len; i++) {
+            print_param(fn.params.start[i]);
+        }
         print_closing_delim(fn.right_paren);
         if (fn.rarrow) {
             if (fn.rarrow->type == TOK_RARROW) {

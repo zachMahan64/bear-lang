@@ -13,7 +13,8 @@ const char* error_message_for_code(error_code_e error_code) {
     static const char* error_messages[ERR__COUNT] = {
         [ERR_ILLEGAL_IDENTIFER] = "illegal identifier",
         [ERR_EXPECTED_TOKEN] = "expected token: ",
-        [ERR_EXPECTED_IDENTIFIER] = "expected identifier",
+        [ERR_EXPECTED_VARIABLE_IDENTIFIER] = "expected variable identifier",
+        [ERR_EXPECTED_PARAMETER_IDENTIFIER] = "expected parameter identifier",
         [ERR_EXPECTED_TYPE] = "expected type",
         [ERR_EXPECTED_EXPRESSION] = "expected expression",
         [ERR_EXPECTED_STATEMENT] = "expected statement",

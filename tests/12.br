@@ -1,12 +1,8 @@
-fn bar() {
-    usize foobar;
-    i32 barfoo
+fn foo(mut i32& a, std..string& b) {
+    b.modify_in_some_way();
+    a >>>= 4; // for fun
 }
 
-fn foo() {
-    i32 a;
-    var b;
-    var c;
-    u64 d = allignof(a);
-    c <- b <- a;
+fn bar() -> i32 {
+    return foo(42, string..new());
 }
