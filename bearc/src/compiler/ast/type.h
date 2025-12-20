@@ -46,7 +46,7 @@ typedef struct ast_type {
 } ast_type_t;
 
 typedef struct {
-    ast_type_t type;
+    ast_type_t* type;
     token_t* name;
 } ast_param_t;
 

@@ -278,3 +278,11 @@ ast_stmt_t* parse_stmt_empty(parser_t* p) {
     empty->last = term;
     return empty;
 }
+
+ast_param_t* parse_param(parser_t* p) {
+    ast_param_t* param = arena_alloc(p->arena, sizeof(ast_param_t));
+    param->type = parse_type(p);
+    token_t* name = parser_match_token(p, TOK_IDENTIFIER);
+    // TODO
+    return param;
+}

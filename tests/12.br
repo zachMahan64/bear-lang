@@ -7,5 +7,6 @@ fn foo() {
     i32 a;
     var b;
     var c;
+    u64 d = allignof(a);
     c <- b <- a;
 }
