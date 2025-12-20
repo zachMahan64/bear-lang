@@ -201,7 +201,7 @@ void parser_disable_bool_comparision(parser_t* p) { p->bool_comparisions_disable
 void parser_enable_bool_comparision(parser_t* p) { p->bool_comparisions_disabled = false; }
 
 bool is_legal_binary_op(parser_t* p, token_type_e type) {
-    return is_binary_op(type) && (!p->bool_comparisions_disabled && is_bool_comparision(type));
+    return is_binary_op(type) && !(p->bool_comparisions_disabled && is_bool_comparision(type));
 }
 
 // map containing look-ups for builtin types

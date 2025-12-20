@@ -8,7 +8,8 @@
 - [x] add alignof
 - [x] parameter parsing when parsing functions
 - [x] array type parsing
-- [ ] generic type parsing
+- [x] generic type parsing
+- [ ] pub/hid parsing for statements
 - [ ] other statement parsing
 
 #### Medium-term

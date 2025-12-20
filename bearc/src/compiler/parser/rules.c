@@ -7,7 +7,6 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/parser/rules.h"
-#include "compiler/parser/parser.h"
 #include "compiler/token.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -29,8 +28,8 @@ static uint8_t postunary_prec_map[TOK__NUM] = {
 uint8_t prec_postunary(token_type_e type) { return postunary_prec_map[type]; }
 
 static uint8_t preunary_prec_map[TOK__NUM] = {
-    [TOK_INC] = 3,  [TOK_DEC] = 3,   [TOK_PLUS] = 3,   [TOK_MINUS] = 3,
-    [TOK_STAR] = 3, [TOK_AMPER] = 3, [TOK_SIZEOF] = 3, [TOK_ALLIGNOF] = 3,
+    [TOK_INC] = 3,   [TOK_DEC] = 3,    [TOK_PLUS] = 3,     [TOK_MINUS] = 3, [TOK_STAR] = 3,
+    [TOK_AMPER] = 3, [TOK_SIZEOF] = 3, [TOK_ALLIGNOF] = 3, [TOK_MOVE] = 3
 
 };
 
