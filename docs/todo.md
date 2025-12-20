@@ -10,7 +10,12 @@
 - [x] array type parsing
 - [x] generic type parsing
 - [ ] pub/hid parsing for statements
+- [ ] `...` and range/slice related syntax
 - [ ] other statement parsing
+- [ ] structs
+- [ ] marks
+- [ ] closures?
+- [ ] decide between and impl switch and/or match 
 
 #### Medium-term
 - [ ] Get a solid subset of the parser working on building an AST

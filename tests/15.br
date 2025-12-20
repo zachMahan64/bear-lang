@@ -11,6 +11,7 @@ fn more_demo() {
     mut i32[8][16] other_arr;
 
     box::i32 thing;
+    Vec<i32> veccy_thing;
     var other <- thing;
     other
         .transform()
