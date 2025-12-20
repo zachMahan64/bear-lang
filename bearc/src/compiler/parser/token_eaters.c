@@ -125,7 +125,8 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
         parser->prev_discarded = false;
         return parser_prev(parser);
     }
-    compiler_error_list_emplace(parser->error_list, tkn, ERR_INCOMPLETE_VAR_DECLARATION);
+    compiler_error_list_emplace_expected_token(parser->error_list, tkn, ERR_EXPECTED_TOKEN,
+                                               expected_type);
     return NULL;
 }
 
@@ -253,5 +254,9 @@ bool token_is_pretype_idicator(token_type_e t) {
 }
 
 bool token_is_generic_opener(token_type_e t) { return t == TOK_TYPE_MOD || t == TOK_LT; }
+
+bool token_is_preunary_op_expecting_type(token_type_e t) {
+    return t == TOK_SIZEOF || t == TOK_ALLIGNOF;
+}
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^

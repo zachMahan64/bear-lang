@@ -22,8 +22,6 @@ typedef enum {
     AST_TYPE_INVALID,
 } ast_type_e;
 
-typedef struct ast_type ast_type_t;
-
 typedef struct {
     token_ptr_slice_t id;
     bool mut;

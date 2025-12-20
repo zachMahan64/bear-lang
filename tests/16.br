@@ -1,0 +1,4 @@
+i32 x = 12;
+u8 y = 15;
+std..Arr<i32, sizeof(u8) * 4> thing;
+bool zed = (t as std..foo::<i32, 2000, std..String>).transform() == arbitrary_global_obj.member_func();

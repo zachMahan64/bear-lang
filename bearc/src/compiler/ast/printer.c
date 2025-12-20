@@ -289,6 +289,11 @@ void print_expr(ast_expr_t* expression) {
         print_closing_delim_from_type(TOK_RBRACK);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
+    case AST_EXPR_TYPE:
+        puts("type expression: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(expr.expr.type_expr.type);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
     }
     puts(",");
     printer_deindent();

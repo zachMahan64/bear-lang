@@ -9,6 +9,7 @@
 #include "compiler/parser/parse_expr.h"
 #include "compiler/ast/expr.h"
 #include "compiler/diagnostics/error_codes.h"
+#include "compiler/parser/parse_type.h"
 #include "compiler/parser/rules.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
@@ -103,7 +104,25 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
     preunary_expr->first = op;
     preunary_expr->expr.unary.op = op;
     // get and set sub expression
-    ast_expr_t* sub_expr = parse_expr_prec(p, NULL, prec_preunary(op->type));
+    ast_expr_t* sub_expr = NULL;
+    // things like sizeof(...)
+    if (token_is_preunary_op_expecting_type(op->type)) {
+        // sizeof(
+        //       ^
+        if (!parser_expect_token(p, TOK_LPAREN)) {
+            return parser_sync_expr(p);
+        }
+        sub_expr = parse_expr_type(p);
+        // sizeof(sub_expr)
+        //                ^
+        if (!parser_expect_token(p, TOK_RPAREN)) {
+            return parser_sync_expr(p);
+        }
+    }
+    // all others like ++x, --x
+    else {
+        sub_expr = parse_expr_prec(p, NULL, prec_preunary(op->type));
+    }
     preunary_expr->expr.unary.expr = sub_expr;
     preunary_expr->last = sub_expr->last;
     return preunary_expr;
@@ -161,15 +180,21 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     binary_expr->expr.binary.lhs = lhs;
     binary_expr->expr.binary.op = op_tkn;
     max_prec = (max_prec >= prec_binary(op_tkn->type)) ? max_prec : prec_binary(op_tkn->type);
-    ast_expr_t* rhs = parse_primary_expr_impl(p, NULL);
+    ast_expr_t* middle_expr = NULL;
+    // try as cast, else just
+    if (op_tkn->type == TOK_AS) {
+        middle_expr = parse_expr_type(p);
+    } else {
+        middle_expr = parse_primary_expr_impl(p, NULL);
+    }
     token_type_e curr_op = op_tkn->type;
     token_type_e next_op = parser_peek(p)->type;
 
     while (binary_bind_right(curr_op, next_op)) {
-        rhs = parse_expr_prec(p, rhs, prec_binary(next_op));
+        middle_expr = parse_expr_prec(p, middle_expr, prec_binary(next_op));
         curr_op = next_op, next_op = parser_peek(p)->type;
     }
-    binary_expr->expr.binary.rhs = rhs;
+    binary_expr->expr.binary.rhs = middle_expr;
     binary_expr->first = binary_expr->expr.binary.lhs->first;
     binary_expr->last = binary_expr->expr.binary.rhs->last;
     return parse_expr_prec(p, binary_expr, prec_binary(curr_op));
@@ -256,5 +281,18 @@ ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs) {
     }
     s->first = s->expr.subscript.lhs->first;
     s->last = rbrack;
+    return s;
+}
+
+ast_expr_t* parse_expr_type(parser_t* p) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_TYPE;
+    ast_type_t* type = parse_type(p);
+    if (type->tag == AST_TYPE_INVALID) {
+        return parser_sync_expr(p);
+    }
+    s->expr.type_expr.type = type;
+    s->first = type->first;
+    s->last = type->last;
     return s;
 }
