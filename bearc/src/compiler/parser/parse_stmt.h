@@ -35,12 +35,22 @@ ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr);
 
 ast_stmt_t* parse_stmt_block(parser_t* p);
 
+/// parse a variable declaration with specified leading quals/identifiers
 ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool leading_mut);
 
+/// parse a statement beginning with a func declarator
 ast_stmt_t* parse_fn_decl(parser_t* p);
 
+/// parse a statement beginning with return
 ast_stmt_t* parse_stmt_return(parser_t* p);
 
+/// parse a statement that't just ';'
 ast_stmt_t* parse_stmt_empty(parser_t* p);
+
+/// parse a statement like "pub i32 x = 1;"
+ast_stmt_t* parse_stmt_vis_modifier(parser_t* p);
+
+/// parse next statement expected a variable or function declaration
+ast_stmt_t* parse_stmt_decl(parser_t* p);
 
 #endif

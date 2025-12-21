@@ -114,7 +114,7 @@ typedef enum token_type {
 
     // more operators
     TOK_SIZEOF,
-    TOK_ALLIGNOF,
+    TOK_ALIGNOF,
     TOK_MOVE,
     TOK_AS,
 

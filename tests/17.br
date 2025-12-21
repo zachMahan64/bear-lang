@@ -1,3 +1,12 @@
-std..Arr<i32, sizeof(u8) * 4> thing;
+hid std..Arr<i32, sizeof(u8) * 4> thing;
 
-var x = sizeof(u8);
+pub var x = alignof(u8);
+
+hid str my_str;
+
+pub mut i32 y;
+
+hid fn do_work(std..String item) -> std..String {
+    item.transform().transform_again().foobar();
+    return item;
+}

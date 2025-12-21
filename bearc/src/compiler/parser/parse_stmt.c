@@ -99,6 +99,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
     }
 
+    if (token_is_visibility_modifier(next_type)) {
+        return parse_stmt_vis_modifier(p);
+    }
+
     if (next_type == TOK_RETURN) {
         return parse_stmt_return(p);
     }
@@ -166,7 +170,7 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
     ast_stmt_t* stmt = parser_alloc_stmt(p);
 
     ast_type_t* type;
-    if (leading_mut) {
+    if (leading_mut || !opt_id_slice) {
         type = parse_type(p);
     } else if (opt_id_slice) {
         type = parse_type_with_leading_id(p, *opt_id_slice);
@@ -300,4 +304,23 @@ ast_param_t* parse_param(parser_t* p) {
         param->last = parser_prev(p);
     }
     return param;
+}
+
+ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
+    ast_stmt_t* vis = parser_alloc_stmt(p);
+    vis->type = AST_STMT_VISIBILITY_MODIFIER;
+    token_t* modif = parser_eat(p);        // fine becuz we knew to enter this function
+    ast_stmt_t* stmt = parse_stmt_decl(p); // expect a declaration, namely a function or var decl
+    vis->stmt.vis_modifier.stmt = stmt;
+    vis->stmt.vis_modifier.modifier = modif;
+    vis->first = modif;
+    vis->last = stmt->last;
+    return vis;
+}
+
+ast_stmt_t* parse_stmt_decl(parser_t* p) {
+    if (token_is_function_leading_kw(parser_peek(p)->type)) {
+        return parse_fn_decl(p);
+    }
+    return parse_var_decl(p, NULL, false); // no leading id, leading mut == false
 }

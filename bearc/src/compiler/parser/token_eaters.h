@@ -101,4 +101,6 @@ bool token_is_generic_opener(token_type_e t);
 
 bool token_is_preunary_op_expecting_type(token_type_e t);
 
+bool token_is_visibility_modifier(token_type_e t);
+
 #endif

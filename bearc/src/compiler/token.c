@@ -130,7 +130,7 @@ static void string_to_token_map_init(void) {
 
     // more operators
     strimap_insert(&string_to_token_map, "sizeof", TOK_SIZEOF);
-    strimap_insert(&string_to_token_map, "allignof", TOK_ALLIGNOF);
+    strimap_insert(&string_to_token_map, "alignof", TOK_ALIGNOF);
     strimap_insert(&string_to_token_map, "move", TOK_MOVE);
     strimap_insert(&string_to_token_map, "as", TOK_AS);
 
@@ -275,7 +275,7 @@ static const char* token_to_string_map[TOK__NUM] = {
 
     // more operators
     [TOK_SIZEOF] = "sizeof",
-    [TOK_ALLIGNOF] = "allignof",
+    [TOK_ALIGNOF] = "alignof",
     [TOK_MOVE] = "move",
     [TOK_AS] = "as",
 

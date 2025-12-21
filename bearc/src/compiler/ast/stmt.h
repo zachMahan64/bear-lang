@@ -19,18 +19,18 @@ extern "C" {
 typedef enum {
     // blocks
     AST_STMT_BLOCK, // {...} sequence of statements
-    AST_STMT_FILE,
+    AST_STMT_FILE,  // top-level flat seq of statements w/ metadata
 
     // var decls
     AST_STMT_VAR_DECL,      // type foo;
     AST_STMT_VAR_INIT_DECL, // type foo = something;
 
     // module stuff
-    AST_STMT_MODULE_BLOCK, // AST_MODULE_NAME + AST_STMT_BLOCK
+    AST_STMT_MODULE_BLOCK,
     AST_STMT_MODULE_FLAT,
 
     // import
-    AST_STMT_IMPORT, // TOK_IMPORT + AST_MODULE_NAME
+    AST_STMT_IMPORT,
 
     // statement expr
     AST_STMT_EXPR,
@@ -49,6 +49,9 @@ typedef enum {
     AST_STMT_FOR,    // KW_FOR + init stmt + cond stmt + step expr + body stmt
     AST_STMT_FOR_IN, // KW_FOR + iterable + iterator + body stmt
     AST_STMT_RETURN, // KW_RETURN + expr
+
+    // visibility
+    AST_STMT_VISIBILITY_MODIFIER,
 
     // structs
     AST_STMT_STRUCT_DEF, // TOK_STRUCT + fields
@@ -201,7 +204,7 @@ typedef struct {
 typedef struct {
     token_t* struct_tkn;
     ast_expr_id_t* name;
-    ast_stmt_block_t* fields;
+    ast_slice_of_stmts_t fields;
 } ast_stmt_struct_decl_t;
 
 typedef struct {
@@ -220,6 +223,11 @@ typedef struct {
 typedef struct {
     token_t* terminator;
 } ast_stmt_empty_t;
+
+typedef struct {
+    token_t* modifier;
+    ast_stmt_t* stmt;
+} ast_stmt_vis_modifier_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -244,6 +252,7 @@ typedef union {
     ast_stmt_mark_decl_t mark_decl;
     ast_stmt_mark_preamble_t mark_preamble;
     ast_stmt_empty_t empty;
+    ast_stmt_vis_modifier_t vis_modifier;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

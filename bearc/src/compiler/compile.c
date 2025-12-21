@@ -75,6 +75,7 @@ int compile_file(const char* file_name) {
         printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
     } else {
         printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
+        error_code = -1;
     }
 
     // clean up resources

@@ -256,7 +256,9 @@ bool token_is_pretype_idicator(token_type_e t) {
 bool token_is_generic_opener(token_type_e t) { return t == TOK_TYPE_MOD || t == TOK_LT; }
 
 bool token_is_preunary_op_expecting_type(token_type_e t) {
-    return t == TOK_SIZEOF || t == TOK_ALLIGNOF;
+    return t == TOK_SIZEOF || t == TOK_ALIGNOF;
 }
+
+bool token_is_visibility_modifier(token_type_e t) { return t == TOK_HID || t == TOK_PUB; }
 
 // ^^^^^^^^^^^^^^^^ token consumption primitive functions ^^^^^^^^^^^^^^^^^^^^^^^^^^^

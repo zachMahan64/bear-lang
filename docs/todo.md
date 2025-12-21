@@ -9,6 +9,7 @@
 - [x] parameter parsing when parsing functions
 - [x] array type parsing
 - [x] generic type parsing
+- [x] full casting, sizeof, alignof operator support
 - [ ] pub/hid parsing for statements
 - [ ] `...` and range/slice related syntax
 - [ ] other statement parsing

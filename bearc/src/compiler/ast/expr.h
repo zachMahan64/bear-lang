@@ -106,7 +106,7 @@ typedef union {
     ast_expr_type_t type_expr;
 } ast_expr_u;
 
-/// underlying expr is 0-offset alligned so this struct can be safely downcasted
+/// underlying expr is 0-offset aligned so this struct can be safely downcasted
 typedef struct ast_expr {
     ast_expr_u expr;
     ast_expr_type_e type;
