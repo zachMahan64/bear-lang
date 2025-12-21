@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SPILL_ARR_SIZE_8_T_ARR_CAP 64
+#define SPILL_ARR_SIZE_8_T_ARR_CAP 512
 
 /// dynamic spill array with a small stack buffer extended by the heap once size grows large enough
 typedef struct {
