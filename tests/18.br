@@ -1,5 +1,10 @@
+mut mut mut mut mut i32[&mut] x;
+mut i32 mut y;
+mut i32 & mut;
 
-(1...1000);
-(1...=1000);
-(std..thing.a...=x.y.z);
+i32[&] slice1; // basically a view since it's immut
+i32[&mut] slice2;
+
+var range = (0...4);
+var same = (0...=3);
 

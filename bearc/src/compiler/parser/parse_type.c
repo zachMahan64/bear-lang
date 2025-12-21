@@ -8,6 +8,8 @@
 
 #include "compiler/parser/parse_type.h"
 #include "compiler/ast/expr.h"
+#include "compiler/diagnostics/error_codes.h"
+#include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_expr.h"
 #include "compiler/parser/parser.h"
 #include "compiler/parser/token_eaters.h"
@@ -56,10 +58,17 @@ ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
 
 static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_slice_t id_slice) {
     ast_type_t* base = parser_alloc_type(p);
+    // self-referential for canonical_base, although this shouldn't be an issue
+    base->canonical_base = base;
     // handle pre-mut
     token_t* pre_mut_tkn = NULL;
     if (pre_mut) {
         pre_mut_tkn = parser_eat(p);
+        // handle redundant leading muts
+        while (parser_match_token(p, TOK_MUT)) {
+            compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
+        }
+        // parse base type
         base->type.base.id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
     } else {
         // base id must already be parsed and passed in
@@ -78,6 +87,7 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
         assert(pre_mut_tkn != NULL && "[parse_type_base] mut_tkn must not be NULL");
         base->first = pre_mut_tkn;
         base->last = parser_prev(p); // gets post mut token
+        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
     } else if (!post_mut && !pre_mut) {
         base->first = base->type.base.id.start[0];
         base->last = base->type.base.id.start[base->type.base.id.len - 1];
@@ -124,6 +134,9 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
     while (token_is_ref_or_ptr(parser_peek(p)->type)) {
         inner = parse_type_ref(p, inner);
     }
+    while (parser_peek(p)->type == TOK_LBRACK && parser_peek_n(p, 1)->type == TOK_AMPER) {
+        inner = parse_type_slice(p, inner);
+    }
     while (parser_peek(p)->type == TOK_LBRACK) {
         inner = parse_type_arr(p, inner);
     }
@@ -147,11 +160,7 @@ ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner) {
     ast_type_t* outer = parser_alloc_type(p);
     outer->type.ref.modifier = parser_eat(p); // definitely fine because we know to be in this func
     outer->type.ref.mut = parser_match_token(p, TOK_MUT); // match into bool
-    if (inner->tag == AST_TYPE_BASE) {
-        outer->type.ref.canonical_base = inner;
-    } else {
-        outer->type.ref.canonical_base = inner->type.ref.canonical_base;
-    }
+    outer->canonical_base = inner->canonical_base;
     outer->type.ref.inner = inner;
     outer->tag = AST_TYPE_REF_PTR;
     outer->first = inner->first;
@@ -164,13 +173,10 @@ ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner) {
     outer->tag = AST_TYPE_ARR;
 
     // handle canonical base
-    if (inner->tag == AST_TYPE_BASE) {
-        outer->type.arr.canonical_base = inner;
-    } else {
-        outer->type.arr.canonical_base = inner->type.ref.canonical_base;
-    }
+    outer->canonical_base = inner->canonical_base;
+
     // handle [size_expr]
-    outer->type.arr.lbrack = parser_eat(p); // definitely fine because we know to be in this func
+    parser_expect_token(p, TOK_LBRACK); // should be fine because we know to be in this func
     ast_expr_t* size_expr = parse_expr(p);
     if (size_expr->type == AST_EXPR_INVALID) {
         return parser_sync_type(p);
@@ -180,9 +186,31 @@ ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner) {
     if (!rbrack) {
         return parser_sync_type(p);
     }
-    outer->type.arr.rbrack = rbrack;
     outer->type.arr.mut = parser_match_token(p, TOK_MUT); // match into bool
     outer->type.arr.inner = inner;
+    outer->first = inner->first;
+    outer->last = parser_prev(p);
+    return outer;
+}
+
+ast_type_t* parse_type_slice(parser_t* p, ast_type_t* inner) {
+    ast_type_t* outer = parser_alloc_type(p);
+    outer->tag = AST_TYPE_SLICE;
+    // handle canonical base
+    outer->canonical_base = inner->canonical_base;
+    // handle [&]
+    // should be fine because we know to be in this func
+    if (!parser_expect_token(p, TOK_LBRACK)) {
+        return parser_sync_type(p);
+    }
+    if (!parser_expect_token(p, TOK_AMPER)) {
+        return parser_sync_type(p);
+    }
+    outer->type.slice.mut = parser_match_token(p, TOK_MUT); // match into bool
+    if (!parser_expect_token(p, TOK_RBRACK)) {
+        return parser_sync_type(p);
+    }
+    outer->type.slice.inner = inner;
     outer->first = inner->first;
     outer->last = parser_prev(p);
     return outer;
@@ -292,6 +320,7 @@ ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
         return parser_sync_type(p);
     }
     outer->type.generic.inner = inner;
+    outer->canonical_base = inner->canonical_base;
     parser_disable_bool_comparision(p); // cleaner template parsing from < and > issues
     ast_generic_arg_slice_t args = parse_generic_arg_slice(p);
     parser_enable_bool_comparision(p); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

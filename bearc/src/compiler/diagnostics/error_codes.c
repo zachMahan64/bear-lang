@@ -13,7 +13,7 @@ const char* error_message_for_code(error_code_e error_code) {
     static const char* error_messages[ERR__COUNT] = {
         [ERR_ILLEGAL_IDENTIFER] = "illegal identifier",
         [ERR_EXPECTED_TOKEN] = "expected token: ",
-        [ERR_EXPECTED_VARIABLE_IDENTIFIER] = "expected variable identifier",
+        [ERR_EXPECTED_VARIABLE_NAME] = "expected variable name",
         [ERR_EXPECTED_PARAMETER_IDENTIFIER] = "expected parameter name",
         [ERR_EXPECTED_TYPE] = "expected type",
         [ERR_EXPECTED_EXPRESSION] = "expected expression",
@@ -22,7 +22,7 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECT_GENERIC_OPENER] = "expected '::' or '<' in generic type",
         [ERR_EXPECTED_BASE_TYPE_IN_GENERIC] =
             "templated can only be applied to base types (not &, *, or arrays)",
-    };
+        [ERR_REDUNDANT_MUT] = "redundant 'mut' qualifier"};
     return error_messages[error_code];
 }
 

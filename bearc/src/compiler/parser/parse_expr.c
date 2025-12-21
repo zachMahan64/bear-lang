@@ -163,7 +163,7 @@ ast_expr_t* parse_expr_from_id_slice(parser_t* p, token_ptr_slice_t id_slice) {
 }
 
 token_t* parse_var_name(parser_t* p) {
-    return parser_expect_token_with_err_code(p, TOK_IDENTIFIER, ERR_ILLEGAL_IDENTIFER);
+    return parser_expect_token_with_err_code(p, TOK_IDENTIFIER, ERR_EXPECTED_VARIABLE_NAME);
 }
 
 static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {

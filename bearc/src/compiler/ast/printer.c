@@ -94,10 +94,13 @@ static void print_terminator(token_t* term) {
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
 }
 
-static void print_mut(void) {
+static void print_op_from_type(token_type_e t) {
     print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_BOLD_MAGENTA "mut" ANSI_BOLD_GREEN "`" ANSI_RESET ",\n");
+        printf(ANSI_BOLD_GREEN "`" ANSI_BOLD_MAGENTA "%s" ANSI_BOLD_GREEN "`" ANSI_RESET ",\n",
+               get_token_to_string_map()[t]);
 }
+
+static void print_mut(void) { print_op_from_type(TOK_MUT); }
 
 static void print_type(ast_type_t* type);
 
@@ -158,9 +161,9 @@ static void print_type(ast_type_t* type) {
     case AST_TYPE_ARR:
         puts("arr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_type(type->type.arr.inner);
-        print_opening_delim(type->type.arr.lbrack);
+        print_opening_delim_from_type(TOK_LBRACK);
         print_expr(type->type.arr.size_expr);
-        print_closing_delim(type->type.arr.rbrack);
+        print_closing_delim_from_type(TOK_RBRACK);
         if (type->type.arr.mut) {
             printer_do_indent();
             print_mut();
@@ -183,6 +186,17 @@ static void print_type(ast_type_t* type) {
     case AST_TYPE_INVALID:
         print_indent();
         printf(ANSI_BOLD_RED "invalid type" ANSI_RESET);
+        break;
+    case AST_TYPE_SLICE:
+        puts("slice type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_type(type->type.slice.inner);
+        print_opening_delim_from_type(TOK_LBRACK);
+        print_op_from_type(TOK_AMPER);
+        if (type->type.slice.mut) {
+            print_mut();
+        }
+        print_closing_delim_from_type(TOK_RBRACK);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
     puts(",");

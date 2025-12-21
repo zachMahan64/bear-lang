@@ -18,6 +18,7 @@ typedef enum {
     AST_TYPE_BASE,
     AST_TYPE_REF_PTR,
     AST_TYPE_ARR,
+    AST_TYPE_SLICE,
     AST_TYPE_GENERIC,
     AST_TYPE_INVALID,
 } ast_type_e;
@@ -30,19 +31,20 @@ typedef struct {
 // shared by tags AST_TYPE_REF and AST_TYPE_PTR
 typedef struct {
     ast_type_t* inner;
-    ast_type_t* canonical_base;
     token_t* modifier; // & or *
     bool mut;
 } ast_type_ref_t;
 
 typedef struct {
     ast_type_t* inner;
-    ast_type_t* canonical_base;
-    token_t* lbrack;
     ast_expr_t* size_expr;
-    token_t* rbrack;
     bool mut;
 } ast_type_arr_t;
+
+typedef struct {
+    ast_type_t* inner;
+    bool mut;
+} ast_type_slice_t;
 
 // generics ~~~~~~~~~~~~~~~~~~
 typedef struct {
@@ -78,11 +80,13 @@ typedef union {
     ast_type_ref_t ref;
     ast_type_arr_t arr;
     ast_type_generic_t generic;
+    ast_type_slice_t slice;
 } ast_type_u;
 
 typedef struct ast_type {
     ast_type_u type;
     ast_type_e tag;
+    ast_type_t* canonical_base;
     token_t* first;
     token_t* last;
 } ast_type_t;
