@@ -348,7 +348,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     return stmt;
 }
 
-// TODO, finish impl
+// TODO, finish impl, broken
 ast_stmt_t* parse_module(parser_t* p) {
     ast_stmt_t* mod = parser_alloc_stmt(p);
     token_t* mod_tkn = parser_expect_token(p, TOK_MODULE);
