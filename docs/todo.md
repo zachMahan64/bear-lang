@@ -10,8 +10,9 @@
 - [x] array type parsing
 - [x] generic type parsing
 - [x] full casting, sizeof, alignof operator support
-- [ ] pub/hid parsing for statements
-- [ ] `...` and range/slice related syntax
+- [x] pub/hid parsing for statements
+- [x] `...` and range/slice related syntax
+- [ ] add slices as i32\[&]
 - [ ] other statement parsing
 - [ ] structs
 - [ ] marks

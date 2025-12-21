@@ -111,6 +111,7 @@ lex_start:
     ++col;
     goto lex_start;
 
+    // add any new maximum-munch operators into here
 lex_multichar_operator:
     if (pos + 1 < end_of_buf) {
         n1 = pos[1]; // cache
@@ -119,7 +120,15 @@ lex_multichar_operator:
     }
     switch (c) {
     case ('.'): {
-        if (end_of_buf && n1 == '.') {
+        if (pos + 3 < end_of_buf && n1 == '.' && pos[2] == '.' && pos[3] == '=') {
+            // ...=
+            LEX_KNOWN_LEN_PUSH(4);
+        }
+        if (pos + 2 < end_of_buf && n1 == '.' && pos[2] == '.') {
+            // ...
+            LEX_KNOWN_LEN_PUSH(3);
+        }
+        if (n1 == '.') {
             LEX_KNOWN_LEN_PUSH(2);
         }
         if ((n1) >= '0' && n1 <= '9') {
@@ -129,6 +138,7 @@ lex_multichar_operator:
             ++col;
             goto lex_start;
         }
+        // else
         LEX_KNOWN_LEN_PUSH(1);
     }
     // assignment

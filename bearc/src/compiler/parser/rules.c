@@ -41,6 +41,8 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_DOT] = 2,
     [TOK_RARROW] = 2,
 
+    [TOK_ELLIPSE] = 3,
+    [TOK_ELLIPSE_EQ] = 3,
     [TOK_AS] = 3,
 
     [TOK_ASSIGN_EQ] = 16,

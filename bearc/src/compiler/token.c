@@ -161,6 +161,10 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "==", TOK_BOOL_EQ);
     strimap_insert(&string_to_token_map, "!=", TOK_NE);
 
+    // range stuff
+    strimap_insert(&string_to_token_map, "...", TOK_ELLIPSE);
+    strimap_insert(&string_to_token_map, "...=", TOK_ELLIPSE_EQ);
+
     // compound assignment operators
     strimap_insert(&string_to_token_map, "+=", TOK_ASSIGN_PLUS_EQ);
     strimap_insert(&string_to_token_map, "-=", TOK_ASSIGN_MINUS_EQ);
@@ -302,6 +306,10 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_RARROW] = "->",
     [TOK_SCOPE_RES] = "..",
     [TOK_TYPE_MOD] = "::",
+
+    // range
+    [TOK_ELLIPSE] = "...",
+    [TOK_ELLIPSE_EQ] = "...=",
 
     // operators
     [TOK_ASSIGN_MOVE] = "<-",

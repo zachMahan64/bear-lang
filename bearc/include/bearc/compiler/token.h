@@ -157,6 +157,9 @@ typedef enum token_type {
     TOK_TYPE_MOD,  // :: , for example, box::int
 
     // operators
+    // range
+    TOK_ELLIPSE,
+    TOK_ELLIPSE_EQ,
     // assign
     TOK_ASSIGN_MOVE, // <-
     // stream
