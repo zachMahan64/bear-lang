@@ -218,7 +218,8 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     call_expr->expr.fn_call.left_expr = lhs;
     call_expr->expr.fn_call.left_paren = lparen;
 
-    spill_arr_ptr_t args = spill_arr_ptr_create();
+    spill_arr_ptr_t args;
+    spill_arr_ptr_init(&args);
 
     // skip the args parsing loop if the struct is foo()
     if (!(parser_peek(p)->type == TOK_RPAREN)) {

@@ -22,7 +22,7 @@ typedef struct {
     void* data[SPILL_ARR_SIZE_8_T_ARR_CAP];
 } spill_arr_ptr_t;
 
-spill_arr_ptr_t spill_arr_ptr_create(void);
+void spill_arr_ptr_init(spill_arr_ptr_t* sarr);
 
 void** spill_arr_ptr_emplace(spill_arr_ptr_t* sarr);
 

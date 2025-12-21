@@ -49,7 +49,8 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
 }
 
 ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
-    spill_arr_ptr_t sarr = spill_arr_ptr_create();
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
 
     while (!(parser_peek(p)->type == until_tkn)  // while curr uneaten != until (intended behavior)
            && !parser_match_tossed(p, until_tkn) // while prev tossed != until (edge-case handling)

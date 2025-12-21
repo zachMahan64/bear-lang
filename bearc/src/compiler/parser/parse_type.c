@@ -41,7 +41,8 @@ ast_slice_of_params_t parser_freeze_params_spill_arr(parser_t* p, spill_arr_ptr_
 
 ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
                                             token_type_e terminator) {
-    spill_arr_ptr_t sarr = spill_arr_ptr_create();
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
 
     while (!parser_peek_match(p, terminator) && !parser_eof(p)) {
         spill_arr_ptr_push(&sarr, parse_param(p));
@@ -250,7 +251,8 @@ ast_generic_arg_slice_t parser_freeze_generic_arg_spill_arr(parser_t* p, spill_a
 
 ast_generic_arg_slice_t parse_generic_arg_slice(parser_t* p) {
 
-    spill_arr_ptr_t sarr = spill_arr_ptr_create();
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
 
     token_t* opener =
         parser_expect_token_call(p, &token_is_generic_opener, ERR_EXPECT_GENERIC_OPENER);

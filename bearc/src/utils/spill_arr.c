@@ -7,7 +7,6 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "utils/spill_arr.h"
-#include "compiler/ast/printer.h"
 #include "utils/vector.h"
 #include <assert.h>
 #include <stddef.h>
@@ -15,15 +14,11 @@
 #include <stdio.h>
 #include <string.h>
 
-/// makes a spill_arr_8_t of internal default capacity
-spill_arr_ptr_t spill_arr_ptr_create(void) {
-    spill_arr_ptr_t arr = {
-        .size = 0,
-        .arr_cap = SPILL_ARR_SIZE_8_T_ARR_CAP,
-        // vec uninit until we need it,
-        // arr uninit'd
-    };
-    return arr;
+void spill_arr_ptr_init(spill_arr_ptr_t* sarr) {
+    sarr->size = 0;
+    sarr->arr_cap = SPILL_ARR_SIZE_8_T_ARR_CAP;
+    // vec uninit until we need it,
+    // arr uninit'd
 }
 
 void** spill_arr_ptr_emplace(spill_arr_ptr_t* sarr) {
