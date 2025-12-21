@@ -36,7 +36,7 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
     ast_stmt_t* file = parser_alloc_stmt(p);
     file->type = AST_STMT_FILE;
     file->stmt.file.file_name = file_name;
-    file->stmt.file.stmts = parse_slice_of_stmts(p, TOK_EOF);
+    file->stmt.file.stmts = parse_slice_of_decls(p, TOK_EOF);
     if (file->stmt.file.stmts.len != 0) {
         file->first = file->stmt.file.stmts.start[0]->first;
         file->last = file->stmt.file.stmts.start[file->stmt.file.stmts.len - 1]->last;
@@ -52,7 +52,7 @@ ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
-    while (!(parser_peek_match(p, until_tkn)) && !parser_eof(p) // while !eof (edge-case handling)
+    while (!(parser_peek_match(p, until_tkn) || parser_eof(p)) // while !eof (edge-case handling)
     ) {
         spill_arr_ptr_push(&sarr, parse_stmt(p));
     }
@@ -64,7 +64,7 @@ ast_slice_of_stmts_t parse_slice_of_decls(parser_t* p, token_type_e until_tkn) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
-    while (!(parser_peek_match(p, until_tkn) && !parser_eof(p))) {
+    while (!(parser_peek_match(p, until_tkn) || parser_eof(p))) {
         spill_arr_ptr_push(&sarr, parse_stmt_decl(p));
     }
 
@@ -337,7 +337,15 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     if (next_type == TOK_MODULE) {
         return parse_module(p);
     }
-    return parse_var_decl(p, NULL, false); // no leading id, leading mut == false
+    if (!token_is_builtin_type_or_id(next_type)) {
+        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_EXPECTED_DECLARTION);
+        return parser_sync_stmt(p);
+    }
+    ast_stmt_t* stmt = parse_var_decl(p, NULL, false); // no leading id, leading mut == false
+    if (stmt->type == AST_STMT_INVALID) {
+        compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
+    }
+    return stmt;
 }
 
 // TODO, finish impl
@@ -348,25 +356,34 @@ ast_stmt_t* parse_module(parser_t* p) {
         return parser_sync_stmt(p);
     }
     ast_expr_t* id = parse_id(p);
-    token_t* terminator = parser_expect_token(p, TOK_SEMICOLON);
-    if (terminator) {
-        mod->type = AST_STMT_MODULE_FLAT;
-        mod->stmt.module_flat.id = id;
-        ast_slice_of_stmts_t stmts = parse_slice_of_decls(p, TOK_MODULE);
-        mod->stmt.module_flat.statements = stmts;
+    mod->stmt.module.id = id;
+    mod->type = AST_STMT_MODULE;
+
+    token_type_e next_type = parser_peek(p)->type;
+    if (next_type != TOK_SEMICOLON && next_type != TOK_LBRACE) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    ERR_EXPECTED_DELIM_IN_MODULE_DECL);
+        return parser_sync_stmt(p);
+    }
+
+    token_t* semicolon = parser_match_token(p, TOK_SEMICOLON);
+    if (semicolon) {
+        mod->stmt.module.id = id;
+        ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_MODULE);
+        mod->stmt.module.decls = decls;
         mod->first = mod_tkn;
-        if (stmts.len > 0) {
-            mod->last = stmts.start[stmts.len - 1]->last;
+        if (decls.len > 0) {
+            mod->last = decls.start[decls.len - 1]->last;
         } else {
-            mod->last = terminator;
+            mod->last = semicolon;
         }
     } else {
-        mod->type = AST_STMT_MODULE_BLOCK;
-        mod->stmt.module_block.id = id;
-        ast_stmt_t* block = parse_stmt_block(p);
-        mod->stmt.module_block.block = block;
+        parser_expect_token(p, TOK_LBRACE);
+        ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_RBRACE);
+        token_t* rbrace = parser_expect_token(p, TOK_RBRACE);
+        mod->stmt.module.decls = decls;
         mod->first = mod_tkn;
-        mod->last = block->last;
+        mod->last = rbrace;
     }
     return mod;
 }

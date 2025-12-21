@@ -26,8 +26,7 @@ typedef enum {
     AST_STMT_VAR_INIT_DECL, // type foo = something;
 
     // module stuff
-    AST_STMT_MODULE_BLOCK,
-    AST_STMT_MODULE_FLAT,
+    AST_STMT_MODULE,
 
     // import
     AST_STMT_IMPORT,
@@ -101,13 +100,8 @@ typedef struct {
  */
 typedef struct {
     ast_expr_t* id;
-    ast_stmt_t* block;
-} ast_stmt_module_block_t;
-
-typedef struct {
-    ast_expr_t* id;
-    ast_slice_of_stmts_t statements;
-} ast_stmt_module_flat_t;
+    ast_slice_of_stmts_t decls;
+} ast_stmt_module_t;
 
 /**
  * imports a file given my a path as my.path.to.file
@@ -229,8 +223,7 @@ typedef struct {
 typedef union {
     ast_stmt_block_t block;
     ast_stmt_file_t file;
-    ast_stmt_module_block_t module_block;
-    ast_stmt_module_flat_t module_flat;
+    ast_stmt_module_t module;
     ast_stmt_import_t import;
     ast_stmt_expr_t stmt_expr;
     ast_stmt_fn_decl_t fn_decl;

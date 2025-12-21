@@ -219,6 +219,7 @@ void print_expr(ast_expr_t* expression) {
     case (AST_EXPR_ID): {
         token_ptr_slice_t ids = expression->expr.id.slice;
         printf("identifer: " ANSI_BOLD_GREEN "`" ANSI_RESET);
+        printer_do_indent();
         for (size_t i = 0; i < ids.len; i++) {
             int len = (int)ids.start[i]->len;
             const char* start = ids.start[i]->start;
@@ -227,6 +228,7 @@ void print_expr(ast_expr_t* expression) {
                 printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
             }
         }
+        printer_deindent();
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
         break;
     }
@@ -321,8 +323,15 @@ void print_stmt(ast_stmt_t* stmt) {
         print_closing_delim_from_type(TOK_RBRACE);
         print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
-    case AST_STMT_MODULE_BLOCK:
-    case AST_STMT_MODULE_FLAT:
+    case AST_STMT_MODULE:
+        printf("module: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
+        print_op_from_type(TOK_MODULE);
+        print_expr(stmt->stmt.module.id);
+        for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
+            print_stmt(stmt->stmt.module.decls.start[i]);
+        }
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        break;
     case AST_STMT_FILE:
         printf("file '%s': " ANSI_BOLD_GREEN "{\n" ANSI_RESET, stmt->stmt.file.file_name);
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {

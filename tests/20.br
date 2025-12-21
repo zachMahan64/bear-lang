@@ -1,1 +1,3 @@
-//mod main; // todo, not impl yet
+mod main; // todo, not impl yet
+
+1 + 1;
