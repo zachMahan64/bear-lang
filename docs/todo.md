@@ -12,7 +12,7 @@
 - [x] full casting, sizeof, alignof operator support
 - [x] pub/hid parsing for statements
 - [x] `...` and range/slice related syntax
-- [ ] add slices as i32\[&]
+- [x] add slices as i32\[&]
 - [ ] other statement parsing
 - [ ] structs
 - [ ] marks
