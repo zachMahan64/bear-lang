@@ -325,12 +325,16 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_MODULE:
         printf("module: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
+        printer_do_indent();
         print_op_from_type(TOK_MODULE);
+        printer_deindent();
         print_expr(stmt->stmt.module.id);
+        printer_do_indent();
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
             print_stmt(stmt->stmt.module.decls.start[i]);
         }
         print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        printer_deindent();
         break;
     case AST_STMT_FILE:
         printf("file '%s': " ANSI_BOLD_GREEN "{\n" ANSI_RESET, stmt->stmt.file.file_name);
