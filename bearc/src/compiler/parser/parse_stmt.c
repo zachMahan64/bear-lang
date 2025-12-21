@@ -338,7 +338,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_module(p);
     }
     if (!token_is_builtin_type_or_id(next_type)) {
-        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_EXPECTED_DECLARTION);
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
         return parser_sync_stmt(p);
     }
     ast_stmt_t* stmt = parse_var_decl(p, NULL, false); // no leading id, leading mut == false
