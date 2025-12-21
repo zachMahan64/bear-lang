@@ -333,8 +333,8 @@ void print_stmt(ast_stmt_t* stmt) {
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
             print_stmt(stmt->stmt.module.decls.start[i]);
         }
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_FILE:
         printf("file '%s': " ANSI_BOLD_GREEN "{\n" ANSI_RESET, stmt->stmt.file.file_name);
@@ -432,8 +432,8 @@ void print_stmt(ast_stmt_t* stmt) {
         print_op(stmt->stmt.vis_modifier.modifier);
         printer_do_indent();
         print_stmt(stmt->stmt.vis_modifier.stmt);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     }
 }
