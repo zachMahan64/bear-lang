@@ -244,14 +244,12 @@ bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t
 
 bool token_is_posttype_indicator(token_type_e t) {
     return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR || t == TOK_LT ||
-           t == TOK_TYPE_MOD || t == TOK_GT || t == TOK_LBRACK;
+           t == TOK_TYPE_MOD || t == TOK_GT;
 }
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }
 
-bool token_is_pretype_idicator(token_type_e t) {
-    return t == TOK_MUT || t == TOK_PUB || t == TOK_HID;
-}
+bool token_is_non_id_type_idicator(token_type_e t) { return t == TOK_MUT || t == TOK_LBRACK; }
 
 bool token_is_generic_opener(token_type_e t) { return t == TOK_TYPE_MOD || t == TOK_LT; }
 

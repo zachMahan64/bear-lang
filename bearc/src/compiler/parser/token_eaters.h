@@ -95,7 +95,7 @@ bool token_is_ref_or_ptr(token_type_e t);
 
 bool token_is_function_leading_kw(token_type_e t);
 
-bool token_is_pretype_idicator(token_type_e t);
+bool token_is_non_id_type_idicator(token_type_e t);
 
 bool token_is_generic_opener(token_type_e t);
 

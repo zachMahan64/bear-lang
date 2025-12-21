@@ -134,6 +134,7 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
     while (token_is_ref_or_ptr(parser_peek(p)->type)) {
         inner = parse_type_ref(p, inner);
     }
+    // TODO fix impl
     while (parser_peek(p)->type == TOK_LBRACK && parser_peek_n(p, 1)->type == TOK_AMPER) {
         inner = parse_type_slice(p, inner);
     }
@@ -239,7 +240,7 @@ ast_generic_arg_t* parse_generic_arg(parser_t* p) {
         is_type = false;
         expr = parse_expr(p);
     }
-    if (token_is_pretype_idicator(parser_peek(p)->type)) {
+    if (token_is_non_id_type_idicator(parser_peek(p)->type)) {
         is_type = true;
         type = parse_type(p);
     }
