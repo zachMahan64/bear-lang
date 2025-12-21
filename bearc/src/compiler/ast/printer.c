@@ -429,12 +429,11 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_VISIBILITY_MODIFIER:
         puts("visibility-modified statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
-        print_indent();
         print_op(stmt->stmt.vis_modifier.modifier);
         printer_do_indent();
         print_stmt(stmt->stmt.vis_modifier.stmt);
-        printer_deindent();
         print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
+        printer_deindent();
         break;
     }
 }

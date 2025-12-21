@@ -110,10 +110,6 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
     }
 
-    if (token_is_visibility_modifier(next_type)) {
-        return parse_stmt_vis_modifier(p);
-    }
-
     if (next_type == TOK_RETURN) {
         return parse_stmt_return(p);
     }
@@ -337,6 +333,11 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     if (next_type == TOK_MODULE) {
         return parse_module(p);
     }
+
+    if (token_is_visibility_modifier(next_type)) {
+        return parse_stmt_vis_modifier(p);
+    }
+
     if (!token_is_builtin_type_or_id(next_type)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
         return parser_sync_stmt(p);
@@ -369,7 +370,7 @@ ast_stmt_t* parse_module(parser_t* p) {
     token_t* semicolon = parser_match_token(p, TOK_SEMICOLON);
     if (semicolon) {
         mod->stmt.module.id = id;
-        ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_MODULE);
+        ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_EOF);
         mod->stmt.module.decls = decls;
         mod->first = mod_tkn;
         if (decls.len > 0) {

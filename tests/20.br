@@ -1,7 +1,16 @@
-mod main; // todo, not impl yet
+mod my_mod; // make this whole file included in this module
 
 
 fn main() {
     do_thing();
-    1 + 1;
+    i32 x = (1 + 1);
+}
+
+pub mod nested {
+    hid fn implementation_detail() {
+        do_work(); 
+    }
+    fn foo() {
+        implementation_detail();
+    }
 }
