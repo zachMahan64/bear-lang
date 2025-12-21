@@ -22,9 +22,9 @@ ast_param_t* parse_param(parser_t* p);
 ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
                                             token_type_e terminator);
 
-ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner);
+ast_type_t* parse_type_arr(parser_t* p);
 
-ast_type_t* parse_type_slice(parser_t* p, ast_type_t* inner);
+ast_type_t* parse_type_slice(parser_t* p);
 
 ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner);
 

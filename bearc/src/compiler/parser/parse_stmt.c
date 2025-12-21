@@ -105,7 +105,8 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_fn_decl(p);
     }
 
-    if (next_type == TOK_MUT) {
+    // handle decls with leading mut or brackets (slices and arrays)
+    if (token_is_non_id_type_idicator(next_type)) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
     }
 

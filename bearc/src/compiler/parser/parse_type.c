@@ -114,12 +114,29 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
 
+    if (first_type == TOK_LBRACK && parser_peek_n(p, 1)->type == TOK_AMPER) {
+        return parse_type_slice(p);
+    }
+    if (first_type == TOK_LBRACK) {
+        return parse_type_arr(p);
+    }
+
     ast_type_t* inner = NULL;
 
     // parse base types
     if (has_leading_id) {
         inner = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
     } else if (first_type == TOK_MUT) {
+        token_type_e t1 = parser_peek_n(p, 1)->type;
+        token_type_e t2 = parser_peek_n(p, 2)->type;
+        if (t1 == TOK_LBRACK && t2 == TOK_AMPER) {
+            compiler_error_list_emplace(p->error_list, first_tkn, ERR_NO_LEADING_MUT_FOR_SLICES);
+            return parser_sync_type(p);
+        }
+        if (t1 == TOK_LBRACK) {
+            compiler_error_list_emplace(p->error_list, first_tkn, ERR_MUT_CANNOT_BIND_TO_ARRAYS);
+            return parser_sync_type(p);
+        }
         inner = parse_type_base_with_leading_mut(p);
     } else {
         leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
@@ -133,13 +150,6 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
     // parse type modifiers
     while (token_is_ref_or_ptr(parser_peek(p)->type)) {
         inner = parse_type_ref(p, inner);
-    }
-    // TODO fix impl
-    while (parser_peek(p)->type == TOK_LBRACK && parser_peek_n(p, 1)->type == TOK_AMPER) {
-        inner = parse_type_slice(p, inner);
-    }
-    while (parser_peek(p)->type == TOK_LBRACK) {
-        inner = parse_type_arr(p, inner);
     }
     if (inner) {
         return inner;
@@ -169,15 +179,15 @@ ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner) {
     return outer;
 }
 
-ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner) {
+ast_type_t* parse_type_arr(parser_t* p) {
     ast_type_t* outer = parser_alloc_type(p);
     outer->tag = AST_TYPE_ARR;
 
-    // handle canonical base
-    outer->canonical_base = inner->canonical_base;
-
     // handle [size_expr]
-    parser_expect_token(p, TOK_LBRACK); // should be fine because we know to be in this func
+    token_t* lbrack = parser_expect_token(p, TOK_LBRACK);
+    if (!lbrack) {
+        return parser_sync_type(p);
+    }
     ast_expr_t* size_expr = parse_expr(p);
     if (size_expr->type == AST_EXPR_INVALID) {
         return parser_sync_type(p);
@@ -187,21 +197,25 @@ ast_type_t* parse_type_arr(parser_t* p, ast_type_t* inner) {
     if (!rbrack) {
         return parser_sync_type(p);
     }
-    outer->type.arr.mut = parser_match_token(p, TOK_MUT); // match into bool
+    ast_type_t* inner = parse_type(p);
+    if (inner->tag == AST_TYPE_INVALID) {
+        return parser_sync_type(p);
+    }
     outer->type.arr.inner = inner;
-    outer->first = inner->first;
-    outer->last = parser_prev(p);
+    // handle canonical base
+    outer->canonical_base = inner->canonical_base;
+    outer->first = lbrack;
+    inner->last = inner->last;
     return outer;
 }
 
-ast_type_t* parse_type_slice(parser_t* p, ast_type_t* inner) {
+ast_type_t* parse_type_slice(parser_t* p) {
     ast_type_t* outer = parser_alloc_type(p);
     outer->tag = AST_TYPE_SLICE;
-    // handle canonical base
-    outer->canonical_base = inner->canonical_base;
     // handle [&]
     // should be fine because we know to be in this func
-    if (!parser_expect_token(p, TOK_LBRACK)) {
+    token_t* lbrack = parser_expect_token(p, TOK_LBRACK);
+    if (!lbrack) {
         return parser_sync_type(p);
     }
     if (!parser_expect_token(p, TOK_AMPER)) {
@@ -211,9 +225,15 @@ ast_type_t* parse_type_slice(parser_t* p, ast_type_t* inner) {
     if (!parser_expect_token(p, TOK_RBRACK)) {
         return parser_sync_type(p);
     }
+    ast_type_t* inner = parse_type(p);
+    if (inner->tag == AST_TYPE_INVALID) {
+        return parser_sync_type(p);
+    }
+    // handle canonical base
     outer->type.slice.inner = inner;
-    outer->first = inner->first;
-    outer->last = parser_prev(p);
+    outer->canonical_base = inner->canonical_base;
+    outer->first = lbrack;
+    inner->last = inner->last;
     return outer;
 }
 

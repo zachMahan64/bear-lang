@@ -38,7 +38,6 @@ typedef struct {
 typedef struct {
     ast_type_t* inner;
     ast_expr_t* size_expr;
-    bool mut;
 } ast_type_arr_t;
 
 typedef struct {

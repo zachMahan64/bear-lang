@@ -235,7 +235,7 @@ bool token_is_function_leading_kw(token_type_e t) {
 
 bool token_is_syncable_delim(token_type_e t) {
     return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
-           t == TOK_RBRACK || token_is_function_leading_kw(t) || t == TOK_COMMA;
+           token_is_function_leading_kw(t) || t == TOK_COMMA;
 }
 
 bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }
@@ -244,7 +244,7 @@ bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t
 
 bool token_is_posttype_indicator(token_type_e t) {
     return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR || t == TOK_LT ||
-           t == TOK_TYPE_MOD || t == TOK_GT;
+           t == TOK_TYPE_MOD;
 }
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }

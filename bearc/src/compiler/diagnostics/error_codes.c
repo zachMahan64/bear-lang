@@ -22,7 +22,9 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECT_GENERIC_OPENER] = "expected '::' or '<' in generic type",
         [ERR_EXPECTED_BASE_TYPE_IN_GENERIC] =
             "templated can only be applied to base types (not &, *, or arrays)",
-        [ERR_REDUNDANT_MUT] = "redundant 'mut' qualifier"};
+        [ERR_REDUNDANT_MUT] = "redundant 'mut' qualifier",
+        [ERR_MUT_CANNOT_BIND_TO_ARRAYS] = "'mut' qualifier cannot bind to arrays",
+        [ERR_NO_LEADING_MUT_FOR_SLICES] = "'mut' qualifier should be: [&mut] for slices"};
     return error_messages[error_code];
 }
 

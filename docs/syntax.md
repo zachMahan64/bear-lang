@@ -49,15 +49,14 @@ ResrcManager manager1 = ResrcManager::new();
 ResrcManager manager2 <- manager1; // transfer ownership through move
 ```
 #### Arrays
-- Arrays are first-class objects and don't decay to pointers.
-- To pass a pointer to the first element, pass like this &arr
 ```
-i32[10] my_arr;      // holding {elem_0, elem_1, ...}
-i32[10]& my_arr_ref = &my_arr; // ptr to elem_0 w/ compile time size awareness
+[10]i32 my_arr;      // holding {elem_0, elem_1, ...}
+[&]i32 my_arr_ref = &my_arr; // slice
 ```
 ```
-fn take_an_arr(i32[10]& arr) -> i32[10]& {
-    return arr; // does nothing, but demonstrates by-size array passing
+fn take_a_slice([&mut]i32 slice) -> [&]i32 {
+    transform_slice(slice);
+    return slice;
 }
 ```
 
