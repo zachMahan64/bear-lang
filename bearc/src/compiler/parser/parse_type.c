@@ -69,7 +69,7 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
             compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
         }
         // parse base type
-        base->type.base.id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+        base->type.base.id = parse_id_token_slice(p, TOK_SCOPE_RES);
     } else {
         // base id must already be parsed and passed in
         base->type.base.id = id_slice;
@@ -122,7 +122,7 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
     } else if (first_type == TOK_MUT) {
         inner = parse_type_base_with_leading_mut(p);
     } else {
-        leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+        leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         inner = parse_type_base_with_leading_id(p, leading_id);
     }
 
@@ -225,7 +225,7 @@ ast_generic_arg_t* parse_generic_arg(parser_t* p) {
     bool is_type = false;
     // parse as type or id ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
-        token_ptr_slice_t leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+        token_ptr_slice_t leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         next_type = parser_peek(p)->type;
         if (token_is_posttype_indicator(next_type)) {
             is_type = true;

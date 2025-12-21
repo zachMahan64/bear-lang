@@ -21,7 +21,11 @@ ast_stmt_t* parse_file(parser_t* parser, const char* file_name);
 /// - vector must contain type ast_stmt_t
 ast_slice_of_stmts_t parser_freeze_stmt_spill_arr(parser_t* p, spill_arr_ptr_t* sarr);
 
+/// parse a sequence of any kind of statement
 ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until);
+
+/// parse a sequence of stmts but only allowing declarations
+ast_slice_of_stmts_t parse_slice_of_decls(parser_t* p, token_type_e until_tkn);
 
 /// for adding contents of the vector to the arena, and freeing the vector
 /// - vector must contain type ast_param_t
@@ -52,5 +56,7 @@ ast_stmt_t* parse_stmt_vis_modifier(parser_t* p);
 
 /// parse next statement expected a variable or function declaration
 ast_stmt_t* parse_stmt_decl(parser_t* p);
+
+ast_stmt_t* parse_module(parser_t* p);
 
 #endif

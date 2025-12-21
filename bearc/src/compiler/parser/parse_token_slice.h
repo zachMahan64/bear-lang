@@ -12,4 +12,4 @@
 #include "compiler/parser/parser.h"
 #include "compiler/token.h"
 
-token_ptr_slice_t parse_token_ptr_slice(parser_t* p, token_type_e divider);
+token_ptr_slice_t parse_id_token_slice(parser_t* p, token_type_e divider);

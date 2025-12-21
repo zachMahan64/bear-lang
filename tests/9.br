@@ -4,7 +4,7 @@
 
 a..b.c + std..some_call(5);
 
-hi[a];
+hi[5].thing;
 {call();}
 
 mut i32 a;

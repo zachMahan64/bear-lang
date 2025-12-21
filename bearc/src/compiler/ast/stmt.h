@@ -100,19 +100,13 @@ typedef struct {
  * mod my_mod {...} // module will enclosed
  */
 typedef struct {
-    token_t* mod_tkn;
     ast_expr_t* id;
-    /// NULLable if whole file should be internal to a module
     ast_stmt_t* block;
-    /// NULLable if block != NULL
 } ast_stmt_module_block_t;
 
 typedef struct {
-    token_t* mod_tkn;
     ast_expr_t* id;
-    /// NULLable if whole file should be internal to a module
     ast_slice_of_stmts_t statements;
-    /// NULLable if block != NULL
 } ast_stmt_module_flat_t;
 
 /**

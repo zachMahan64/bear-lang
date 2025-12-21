@@ -52,11 +52,20 @@ ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
-    while (!(parser_peek(p)->type == until_tkn)  // while curr uneaten != until (intended behavior)
-           && !parser_match_tossed(p, until_tkn) // while prev tossed != until (edge-case handling)
-           && !parser_eof(p)                     // while !eof (edge-case handling)
+    while (!(parser_peek_match(p, until_tkn)) && !parser_eof(p) // while !eof (edge-case handling)
     ) {
         spill_arr_ptr_push(&sarr, parse_stmt(p));
+    }
+
+    return parser_freeze_stmt_spill_arr(p, &sarr);
+}
+
+ast_slice_of_stmts_t parse_slice_of_decls(parser_t* p, token_type_e until_tkn) {
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
+
+    while (!(parser_peek_match(p, until_tkn) && !parser_eof(p))) {
+        spill_arr_ptr_push(&sarr, parse_stmt_decl(p));
     }
 
     return parser_freeze_stmt_spill_arr(p, &sarr);
@@ -116,7 +125,7 @@ ast_stmt_t* parse_stmt(parser_t* p) {
     // parse things with a leading id (varname or type)
     if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
 
-        token_ptr_slice_t leading_id = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+        token_ptr_slice_t leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         next_type = parser_peek(p)->type;
         if (token_is_posttype_indicator(next_type)) {
             return parse_var_decl(p, &leading_id, NULL);
@@ -219,7 +228,7 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_DECL;
     decl->stmt.fn_decl.kw = parser_eat(p); // fine because we knew to enter this function
-    decl->stmt.fn_decl.name = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+    decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
 
     token_t* lparen = parser_expect_token(p, TOK_LPAREN);
     if (!lparen) {
@@ -320,8 +329,43 @@ ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
 }
 
 ast_stmt_t* parse_stmt_decl(parser_t* p) {
-    if (token_is_function_leading_kw(parser_peek(p)->type)) {
+    token_type_e next_type = parser_peek(p)->type;
+    if (token_is_function_leading_kw(next_type)) {
         return parse_fn_decl(p);
     }
+    if (next_type == TOK_MODULE) {
+        return parse_module(p);
+    }
     return parse_var_decl(p, NULL, false); // no leading id, leading mut == false
+}
+
+// TODO, finish impl
+ast_stmt_t* parse_module(parser_t* p) {
+    ast_stmt_t* mod = parser_alloc_stmt(p);
+    token_t* mod_tkn = parser_expect_token(p, TOK_MODULE);
+    if (!mod_tkn) {
+        return parser_sync_stmt(p);
+    }
+    ast_expr_t* id = parse_id(p);
+    token_t* terminator = parser_expect_token(p, TOK_SEMICOLON);
+    if (terminator) {
+        mod->type = AST_STMT_MODULE_FLAT;
+        mod->stmt.module_flat.id = id;
+        ast_slice_of_stmts_t stmts = parse_slice_of_decls(p, TOK_MODULE);
+        mod->stmt.module_flat.statements = stmts;
+        mod->first = mod_tkn;
+        if (stmts.len > 0) {
+            mod->last = stmts.start[stmts.len - 1]->last;
+        } else {
+            mod->last = terminator;
+        }
+    } else {
+        mod->type = AST_STMT_MODULE_BLOCK;
+        mod->stmt.module_block.id = id;
+        ast_stmt_t* block = parse_stmt_block(p);
+        mod->stmt.module_block.block = block;
+        mod->first = mod_tkn;
+        mod->last = block->last;
+    }
+    return mod;
 }

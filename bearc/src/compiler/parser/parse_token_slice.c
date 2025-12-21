@@ -22,7 +22,7 @@ token_ptr_slice_t parser_freeze_token_ptr_slice(parser_t* p, spill_arr_ptr_t* sa
     return slice;
 }
 
-token_ptr_slice_t parse_token_ptr_slice(parser_t* p, token_type_e divider) {
+token_ptr_slice_t parse_id_token_slice(parser_t* p, token_type_e divider) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
     do {

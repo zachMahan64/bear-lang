@@ -140,7 +140,12 @@ ast_expr_t* parse_literal(parser_t* p) {
 
 ast_expr_t* parse_id(parser_t* p) {
     ast_expr_t* id_expr = parser_alloc_expr(p);
-    id_expr->expr.id.slice = parse_token_ptr_slice(p, TOK_SCOPE_RES);
+    token_ptr_slice_t id_slice = parse_id_token_slice(p, TOK_SCOPE_RES);
+    // handle failure edge case, this is usually safe if we knew to enter this function
+    if (id_slice.len == 0) {
+        return parser_sync_expr(p);
+    }
+    id_expr->expr.id.slice = id_slice;
     id_expr->type = AST_EXPR_ID;
     id_expr->first = id_expr->expr.id.slice.start[0];
     id_expr->last = id_expr->expr.id.slice.start[id_expr->expr.id.slice.len - 1];
