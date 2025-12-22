@@ -317,7 +317,12 @@ ast_param_t* parse_param(parser_t* p) {
 ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
     ast_stmt_t* vis = parser_alloc_stmt(p);
     vis->type = AST_STMT_VISIBILITY_MODIFIER;
-    token_t* modif = parser_eat(p);        // fine becuz we knew to enter this function
+    token_t* modif = parser_eat(p); // fine becuz we knew to enter this function
+    // shed redundant qualifiers in a loop, but don't return invalid statement
+    while (parser_match_token_call(p, &token_is_visibility_modifier)) {
+        compiler_error_list_emplace(p->error_list, parser_prev(p),
+                                    ERR_EXTRANEOUS_VISIBILITY_MODIFIER);
+    }
     ast_stmt_t* stmt = parse_stmt_decl(p); // expect a declaration, namely a function or var decl
     vis->stmt.vis_modifier.stmt = stmt;
     vis->stmt.vis_modifier.modifier = modif;

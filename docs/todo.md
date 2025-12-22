@@ -18,7 +18,7 @@
     - finish implementing `parse_stmt_decl` and  `parse_slice_of_decls` in top level file and module statement slices. Decide how to implement `ast_stmt_module_block_t`, perhaps just don't use a block and just expect curly braces on either side of stmt slice, but get the slice thru `parse_slice_of_decls`
 - [x] test modules and vis modifiers
 - [x] make id be a token, not id as expr in module parsing
-- [ ] prevent duplicate pub/hid by matching in a loop
+- [x] prevent duplicate pub/hid by matching in a loop
 - [ ] other statement parsing
 - [ ] structs
 - [ ] marks

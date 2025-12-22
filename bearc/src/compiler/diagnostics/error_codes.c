@@ -28,7 +28,8 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECTED_DECLARTION] = "expected variable or function declaration",
         [ERR_EXPECTED_DELIM_IN_MODULE_DECL] = "expected '{' or ';' in module declaration",
         [ERR_INVALID_MODULE_NAME] = "invalid module name",
-        [ERR_EXTRANEOUS_SEMICOLON] = "extraneous ';'"};
+        [ERR_EXTRANEOUS_SEMICOLON] = "extraneous ';'",
+        [ERR_EXTRANEOUS_VISIBILITY_MODIFIER] = "extraneous visibility modifier"};
     return error_messages[error_code];
 }
 

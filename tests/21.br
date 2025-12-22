@@ -1,0 +1,3 @@
+pub hid pub fn main() {
+    do_work();
+}
