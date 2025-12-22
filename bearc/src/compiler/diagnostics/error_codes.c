@@ -11,7 +11,7 @@
 
 const char* error_message_for_code(error_code_e error_code) {
     static const char* error_messages[ERR__COUNT] = {
-        [ERR_ILLEGAL_IDENTIFER] = "illegal identifier",
+        [ERR_EXPECTED_IDENTIFER] = "expected identifier",
         [ERR_EXPECTED_TOKEN] = "expected token: ",
         [ERR_EXPECTED_VARIABLE_NAME] = "expected variable name",
         [ERR_EXPECTED_PARAMETER_IDENTIFIER] = "expected parameter name",

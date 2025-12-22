@@ -19,6 +19,7 @@
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include "utils/vector.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -117,6 +118,11 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 
     if (next_type == TOK_SEMICOLON) {
         return parse_stmt_empty(p);
+    }
+
+    // vis modifers are illegal on plain statements
+    if (token_is_visibility_modifier(next_type)) {
+        parser_shed_visibility_qualis_with_error(p);
     }
 
     ast_expr_t* leading_expr = NULL;
@@ -226,6 +232,7 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_DECL;
     decl->stmt.fn_decl.kw = parser_eat(p); // fine because we knew to enter this function
+    parser_shed_visibility_qualis_with_error(p);
     decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
 
     token_t* lparen = parser_expect_token(p, TOK_LPAREN);
@@ -314,15 +321,22 @@ ast_param_t* parse_param(parser_t* p) {
     return param;
 }
 
+bool parser_shed_visibility_qualis_with_error(parser_t* p) {
+    bool did_shed = false;
+    while (parser_match_token_call(p, &token_is_visibility_modifier)) {
+        compiler_error_list_emplace(p->error_list, parser_prev(p),
+                                    ERR_EXTRANEOUS_VISIBILITY_MODIFIER);
+        did_shed = true;
+    }
+    return did_shed;
+}
+
 ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
     ast_stmt_t* vis = parser_alloc_stmt(p);
     vis->type = AST_STMT_VISIBILITY_MODIFIER;
     token_t* modif = parser_eat(p); // fine becuz we knew to enter this function
     // shed redundant qualifiers in a loop, but don't return invalid statement
-    while (parser_match_token_call(p, &token_is_visibility_modifier)) {
-        compiler_error_list_emplace(p->error_list, parser_prev(p),
-                                    ERR_EXTRANEOUS_VISIBILITY_MODIFIER);
-    }
+    parser_shed_visibility_qualis_with_error(p);
     ast_stmt_t* stmt = parse_stmt_decl(p); // expect a declaration, namely a function or var decl
     vis->stmt.vis_modifier.stmt = stmt;
     vis->stmt.vis_modifier.modifier = modif;

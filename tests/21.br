@@ -1,3 +1,7 @@
 pub hid pub fn main() {
     do_work();
 }
+
+fn pub pub foo() {
+    hid do_work();
+}

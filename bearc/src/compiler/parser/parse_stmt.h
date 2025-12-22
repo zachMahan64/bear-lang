@@ -54,6 +54,10 @@ ast_stmt_t* parse_stmt_empty(parser_t* p);
 /// parse a statement like "pub i32 x = 1;"
 ast_stmt_t* parse_stmt_vis_modifier(parser_t* p);
 
+/// shed extraneous pub and hid qualifiers and emplace errors messages, returns true if shed
+/// anything
+bool parser_shed_visibility_qualis_with_error(parser_t* p);
+
 /// parse next statement expected a variable or function declaration
 ast_stmt_t* parse_stmt_decl(parser_t* p);
 
