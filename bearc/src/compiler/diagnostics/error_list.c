@@ -39,7 +39,16 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  error_code_e error_code) {
     const compiler_error_t err = {
-        .token = token, .error_code = error_code, .expected_token_type = TOK_NONE};
+        .start_tkn = token, .error_code = error_code, .expected_token_type = TOK_NONE};
+    vector_push_back(&list->list_vec, &err);
+}
+
+void compiler_error_list_emplace_range(compiler_error_list_t* list, token_t* start, token_t* end,
+                                       error_code_e error_code) {
+    const compiler_error_t err = {.start_tkn = start,
+                                  .end_tkn = end,
+                                  .error_code = error_code,
+                                  .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
 }
 
@@ -47,7 +56,7 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
                                                 error_code_e error_code,
                                                 token_type_e expected_tkn_type) {
     const compiler_error_t err = {
-        .token = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
+        .start_tkn = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
     vector_push_back(&list->list_vec, &err);
 }
 
@@ -56,8 +65,8 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     compiler_error_t* err = vector_at(&list->list_vec, i);
 
     // line is zero-indexed inside of token_t, so adjust
-    size_t line = err->token->loc.line + 1;
-    size_t col = err->token->loc.col + 1;
+    size_t line = err->start_tkn->loc.line + 1;
+    size_t col = err->start_tkn->loc.col + 1;
 
 // setup " | <line num> strings"
 // max buf of size 21 since size_t max is 18'446'744'073'709'551'615
@@ -77,12 +86,12 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
            list->src_buffer.file_name, line, col, error_message_for_code(err->error_code),
            error_message_context_for(err));
 
-    string_view_t line_preview = get_line_string_view(&list->src_buffer, err->token);
+    string_view_t line_preview = get_line_string_view(&list->src_buffer, err->start_tkn);
 
 // ADJUST for beauty's sake
 #define LINE_LEN_CRIT_VAL 32 // this is pretty long
 
-    token_t revised_tkn = *err->token;
+    token_t revised_tkn = *err->start_tkn;
 
     // shenanigans, but it's worth it ~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // this shifts the view down by appropriate factors of LINE_LEN_CRIT_VAL

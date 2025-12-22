@@ -1,5 +1,6 @@
 mod my_mod; // make this whole file included in this module
 
+i32 a;
 
 fn main() {
     do_thing();

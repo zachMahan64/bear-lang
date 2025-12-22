@@ -19,6 +19,7 @@
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include "utils/vector.h"
+#include <stdio.h>
 #include <string.h>
 
 /// right now this is just some placeholder logic to test the basic parser functions
@@ -326,6 +327,7 @@ ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
 }
 
 ast_stmt_t* parse_stmt_decl(parser_t* p) {
+
     token_type_e next_type = parser_peek(p)->type;
     if (token_is_function_leading_kw(next_type)) {
         return parse_fn_decl(p);
@@ -338,10 +340,18 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_stmt_vis_modifier(p);
     }
 
+    // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (next_type == TOK_SEMICOLON) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXTRANEOUS_SEMICOLON);
+        return parser_sync_stmt(p);
+    }
     if (!token_is_builtin_type_or_id(next_type)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
         return parser_sync_stmt(p);
     }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // if malformed guard passes, try to parse as a var declaration
     ast_stmt_t* stmt = parse_var_decl(p, NULL, false); // no leading id, leading mut == false
     if (stmt->type == AST_STMT_INVALID) {
         compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
@@ -349,14 +359,17 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     return stmt;
 }
 
-// TODO, finish impl, broken
 ast_stmt_t* parse_module(parser_t* p) {
     ast_stmt_t* mod = parser_alloc_stmt(p);
     token_t* mod_tkn = parser_expect_token(p, TOK_MODULE);
     if (!mod_tkn) {
         return parser_sync_stmt(p);
     }
-    ast_expr_t* id = parse_id(p);
+    token_t* id = parser_match_token(p, TOK_IDENTIFIER);
+    if (!id) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_INVALID_MODULE_NAME);
+        return parser_sync_stmt(p);
+    }
     mod->stmt.module.id = id;
     mod->type = AST_STMT_MODULE;
 
@@ -369,7 +382,6 @@ ast_stmt_t* parse_module(parser_t* p) {
 
     token_t* semicolon = parser_match_token(p, TOK_SEMICOLON);
     if (semicolon) {
-        mod->stmt.module.id = id;
         ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_EOF);
         mod->stmt.module.decls = decls;
         mod->first = mod_tkn;

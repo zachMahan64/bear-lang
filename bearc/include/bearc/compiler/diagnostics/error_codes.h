@@ -32,6 +32,8 @@ typedef enum {
     ERR_NO_LEADING_MUT_FOR_SLICES,
     ERR_EXPECTED_DECLARTION,
     ERR_EXPECTED_DELIM_IN_MODULE_DECL,
+    ERR_INVALID_MODULE_NAME,
+    ERR_EXTRANEOUS_SEMICOLON,
     ERR__COUNT
 } error_code_e;
 
@@ -43,7 +45,8 @@ typedef enum {
  * from both the token's data as well as the error message
  */
 typedef struct {
-    token_t* token;          // view into a tkn whose resources are externally managed
+    token_t* start_tkn; // view into a tkn whose resources are externally managed
+    token_t* end_tkn;
     error_code_e error_code; // correspond to a type of compilation error
     // corresponds to the type of an expected token, should be NONE by default
     token_type_e expected_token_type;

@@ -26,7 +26,9 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_MUT_CANNOT_BIND_TO_ARRAYS] = "'mut' qualifier cannot bind to arrays",
         [ERR_NO_LEADING_MUT_FOR_SLICES] = "'mut' qualifier should be: [&mut] for slices",
         [ERR_EXPECTED_DECLARTION] = "expected variable or function declaration",
-        [ERR_EXPECTED_DELIM_IN_MODULE_DECL] = "expected '{' or ';' in module declaration"};
+        [ERR_EXPECTED_DELIM_IN_MODULE_DECL] = "expected '{' or ';' in module declaration",
+        [ERR_INVALID_MODULE_NAME] = "invalid module name",
+        [ERR_EXTRANEOUS_SEMICOLON] = "extraneous ';'"};
     return error_messages[error_code];
 }
 

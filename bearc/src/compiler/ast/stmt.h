@@ -99,7 +99,7 @@ typedef struct {
  * mod my_mod {...} // module will enclosed
  */
 typedef struct {
-    ast_expr_t* id;
+    token_t* id;
     ast_slice_of_stmts_t decls;
 } ast_stmt_module_t;
 
