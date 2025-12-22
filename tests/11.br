@@ -17,6 +17,8 @@ fn bar() {
     return;
 }
 
+fn fooey() 
+{
 bar(ffoo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foofoo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo,foo, foo, foo, foo, foo, foo, foo, last);
 
 i32 bar;
@@ -128,3 +130,4 @@ bar;
 bar;
 bar;
 bar;
+}

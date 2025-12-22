@@ -8,7 +8,7 @@ fn more_demo() {
     // theoretical
     std..cpp_style_array<i32, 4096> arr;
     // nice 
-    mut i32[8][16] other_arr;
+    [8][16]mut i32 other_arr;
 
     box::i32 thing;
     Vec<i32> veccy_thing;
