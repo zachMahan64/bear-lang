@@ -4,9 +4,10 @@
 - [C++ Operator Precedence](https://en.cppreference.com/w/cpp/language/operator_precedence.html)
 #### LLVM
 - [Building a Distribution](https://llvm.org/docs/BuildingADistribution.html)
-
 #### Architecture
 - [Rust Compiler Architecture](https://rustc-dev-guide.rust-lang.org/part-2-intro.html)
+#### Statements/Expressions
+- [Rust Statements and Expressions](https://doc.rust-lang.org/reference/statements-and-expressions.html)
 #### Educational Resources
 - [*Crafting Interprets* by Robert Nystrom](https://github.com/munificent/craftinginterpreters/tree/master)
 - *Engineering a Compiler* by Keith D. Cooper and Linda Torczon

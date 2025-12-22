@@ -148,16 +148,15 @@ typedef struct {
 } ast_stmt_var_decl_t;
 
 typedef struct {
-    token_t* if_tkn;
+    ast_expr_t* condition;
     ast_stmt_t* stmt;
-    /// NULLable if there's no (more) elses
-    ast_stmt_else_t* else_stmt;
+    /// NULLable if there's no else
+    ast_stmt_t* else_stmt;
+    bool has_else;
 } ast_stmt_if_t;
 
 typedef struct ast_stmt_else {
-    token_t* else_tkn;
     ast_stmt_t* stmt;
-    /// NULLable if there's no (more) elses
 } ast_stmt_else_t;
 
 typedef struct {
