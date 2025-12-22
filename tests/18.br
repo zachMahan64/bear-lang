@@ -1,10 +1,13 @@
-mut mut mut mut mut i32[&mut] x;
+fn main() 
+{
+[&mut]mut mut mut mut mut i32 x;
 mut i32 mut y;
-mut i32 & mut;
+mut i32 & mut; // no var name
 
-i32[&] slice1; // basically a view since it's immut
-i32[&mut] slice2;
+[&]i32 slice1; // basically a view since it's immut
+[&mut]i32 slice2;
 
 var range = (0...4);
 var same = (0...=3);
+}
 

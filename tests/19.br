@@ -1,3 +1,5 @@
+fn main() 
+{
 mut [16]i32 arr;
 transform(&arr);
 mut [&] mut i32 thingie = arr;
@@ -6,3 +8,4 @@ mut [&] mut i32 thingie = arr;
 [16] mut i32 mut other2;
 
 [&]foo..bar<genarg1,genarg2, genarg3> & mut & mut foobar;
+}
