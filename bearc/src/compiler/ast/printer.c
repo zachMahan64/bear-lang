@@ -321,7 +321,6 @@ void print_stmt(ast_stmt_t* stmt) {
             print_stmt(stmt->stmt.block.stmts.start[i]);
         }
         print_closing_delim_from_type(TOK_RBRACE);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_MODULE:
         printf("module: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
@@ -334,21 +333,18 @@ void print_stmt(ast_stmt_t* stmt) {
             print_stmt(stmt->stmt.module.decls.start[i]);
         }
         printer_deindent();
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_FILE:
         printf("file '%s': " ANSI_BOLD_GREEN "{\n" ANSI_RESET, stmt->stmt.file.file_name);
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
             print_stmt(stmt->stmt.file.stmts.start[i]);
         }
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_IMPORT:
     case AST_STMT_EXPR:
         puts("expression-statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(stmt->stmt.stmt_expr.expr);
         print_terminator(stmt->stmt.stmt_expr.terminator);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_FN_DECL:
         puts("function declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
@@ -383,7 +379,6 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_stmt(fn.block);
         printer_deindent();
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_VAR_INIT_DECL:
         puts("variable initialization: " ANSI_BOLD_GREEN "{" ANSI_RESET);
@@ -392,17 +387,33 @@ void print_stmt(ast_stmt_t* stmt) {
         print_op(stmt->stmt.var_init_decl.assign_op);
         print_expr(stmt->stmt.var_init_decl.rhs);
         print_terminator(stmt->stmt.var_init_decl.terminator);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_VAR_DECL:
         puts("variable declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_type(stmt->stmt.var_decl.type);
         print_var_name(stmt->stmt.var_decl.name);
         print_terminator(stmt->stmt.var_decl.terminator);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_IF:
+        puts("if statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_op_from_type(TOK_IF);
+        print_expr(stmt->stmt.if_stmt.condition);
+        printer_do_indent();
+        print_stmt(stmt->stmt.if_stmt.body_stmt);
+        printer_deindent();
+        if (stmt->stmt.if_stmt.has_else) {
+            printer_do_indent();
+            print_stmt(stmt->stmt.if_stmt.else_stmt);
+            printer_deindent();
+        }
+        break;
     case AST_STMT_ELSE:
+        puts("else statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_op_from_type(TOK_ELSE);
+        printer_do_indent();
+        print_stmt(stmt->stmt.else_stmt.stmt);
+        printer_deindent();
+        break;
     case AST_STMT_WHILE:
     case AST_STMT_FOR:
     case AST_STMT_FOR_IN:
@@ -414,18 +425,16 @@ void print_stmt(ast_stmt_t* stmt) {
             print_expr(expr);
         }
         print_terminator(stmt->stmt.return_stmt.terminator);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_STRUCT_DEF:
     case AST_MARK_PREAMBLE:
     case AST_MARK_DECL:
     case AST_STMT_INVALID:
-        puts(ANSI_BOLD_RED "invalid statement" ANSI_RESET);
+        puts(ANSI_BOLD_RED "invalid statement" ANSI_BOLD_GREEN " {" ANSI_RESET);
         break;
     case AST_STMT_EMPTY:
         puts("empty statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_terminator(stmt->stmt.empty.terminator);
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     case AST_STMT_VISIBILITY_MODIFIER:
         puts("visibility-modified declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
@@ -433,7 +442,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_stmt(stmt->stmt.vis_modifier.stmt);
         printer_deindent();
-        print_indent(), printf(ANSI_BOLD_GREEN "}\n" ANSI_RESET);
         break;
     }
+    print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
 }

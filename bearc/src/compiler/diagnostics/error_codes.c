@@ -29,7 +29,10 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_EXPECTED_DELIM_IN_MODULE_DECL] = "expected '{' or ';' in module declaration",
         [ERR_INVALID_MODULE_NAME] = "invalid module name",
         [ERR_EXTRANEOUS_SEMICOLON] = "extraneous ';'",
-        [ERR_EXTRANEOUS_VISIBILITY_MODIFIER] = "extraneous visibility modifier"};
+        [ERR_EXTRANEOUS_VISIBILITY_MODIFIER] = "extraneous visibility modifier",
+        [ERR_CONDITIONAL_MUST_BE_WRAPPED_IN_BRACES] =
+            "expected '{' since statement following condition must be wrapped in braces",
+        [ERR_MISMATCHED_RPAREN] = "mismatched ')' without an opening '('"};
     return error_messages[error_code];
 }
 

@@ -107,6 +107,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_fn_decl(p);
     }
 
+    if (next_type == TOK_IF) {
+        return parse_stmt_if(p);
+    }
+
     // handle decls with leading mut or brackets (slices and arrays)
     if (token_is_non_id_type_idicator(next_type)) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
@@ -418,4 +422,50 @@ ast_stmt_t* parse_module(parser_t* p) {
         mod->last = rbrace;
     }
     return mod;
+}
+
+ast_stmt_t* parse_stmt_if(parser_t* p) {
+    ast_stmt_t* if_stmt = parser_alloc_stmt(p);
+    if_stmt->type = AST_STMT_IF;
+    token_t* if_tkn = parser_expect_token(p, TOK_IF);
+    if (!if_tkn) {
+        return parser_sync_stmt(p);
+    }
+    ast_expr_t* cond_expr = parse_expr(p);
+    if_stmt->stmt.if_stmt.condition = cond_expr;
+    // make sure a block will succeed the conditional expression
+    if (parser_peek(p)->type == TOK_RPAREN) {
+        token_t* rparen;
+        while ((rparen = parser_match_token(p, TOK_RPAREN))) {
+            compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_MISMATCHED_RPAREN);
+        }
+    }
+    if (!parser_peek_match(p, TOK_LBRACE)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    ERR_CONDITIONAL_MUST_BE_WRAPPED_IN_BRACES);
+    }
+    if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p);
+    if (parser_peek_match(p, TOK_ELSE)) {
+        if_stmt->stmt.if_stmt.has_else = true;
+        if_stmt->stmt.if_stmt.else_stmt = parse_stmt_else(p);
+        // handle last
+        if_stmt->last = if_stmt->stmt.if_stmt.else_stmt->last;
+    } else {
+        if_stmt->last = if_stmt->stmt.if_stmt.body_stmt->last;
+    }
+    if_stmt->first = if_tkn;
+    return if_stmt;
+}
+
+ast_stmt_t* parse_stmt_else(parser_t* p) {
+    ast_stmt_t* else_stmt = parser_alloc_stmt(p);
+    else_stmt->type = AST_STMT_ELSE;
+    token_t* else_tkn = parser_expect_token(p, TOK_ELSE);
+    if (!else_tkn) {
+        return parser_sync_stmt(p);
+    }
+    else_stmt->stmt.else_stmt.stmt = parse_stmt(p);
+    else_stmt->first = else_tkn;
+    else_stmt->last = else_stmt->stmt.else_stmt.stmt->last;
+    return else_stmt;
 }

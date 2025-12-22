@@ -164,12 +164,31 @@ lex_multichar_operator:
         }
         LEX_KNOWN_LEN_PUSH(1);
     }
+    case ('|'):
+        if (n1 == '|') {
+            // ||
+            LEX_KNOWN_LEN_PUSH(2);
+        }
+        if (n1 == '=') {
+            // |=
+            LEX_KNOWN_LEN_PUSH(2);
+        }
+        LEX_KNOWN_LEN_PUSH(1);
+    case ('&'):
+        if (n1 == '&') {
+            // ||
+            LEX_KNOWN_LEN_PUSH(2);
+        }
+        if (n1 == '=') {
+            // &=
+            LEX_KNOWN_LEN_PUSH(2);
+        }
+        LEX_KNOWN_LEN_PUSH(1);
+    // intentional fallthrough ~~~~~~~~~~~~~~~~~~~~
     case ('*'):
     case ('/'):
     case ('%'):
     // bitwise
-    case ('|'):
-    case ('&'):
     case ('~'):
     case ('^'):
     // boolean
@@ -179,6 +198,7 @@ lex_multichar_operator:
             LEX_KNOWN_LEN_PUSH(2);
         }
         LEX_KNOWN_LEN_PUSH(1);
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // comparison
     case ('>'): {
         if (pos + 3 < end_of_buf && n1 == '>' && pos[2] == '>' && pos[3] == '=') {

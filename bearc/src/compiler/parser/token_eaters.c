@@ -225,7 +225,7 @@ bool token_is_builtin_type_or_id(token_type_e t) {
 bool token_is_builtin_type_mod(token_type_e t) { return parser_builtin_type_mod_map[t]; }
 
 bool token_is_literal(token_type_e t) {
-    return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_TRUE || t == TOK_INT_LIT ||
+    return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_FALSE || t == TOK_INT_LIT ||
            t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT || t == TOK_NULL_LIT;
 }
 

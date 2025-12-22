@@ -149,7 +149,7 @@ typedef struct {
 
 typedef struct {
     ast_expr_t* condition;
-    ast_stmt_t* stmt;
+    ast_stmt_t* body_stmt;
     /// NULLable if there's no else
     ast_stmt_t* else_stmt;
     bool has_else;

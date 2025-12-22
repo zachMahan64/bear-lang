@@ -1,0 +1,14 @@
+fn main() {
+    // dumb but fun
+    bool a = true;
+    i32 x = 5;
+    if (true || false && true && a && !check_cond())) {
+        do_work();
+   } 
+    // parentheses are optional
+   else if x > 4 {
+       do_other_work();
+   } else {
+       do_foo();
+   }
+}
