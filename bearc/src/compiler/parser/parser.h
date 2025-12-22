@@ -18,6 +18,12 @@ extern "C" {
 #include "utils/vector.h"
 #include <stdint.h>
 
+typedef enum {
+    PARSER_MODE_DEFAULT = 0,
+    PARSER_MODE_BAN_LT_GT,
+    PARSER_MODE__NUM,
+} parser_mode_e;
+
 /**
  * primary parser structure
  * tracks a position ptr along a vector of token_t
@@ -28,11 +34,17 @@ typedef struct {
     size_t pos;
     arena_t* arena;
     compiler_error_list_t* error_list;
+    parser_mode_e mode;
     bool prev_discarded;
-    bool bool_comparisions_disabled;
 } parser_t;
 
 parser_t parser_create(vector_t* tokens, arena_t* arena, compiler_error_list_t* error_list);
+
+void parser_mode_set(parser_t* p, parser_mode_e mode);
+
+void parser_mode_reset(parser_t* p);
+
+parser_mode_e parser_mode(parser_t* p);
 
 #ifdef __cplusplus
 } // extern "C"

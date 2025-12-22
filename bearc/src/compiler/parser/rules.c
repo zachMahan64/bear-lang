@@ -96,6 +96,6 @@ static uint8_t binary_prec_map[TOK__NUM] = {
 uint8_t prec_binary(token_type_e type) { return binary_prec_map[type]; }
 
 bool is_binary_op(token_type_e type) { return binary_prec_map[type]; }
-bool is_bool_comparision(token_type_e t) { return t == TOK_GT || t == TOK_LT; }
+bool is_lt_gt(token_type_e t) { return t == TOK_GT || t == TOK_LT; }
 bool is_preunary_op(token_type_e type) { return preunary_prec_map[type]; }
 bool is_postunary_op(token_type_e type) { return postunary_prec_map[type]; }

@@ -15,6 +15,12 @@ parser_t parser_create(vector_t* tokens, arena_t* arena, compiler_error_list_t* 
                        .arena = arena,
                        .error_list = error_list,
                        .prev_discarded = false,
-                       .bool_comparisions_disabled = false};
+                       .mode = PARSER_MODE_DEFAULT};
     return parser;
 }
+
+void parser_mode_set(parser_t* p, parser_mode_e mode) { p->mode = mode; }
+
+void parser_mode_reset(parser_t* p) { p->mode = PARSER_MODE_DEFAULT; }
+
+parser_mode_e parser_mode(parser_t* p) { return p->mode; }

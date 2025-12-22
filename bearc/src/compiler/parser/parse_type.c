@@ -342,9 +342,9 @@ ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
     }
     outer->type.generic.inner = inner;
     outer->canonical_base = inner->canonical_base;
-    parser_disable_bool_comparision(p); // cleaner template parsing from < and > issues
+    parser_mode_set(p, PARSER_MODE_BAN_LT_GT); // cleaner template parsing from < and > issues
     ast_generic_arg_slice_t args = parse_generic_arg_slice(p);
-    parser_enable_bool_comparision(p); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    parser_mode_reset(p); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     if (!args.valid) {
         return parser_sync_type(p);
     }

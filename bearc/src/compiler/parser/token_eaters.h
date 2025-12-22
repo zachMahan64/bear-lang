@@ -66,10 +66,6 @@ bool parser_eof(const parser_t* parser);
 // sync the parser and returns a range of tokens consumed while syncing
 token_range_t parser_sync(parser_t* p);
 
-/// disable bool comparisions (helpful parsing generics)
-void parser_disable_bool_comparision(parser_t* p);
-/// enable bool comparisions (helpful parsing generics)
-void parser_enable_bool_comparision(parser_t* p);
 /// ensure binary op is legal
 bool is_legal_binary_op(parser_t* p, token_type_e type);
 

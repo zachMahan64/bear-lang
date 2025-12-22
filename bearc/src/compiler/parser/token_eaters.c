@@ -196,13 +196,8 @@ token_range_t parser_sync(parser_t* p) {
     return range;
 }
 
-/// disable bool comparisions (helpful parsing generics)
-void parser_disable_bool_comparision(parser_t* p) { p->bool_comparisions_disabled = true; }
-/// enable bool comparisions (helpful parsing generics)
-void parser_enable_bool_comparision(parser_t* p) { p->bool_comparisions_disabled = false; }
-
 bool is_legal_binary_op(parser_t* p, token_type_e type) {
-    return is_binary_op(type) && !(p->bool_comparisions_disabled && is_bool_comparision(type));
+    return is_binary_op(type) && !(p->mode == PARSER_MODE_BAN_LT_GT && is_lt_gt(type));
 }
 
 // map containing look-ups for builtin types
