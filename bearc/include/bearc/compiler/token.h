@@ -122,13 +122,14 @@ typedef enum token_type {
     TOK_MARK, // marks (like traits)
     TOK_REQUIRES,
 
-    // comparison
+    // ctrl flow
     TOK_IF,
     TOK_ELSE,
     TOK_WHILE,
     TOK_FOR,
     TOK_IN, // example: for (int a in myArr) {...}
     TOK_RETURN,
+    TOK_BREAK,
 
     // structures (incorp after prodcedural is working)
     TOK_SELF_ID,

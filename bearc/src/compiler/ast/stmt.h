@@ -37,6 +37,9 @@ typedef enum {
     // statement empty
     AST_STMT_EMPTY,
 
+    // break statement
+    AST_STMT_BREAK,
+
     // function declarations
     AST_STMT_FN_DECL, // fn + params + (body for definitions / null for declarations)
                       // + return type
@@ -156,12 +159,12 @@ typedef struct {
 } ast_stmt_if_t;
 
 typedef struct ast_stmt_else {
-    ast_stmt_t* stmt;
+    ast_stmt_t* body_stmt;
 } ast_stmt_else_t;
 
 typedef struct {
-    token_t* while_tkn;
-    ast_stmt_t* stmt;
+    ast_expr_t* condition;
+    ast_stmt_t* body_stmt;
 } ast_stmt_while_t;
 
 typedef struct {

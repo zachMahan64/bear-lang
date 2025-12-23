@@ -1,0 +1,15 @@
+fn main() -> i32 {
+    i32 a;
+    while true {
+        ++a;
+        if (a % 2 == 0) {
+            println("even: " + a.to_string());
+        }
+        if (a % 100 == 0) {
+            println("eureka!");
+            break;
+        }
+    }
+    break;
+    return 0;
+}

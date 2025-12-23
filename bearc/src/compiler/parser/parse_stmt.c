@@ -111,6 +111,18 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_if(p);
     }
 
+    if (next_type == TOK_WHILE) {
+        return parse_stmt_while(p);
+    }
+
+    if (next_type == TOK_BREAK) {
+        if (parser_mode(p) != PARSER_MODE_IN_LOOP) {
+            compiler_error_list_emplace(p->error_list, first_tkn, ERR_BREAK_STMT_OUTSIDE_OF_LOOP);
+            return parser_sync_stmt(p);
+        }
+        return parse_stmt_break(p);
+    }
+
     // handle decls with leading mut or brackets (slices and arrays)
     if (token_is_non_id_type_idicator(next_type)) {
         return parse_var_decl(p, NULL, true); // leading_mut = true
@@ -424,6 +436,15 @@ ast_stmt_t* parse_module(parser_t* p) {
     return mod;
 }
 
+static void parser_guard_against_trailing_rparens(parser_t* p) {
+    if (parser_peek(p)->type == TOK_RPAREN) {
+        token_t* rparen;
+        while ((rparen = parser_match_token(p, TOK_RPAREN))) {
+            compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_MISMATCHED_RPAREN);
+        }
+    }
+}
+
 ast_stmt_t* parse_stmt_if(parser_t* p) {
     ast_stmt_t* if_stmt = parser_alloc_stmt(p);
     if_stmt->type = AST_STMT_IF;
@@ -434,17 +455,13 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
     ast_expr_t* cond_expr = parse_expr(p);
     if_stmt->stmt.if_stmt.condition = cond_expr;
     // make sure a block will succeed the conditional expression
-    if (parser_peek(p)->type == TOK_RPAREN) {
-        token_t* rparen;
-        while ((rparen = parser_match_token(p, TOK_RPAREN))) {
-            compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_MISMATCHED_RPAREN);
-        }
-    }
+    parser_guard_against_trailing_rparens(p);
     if (!parser_peek_match(p, TOK_LBRACE)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p),
                                     ERR_CONDITIONAL_MUST_BE_WRAPPED_IN_BRACES);
+        return parser_sync_stmt(p);
     }
-    if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p);
+    if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p); // TODO potential cascade risk
     if (parser_peek_match(p, TOK_ELSE)) {
         if_stmt->stmt.if_stmt.has_else = true;
         if_stmt->stmt.if_stmt.else_stmt = parse_stmt_else(p);
@@ -464,8 +481,52 @@ ast_stmt_t* parse_stmt_else(parser_t* p) {
     if (!else_tkn) {
         return parser_sync_stmt(p);
     }
-    else_stmt->stmt.else_stmt.stmt = parse_stmt(p);
+    else_stmt->stmt.else_stmt.body_stmt = parse_stmt(p);
     else_stmt->first = else_tkn;
-    else_stmt->last = else_stmt->stmt.else_stmt.stmt->last;
+    else_stmt->last = else_stmt->stmt.else_stmt.body_stmt->last;
     return else_stmt;
+}
+
+ast_stmt_t* parse_stmt_while(parser_t* p) {
+    ast_stmt_t* while_stmt = parser_alloc_stmt(p);
+    while_stmt->type = AST_STMT_WHILE;
+    token_t* while_tkn = parser_expect_token(p, TOK_WHILE);
+    if (!while_tkn) {
+        return parser_sync_stmt(p);
+    }
+    ast_expr_t* cond_expr = parse_expr(p);
+    while_stmt->stmt.while_stmt.condition = cond_expr;
+    parser_guard_against_trailing_rparens(p);
+    // make sure a block will succeed the conditional expression
+    if (!parser_peek_match(p, TOK_LBRACE)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    ERR_CONDITIONAL_MUST_BE_WRAPPED_IN_BRACES);
+        return parser_sync_stmt(p);
+    }
+    // push mode, parse block, restore ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    parser_mode_e saved = parser_mode(p);
+    parser_mode_set(p, PARSER_MODE_IN_LOOP);
+    while_stmt->stmt.while_stmt.body_stmt = parse_stmt_block(p);
+    parser_mode_set(p, saved);
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    while_stmt->first = while_tkn;
+    while_stmt->last = while_stmt->stmt.while_stmt.body_stmt->last;
+    return while_stmt;
+}
+
+ast_stmt_t* parse_stmt_break(parser_t* p) {
+    ast_stmt_t* break_stmt = parser_alloc_stmt(p);
+    break_stmt->type = AST_STMT_BREAK;
+    token_t* break_tkn = parser_expect_token(p, TOK_BREAK);
+    if (!break_tkn) {
+        return parser_sync_stmt(p);
+    }
+    break_stmt->first = break_tkn;
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (term) {
+        break_stmt->last = term;
+    } else {
+        break_stmt->last = break_tkn;
+    }
+    return break_stmt;
 }

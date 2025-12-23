@@ -9,8 +9,10 @@
 #include <stdio.h>
 
 static string_t indent_str;
+// make sure to adjust these so they match or it'll look very ugly:
 static const char* indent = "|   ";
 #define PRINTER_INDENT_LEN 4
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 static void printer_try_init(void) {
     static bool initialized;
@@ -396,7 +398,9 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_IF:
         puts("if statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
         print_op_from_type(TOK_IF);
+        printer_deindent();
         print_expr(stmt->stmt.if_stmt.condition);
         printer_do_indent();
         print_stmt(stmt->stmt.if_stmt.body_stmt);
@@ -409,12 +413,18 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_ELSE:
         puts("else statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
-        print_op_from_type(TOK_ELSE);
         printer_do_indent();
-        print_stmt(stmt->stmt.else_stmt.stmt);
+        print_op_from_type(TOK_ELSE);
+        print_stmt(stmt->stmt.else_stmt.body_stmt);
         printer_deindent();
         break;
     case AST_STMT_WHILE:
+        puts("while-loop statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_WHILE);
+        print_stmt(stmt->stmt.while_stmt.body_stmt);
+        printer_deindent();
+        break;
     case AST_STMT_FOR:
     case AST_STMT_FOR_IN:
     case AST_STMT_RETURN:
@@ -442,6 +452,13 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_stmt(stmt->stmt.vis_modifier.stmt);
         printer_deindent();
+        break;
+    case AST_STMT_BREAK:
+        puts("break statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_BREAK);
+        printer_deindent();
+        print_delineator_from_type(TOK_SEMICOLON);
         break;
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);

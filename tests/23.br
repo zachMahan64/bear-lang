@@ -1,0 +1,25 @@
+fn main() {
+    bool a = true;
+    i32 x = 5;
+
+    if (true && a)) {
+        do_work();
+    }
+
+    1 + 7;
+
+    if x > 3 && !false {
+        do_other_work();
+    }
+
+    if x < 10 {
+        do_foo();
+    } else if x == 5 {
+        do_bar();
+    } else {
+        do_baz();
+    }
+
+    x = x + 1;
+}
+

@@ -19,13 +19,17 @@
 - [x] test modules and vis modifiers
 - [x] make id be a token, not id as expr in module parsing
 - [x] prevent duplicate pub/hid by matching in a loop
-- [ ] other statement parsing
-- [ ] structs
+- [x] if, else/else if
+- [x] while & break statements
+- [ ] c-style for & for x in expr statements
+- [ ] struct decls and init-expressions
+- [ ] enums
+- [ ] varis
 - [ ] marks
-- [ ] closures?
-- [ ] decide between and impl switch and/or match 
+- [ ] closures
+- [ ] decide between and impl switch and/or match
+- [ ] write a full parser test suite
 
 #### Medium-term
-- [ ] Get a solid subset of the parser working on building an AST
-- [ ] Write unit tests for the parser and work on a basic AST walker for debug logging (will also be helpful for semantic analysis and codegen)
-- [ ] Revamp CLI to be much more robust using the strimap_t and vector_t containers
+- [ ] finish parser
+- [ ] revamp CLI to be much more robust using the strimap_t and vector_t containers and set up a proper flag system

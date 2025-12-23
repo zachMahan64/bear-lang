@@ -11,4 +11,5 @@ fn main() {
    } else {
        do_foo();
    }
+   1 + 7;
 }

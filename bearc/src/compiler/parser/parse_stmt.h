@@ -67,4 +67,8 @@ ast_stmt_t* parse_stmt_if(parser_t* p);
 
 ast_stmt_t* parse_stmt_else(parser_t* p);
 
+ast_stmt_t* parse_stmt_while(parser_t* p);
+
+ast_stmt_t* parse_stmt_break(parser_t* p);
+
 #endif
