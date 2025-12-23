@@ -26,8 +26,8 @@
 - [x] using statements
 - [x] c-style for 
 - [x] for x in expr statements
-- [ ] compt qualifier on fn decls and variables
-- [ ] full generic syntax (decide on exact specifics and get rid of the `template`, use the `<T has(Size), var N>` syntax)
+- [x] compt qualifier on fn decls and variables
+- [ ] full generic syntax (use the `<T has(Size), var N>` syntax)
 - [ ] struct decls and init-expressions
 - [ ] marks (decide between `#[...]` and `markwith ...`)
 - [ ] unions (add union tkn)
