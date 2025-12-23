@@ -57,6 +57,7 @@ typedef enum {
 
     // visibility
     AST_STMT_VISIBILITY_MODIFIER,
+    AST_STMT_COMPT_MODIFIER,
 
     // structs
     AST_STMT_STRUCT_DEF, // TOK_STRUCT + fields
@@ -224,6 +225,10 @@ typedef struct {
     ast_stmt_t* stmt;
 } ast_stmt_vis_modifier_t;
 
+typedef struct {
+    ast_stmt_t* stmt;
+} ast_stmt_wrapped_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// union of all stmt types
@@ -248,6 +253,7 @@ typedef union {
     ast_stmt_mark_preamble_t mark_preamble;
     ast_stmt_empty_t empty;
     ast_stmt_vis_modifier_t vis_modifier;
+    ast_stmt_wrapped_t compt_modifier;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

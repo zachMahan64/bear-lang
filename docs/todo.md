@@ -26,13 +26,16 @@
 - [x] using statements
 - [x] c-style for 
 - [x] for x in expr statements
+- [ ] compt qualifier on fn decls and variables
+- [ ] full generic syntax (decide on exact specifics and get rid of the `template`, use the `<T has(Size), var N>` syntax)
 - [ ] struct decls and init-expressions
+- [ ] marks (decide between `#[...]` and `markwith ...`)
+- [ ] unions (add union tkn)
 - [ ] enums
-- [ ] varis
+- [ ] variants (add variant tkn)
 - [ ] add is token and impl the `if foo is Some(x) {...}` construct
 - [ ] switch exprs?
 - [ ] switch statements
-- [ ] marks
 - [ ] closures
 - [ ] write a full parser test suite
 

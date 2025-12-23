@@ -1,0 +1,17 @@
+// compt tests
+
+pub mod globals {
+    compt var x = 10;
+}
+
+compt fn magic() {
+    i32 x;
+    for var i in (1...=16) {
+        x *= i;
+    }
+    return globals..x * 4 * x; 
+}
+
+pub compt hid pub compt hid pub fn malformed5() -> i32 {
+    return 5;
+}

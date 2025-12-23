@@ -508,6 +508,13 @@ void print_stmt(ast_stmt_t* stmt) {
         puts(",");
         printer_deindent();
         break;
+    case AST_STMT_COMPT_MODIFIER:
+        puts("comptime-declaration statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_delineator_from_type(TOK_COMPT);
+        printer_do_indent();
+        print_stmt(stmt->stmt.compt_modifier.stmt);
+        printer_deindent();
+        break;
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
 }

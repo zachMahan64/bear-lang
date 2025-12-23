@@ -354,6 +354,36 @@ ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
     return vis;
 }
 
+bool parser_shed_compt_qualis_with_error(parser_t* p) {
+    bool did_shed = false;
+    while (parser_match_token(p, TOK_COMPT)) {
+        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_COMPT_QUALIFIER);
+        did_shed = true;
+    }
+    return did_shed;
+}
+
+ast_stmt_t* parse_stmt_compt_modifier(parser_t* p) {
+    ast_stmt_t* vis = parser_alloc_stmt(p);
+    vis->type = AST_STMT_COMPT_MODIFIER;
+    token_t* modif = parser_expect_token(p, TOK_COMPT);
+    if (!modif) {
+        return parser_sync_stmt(p);
+    }
+    // shed redundant qualifiers
+    // this goto structure handles any kind of stupid compt pub compt hid ... input
+keep_shedding:
+    parser_shed_compt_qualis_with_error(p);
+    if (parser_shed_visibility_qualis_with_error(p)) {
+        goto keep_shedding;
+    }
+    ast_stmt_t* stmt = parse_stmt_decl(p); // expect a declaration, namely a function or var decl
+    vis->stmt.compt_modifier.stmt = stmt;
+    vis->first = modif;
+    vis->last = stmt->last;
+    return vis;
+}
+
 ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     token_type_e next_type = parser_peek(p)->type;
@@ -382,6 +412,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     if (token_is_visibility_modifier(next_type)) {
         return parse_stmt_vis_modifier(p);
+    }
+
+    if (next_type == TOK_COMPT) {
+        return parse_stmt_compt_modifier(p);
     }
 
     if (next_type == TOK_USE) {
