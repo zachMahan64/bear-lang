@@ -77,6 +77,7 @@ static void string_to_token_map_init(void) {
 
     // keywords
     strimap_insert(&string_to_token_map, "mod", TOK_MODULE);
+    strimap_insert(&string_to_token_map, "use", TOK_USE);
     strimap_insert(&string_to_token_map, "fn", TOK_FN);
     strimap_insert(&string_to_token_map, "mt", TOK_MT);
     strimap_insert(&string_to_token_map, "dt", TOK_DT);
@@ -227,6 +228,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     // file / keywords
     [TOK_IMPORT] = "import",
     [TOK_MODULE] = "mod",
+    [TOK_USE] = "use",
     [TOK_FN] = "fn",
     [TOK_MT] = "mt",
     [TOK_DT] = "dt",

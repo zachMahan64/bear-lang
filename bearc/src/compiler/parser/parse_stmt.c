@@ -18,21 +18,8 @@
 #include "compiler/token.h"
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
-#include "utils/vector.h"
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
-
-/// right now this is just some placeholder logic to test the basic parser functions
-/// no ast is being raised, we're just running through the tokens
-/// def of this fn is lower down in this src file
-void temp_eat(parser_t* p);
-
-size_t parser_estimate_stmt_cnt(vector_t* tkn_vec) {
-    // num stmts roughly <= 2 * num lines
-    token_t* tkn = vector_last(tkn_vec);
-    return 2 * (tkn->loc.line + 1); // + 1 since zero-indexed
-}
 
 ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
     ast_stmt_t* file = parser_alloc_stmt(p);

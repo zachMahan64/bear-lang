@@ -67,6 +67,7 @@ typedef enum token_type {
     // keywords
     // module
     TOK_MODULE, // mod
+    TOK_USE,
     // function
     TOK_FN,
     TOK_MT, // method, for implicit this ptr for data-associated behavior in structs
