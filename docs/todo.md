@@ -24,14 +24,16 @@
 - [x] handle infinitely loop in tests/01.br
 - [x] import statements
 - [x] using statements
-- [ ] c-style for 
-- [ ] for x in expr statements
+- [x] c-style for 
+- [x] for x in expr statements
 - [ ] struct decls and init-expressions
 - [ ] enums
 - [ ] varis
+- [ ] add is token and impl the `if foo is Some(x) {...}` construct
+- [ ] switch exprs?
+- [ ] switch statements
 - [ ] marks
 - [ ] closures
-- [ ] decide between and impl switch and/or match
 - [ ] write a full parser test suite
 
 #### Medium-term
