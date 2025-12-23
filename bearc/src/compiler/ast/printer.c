@@ -434,11 +434,36 @@ void print_stmt(ast_stmt_t* stmt) {
         puts("while-loop statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         printer_do_indent();
         print_op_from_type(TOK_WHILE);
+        printer_deindent();
+        print_expr(stmt->stmt.while_stmt.condition);
+        printer_do_indent();
         print_stmt(stmt->stmt.while_stmt.body_stmt);
         printer_deindent();
         break;
     case AST_STMT_FOR:
+        puts("for-loop statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_FOR);
+        print_stmt(stmt->stmt.for_stmt.init);
+        printer_deindent();
+        print_expr(stmt->stmt.for_stmt.condition);
+        print_expr(stmt->stmt.for_stmt.step);
+        printer_do_indent();
+        print_stmt(stmt->stmt.for_stmt.body_stmt);
+        printer_deindent();
+        break;
     case AST_STMT_FOR_IN:
+        puts("for-in-loop statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_FOR);
+        print_param(stmt->stmt.for_in_stmt.each);
+        printer_deindent();
+        print_delineator_from_type(TOK_IN);
+        print_expr(stmt->stmt.for_in_stmt.iterator);
+        printer_do_indent();
+        print_stmt(stmt->stmt.for_in_stmt.body_stmt);
+        printer_deindent();
+        break;
     case AST_STMT_RETURN:
         puts("return statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_op(stmt->stmt.return_stmt.return_tkn);

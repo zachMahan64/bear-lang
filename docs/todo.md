@@ -24,7 +24,8 @@
 - [x] handle infinitely loop in tests/01.br
 - [x] import statements
 - [x] using statements
-- [ ] c-style for & for x in expr statements
+- [ ] c-style for 
+- [ ] for x in expr statements
 - [ ] struct decls and init-expressions
 - [ ] enums
 - [ ] varis

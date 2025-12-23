@@ -102,6 +102,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_while(p);
     }
 
+    if (next_type == TOK_FOR) {
+        return parse_stmt_for(p);
+    }
+
     if (next_type == TOK_BREAK) {
         if (parser_mode(p) != PARSER_MODE_IN_LOOP) {
             compiler_error_list_emplace(p->error_list, first_tkn, ERR_BREAK_STMT_OUTSIDE_OF_LOOP);
@@ -463,7 +467,7 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
     parser_guard_against_trailing_rparens(p);
     if (!parser_peek_match(p, TOK_LBRACE)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p),
-                                    ERR_COND_BODY_MUST_BE_WRAPPED_IN_BRACES);
+                                    ERR_BODY_MUST_BE_WRAPPED_IN_BRACES);
         return parser_sync_stmt(p);
     }
     if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p); // TODO potential cascade risk
@@ -505,7 +509,7 @@ ast_stmt_t* parse_stmt_while(parser_t* p) {
     // make sure a block will succeed the conditional expression
     if (!parser_peek_match(p, TOK_LBRACE)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p),
-                                    ERR_COND_BODY_MUST_BE_WRAPPED_IN_BRACES);
+                                    ERR_BODY_MUST_BE_WRAPPED_IN_BRACES);
         return parser_sync_stmt(p);
     }
     // push mode, parse block, restore ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -578,4 +582,79 @@ ast_stmt_t* parse_stmt_use(parser_t* p) {
         use_stmt->last = term;
     }
     return use_stmt;
+}
+
+ast_stmt_t* parse_stmt_for_in(parser_t* p) {
+    token_t* for_tkn = parser_prev(p);
+    ast_stmt_t* for_stmt = parser_alloc_stmt(p);
+    for_stmt->type = AST_STMT_FOR_IN;
+    ast_param_t* param = parse_param(p);
+    parser_expect_token(p, TOK_IN);
+    ast_expr_t* iter = parse_expr(p);
+    for_stmt->stmt.for_in_stmt.each = param;
+    for_stmt->stmt.for_in_stmt.iterator = iter;
+
+    parser_guard_against_trailing_rparens(p);
+
+    // make sure a block will succeed the conditional expression
+    if (!parser_peek_match(p, TOK_LBRACE)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    ERR_BODY_MUST_BE_WRAPPED_IN_BRACES);
+        return parser_sync_stmt(p);
+    }
+    // push mode, parse block, restore ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    parser_mode_e saved = parser_mode(p);
+    parser_mode_set(p, PARSER_MODE_IN_LOOP);
+    for_stmt->stmt.for_in_stmt.body_stmt = parse_stmt_block(p);
+    parser_mode_set(p, saved);
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    for_stmt->first = for_tkn;
+    for_stmt->last = for_stmt->stmt.for_in_stmt.body_stmt->last;
+    return for_stmt;
+}
+
+ast_stmt_t* parse_stmt_for(parser_t* p) {
+    token_t* for_tkn = parser_expect_token(p, TOK_FOR);
+    if (!for_tkn) {
+        return parser_sync_stmt(p);
+    }
+    // try to get lparen to decide how to parse
+    token_t* lparen = parser_match_token(p, TOK_LPAREN);
+    // if no lparen, parse as a for-in loop
+    if (!lparen) {
+        return parse_stmt_for_in(p);
+    }
+    // else try as c-style for loop:
+    ast_stmt_t* for_stmt = parser_alloc_stmt(p);
+    for_stmt->type = AST_STMT_FOR;
+
+    ast_stmt_t* init = parse_stmt(p); // this will end with a ';'
+    ast_expr_t* cond_expr = parse_expr(p);
+    parser_expect_token(p, TOK_SEMICOLON); // expected ';' following the expr
+    ast_expr_t* step = parse_expr(p);
+    for_stmt->stmt.for_stmt.init = init;
+    for_stmt->stmt.for_stmt.condition = cond_expr;
+    for_stmt->stmt.for_stmt.step = step;
+
+    if (lparen) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
+
+    parser_guard_against_trailing_rparens(p);
+
+    // make sure a block will succeed the conditional expression
+    if (!parser_peek_match(p, TOK_LBRACE)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    ERR_BODY_MUST_BE_WRAPPED_IN_BRACES);
+        return parser_sync_stmt(p);
+    }
+    // push mode, parse block, restore ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    parser_mode_e saved = parser_mode(p);
+    parser_mode_set(p, PARSER_MODE_IN_LOOP);
+    for_stmt->stmt.for_stmt.body_stmt = parse_stmt_block(p);
+    parser_mode_set(p, saved);
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    for_stmt->first = for_tkn;
+    for_stmt->last = for_stmt->stmt.for_stmt.body_stmt->last;
+    return for_stmt;
 }

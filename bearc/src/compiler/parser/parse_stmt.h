@@ -75,4 +75,6 @@ ast_stmt_t* parse_stmt_import(parser_t* p);
 
 ast_stmt_t* parse_stmt_use(parser_t* p);
 
+ast_stmt_t* parse_stmt_for(parser_t* p);
+
 #endif

@@ -1,0 +1,23 @@
+fn main() {
+    while (true)) { // intentional error, but we can catch this
+        do_work();
+        if (magic()) {
+            break;
+        }
+        // elide parens
+        if more_magic() {
+            return;
+        }
+    }
+    // parens always around c-style
+    for (i32 i = 0; i < 5; i++) {
+        do_work();
+        break;
+    }
+    for i32 x in (1...4) {
+        println(x);
+        if (x % 2 == 0) {
+            break;
+        }
+    }
+}

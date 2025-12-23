@@ -174,21 +174,19 @@ typedef struct {
     ast_stmt_t* body_stmt;
 } ast_stmt_while_t;
 
+/// C-style for <int>; <cond>; <step> {...}
 typedef struct {
-    token_t* for_tkn;
     ast_stmt_t* init;
-    ast_stmt_t* condition;
+    ast_expr_t* condition;
     ast_expr_t* step;
-    ast_stmt_t* body;
+    ast_stmt_t* body_stmt;
 } ast_stmt_for_t;
 
+/// for x in thing {...}
 typedef struct {
-    token_t* for_tkn;
-    ast_expr_id_t* type;
-    ast_expr_t* iterable;
-    token_t* in;
+    ast_param_t* each;
     ast_expr_t* iterator;
-    ast_stmt_t* body;
+    ast_stmt_t* body_stmt;
 } ast_stmt_for_in_t;
 
 typedef struct {

@@ -30,8 +30,8 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_INVALID_MODULE_NAME] = "invalid module name",
         [ERR_EXTRANEOUS_SEMICOLON] = "extraneous ';'",
         [ERR_EXTRANEOUS_VISIBILITY_MODIFIER] = "extraneous visibility modifier",
-        [ERR_COND_BODY_MUST_BE_WRAPPED_IN_BRACES] =
-            "expected '{' since statement following condition must be wrapped in braces",
+        [ERR_BODY_MUST_BE_WRAPPED_IN_BRACES] =
+            "expected '{' since statements following condition must be wrapped in braces",
         [ERR_MISMATCHED_RPAREN] = "mismatched ')' without an opening '('",
         [ERR_BREAK_STMT_OUTSIDE_OF_LOOP] = "break statement outside of loop"};
     return error_messages[error_code];
