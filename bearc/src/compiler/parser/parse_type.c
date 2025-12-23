@@ -50,6 +50,7 @@ ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
         spill_arr_ptr_push(&sarr, parse_param(p));
         if (!parser_peek_match(p, terminator)) {
             parser_expect_token(p, divider);
+            break;
         }
     }
 
@@ -245,7 +246,10 @@ ast_generic_arg_t* parse_generic_arg(parser_t* p) {
 
     bool is_type = false;
     // parse as type or id ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
+    if (token_is_non_id_type_idicator(parser_peek(p)->type)) {
+        is_type = true;
+        type = parse_type(p);
+    } else if (token_is_builtin_type_or_id(parser_peek(p)->type)) {
         token_ptr_slice_t leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         next_type = parser_peek(p)->type;
         if (token_is_posttype_indicator(next_type)) {
@@ -259,10 +263,6 @@ ast_generic_arg_t* parse_generic_arg(parser_t* p) {
         // parse things that have a leading expr
         is_type = false;
         expr = parse_expr(p);
-    }
-    if (token_is_non_id_type_idicator(parser_peek(p)->type)) {
-        is_type = true;
-        type = parse_type(p);
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

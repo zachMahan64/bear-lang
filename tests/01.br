@@ -1,19 +1,15 @@
-fn main (box::str[] args) {
+fn main([&]str args) {
     char bing = '\t';
     str arg2 = args[1];
     str myStr = "This is my string.";
     foo(5);
 }
 
-fn foo(int bar) -> bool {
-    int whatUp = 65536;
-    whatUp<<=4;// test comment
-    int num=333 + whatUp;
-    f32 myFloat = 1.5;
-    return num<222 + bar * myFloat;
+fn convert([&]str strs) -> Vec<str> {
+    return to_vec<str>(strs);
 }
 
-struct dog::T {
+struct Dog {
     int age;
     str name;
     T itemOfChoice;
