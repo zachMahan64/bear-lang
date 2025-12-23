@@ -134,9 +134,11 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 
         token_ptr_slice_t leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         next_type = parser_peek(p)->type;
+        // parse as decl is the id is followed by a var name, or other symbol indicative of a type
         if (token_is_posttype_indicator(next_type)) {
             return parse_var_decl(p, &leading_id, NULL);
         }
+        // parse as regular expression
         leading_expr = parse_expr_from_id_slice(p, leading_id);
     } else {
         // parse things that have a leading expr
@@ -351,6 +353,18 @@ ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
 ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     token_type_e next_type = parser_peek(p)->type;
+    // if prev was discarded, that means that the semicolon was certainly part of an already
+    // adressed malformed statement, so consum it and otherwise return an invalid statement w/ an
+    // error
+    if (next_type == TOK_SEMICOLON) {
+        if (!p->prev_discarded) {
+            compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXTRANEOUS_SEMICOLON);
+            return parser_sync_stmt(p);
+        }
+        parser_eat(p); // consume lingering semicolon
+        next_type = parser_peek(p)->type;
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (token_is_function_leading_kw(next_type)) {
         return parse_fn_decl(p);
     }
@@ -358,15 +372,19 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_module(p);
     }
 
+    if (next_type == TOK_IMPORT) {
+        return parse_stmt_import(p);
+    }
+
     if (token_is_visibility_modifier(next_type)) {
         return parse_stmt_vis_modifier(p);
     }
 
-    // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (next_type == TOK_SEMICOLON) {
-        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXTRANEOUS_SEMICOLON);
-        return parser_sync_stmt(p);
+    if (next_type == TOK_USE) {
+        return parse_stmt_use(p);
     }
+
+    // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!token_is_builtin_type_or_id(next_type)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
         return parser_sync_stmt(p);
@@ -445,7 +463,7 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
     parser_guard_against_trailing_rparens(p);
     if (!parser_peek_match(p, TOK_LBRACE)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p),
-                                    ERR_CONDITIONAL_MUST_BE_WRAPPED_IN_BRACES);
+                                    ERR_COND_BODY_MUST_BE_WRAPPED_IN_BRACES);
         return parser_sync_stmt(p);
     }
     if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p); // TODO potential cascade risk
@@ -487,7 +505,7 @@ ast_stmt_t* parse_stmt_while(parser_t* p) {
     // make sure a block will succeed the conditional expression
     if (!parser_peek_match(p, TOK_LBRACE)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p),
-                                    ERR_CONDITIONAL_MUST_BE_WRAPPED_IN_BRACES);
+                                    ERR_COND_BODY_MUST_BE_WRAPPED_IN_BRACES);
         return parser_sync_stmt(p);
     }
     // push mode, parse block, restore ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -516,4 +534,48 @@ ast_stmt_t* parse_stmt_break(parser_t* p) {
         break_stmt->last = break_tkn;
     }
     return break_stmt;
+}
+
+ast_stmt_t* parse_stmt_import(parser_t* p) {
+    ast_stmt_t* import_stmt = parser_alloc_stmt(p);
+    import_stmt->type = AST_STMT_IMPORT;
+    token_t* import_tkn = parser_expect_token(p, TOK_IMPORT);
+    if (!import_tkn) {
+        return parser_sync_stmt(p);
+    }
+    token_t* path = parser_expect_token(p, TOK_STR_LIT);
+    if (!path) {
+        return parser_sync_stmt(p);
+    }
+    import_stmt->stmt.import.file_path = path;
+    import_stmt->first = import_tkn;
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (!term) {
+        import_stmt->last = path;
+    } else {
+        import_stmt->last = term;
+    }
+    return import_stmt;
+}
+
+ast_stmt_t* parse_stmt_use(parser_t* p) {
+    ast_stmt_t* use_stmt = parser_alloc_stmt(p);
+    use_stmt->type = AST_STMT_USE;
+    token_t* use_tkn = parser_expect_token(p, TOK_USE);
+    if (!use_tkn) {
+        return parser_sync_stmt(p);
+    }
+    token_ptr_slice_t id = parse_id_token_slice(p, TOK_SCOPE_RES);
+    if (id.len == 0) {
+        return parser_sync_stmt(p);
+    }
+    use_stmt->stmt.use.module_id = id;
+    use_stmt->first = use_tkn;
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (!term) {
+        use_stmt->last = id.start[id.len - 1];
+    } else {
+        use_stmt->last = term;
+    }
+    return use_stmt;
 }

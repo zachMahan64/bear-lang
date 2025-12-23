@@ -31,6 +31,9 @@ typedef enum {
     // import
     AST_STMT_IMPORT,
 
+    // use foo;
+    AST_STMT_USE,
+
     // statement expr
     AST_STMT_EXPR,
 
@@ -110,9 +113,13 @@ typedef struct {
  * imports a file given my a path as my.path.to.file
  */
 typedef struct {
-    token_t* import;
-    ast_expr_t* file_id;
+    token_t* file_path;
 } ast_stmt_import_t;
+
+/// bring a module into current scope
+typedef struct {
+    token_ptr_slice_t module_id;
+} ast_stmt_use_t;
 
 /// a statement expr, like `foo();`
 typedef struct {
@@ -227,6 +234,7 @@ typedef union {
     ast_stmt_file_t file;
     ast_stmt_module_t module;
     ast_stmt_import_t import;
+    ast_stmt_use_t use;
     ast_stmt_expr_t stmt_expr;
     ast_stmt_fn_decl_t fn_decl;
     ast_stmt_var_decl_init_t var_init_decl;

@@ -8,6 +8,8 @@
 - [Rust Compiler Architecture](https://rustc-dev-guide.rust-lang.org/part-2-intro.html)
 #### Statements/Expressions
 - [Rust Statements and Expressions](https://doc.rust-lang.org/reference/statements-and-expressions.html)
+#### Cross-compilation
+- [Calling C from Zig](https://mtlynch.io/notes/zig-call-c-simple/)
 #### Educational Resources
 - [*Crafting Interprets* by Robert Nystrom](https://github.com/munificent/craftinginterpreters/tree/master)
 - *Engineering a Compiler* by Keith D. Cooper and Linda Torczon

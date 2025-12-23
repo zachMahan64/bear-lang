@@ -26,7 +26,7 @@ token_ptr_slice_t parse_id_token_slice(parser_t* p, token_type_e divider) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
     if (!token_is_builtin_type_or_id(parser_peek(p)->type)) {
-        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_EXPECTED_IDENTIFER);
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_IDENTIFER);
         return parser_freeze_token_ptr_slice(p, &sarr);
     }
     do {

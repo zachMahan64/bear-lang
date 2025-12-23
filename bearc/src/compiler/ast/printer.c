@@ -212,6 +212,21 @@ static void print_param(ast_param_t* param) {
     print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
 }
 
+static void print_id_slice(token_ptr_slice_t ids) {
+    printer_do_indent();
+    printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+    for (size_t i = 0; i < ids.len; i++) {
+        int len = (int)ids.start[i]->len;
+        const char* start = ids.start[i]->start;
+        printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
+        if (ids.len != 1 && i != ids.len - 1) {
+            printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+        }
+    }
+    printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+    printer_deindent();
+}
+
 void print_expr(ast_expr_t* expression) {
     printer_try_init();
     printer_do_indent();
@@ -220,18 +235,8 @@ void print_expr(ast_expr_t* expression) {
     switch (expr.type) {
     case (AST_EXPR_ID): {
         token_ptr_slice_t ids = expression->expr.id.slice;
-        printf("identifer: " ANSI_BOLD_GREEN "`" ANSI_RESET);
-        printer_do_indent();
-        for (size_t i = 0; i < ids.len; i++) {
-            int len = (int)ids.start[i]->len;
-            const char* start = ids.start[i]->start;
-            printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
-            if (ids.len != 1 && i != ids.len - 1) {
-                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
-            }
-        }
-        printer_deindent();
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+        printf("identifer: ");
+        print_id_slice(ids);
         break;
     }
     case AST_EXPR_LITERAL: {
@@ -343,6 +348,13 @@ void print_stmt(ast_stmt_t* stmt) {
         }
         break;
     case AST_STMT_IMPORT:
+        printf("import statement: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_IMPORT);
+        print_closing_delim(stmt->stmt.import.file_path);
+        puts(",");
+        printer_deindent();
+        break;
     case AST_STMT_EXPR:
         puts("expression-statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(stmt->stmt.stmt_expr.expr);
@@ -439,6 +451,7 @@ void print_stmt(ast_stmt_t* stmt) {
     case AST_STMT_STRUCT_DEF:
     case AST_MARK_PREAMBLE:
     case AST_MARK_DECL:
+        break;
     case AST_STMT_INVALID:
         puts(ANSI_BOLD_RED "invalid statement" ANSI_BOLD_GREEN " {" ANSI_RESET);
         break;
@@ -459,6 +472,16 @@ void print_stmt(ast_stmt_t* stmt) {
         print_op_from_type(TOK_BREAK);
         printer_deindent();
         print_delineator_from_type(TOK_SEMICOLON);
+        break;
+    case AST_STMT_USE:
+        printf("use statement: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_IMPORT);
+        print_indent();
+        printf("module name: ");
+        print_id_slice(stmt->stmt.use.module_id);
+        puts(",");
+        printer_deindent();
         break;
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);

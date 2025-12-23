@@ -1,4 +1,4 @@
-### Bear Lang Syntax
+### Bear Lang Syntax (out-of-date, TODO update soon)
 - **Work In Progress:** this document will be the main syntax reference before moving to a more rigorous system of seperate documents for each language feature.
 - BearLang is a C-Like language inspired by elements of Rust, and C++.
 #### Project structure:

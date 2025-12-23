@@ -1,0 +1,11 @@
+import foo/bar;   //wrong
+
+import "foo/bar"; //right 
+
+use thing         //wrong
+
+use thing;        //right
+
+fn main([&]str args) -> i32 {
+    return do_work(args);
+}
