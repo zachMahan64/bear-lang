@@ -148,7 +148,7 @@ static void string_to_token_map_init(void) {
     // operators / symbols (multi-char tokens)
     strimap_insert(&string_to_token_map, "->", TOK_RARROW);
     strimap_insert(&string_to_token_map, "..", TOK_SCOPE_RES);
-    strimap_insert(&string_to_token_map, "::", TOK_TYPE_MOD);
+    strimap_insert(&string_to_token_map, "::", TOK_GENERIC_SEP);
     strimap_insert(&string_to_token_map, "<-", TOK_ASSIGN_MOVE);
     strimap_insert(&string_to_token_map, "<<-", TOK_STREAM);
     strimap_insert(&string_to_token_map, "++", TOK_INC);
@@ -310,7 +310,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     // special punctuation
     [TOK_RARROW] = "->",
     [TOK_SCOPE_RES] = "..",
-    [TOK_TYPE_MOD] = "::",
+    [TOK_GENERIC_SEP] = "::",
 
     // range
     [TOK_ELLIPSE] = "...",

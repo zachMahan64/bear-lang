@@ -240,9 +240,19 @@ ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool le
 ast_stmt_t* parse_fn_decl(parser_t* p) {
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_DECL;
+
     decl->stmt.fn_decl.kw = parser_eat(p); // fine because we knew to enter this function
+
     parser_shed_visibility_qualis_with_error(p);
+
     decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
+
+    parser_match_token(p, TOK_GENERIC_SEP); // this is fine
+    if (parser_match_token(p, TOK_LT)) {
+        decl->stmt.fn_decl.is_generic = true;
+        decl->stmt.fn_decl.generic_params = parse_generic_params(p);
+        parser_expect_token(p, TOK_GT);
+    }
 
     token_t* lparen = parser_expect_token(p, TOK_LPAREN);
     if (!lparen) {
@@ -691,4 +701,78 @@ ast_stmt_t* parse_stmt_for(parser_t* p) {
     for_stmt->first = for_tkn;
     for_stmt->last = for_stmt->stmt.for_stmt.body_stmt->last;
     return for_stmt;
+}
+
+/// parse the form T has(id, id, id, ...)
+ast_param_generic_type_t* parse_param_generic_type(parser_t* p) {
+    ast_param_generic_type_t* gen = arena_alloc(p->arena, sizeof(ast_param_generic_type_t));
+    token_t* id = parser_expect_token(p, TOK_IDENTIFIER);
+    gen->valid = false;
+    if (!id) {
+        parser_sync(p);
+    } else {
+        gen->valid = true;
+        gen->id = id;
+        spill_arr_ptr_t ids;
+        spill_arr_ptr_init(&ids);
+        // optionally match has, then if there is, expect the has(id, id, id) structure
+        if (parser_match_token(p, TOK_HAS)) {
+            parser_expect_token(p, TOK_LPAREN);
+            if (!parser_peek_match(p, TOK_RPAREN)) {
+                do {
+                    *((ast_expr_t**)spill_arr_ptr_emplace(&ids)) = parse_id(p);
+                } while (parser_match_token(p, TOK_COMMA));
+            }
+            parser_expect_token(p, TOK_RPAREN);
+        }
+        gen->mark_ids = parser_freeze_expr_spill_arr(p, &ids);
+    }
+    return gen;
+}
+
+ast_generic_parameter_t* parse_generic_param(parser_t* p) {
+    ast_generic_parameter_t* gen_param = arena_alloc(p->arena, sizeof(ast_generic_parameter_t));
+    token_t* first = parser_peek(p);
+    token_type_e t0 = first->type;
+    token_type_e t1 = parser_peek_n(p, 1)->type;
+    if (t0 == TOK_IDENTIFIER && (t1 == TOK_COMMA || t1 == TOK_COMMA || t1 == TOK_HAS)) {
+        gen_param->tag = AST_GENERIC_PARAM_TYPE;
+        gen_param->param.generic_type = parse_param_generic_type(p);
+    } else if (token_is_non_id_type_idicator(t0) || token_is_builtin_type_or_id(t0)) {
+        gen_param->tag = AST_GENERIC_PARAM_VAR;
+        gen_param->param.generic_var = parse_param(p);
+    } else {
+        gen_param->tag = AST_GENERIC_PARAM_INVALID;
+        parser_sync(p);
+    }
+    gen_param->first = first;
+    gen_param->last = parser_prev(p);
+    return gen_param;
+}
+
+ast_slice_of_generic_params_t parser_freeze_generic_param_spill_arr(parser_t* p,
+                                                                    spill_arr_ptr_t* sarr) {
+    ast_slice_of_generic_params_t slice = {
+        .start = (ast_generic_parameter_t**)arena_alloc(
+            p->arena, sarr->size * sizeof(ast_generic_parameter_t*)),
+        .len = sarr->size,
+    };
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
+    spill_arr_ptr_destroy(sarr);
+    return slice;
+}
+
+ast_slice_of_generic_params_t parse_generic_params(parser_t* p) {
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
+
+    while (!(parser_peek_match(p, TOK_GT) || parser_eof(p)) // while !eof (edge-case handling)
+    ) {
+        spill_arr_ptr_push(&sarr, parse_generic_param(p));
+        if (!parser_peek_match(p, TOK_GT)) {
+            parser_expect_token(p, TOK_COMMA);
+        }
+    }
+
+    return parser_freeze_generic_param_spill_arr(p, &sarr);
 }

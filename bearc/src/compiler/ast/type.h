@@ -45,34 +45,10 @@ typedef struct {
     bool mut;
 } ast_type_slice_t;
 
-// generics ~~~~~~~~~~~~~~~~~~
-typedef struct {
-    ast_expr_t* expr;
-    ast_type_t* type;
-} ast_generic_arg_u;
-
-typedef enum {
-    AST_GENERIC_ARG_TYPE,
-    AST_GENERIC_ARG_EXPR,
-} ast_generic_arg_e;
-
-typedef struct {
-    ast_generic_arg_u arg;
-    ast_generic_arg_e tag;
-    bool valid;
-} ast_generic_arg_t;
-
-typedef struct {
-    ast_generic_arg_t** start;
-    size_t len;
-    bool valid;
-} ast_generic_arg_slice_t;
-
 typedef struct {
     ast_type_t* inner;
-    ast_generic_arg_slice_t generic_args;
+    ast_slice_of_generic_args_t generic_args;
 } ast_type_generic_t;
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 typedef union {
     ast_type_base_t base;
@@ -102,5 +78,11 @@ typedef struct {
     ast_param_t** start;
     size_t len;
 } ast_slice_of_params_t;
+
+typedef struct {
+    token_t* id;
+    ast_slice_of_exprs_t mark_ids;
+    bool valid;
+} ast_param_generic_type_t;
 
 #endif // !COMPILER_AST_TYPE

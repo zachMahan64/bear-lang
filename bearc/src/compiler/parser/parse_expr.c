@@ -10,6 +10,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/parser/parse_type.h"
+#include "compiler/parser/parser.h"
 #include "compiler/parser/rules.h"
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
@@ -17,6 +18,7 @@
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -55,7 +57,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
         return parse_postunary(p, lhs);
     }
     // try fn call too
-    if (lhs && parser_peek(p)->type == TOK_LPAREN) {
+    if (lhs && (parser_peek(p)->type == TOK_LPAREN || parser_peek(p)->type == TOK_GENERIC_SEP)) {
         return parse_fn_call(p, lhs);
     }
     // try subscript
@@ -218,7 +220,16 @@ ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs) {
 
 ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     ast_expr_t* call_expr = parser_alloc_expr(p);
-    token_t* lparen = parser_eat(p); // already verfied legit
+    if (parser_peek_match(p, TOK_GENERIC_SEP)) {
+        call_expr->expr.fn_call.is_generic = true;
+        parser_mode_e saved = parser_mode(p);
+        parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
+        call_expr->expr.fn_call.generic_args = parse_slice_of_generic_args(p);
+        parser_mode_set(p, saved);
+    } else {
+        call_expr->expr.fn_call.is_generic = false;
+    }
+    token_t* lparen = parser_expect_token(p, TOK_LPAREN); // already verfied legit
     call_expr->type = AST_EXPR_FN_CALL;
     call_expr->expr.fn_call.left_expr = lhs;
     call_expr->expr.fn_call.left_paren = lparen;

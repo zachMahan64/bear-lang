@@ -73,6 +73,32 @@ typedef struct ast_stmt ast_stmt_t;
 typedef struct ast_stmt_else ast_stmt_else_t;
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+/// generic parmeters
+
+typedef enum {
+    AST_GENERIC_PARAM_TYPE,
+    AST_GENERIC_PARAM_VAR,
+    AST_GENERIC_PARAM_INVALID,
+} ast_generic_parameter_e;
+
+typedef struct {
+    ast_param_t* generic_var;
+    ast_param_generic_type_t* generic_type;
+} ast_generic_parameter_u;
+
+typedef struct {
+    ast_generic_parameter_u param;
+    ast_generic_parameter_e tag;
+    token_t* first;
+    token_t* last;
+} ast_generic_parameter_t;
+
+/// this is the <T has(foo, bar), var N> clause
+typedef struct {
+    ast_generic_parameter_t** start;
+    size_t len;
+} ast_slice_of_generic_params_t;
+
 /**
  * slice of statements
  */
@@ -134,6 +160,7 @@ typedef struct {
     /// fn, mt, or dt
     token_t* kw;
     token_ptr_slice_t name;
+    ast_slice_of_generic_params_t generic_params;
     token_t* left_paren;
     ast_slice_of_params_t params;
     token_t* right_paren;
@@ -142,6 +169,7 @@ typedef struct {
     /// NULLable if no return type
     ast_type_t* return_type;
     ast_stmt_t* block;
+    bool is_generic;
 } ast_stmt_fn_decl_t;
 
 typedef struct {

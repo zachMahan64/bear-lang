@@ -287,8 +287,9 @@ ast_generic_arg_t* parse_generic_arg(parser_t* p) {
     return arg;
 }
 
-ast_generic_arg_slice_t parser_freeze_generic_arg_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
-    ast_generic_arg_slice_t slice = {
+ast_slice_of_generic_args_t parser_freeze_generic_arg_spill_arr(parser_t* p,
+                                                                spill_arr_ptr_t* sarr) {
+    ast_slice_of_generic_args_t slice = {
         .start =
             (ast_generic_arg_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_generic_arg_t*)),
         .len = sarr->size,
@@ -298,7 +299,7 @@ ast_generic_arg_slice_t parser_freeze_generic_arg_spill_arr(parser_t* p, spill_a
     return slice;
 }
 
-ast_generic_arg_slice_t parse_generic_arg_slice(parser_t* p) {
+ast_slice_of_generic_args_t parse_slice_of_generic_args(parser_t* p) {
 
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
@@ -308,7 +309,7 @@ ast_generic_arg_slice_t parse_generic_arg_slice(parser_t* p) {
     // when just, ::, just expect one thing, like box::thing
     ast_generic_arg_t* arg = NULL;
     bool valid = false;
-    if (opener->type == TOK_TYPE_MOD && !parser_match_token(p, TOK_LT)) {
+    if (opener->type == TOK_GENERIC_SEP && !parser_match_token(p, TOK_LT)) {
         arg = parse_generic_arg(p);
         valid |= arg->valid;
         spill_arr_ptr_push(&sarr, arg);
@@ -319,14 +320,14 @@ ast_generic_arg_slice_t parse_generic_arg_slice(parser_t* p) {
             arg = parse_generic_arg(p);
             valid |= arg->valid;
             spill_arr_ptr_push(&sarr, arg);
-            if (!parser_peek_match(p, TOK_GT) && !parser_peek_match(p, TOK_TYPE_MOD)) {
+            if (!parser_peek_match(p, TOK_GT) && !parser_peek_match(p, TOK_GENERIC_SEP)) {
                 parser_expect_token(p, TOK_COMMA);
             }
         }
         token_t* gt = parser_expect_token(p, TOK_GT);
         valid = gt; // false if gt == NULL
     }
-    ast_generic_arg_slice_t args = parser_freeze_generic_arg_spill_arr(p, &sarr);
+    ast_slice_of_generic_args_t args = parser_freeze_generic_arg_spill_arr(p, &sarr);
     args.valid = valid;
     return args;
 }
@@ -342,9 +343,10 @@ ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
     }
     outer->type.generic.inner = inner;
     outer->canonical_base = inner->canonical_base;
+    parser_mode_e saved = parser_mode(p);
     parser_mode_set(p, PARSER_MODE_BAN_LT_GT); // cleaner template parsing from < and > issues
-    ast_generic_arg_slice_t args = parse_generic_arg_slice(p);
-    parser_mode_reset(p); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ast_slice_of_generic_args_t args = parse_slice_of_generic_args(p);
+    parser_mode_set(p, saved); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     if (!args.valid) {
         return parser_sync_type(p);
     }

@@ -28,4 +28,6 @@ ast_type_t* parse_type_slice(parser_t* p);
 
 ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner);
 
+ast_slice_of_generic_args_t parse_slice_of_generic_args(parser_t* p);
+
 #endif // ! COMPILER_PARSER_PARSE_TYPE

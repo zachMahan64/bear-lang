@@ -37,8 +37,9 @@ typedef enum {
 
 } ast_expr_type_e;
 
-// main generic expr type
+// forward decls
 typedef struct ast_expr ast_expr_t;
+typedef struct ast_type ast_type_t;
 
 /// slice of ast_expr_t
 typedef struct {
@@ -80,14 +81,38 @@ typedef struct {
     token_t* op;
 } ast_expr_unary_t;
 
+// generics ~~~~~~~~~~~~~~~~~~
+typedef struct {
+    ast_expr_t* expr;
+    ast_type_t* type;
+} ast_generic_arg_u;
+
+typedef enum {
+    AST_GENERIC_ARG_TYPE,
+    AST_GENERIC_ARG_EXPR,
+} ast_generic_arg_e;
+
+typedef struct {
+    ast_generic_arg_u arg;
+    ast_generic_arg_e tag;
+    bool valid;
+} ast_generic_arg_t;
+
+typedef struct ast_slice_of_generic_args {
+    ast_generic_arg_t** start;
+    size_t len;
+    bool valid;
+} ast_slice_of_generic_args_t;
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 typedef struct {
     ast_expr_t* left_expr; // should resolve to a func/func ptr
+    ast_slice_of_generic_args_t generic_args;
     token_t* left_paren;
     ast_slice_of_exprs_t args; // of type ast_expr_t
     token_t* right_paren;
+    bool is_generic;
 } ast_expr_fn_call_t;
-
-typedef struct ast_type ast_type_t;
 
 typedef struct {
     ast_type_t* type;

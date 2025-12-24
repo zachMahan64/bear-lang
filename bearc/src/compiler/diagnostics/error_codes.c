@@ -34,7 +34,9 @@ const char* error_message_for_code(error_code_e error_code) {
             "expected '{' since statements following condition must be wrapped in braces",
         [ERR_MISMATCHED_RPAREN] = "mismatched ')' without an opening '('",
         [ERR_BREAK_STMT_OUTSIDE_OF_LOOP] = "break statement outside of loop",
-        [ERR_REDUNDANT_COMPT_QUALIFIER] = "redundant 'compt' qualifier"};
+        [ERR_REDUNDANT_COMPT_QUALIFIER] = "redundant 'compt' qualifier",
+        [ERR_INVALID_GENERIC_PARAMETER] = "illegal generic parameter",
+    };
     return error_messages[error_code];
 }
 

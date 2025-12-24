@@ -1,0 +1,4 @@
+fn foo<T, var N>() -> DynArr<T, N> {
+    DynArr<T, N> arr = make_dyn_arr::<T, N>();
+    return arr;
+}

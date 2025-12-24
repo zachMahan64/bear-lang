@@ -77,4 +77,6 @@ ast_stmt_t* parse_stmt_use(parser_t* p);
 
 ast_stmt_t* parse_stmt_for(parser_t* p);
 
+ast_slice_of_generic_params_t parse_generic_params(parser_t* p);
+
 #endif

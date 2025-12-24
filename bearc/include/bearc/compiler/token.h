@@ -154,9 +154,9 @@ typedef enum token_type {
     TOK_NULL_LIT,
 
     // punc
-    TOK_RARROW,    // -> for return types
-    TOK_SCOPE_RES, // ..
-    TOK_TYPE_MOD,  // :: , for example, box::int
+    TOK_RARROW,      // -> for return types
+    TOK_SCOPE_RES,   // ..
+    TOK_GENERIC_SEP, // :: , for example, box::int
 
     // operators
     // range

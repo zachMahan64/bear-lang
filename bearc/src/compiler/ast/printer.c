@@ -172,7 +172,7 @@ static void print_type(ast_type_t* type) {
     case AST_TYPE_GENERIC:
         puts("template type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_type(type->type.generic.inner);
-        print_delineator_from_type(TOK_TYPE_MOD);
+        print_delineator_from_type(TOK_GENERIC_SEP);
         print_opening_delim_from_type(TOK_LT);
         for (size_t i = 0; i < type->type.generic.generic_args.len; i++) {
             print_generic_type_arg(type->type.generic.generic_args.start[i]);
@@ -225,6 +225,46 @@ static void print_id_slice(token_ptr_slice_t ids) {
     }
     printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
     printer_deindent();
+}
+
+static void print_generic_param_type(ast_param_generic_type_t* t) {
+    print_indent();
+    if (!t->valid) {
+        printf(ANSI_BOLD_RED "invalid parameter,\n" ANSI_RESET);
+        return;
+    }
+    puts("generic type parameter: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    print_var_name(t->id);
+    if (t->mark_ids.len != 0) {
+        print_op_from_type(TOK_HAS);
+        print_opening_delim_from_type(TOK_LPAREN);
+        for (size_t i = 0; i < t->mark_ids.len; i++) {
+            print_expr(t->mark_ids.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RPAREN);
+    }
+    print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
+}
+
+static void print_generic_params(ast_slice_of_generic_params_t params) {
+    print_indent();
+    puts("generic parameter list: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    printer_do_indent();
+    for (size_t i = 0; i < params.len; i++) {
+        switch (params.start[i]->tag) {
+        case AST_GENERIC_PARAM_TYPE:
+            print_generic_param_type(params.start[i]->param.generic_type);
+            break;
+        case AST_GENERIC_PARAM_VAR:
+            print_param(params.start[i]->param.generic_var);
+            break;
+        case AST_GENERIC_PARAM_INVALID:
+            print_indent(), printf(ANSI_BOLD_RED "invalid generic param" ANSI_RESET ",\n");
+            break;
+        }
+    }
+    printer_deindent();
+    print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
 }
 
 void print_expr(ast_expr_t* expression) {
@@ -283,6 +323,15 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_FN_CALL:
         puts("function call: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(expr.expr.fn_call.left_expr);
+        if (expr.expr.fn_call.is_generic) {
+            ast_slice_of_generic_args_t args = expr.expr.fn_call.generic_args;
+            print_delineator_from_type(TOK_GENERIC_SEP);
+            print_opening_delim_from_type(TOK_LT);
+            for (size_t i = 0; i < args.len; i++) {
+                print_generic_type_arg(args.start[i]);
+            }
+            print_closing_delim_from_type(TOK_GT);
+        }
         print_opening_delim(expr.expr.fn_call.left_paren);
 
         ast_slice_of_exprs_t args = expr.expr.fn_call.args;
@@ -376,9 +425,12 @@ void print_stmt(ast_stmt_t* stmt) {
                 printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
             }
         }
-        printer_deindent();
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
         printf(",\n");
+        if (fn.is_generic) {
+            print_generic_params(fn.generic_params);
+        }
+        printer_deindent();
         print_opening_delim(fn.left_paren);
         for (size_t i = 0; i < fn.params.len; i++) {
             print_param(fn.params.start[i]);
