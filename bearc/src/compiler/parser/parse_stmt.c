@@ -73,7 +73,7 @@ ast_slice_of_stmts_t parser_freeze_stmt_spill_arr(parser_t* p, spill_arr_ptr_t* 
 ast_stmt_t* parser_alloc_stmt(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_stmt_t)); }
 
 static ast_stmt_t* parser_sync_stmt(parser_t* p) {
-    token_range_t range = parser_sync(p);
+    token_range_t range = parser_sync_call(p, &token_is_syncable_stmt_delim);
     ast_stmt_t* dummy_stmt = parser_alloc_stmt(p);
     dummy_stmt->type = AST_STMT_INVALID;
     dummy_stmt->first = range.first;
@@ -116,7 +116,7 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 
     // handle decls with leading mut or brackets (slices and arrays)
     if (token_is_non_id_type_idicator(next_type)) {
-        return parse_var_decl(p, NULL, true); // leading_mut = true
+        return parse_var_decl_from_id_or_mut(p, NULL, true); // leading_mut = true
     }
 
     if (next_type == TOK_RETURN) {
@@ -125,6 +125,14 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 
     if (next_type == TOK_SEMICOLON) {
         return parse_stmt_empty(p);
+    }
+
+    if (next_type == TOK_COMPT) {
+        return parse_stmt_compt_modifier(p, &parse_var_decl);
+    }
+
+    if (next_type == TOK_USE) {
+        return parse_stmt_use(p);
     }
 
     // vis modifers are illegal on plain statements
@@ -140,7 +148,7 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         next_type = parser_peek(p)->type;
         // parse as decl is the id is followed by a var name, or other symbol indicative of a type
         if (token_is_posttype_indicator(next_type)) {
-            return parse_var_decl(p, &leading_id, NULL);
+            return parse_var_decl_from_id_or_mut(p, &leading_id, NULL);
         }
         // parse as regular expression
         leading_expr = parse_expr_from_id_slice(p, leading_id);
@@ -189,7 +197,10 @@ ast_stmt_t* parse_stmt_block(parser_t* p) {
     return stmt;
 }
 
-ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool leading_mut) {
+ast_stmt_t* parse_var_decl(parser_t* p) { return parse_var_decl_from_id_or_mut(p, NULL, false); }
+
+ast_stmt_t* parse_var_decl_from_id_or_mut(parser_t* p, token_ptr_slice_t* opt_id_slice,
+                                          bool leading_mut) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
 
     ast_type_t* type;
@@ -373,7 +384,8 @@ bool parser_shed_compt_qualis_with_error(parser_t* p) {
     return did_shed;
 }
 
-ast_stmt_t* parse_stmt_compt_modifier(parser_t* p) {
+/// the call should correspond to a function that parses the underlying function
+ast_stmt_t* parse_stmt_compt_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t* p)) {
     ast_stmt_t* vis = parser_alloc_stmt(p);
     vis->type = AST_STMT_COMPT_MODIFIER;
     token_t* modif = parser_expect_token(p, TOK_COMPT);
@@ -387,7 +399,7 @@ keep_shedding:
     if (parser_shed_visibility_qualis_with_error(p)) {
         goto keep_shedding;
     }
-    ast_stmt_t* stmt = parse_stmt_decl(p); // expect a declaration, namely a function or var decl
+    ast_stmt_t* stmt = call(p); // expect a declaration, namely a function or var decl
     vis->stmt.compt_modifier.stmt = stmt;
     vis->first = modif;
     vis->last = stmt->last;
@@ -425,7 +437,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     }
 
     if (next_type == TOK_COMPT) {
-        return parse_stmt_compt_modifier(p);
+        return parse_stmt_compt_modifier(p, &parse_stmt_decl);
     }
 
     if (next_type == TOK_USE) {
@@ -433,14 +445,15 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     }
 
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if (!token_is_builtin_type_or_id(next_type)) {
+    if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type))) {
         compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
         return parser_sync_stmt(p);
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // if malformed guard passes, try to parse as a var declaration
-    ast_stmt_t* stmt = parse_var_decl(p, NULL, false); // no leading id, leading mut == false
+    ast_stmt_t* stmt =
+        parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
     if (stmt->type == AST_STMT_INVALID) {
         compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
     }

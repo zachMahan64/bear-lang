@@ -115,7 +115,7 @@ static void print_generic_type_arg(ast_generic_arg_t* arg) {
         }
     } else {
         printer_do_indent();
-        print_indent(), printf(ANSI_BOLD_RED "invalid template arg" ANSI_RESET ",\n");
+        print_indent(), printf(ANSI_BOLD_RED "invalid generic arg" ANSI_RESET ",\n");
         printer_deindent();
     }
 }
@@ -170,7 +170,7 @@ static void print_type(ast_type_t* type) {
 
         break;
     case AST_TYPE_GENERIC:
-        puts("template type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        puts("generic type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_type(type->type.generic.inner);
         print_delineator_from_type(TOK_GENERIC_SEP);
         print_opening_delim_from_type(TOK_LT);
@@ -275,7 +275,7 @@ void print_expr(ast_expr_t* expression) {
     switch (expr.type) {
     case (AST_EXPR_ID): {
         token_ptr_slice_t ids = expression->expr.id.slice;
-        printf("identifer: ");
+        printf("identifier: ");
         print_id_slice(ids);
         break;
     }

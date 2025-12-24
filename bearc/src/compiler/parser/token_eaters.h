@@ -60,6 +60,8 @@ token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expect
 /// uses a match call that returns bool based on a token_type_e
 token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e), error_code_e code);
 
+token_range_t parser_sync_call(parser_t* p, bool (*match)(token_type_e));
+
 // returns true when parser is at EOF
 bool parser_eof(const parser_t* parser);
 
@@ -82,6 +84,8 @@ bool token_is_literal(token_type_e t);
 /// returns true when tkn type is a delimiter which the parser can sync to, like a parenthesis or
 /// brace
 bool token_is_syncable_delim(token_type_e t);
+
+bool token_is_syncable_stmt_delim(token_type_e t);
 
 bool token_is_assignment_init(token_type_e t);
 

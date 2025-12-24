@@ -1,4 +1,13 @@
 fn foo<T, var N>() -> DynArr<T, N> {
-    DynArr<T, N> arr = make_dyn_arr::<T, N>();
-    return arr;
+    compt var a = get_sixteen();
+    Bar<T, N> bar = make_bar::<T, N>(); 
+    var b2 = bar.clone();
+    [&mut]T slice = b2.to_slice_mut();
+    [&]T view = slice[0...(N/2)];
+    DynArr<T, N> dyn_arr = make_dyn_arr::<T, N>();
+    return dyn_arr;
+}
+
+compt fn get_sixteen() -> usize {
+    return 16;
 }

@@ -74,7 +74,7 @@ int compile_file(const char* file_name) {
 
     if (compiler_error_list_empty(&error_list)) {
         // codegen here
-        printf("sucessfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
+        printf("successfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
     } else {
         printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
         error_code = -1;

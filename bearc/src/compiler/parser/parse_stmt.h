@@ -40,7 +40,11 @@ ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr);
 ast_stmt_t* parse_stmt_block(parser_t* p);
 
 /// parse a variable declaration with specified leading quals/identifiers
-ast_stmt_t* parse_var_decl(parser_t* p, token_ptr_slice_t* opt_id_slice, bool leading_mut);
+ast_stmt_t* parse_var_decl_from_id_or_mut(parser_t* p, token_ptr_slice_t* opt_id_slice,
+                                          bool leading_mut);
+
+/// parse a variable declaration
+ast_stmt_t* parse_var_decl(parser_t* p);
 
 /// parse a statement beginning with a func declarator
 ast_stmt_t* parse_fn_decl(parser_t* p);
@@ -78,5 +82,7 @@ ast_stmt_t* parse_stmt_use(parser_t* p);
 ast_stmt_t* parse_stmt_for(parser_t* p);
 
 ast_slice_of_generic_params_t parse_generic_params(parser_t* p);
+
+ast_stmt_t* parse_stmt_compt_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t* p));
 
 #endif

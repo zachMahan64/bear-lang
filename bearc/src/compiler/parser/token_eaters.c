@@ -6,6 +6,7 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
+#include "compiler/parser/token_eaters.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parser.h"
@@ -91,11 +92,6 @@ token_t* parser_match_token(parser_t* parser, token_type_e type) {
     return tkn;
 }
 
-//------------- match forward decls --------------
-bool token_is_builtin_type(token_type_e t);
-
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 /**
  * peek then conditionally eat based on a match function call, which takes a token_type_e and
  * returns bool if valid, else false
@@ -172,15 +168,14 @@ bool parser_eof(const parser_t* parser) {
     return tkn->type == TOK_EOF;
 }
 
-bool token_is_syncable_delim(token_type_e t);
 bool token_is_closing_region_delim(token_type_e t);
 
-token_range_t parser_sync(parser_t* p) {
+token_range_t parser_sync_call(parser_t* p, bool (*match)(token_type_e)) {
     token_t* first_tkn = parser_peek(p);
     token_t* last_tkn = first_tkn; // init in case loop never runs!
     while (!parser_eof(p)) {
         token_t* curr = parser_peek(p);
-        if (token_is_syncable_delim(curr->type)) {
+        if (match(curr->type)) {
             break;
         }
         parser_toss(p);
@@ -195,6 +190,8 @@ token_range_t parser_sync(parser_t* p) {
     };
     return range;
 }
+
+token_range_t parser_sync(parser_t* p) { return parser_sync_call(p, &token_is_syncable_delim); }
 
 bool is_legal_binary_op(parser_t* p, token_type_e type) {
     return is_binary_op(type) && !(p->mode == PARSER_MODE_BAN_LT_GT && is_lt_gt(type));
@@ -231,6 +228,11 @@ bool token_is_function_leading_kw(token_type_e t) {
 bool token_is_syncable_delim(token_type_e t) {
     return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
            token_is_function_leading_kw(t) || t == TOK_COMMA;
+}
+
+bool token_is_syncable_stmt_delim(token_type_e t) {
+    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
+           token_is_function_leading_kw(t);
 }
 
 bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }

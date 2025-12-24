@@ -28,7 +28,7 @@
 - [x] for x in expr statements
 - [x] compt qualifier on fn decls and variables
 - [x] full generic syntax (use the `<T has(Size), var N>` syntax)
-- [ ] test generic fn decls and calls more, improve error messaging and recovery
+- [x] test generic fn decls and calls more, improve error messaging and recovery
 - [ ] struct decls and init-expressions
 - [ ] marks (decide between `#[...]` and `markwith ...`)
 - [ ] unions (add union tkn)
