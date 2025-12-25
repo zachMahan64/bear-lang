@@ -50,7 +50,6 @@ ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
         spill_arr_ptr_push(&sarr, parse_param(p));
         if (!parser_peek_match(p, terminator)) {
             parser_expect_token(p, divider);
-            break;
         }
     }
 

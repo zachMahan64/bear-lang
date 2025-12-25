@@ -3,8 +3,8 @@ has(Bar, Copy)
 <T, var B> 
 {
     i32 a;
-    fn foo() {
-        do_work();
+    fn foo(i32 a, i32 b) {
+        do_work(a, b);
     }
     mt a() -> i32 {
         return self.a;

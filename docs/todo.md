@@ -30,7 +30,7 @@
 - [x] full generic syntax (use the `<T has(Size), var N>` syntax)
 - [x] test generic fn decls and calls more, improve error messaging and recovery
 - [x] struct decls
-- [ ] generalize `parse_slice_of_stmts` with a call parameter for better field parsing
+- [x] generalize `parse_slice_of_stmts` with a call parameter for better field parsing
 - [ ] `contract` decls, add kw, add function signature parsing, use updated func ^ to parse body of contract decls are just fn_sig decls, requires clauses
 - [ ] struct init-expressions
 - [ ] unions (add union tkn)

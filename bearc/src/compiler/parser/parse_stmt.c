@@ -37,27 +37,25 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
     return file;
 }
 
-ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
+ast_slice_of_stmts_t parse_slice_of_stmts_call(parser_t* p, token_type_e until_tkn,
+                                               ast_stmt_t* (*call)(parser_t*)) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
     while (!(parser_peek_match(p, until_tkn) || parser_eof(p)) // while !eof (edge-case handling)
     ) {
-        spill_arr_ptr_push(&sarr, parse_stmt(p));
+        spill_arr_ptr_push(&sarr, call(p));
     }
 
     return parser_freeze_stmt_spill_arr(p, &sarr);
 }
 
+ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until_tkn) {
+    return parse_slice_of_stmts_call(p, until_tkn, &parse_stmt);
+}
+
 ast_slice_of_stmts_t parse_slice_of_decls(parser_t* p, token_type_e until_tkn) {
-    spill_arr_ptr_t sarr;
-    spill_arr_ptr_init(&sarr);
-
-    while (!(parser_peek_match(p, until_tkn) || parser_eof(p))) {
-        spill_arr_ptr_push(&sarr, parse_stmt_decl(p));
-    }
-
-    return parser_freeze_stmt_spill_arr(p, &sarr);
+    return parse_slice_of_stmts_call(p, until_tkn, &parse_stmt_decl);
 }
 
 ast_slice_of_stmts_t parser_freeze_stmt_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
