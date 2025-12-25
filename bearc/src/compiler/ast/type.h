@@ -81,8 +81,8 @@ typedef struct {
 
 typedef struct {
     token_t* id;
-    ast_slice_of_exprs_t mark_ids;
+    ast_slice_of_exprs_t contract_ids;
     bool valid;
-} ast_type_with_marks_t;
+} ast_type_with_contracts_t;
 
 #endif // !COMPILER_AST_TYPE

@@ -227,7 +227,7 @@ static void print_id_slice(token_ptr_slice_t ids) {
     printer_deindent();
 }
 
-static void print_id_with_marks(ast_type_with_marks_t* t) {
+static void print_id_with_contracts(ast_type_with_contracts_t* t) {
     print_indent();
     if (!t->valid) {
         printf(ANSI_BOLD_RED "invalid parameter,\n" ANSI_RESET);
@@ -235,13 +235,13 @@ static void print_id_with_marks(ast_type_with_marks_t* t) {
     }
     puts("type-name: " ANSI_BOLD_GREEN "{" ANSI_RESET);
     print_var_name(t->id);
-    if (t->mark_ids.len != 0) {
+    if (t->contract_ids.len != 0) {
         printer_do_indent();
         print_op_from_type(TOK_HAS);
         printer_deindent();
         print_opening_delim_from_type(TOK_LPAREN);
-        for (size_t i = 0; i < t->mark_ids.len; i++) {
-            print_expr(t->mark_ids.start[i]);
+        for (size_t i = 0; i < t->contract_ids.len; i++) {
+            print_expr(t->contract_ids.start[i]);
         }
         print_closing_delim_from_type(TOK_RPAREN);
     }
@@ -255,7 +255,7 @@ static void print_generic_params(ast_slice_of_generic_params_t params) {
     for (size_t i = 0; i < params.len; i++) {
         switch (params.start[i]->tag) {
         case AST_GENERIC_PARAM_TYPE:
-            print_id_with_marks(params.start[i]->param.generic_type);
+            print_id_with_contracts(params.start[i]->param.generic_type);
             break;
         case AST_GENERIC_PARAM_VAR:
             print_param(params.start[i]->param.generic_var);
@@ -532,7 +532,7 @@ void print_stmt(ast_stmt_t* stmt) {
         ast_stmt_struct_decl_t st = stmt->stmt.struct_decl;
         print_delineator_from_type(TOK_STRUCT);
         printer_do_indent();
-        print_id_with_marks(st.name_with_marks);
+        print_id_with_contracts(st.name_with_contracts);
         if (st.is_generic) {
             print_generic_params(st.generic_params);
         }
@@ -547,7 +547,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         break;
     case AST_MARK_PREAMBLE:
-    case AST_MARK_DECL:
+    case AST_CONTRACT_DECL:
         break;
     case AST_STMT_INVALID:
         puts(ANSI_BOLD_RED "invalid statement" ANSI_BOLD_GREEN " {" ANSI_RESET);

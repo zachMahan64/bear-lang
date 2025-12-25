@@ -64,7 +64,7 @@ typedef enum {
 
     // marks
     AST_MARK_PREAMBLE,
-    AST_MARK_DECL, // mark Name { functions }
+    AST_CONTRACT_DECL,
     AST_STMT_INVALID,
 } ast_stmt_type_e;
 
@@ -83,7 +83,7 @@ typedef enum {
 
 typedef struct {
     ast_param_t* generic_var;
-    ast_type_with_marks_t* generic_type;
+    ast_type_with_contracts_t* generic_type;
 } ast_generic_parameter_u;
 
 typedef struct {
@@ -226,7 +226,7 @@ typedef struct {
 } ast_stmt_return_t;
 
 typedef struct {
-    ast_type_with_marks_t* name_with_marks;
+    ast_type_with_contracts_t* name_with_contracts;
     ast_slice_of_generic_params_t generic_params;
     ast_slice_of_stmts_t fields;
     bool is_generic;

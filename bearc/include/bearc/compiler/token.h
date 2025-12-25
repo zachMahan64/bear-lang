@@ -120,7 +120,7 @@ typedef enum token_type {
     TOK_AS,
 
     // marks
-    TOK_MARK, // marks (like traits)
+    TOK_MARK,
     TOK_REQUIRES,
 
     // ctrl flow
