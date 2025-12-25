@@ -83,7 +83,7 @@ typedef enum {
 
 typedef struct {
     ast_param_t* generic_var;
-    ast_param_generic_type_t* generic_type;
+    ast_type_with_marks_t* generic_type;
 } ast_generic_parameter_u;
 
 typedef struct {
@@ -226,9 +226,10 @@ typedef struct {
 } ast_stmt_return_t;
 
 typedef struct {
-    token_t* struct_tkn;
-    ast_expr_id_t* name;
+    ast_type_with_marks_t* name_with_marks;
+    ast_slice_of_generic_params_t generic_params;
     ast_slice_of_stmts_t fields;
+    bool is_generic;
 } ast_stmt_struct_decl_t;
 
 typedef struct {

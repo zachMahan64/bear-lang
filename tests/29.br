@@ -1,0 +1,16 @@
+struct Foo
+has(Bar, Copy)
+<T, var B> 
+{
+    i32 a;
+    fn foo() {
+        do_work();
+    }
+    mt a() -> i32 {
+        return self.a;
+    }
+    mt copy() -> Self {
+        Self copy; // imagine there's a proper struct init here
+        return copy;
+    }
+}

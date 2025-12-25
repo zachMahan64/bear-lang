@@ -1,4 +1,4 @@
-fn foo<T, var N>() -> DynArr<T, N> {
+fn foo<T has(Sizable), var N>() -> DynArr<T, N> {
     compt var a = get_sixteen();
     Bar<T, N> bar = make_bar::<T, N>(); 
     var b2 = bar.clone();

@@ -227,16 +227,18 @@ static void print_id_slice(token_ptr_slice_t ids) {
     printer_deindent();
 }
 
-static void print_generic_param_type(ast_param_generic_type_t* t) {
+static void print_id_with_marks(ast_type_with_marks_t* t) {
     print_indent();
     if (!t->valid) {
         printf(ANSI_BOLD_RED "invalid parameter,\n" ANSI_RESET);
         return;
     }
-    puts("generic type parameter: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    puts("type-name: " ANSI_BOLD_GREEN "{" ANSI_RESET);
     print_var_name(t->id);
     if (t->mark_ids.len != 0) {
+        printer_do_indent();
         print_op_from_type(TOK_HAS);
+        printer_deindent();
         print_opening_delim_from_type(TOK_LPAREN);
         for (size_t i = 0; i < t->mark_ids.len; i++) {
             print_expr(t->mark_ids.start[i]);
@@ -253,7 +255,7 @@ static void print_generic_params(ast_slice_of_generic_params_t params) {
     for (size_t i = 0; i < params.len; i++) {
         switch (params.start[i]->tag) {
         case AST_GENERIC_PARAM_TYPE:
-            print_generic_param_type(params.start[i]->param.generic_type);
+            print_id_with_marks(params.start[i]->param.generic_type);
             break;
         case AST_GENERIC_PARAM_VAR:
             print_param(params.start[i]->param.generic_var);
@@ -526,6 +528,24 @@ void print_stmt(ast_stmt_t* stmt) {
         print_terminator(stmt->stmt.return_stmt.terminator);
         break;
     case AST_STMT_STRUCT_DEF:
+        puts("struct declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_struct_decl_t st = stmt->stmt.struct_decl;
+        print_delineator_from_type(TOK_STRUCT);
+        printer_do_indent();
+        print_id_with_marks(st.name_with_marks);
+        if (st.is_generic) {
+            print_generic_params(st.generic_params);
+        }
+        print_indent();
+        puts("fields: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        for (size_t i = 0; i < st.fields.len; i++) {
+            print_stmt(st.fields.start[i]);
+        }
+        printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
+        printer_deindent();
+        break;
     case AST_MARK_PREAMBLE:
     case AST_MARK_DECL:
         break;

@@ -29,8 +29,9 @@
 - [x] compt qualifier on fn decls and variables
 - [x] full generic syntax (use the `<T has(Size), var N>` syntax)
 - [x] test generic fn decls and calls more, improve error messaging and recovery
-- [ ] struct decls and init-expressions
-- [ ] marks (decide between `#[...]` and `markwith ...`)
+- [ ] struct decls
+- [ ] struct init-expressions
+- [ ] mark decls
 - [ ] unions (add union tkn)
 - [ ] enums
 - [ ] variants (add variant tkn)
@@ -38,6 +39,7 @@
 - [ ] switch exprs?
 - [ ] switch statements
 - [ ] closures
+- [ ] rewrite ansi code usages to use toggleable strings
 - [ ] write a full parser test suite
 
 #### Medium-term

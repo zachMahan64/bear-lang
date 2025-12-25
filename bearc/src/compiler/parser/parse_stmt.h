@@ -85,4 +85,6 @@ ast_slice_of_generic_params_t parse_generic_params(parser_t* p);
 
 ast_stmt_t* parse_stmt_compt_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t* p));
 
+ast_stmt_t* parse_stmt_struct_decl(parser_t* p);
+
 #endif

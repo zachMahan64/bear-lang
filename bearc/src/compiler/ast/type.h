@@ -83,6 +83,6 @@ typedef struct {
     token_t* id;
     ast_slice_of_exprs_t mark_ids;
     bool valid;
-} ast_param_generic_type_t;
+} ast_type_with_marks_t;
 
 #endif // !COMPILER_AST_TYPE

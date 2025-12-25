@@ -62,18 +62,10 @@ int compile_file(const char* file_name) {
 #endif
     // ----------------------------------------------------
 
-    /* TODO:
-     * TOKENIZE -> AST -> SEMANTIC ANALYSIS -> BYTECODE
-     * DONE        WIP
-     * when we can, just output one unified bytecode file
-     * with original_file_name.bvm
-     */
-
     // display all comptime errors
     compiler_error_list_print_all(&error_list);
 
     if (compiler_error_list_empty(&error_list)) {
-        // codegen here
         printf("successfully compiled: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);
     } else {
         printf("compilation terminated: " ANSI_BOLD "'%s'\n" ANSI_RESET, file_name);

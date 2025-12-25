@@ -432,6 +432,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_stmt_import(p);
     }
 
+    if (next_type == TOK_STRUCT) {
+        return parse_stmt_struct_decl(p);
+    }
+
     if (token_is_visibility_modifier(next_type)) {
         return parse_stmt_vis_modifier(p);
     }
@@ -717,15 +721,15 @@ ast_stmt_t* parse_stmt_for(parser_t* p) {
 }
 
 /// parse the form T has(id, id, id, ...)
-ast_param_generic_type_t* parse_param_generic_type(parser_t* p) {
-    ast_param_generic_type_t* gen = arena_alloc(p->arena, sizeof(ast_param_generic_type_t));
+ast_type_with_marks_t* parse_id_with_marks(parser_t* p) {
+    ast_type_with_marks_t* t = arena_alloc(p->arena, sizeof(ast_type_with_marks_t));
     token_t* id = parser_expect_token(p, TOK_IDENTIFIER);
-    gen->valid = false;
+    t->valid = false;
     if (!id) {
         parser_sync(p);
     } else {
-        gen->valid = true;
-        gen->id = id;
+        t->valid = true;
+        t->id = id;
         spill_arr_ptr_t ids;
         spill_arr_ptr_init(&ids);
         // optionally match has, then if there is, expect the has(id, id, id) structure
@@ -738,9 +742,9 @@ ast_param_generic_type_t* parse_param_generic_type(parser_t* p) {
             }
             parser_expect_token(p, TOK_RPAREN);
         }
-        gen->mark_ids = parser_freeze_expr_spill_arr(p, &ids);
+        t->mark_ids = parser_freeze_expr_spill_arr(p, &ids);
     }
-    return gen;
+    return t;
 }
 
 ast_generic_parameter_t* parse_generic_param(parser_t* p) {
@@ -748,9 +752,9 @@ ast_generic_parameter_t* parse_generic_param(parser_t* p) {
     token_t* first = parser_peek(p);
     token_type_e t0 = first->type;
     token_type_e t1 = parser_peek_n(p, 1)->type;
-    if (t0 == TOK_IDENTIFIER && (t1 == TOK_COMMA || t1 == TOK_COMMA || t1 == TOK_HAS)) {
+    if (t0 == TOK_IDENTIFIER && (t1 == TOK_COMMA || t1 == TOK_GT || t1 == TOK_HAS)) {
         gen_param->tag = AST_GENERIC_PARAM_TYPE;
-        gen_param->param.generic_type = parse_param_generic_type(p);
+        gen_param->param.generic_type = parse_id_with_marks(p);
     } else if (token_is_non_id_type_idicator(t0) || token_is_builtin_type_or_id(t0)) {
         gen_param->tag = AST_GENERIC_PARAM_VAR;
         gen_param->param.generic_var = parse_param(p);
@@ -779,6 +783,9 @@ ast_slice_of_generic_params_t parse_generic_params(parser_t* p) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
+    parser_mode_e saved = parser_mode(p);
+    parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
+
     while (!(parser_peek_match(p, TOK_GT) || parser_eof(p)) // while !eof (edge-case handling)
     ) {
         spill_arr_ptr_push(&sarr, parse_generic_param(p));
@@ -787,5 +794,29 @@ ast_slice_of_generic_params_t parse_generic_params(parser_t* p) {
         }
     }
 
+    parser_mode_set(p, saved);
     return parser_freeze_generic_param_spill_arr(p, &sarr);
+}
+
+ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
+    ast_stmt_t* struct_stmt = parser_alloc_stmt(p);
+    struct_stmt->type = AST_STMT_STRUCT_DEF;
+    token_t* struct_tkn = parser_expect_token(p, TOK_STRUCT);
+    if (!struct_tkn) {
+        return parser_sync_stmt(p);
+    }
+    struct_stmt->stmt.struct_decl.name_with_marks = parse_id_with_marks(p);
+    struct_stmt->stmt.struct_decl.is_generic = false;
+    if (parser_match_token(p, TOK_LT) ||
+        (parser_match_token(p, TOK_GENERIC_SEP) && parser_match_token(p, TOK_LT))) {
+        struct_stmt->stmt.struct_decl.is_generic = true;
+        struct_stmt->stmt.struct_decl.generic_params = parse_generic_params(p);
+        parser_expect_token(p, TOK_GT);
+    }
+    parser_expect_token(p, TOK_LBRACE);
+    struct_stmt->stmt.struct_decl.fields = parse_slice_of_decls(p, TOK_RBRACE);
+    parser_expect_token(p, TOK_RBRACE);
+    struct_stmt->first = struct_tkn;
+    struct_stmt->last = parser_prev(p);
+    return struct_stmt;
 }
