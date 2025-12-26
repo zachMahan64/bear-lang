@@ -1,0 +1,6 @@
+struct Foo {
+    Vec<i32> data;
+    dt self() {
+        destroy(data);
+    }
+}

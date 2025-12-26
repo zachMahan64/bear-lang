@@ -56,7 +56,7 @@ ast_stmt_t* parse_stmt_return(parser_t* p);
 ast_stmt_t* parse_stmt_empty(parser_t* p);
 
 /// parse a statement like "pub i32 x = 1;"
-ast_stmt_t* parse_stmt_vis_modifier(parser_t* p);
+ast_stmt_t* parse_stmt_vis_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t*));
 
 /// shed extraneous pub and hid qualifiers and emplace errors messages, returns true if shed
 /// anything
@@ -86,5 +86,7 @@ ast_slice_of_generic_params_t parse_generic_params(parser_t* p);
 ast_stmt_t* parse_stmt_compt_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t* p));
 
 ast_stmt_t* parse_stmt_struct_decl(parser_t* p);
+
+ast_stmt_t* parse_fn_prototype(parser_t* p);
 
 #endif

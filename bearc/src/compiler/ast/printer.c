@@ -433,16 +433,16 @@ void print_stmt(ast_stmt_t* stmt) {
             print_generic_params(fn.generic_params);
         }
         printer_deindent();
-        print_opening_delim(fn.left_paren);
+        print_opening_delim_from_type(TOK_LPAREN);
         for (size_t i = 0; i < fn.params.len; i++) {
             print_param(fn.params.start[i]);
         }
-        print_closing_delim(fn.right_paren);
-        if (fn.rarrow) {
-            if (fn.rarrow->type == TOK_RARROW) {
-                print_op(fn.rarrow);
-                print_type(fn.return_type);
-            }
+        print_closing_delim_from_type(TOK_RPAREN);
+        if (fn.return_type) {
+            printer_do_indent();
+            print_op_from_type(TOK_RARROW);
+            printer_deindent();
+            print_type(fn.return_type);
         }
         printer_do_indent();
         print_stmt(fn.block);

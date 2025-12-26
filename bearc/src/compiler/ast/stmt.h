@@ -162,16 +162,23 @@ typedef struct {
     token_t* kw;
     token_ptr_slice_t name;
     ast_slice_of_generic_params_t generic_params;
-    token_t* left_paren;
     ast_slice_of_params_t params;
-    token_t* right_paren;
-    /// NULLable if no return type
-    token_t* rarrow;
     /// NULLable if no return type
     ast_type_t* return_type;
     ast_stmt_t* block;
     bool is_generic;
 } ast_stmt_fn_decl_t;
+
+typedef struct {
+    /// fn, mt, or dt
+    token_t* kw;
+    token_ptr_slice_t name;
+    ast_slice_of_generic_params_t generic_params;
+    ast_slice_of_params_t params;
+    /// NULLable if no return type
+    ast_type_t* return_type;
+    bool is_generic;
+} ast_stmt_fn_prototype_t;
 
 typedef struct {
     ast_type_t* type;
@@ -234,10 +241,9 @@ typedef struct {
 } ast_stmt_struct_decl_t;
 
 typedef struct {
-    token_t* mark_tkn;
-    ast_expr_id_t* name;
-    ast_stmt_block_t* funcs;
-} ast_stmt_mark_decl_t;
+    token_t* name;
+    ast_slice_of_stmts_t fields;
+} ast_stmt_contract_decl_t;
 
 typedef struct {
     token_t* hash_tkn;
@@ -270,6 +276,7 @@ typedef union {
     ast_stmt_use_t use;
     ast_stmt_expr_t stmt_expr;
     ast_stmt_fn_decl_t fn_decl;
+    ast_stmt_fn_prototype_t fn_prototype;
     ast_stmt_var_decl_init_t var_init_decl;
     ast_stmt_var_decl_t var_decl;
     ast_stmt_if_t if_stmt;
@@ -279,7 +286,7 @@ typedef union {
     ast_stmt_for_in_t for_in_stmt;
     ast_stmt_return_t return_stmt;
     ast_stmt_struct_decl_t struct_decl;
-    ast_stmt_mark_decl_t mark_decl;
+    ast_stmt_contract_decl_t contract_decl;
     ast_stmt_mark_preamble_t mark_preamble;
     ast_stmt_empty_t empty;
     ast_stmt_vis_modifier_t vis_modifier;

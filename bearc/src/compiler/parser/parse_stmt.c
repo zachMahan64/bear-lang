@@ -267,7 +267,6 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     if (!lparen) {
         return parser_sync_stmt(p);
     }
-    decl->stmt.fn_decl.left_paren = lparen;
 
     if (parser_peek(p)->type != TOK_RPAREN) {
         decl->stmt.fn_decl.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
@@ -277,11 +276,9 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     if (!rparen) {
         return parser_sync_stmt(p);
     }
-    decl->stmt.fn_decl.right_paren = rparen;
 
     token_t* rarrow = parser_match_token(p, TOK_RARROW);
     if (rarrow) {
-        decl->stmt.fn_decl.rarrow = rarrow;
         decl->stmt.fn_decl.return_type = parse_type(p);
     }
     decl->stmt.fn_decl.block = parse_stmt_block(p);
@@ -359,13 +356,13 @@ bool parser_shed_visibility_qualis_with_error(parser_t* p) {
     return did_shed;
 }
 
-ast_stmt_t* parse_stmt_vis_modifier(parser_t* p) {
+ast_stmt_t* parse_stmt_vis_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t*)) {
     ast_stmt_t* vis = parser_alloc_stmt(p);
     vis->type = AST_STMT_VISIBILITY_MODIFIER;
     token_t* modif = parser_eat(p); // fine becuz we knew to enter this function
     // shed redundant qualifiers in a loop, but don't return invalid statement
     parser_shed_visibility_qualis_with_error(p);
-    ast_stmt_t* stmt = parse_stmt_decl(p); // expect a declaration, namely a function or var decl
+    ast_stmt_t* stmt = call(p); // expect a declaration, namely a function or var decl
     vis->stmt.vis_modifier.stmt = stmt;
     vis->stmt.vis_modifier.modifier = modif;
     vis->first = modif;
@@ -435,7 +432,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     }
 
     if (token_is_visibility_modifier(next_type)) {
-        return parse_stmt_vis_modifier(p);
+        return parse_stmt_vis_modifier(p, &parse_stmt_decl);
     }
 
     if (next_type == TOK_COMPT) {
@@ -817,4 +814,48 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
     struct_stmt->first = struct_tkn;
     struct_stmt->last = parser_prev(p);
     return struct_stmt;
+}
+
+// TODO, impl
+ast_stmt_t* parse_fn_prototype(parser_t* p) {
+    ast_stmt_t* decl = parser_alloc_stmt(p);
+    decl->type = AST_STMT_FN_PROTOTYPE;
+
+    parser_shed_visibility_qualis_with_error(p);
+
+    token_t* kw = parser_expect_token_call(p, &token_is_mt_or_fn, ERR_EXPECTED_FN_OR_MT);
+    decl->stmt.fn_prototype.kw = kw;
+
+    parser_shed_visibility_qualis_with_error(p);
+
+    decl->stmt.fn_prototype.name = parse_id_token_slice(p, TOK_SCOPE_RES);
+
+    parser_match_token(p, TOK_GENERIC_SEP); // this is fine
+    if (parser_match_token(p, TOK_LT)) {
+        decl->stmt.fn_prototype.is_generic = true;
+        decl->stmt.fn_prototype.generic_params = parse_generic_params(p);
+        parser_expect_token(p, TOK_GT);
+    }
+
+    token_t* lparen = parser_expect_token(p, TOK_LPAREN);
+    if (!lparen) {
+        return parser_sync_stmt(p);
+    }
+
+    if (parser_peek(p)->type != TOK_RPAREN) {
+        decl->stmt.fn_prototype.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
+    }
+
+    token_t* rparen = parser_expect_token(p, TOK_RPAREN);
+    if (!rparen) {
+        return parser_sync_stmt(p);
+    }
+
+    token_t* rarrow = parser_match_token(p, TOK_RARROW);
+    if (rarrow) {
+        decl->stmt.fn_prototype.return_type = parse_type(p);
+    }
+    decl->first = decl->stmt.fn_prototype.kw;
+    decl->last = parser_prev(p);
+    return decl;
 }
