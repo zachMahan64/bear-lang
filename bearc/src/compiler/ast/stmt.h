@@ -44,23 +44,24 @@ typedef enum {
     AST_STMT_BREAK,
 
     // function declarations
-    AST_STMT_FN_DECL, // fn + params + (body for definitions / null for declarations)
-                      // + return type
+    AST_STMT_FN_DECL,
+    AST_STMT_FN_PROTOTYPE,
 
     // control flow
-    AST_STMT_IF,     // KW_IF + condition + statement
-    AST_STMT_ELSE,   // KW_ELSE (optional branch)
-    AST_STMT_WHILE,  // KW_WHILE + condition + body
-    AST_STMT_FOR,    // KW_FOR + init stmt + cond stmt + step expr + body stmt
-    AST_STMT_FOR_IN, // KW_FOR + iterable + iterator + body stmt
-    AST_STMT_RETURN, // KW_RETURN + expr
+    AST_STMT_IF,
+    AST_STMT_ELSE,
+    AST_STMT_WHILE,
+    AST_STMT_FOR,
+    AST_STMT_FOR_IN,
+    AST_STMT_RETURN,
 
     // visibility
     AST_STMT_VISIBILITY_MODIFIER,
     AST_STMT_COMPT_MODIFIER,
 
     // structs
-    AST_STMT_STRUCT_DEF, // TOK_STRUCT + fields
+    AST_STMT_STRUCT_DEF,
+    AST_STMT_CONTRACT_DEF,
 
     // marks
     AST_MARK_PREAMBLE,

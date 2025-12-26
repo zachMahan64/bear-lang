@@ -587,6 +587,9 @@ void print_stmt(ast_stmt_t* stmt) {
         print_stmt(stmt->stmt.compt_modifier.stmt);
         printer_deindent();
         break;
+    case AST_STMT_FN_PROTOTYPE:
+    case AST_STMT_CONTRACT_DEF:
+        break;
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
 }

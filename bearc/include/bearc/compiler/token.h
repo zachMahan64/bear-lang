@@ -119,9 +119,10 @@ typedef enum token_type {
     TOK_MOVE,
     TOK_AS,
 
-    // marks
+    // marks/contracts
     TOK_MARK,
     TOK_REQUIRES,
+    TOK_CONTRACT,
 
     // ctrl flow
     TOK_IF,

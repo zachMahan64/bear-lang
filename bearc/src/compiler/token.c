@@ -92,6 +92,7 @@ static void string_to_token_map_init(void) {
 
     strimap_insert(&string_to_token_map, "mut", TOK_MUT);
     strimap_insert(&string_to_token_map, "mark", TOK_MARK);
+    strimap_insert(&string_to_token_map, "contract", TOK_CONTRACT);
     strimap_insert(&string_to_token_map, "requires", TOK_REQUIRES);
 
     strimap_insert(&string_to_token_map, "i8", TOK_I8);
@@ -244,6 +245,7 @@ static const char* token_to_string_map[TOK__NUM] = {
 
     [TOK_MUT] = "mut",
     [TOK_MARK] = "mark",
+    [TOK_CONTRACT] = "contract",
     [TOK_REQUIRES] = "requires",
 
     [TOK_I8] = "i8",
