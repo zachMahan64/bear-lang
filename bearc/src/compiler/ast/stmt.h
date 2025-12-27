@@ -65,7 +65,6 @@ typedef enum {
 
     // marks
     AST_MARK_PREAMBLE,
-    AST_CONTRACT_DECL,
     AST_STMT_INVALID,
 } ast_stmt_type_e;
 

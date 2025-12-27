@@ -431,6 +431,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_stmt_struct_decl(p);
     }
 
+    if (next_type == TOK_CONTRACT) {
+        return parse_stmt_contract_decl(p);
+    }
+
     if (token_is_visibility_modifier(next_type)) {
         return parse_stmt_vis_modifier(p, &parse_stmt_decl);
     }
@@ -816,7 +820,6 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
     return struct_stmt;
 }
 
-// TODO, impl
 ast_stmt_t* parse_fn_prototype(parser_t* p) {
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_PROTOTYPE;
@@ -855,7 +858,28 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
     if (rarrow) {
         decl->stmt.fn_prototype.return_type = parse_type(p);
     }
+    parser_expect_token(p, TOK_SEMICOLON);
     decl->first = decl->stmt.fn_prototype.kw;
     decl->last = parser_prev(p);
     return decl;
+}
+
+ast_stmt_t* parse_stmt_contract_decl(parser_t* p) {
+    ast_stmt_t* stmt = parser_alloc_stmt(p);
+    stmt->type = AST_STMT_CONTRACT_DEF;
+    token_t* struct_tkn = parser_expect_token(p, TOK_CONTRACT);
+    if (!struct_tkn) {
+        return parser_sync_stmt(p);
+    }
+    token_t* name = parser_expect_token(p, TOK_IDENTIFIER);
+    if (!name) {
+        return parser_sync_stmt(p);
+    }
+    stmt->stmt.contract_decl.name = name;
+    parser_expect_token(p, TOK_LBRACE);
+    stmt->stmt.contract_decl.fields = parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_fn_prototype);
+    parser_expect_token(p, TOK_RBRACE);
+    stmt->first = struct_tkn;
+    stmt->last = parser_prev(p);
+    return stmt;
 }

@@ -547,8 +547,6 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         break;
     case AST_MARK_PREAMBLE:
-    case AST_CONTRACT_DECL:
-        break;
     case AST_STMT_INVALID:
         puts(ANSI_BOLD_RED "invalid statement" ANSI_BOLD_GREEN " {" ANSI_RESET);
         break;
@@ -587,9 +585,49 @@ void print_stmt(ast_stmt_t* stmt) {
         print_stmt(stmt->stmt.compt_modifier.stmt);
         printer_deindent();
         break;
-    case AST_STMT_FN_PROTOTYPE:
-    case AST_STMT_CONTRACT_DEF:
+    case AST_STMT_FN_PROTOTYPE: {
+        puts("function prototype: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_fn_prototype_t fd = stmt->stmt.fn_prototype;
+        print_op(fd.kw);
+        printer_do_indent();
+        print_indent();
+        print_id_slice(fd.name);
+        printf(",\n");
+        if (fd.is_generic) {
+            print_generic_params(fd.generic_params);
+        }
+        printer_deindent();
+        print_opening_delim_from_type(TOK_LPAREN);
+        for (size_t i = 0; i < fd.params.len; i++) {
+            print_param(fd.params.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RPAREN);
+        if (fd.return_type) {
+            printer_do_indent();
+            print_op_from_type(TOK_RARROW);
+            printer_deindent();
+            print_type(fd.return_type);
+        }
+        print_delineator_from_type(TOK_SEMICOLON);
         break;
+    }
+    case AST_STMT_CONTRACT_DEF: {
+        puts("contract declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_contract_decl_t con = stmt->stmt.contract_decl;
+        print_delineator_from_type(TOK_CONTRACT);
+        print_var_name(con.name);
+        printer_do_indent();
+        print_indent();
+        puts("fields: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        for (size_t i = 0; i < con.fields.len; i++) {
+            print_stmt(con.fields.start[i]);
+        }
+        printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
+        printer_deindent();
+        break;
+    }
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
 }

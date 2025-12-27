@@ -300,7 +300,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_FREE] = "free",
 
     // variable / literal types
-    [TOK_IDENTIFIER] = "id",
+    [TOK_IDENTIFIER] = "identifier",
     [TOK_CHAR_LIT] = "char_lit",
     [TOK_INT_LIT] = "int_lit",
     [TOK_DOUB_LIT] = "doub_lit",

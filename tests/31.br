@@ -1,0 +1,3 @@
+contract Copy {
+    mt copy() -> Self;
+}
