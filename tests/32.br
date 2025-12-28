@@ -1,0 +1,10 @@
+fn main([&]str args) -> i32 {
+    return Foo..new().bar;
+}
+
+struct Foo {
+    i32 bar;
+    fn new() -> Self {
+        return Foo{.bar = 64};
+    }
+}

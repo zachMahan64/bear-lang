@@ -9,6 +9,7 @@
 #include "compiler/parser/parse_expr.h"
 #include "compiler/ast/expr.h"
 #include "compiler/diagnostics/error_codes.h"
+#include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_type.h"
 #include "compiler/parser/parser.h"
 #include "compiler/parser/rules.h"
@@ -35,6 +36,21 @@ ast_slice_of_exprs_t parser_freeze_expr_spill_arr(parser_t* p, spill_arr_ptr_t* 
     return slice;
 }
 
+ast_slice_of_exprs_t parse_slice_of_exprs_call(parser_t* p, token_type_e divider,
+                                               token_type_e until_tkn,
+                                               ast_expr_t* (*call)(parser_t*)) {
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
+
+    while (!(parser_peek_match(p, until_tkn) || parser_eof(p)) // while !eof (edge-case handling)
+    ) {
+        spill_arr_ptr_push(&sarr, call(p));
+        parser_match_token(p, divider);
+    }
+
+    return parser_freeze_expr_spill_arr(p, &sarr);
+}
+
 ast_expr_t* parser_alloc_expr(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_expr_t)); }
 
 static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
@@ -45,6 +61,10 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     if (!lhs) {
         if (token_is_builtin_type_or_id(first_type)) {
             lhs = parse_id(p);
+            // try struct init in form Foo{.thing = 1, .bar = 2}
+            if (parser_peek_match(p, TOK_LBRACE)) {
+                lhs = parse_expr_struct_init(p, lhs);
+            }
         } else if (token_is_literal(first_type)) {
             lhs = parse_literal(p);
         } else if (first_type == TOK_LPAREN) {
@@ -311,5 +331,52 @@ ast_expr_t* parse_expr_type(parser_t* p) {
     s->expr.type_expr.type = type;
     s->first = type->first;
     s->last = type->last;
+    return s;
+}
+
+ast_expr_t* parse_expr_struct_member_init(parser_t* p) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_STRUCT_MEMBER_INIT;
+    if (!parser_expect_token(p, TOK_DOT)) {
+        return parser_sync_expr(p);
+    }
+    token_t* name = parser_match_token(p, TOK_IDENTIFIER);
+    if (!name) {
+        compiler_error_list_emplace(p->error_list, name, ERR_EXPECTED_IDENTIFER);
+        return parser_sync_expr(p);
+    }
+    token_t* assign_op = parser_match_token_call(p, &token_is_assignment_init);
+    if (!assign_op) {
+        compiler_error_list_emplace(p->error_list, assign_op, ERR_EXPECTED_ASSIGNMENT);
+        return parser_sync_expr(p);
+    }
+    s->expr.struct_member_init.id = name;
+    s->expr.struct_member_init.assign_op = assign_op;
+    s->expr.struct_member_init.value = parse_expr(p);
+    // now we should be returning something in the form .foo = some_expr
+    return s;
+}
+
+ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* opt_id_lhs) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_STRUCT_INIT;
+    // if the optional id lhs is NULL, parse an id
+    if (!opt_id_lhs) {
+        opt_id_lhs = parse_id(p);
+    }
+    // verfify it's 100% an id (matters if passed in)
+    if (opt_id_lhs->type != AST_EXPR_ID) {
+        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_EXPECTED_IDENTIFER);
+        return parser_sync_expr(p);
+    }
+    // extract the id slice from the id, this should be safe given the above check
+    token_ptr_slice_t id = opt_id_lhs->expr.id.slice;
+    s->expr.struct_init.id = id;
+    parser_expect_token(p, TOK_LBRACE);
+    s->expr.struct_init.member_inits =
+        parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_struct_member_init);
+    parser_expect_token(p, TOK_RBRACE);
+    s->first = id.start[0]; // safe becuz the id should be valid given the check passed
+    s->last = parser_prev(p);
     return s;
 }

@@ -37,7 +37,7 @@ const char* error_message_for_code(error_code_e error_code) {
         [ERR_REDUNDANT_COMPT_QUALIFIER] = "redundant 'compt' qualifier",
         [ERR_INVALID_GENERIC_PARAMETER] = "illegal generic parameter",
         [ERR_EXPECTED_FN_OR_MT] = "expected function declaration keyword 'fn' or 'mt'",
-    };
+        [ERR_EXPECTED_ASSIGNMENT] = "expected assignment operator '=' or '<-'"};
     return error_messages[error_code];
 }
 

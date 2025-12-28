@@ -363,6 +363,32 @@ void print_expr(ast_expr_t* expression) {
         print_type(expr.expr.type_expr.type);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
+    case AST_EXPR_STRUCT_INIT: {
+        puts("struct-init expression: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_indent();
+        printf("name: ");
+        print_id_slice(expr.expr.struct_init.id);
+        puts(",");
+        print_opening_delim_from_type(TOK_LBRACE);
+        ast_slice_of_exprs_t inits = expr.expr.struct_init.member_inits;
+        for (size_t i = 0; i < inits.len; i++) {
+            print_expr(inits.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RBRACE);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
+    case AST_EXPR_STRUCT_MEMBER_INIT: {
+        puts("member-init: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_opening_delim(expr.expr.struct_member_init.id);
+        printer_deindent();
+        token_t* op = expr.expr.struct_member_init.assign_op;
+        ast_expr_t* val = expr.expr.struct_member_init.value;
+        print_op(op);
+        print_expr(val);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
     }
     puts(",");
     printer_deindent();

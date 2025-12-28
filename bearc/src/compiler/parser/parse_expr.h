@@ -55,4 +55,6 @@ ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs);
 
 ast_expr_t* parse_expr_type(parser_t* p);
 
+ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* id_lhs);
+
 #endif

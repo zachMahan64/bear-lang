@@ -32,6 +32,10 @@ typedef enum {
     // type expr
     AST_EXPR_TYPE,
 
+    // structs
+    AST_EXPR_STRUCT_INIT,
+    AST_EXPR_STRUCT_MEMBER_INIT,
+
     // error
     AST_EXPR_INVALID,
 
@@ -81,6 +85,17 @@ typedef struct {
     token_t* op;
 } ast_expr_unary_t;
 
+typedef struct {
+    token_t* id;
+    token_t* assign_op;
+    ast_expr_t* value;
+} ast_expr_struct_member_init_t;
+
+typedef struct {
+    token_ptr_slice_t id;
+    ast_slice_of_exprs_t member_inits;
+} ast_expr_struct_init_t;
+
 // generics ~~~~~~~~~~~~~~~~~~
 typedef struct {
     ast_expr_t* expr;
@@ -129,6 +144,8 @@ typedef union {
     ast_expr_fn_call_t fn_call;
     ast_expr_subscript_t subscript;
     ast_expr_type_t type_expr;
+    ast_expr_struct_init_t struct_init;
+    ast_expr_struct_member_init_t struct_member_init;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted
