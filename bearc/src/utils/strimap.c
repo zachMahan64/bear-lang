@@ -18,9 +18,14 @@
 // expects either a capacity or NULL for default capacity
 strimap_t strimap_create(size_t capacity) {
     capacity = (capacity > STRIMAP_MINIMUM_CAPACITY) ? capacity : STRIMAP_MINIMUM_CAPACITY;
+    return strimap_create_from_arena(capacity, arena_create(STRIMAP_ARENA_CHUNK_SIZE));
+}
+
+strimap_t strimap_create_from_arena(size_t capacity, arena_t arena) {
+    capacity = (capacity > STRIMAP_MINIMUM_CAPACITY) ? capacity : STRIMAP_MINIMUM_CAPACITY;
     strimap_t map;
     map.capacity = capacity;
-    map.arena = arena_create(STRIMAP_ARENA_CHUNK_SIZE);
+    map.arena = arena;
     map.buckets = (strimap_entry_t**)arena_alloc(&map.arena, capacity * sizeof(strimap_entry_t*));
     // init to NULL
     for (size_t i = 0; i < capacity; i++) {
@@ -29,6 +34,7 @@ strimap_t strimap_create(size_t capacity) {
     map.size = 0;
     return map;
 }
+
 void strimap_destroy(strimap_t* map) {
     if (!map || !map->buckets) {
         return;
