@@ -119,10 +119,11 @@ typedef enum token_type {
     TOK_MOVE,
     TOK_AS,
 
-    // marks/contracts
+    // constructs
     TOK_MARK,
     TOK_REQUIRES,
     TOK_CONTRACT,
+    TOK_UNION,
 
     // ctrl flow
     TOK_IF,
@@ -137,10 +138,6 @@ typedef enum token_type {
     TOK_SELF_ID,
     TOK_SELF_TYPE,
     TOK_STRUCT,
-
-    // low level heap functions
-    TOK_MALLOC,
-    TOK_FREE,
 
     // variable or function name
     TOK_IDENTIFIER,

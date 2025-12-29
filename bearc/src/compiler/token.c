@@ -142,9 +142,7 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "Self", TOK_SELF_TYPE);
     strimap_insert(&string_to_token_map, "struct", TOK_STRUCT);
 
-    // heap
-    strimap_insert(&string_to_token_map, "malloc", TOK_MALLOC);
-    strimap_insert(&string_to_token_map, "free", TOK_FREE);
+    strimap_insert(&string_to_token_map, "union", TOK_UNION);
 
     // operators / symbols (multi-char tokens)
     strimap_insert(&string_to_token_map, "->", TOK_RARROW);
@@ -294,10 +292,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_SELF_ID] = "self",
     [TOK_SELF_TYPE] = "Self",
     [TOK_STRUCT] = "struct",
-
-    // heap
-    [TOK_MALLOC] = "malloc",
-    [TOK_FREE] = "free",
+    [TOK_UNION] = "union",
 
     // variable / literal types
     [TOK_IDENTIFIER] = "identifier",

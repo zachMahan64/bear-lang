@@ -33,7 +33,7 @@
 - [x] generalize `parse_slice_of_stmts` with a call parameter for better field parsing
 - [x] `contract` decls, add kw, add function signature parsing, use updated func ^ to parse body of contract decls are just fn_sig decls, requires clauses
 - [x] struct init-expressions
-- [ ] unions (add union tkn)
+- [x] unions (add union tkn)
 - [ ] enums
 - [ ] variants (add variant tkn)
 - [ ] add is token and impl the `if foo is Some(x) {...}` construct

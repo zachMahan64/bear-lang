@@ -1,0 +1,7 @@
+mod union_test;
+
+union FooBar {
+    Foo foo;
+    Bar bar;
+    oops;
+}

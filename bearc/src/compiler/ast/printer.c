@@ -666,6 +666,23 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         break;
     }
+    case AST_STMT_UNION_DEF: {
+        puts("union declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_union_decl_t un = stmt->stmt.union_decl;
+        print_delineator_from_type(TOK_UNION);
+        print_var_name(un.name);
+        printer_do_indent();
+        print_indent();
+        puts("fields: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        for (size_t i = 0; i < un.fields.len; i++) {
+            print_stmt(un.fields.start[i]);
+        }
+        printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
+        printer_deindent();
+        break;
+    }
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
 }

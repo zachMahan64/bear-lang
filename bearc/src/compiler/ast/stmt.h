@@ -59,9 +59,10 @@ typedef enum {
     AST_STMT_VISIBILITY_MODIFIER,
     AST_STMT_COMPT_MODIFIER,
 
-    // structs
+    // structures
     AST_STMT_STRUCT_DEF,
     AST_STMT_CONTRACT_DEF,
+    AST_STMT_UNION_DEF,
 
     // marks
     AST_MARK_PREAMBLE,
@@ -244,6 +245,7 @@ typedef struct {
     ast_slice_of_stmts_t fields;
 } ast_stmt_contract_decl_t;
 
+// TODO, address this
 typedef struct {
     token_t* hash_tkn;
     token_t* left_bracket;
@@ -263,6 +265,11 @@ typedef struct {
 typedef struct {
     ast_stmt_t* stmt;
 } ast_stmt_wrapped_t;
+
+typedef struct {
+    token_t* name;
+    ast_slice_of_stmts_t fields;
+} ast_stmt_union_decl_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -286,6 +293,7 @@ typedef union {
     ast_stmt_return_t return_stmt;
     ast_stmt_struct_decl_t struct_decl;
     ast_stmt_contract_decl_t contract_decl;
+    ast_stmt_union_decl_t union_decl;
     ast_stmt_mark_preamble_t mark_preamble;
     ast_stmt_empty_t empty;
     ast_stmt_vis_modifier_t vis_modifier;
