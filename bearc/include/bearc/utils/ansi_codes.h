@@ -10,7 +10,7 @@
 #define ANSI_CODES_H
 
 /// ansi escape sequence character
-#define ESC "\x1b"
+#define ESC "\033"
 
 // reset
 #define ANSI_RESET ESC "[0m"
@@ -48,5 +48,6 @@
 #define ANSI_BOLD_YELLOW ANSI_BOLD ANSI_YELLOW_FG
 #define ANSI_BOLD_CYAN ANSI_BOLD ANSI_CYAN_FG
 #define ANSI_BOLD_BLUE ANSI_BOLD ANSI_BLUE_FG
+#define ANSI_BOLD_WHITE ANSI_BOLD ANSI_WHITE_FG
 
 #endif // ANSI_CODES_H

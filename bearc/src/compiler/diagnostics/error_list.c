@@ -81,8 +81,8 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstr(&line_under_num_str, "  |");
 
     // do printing now that we have all strings setup
-    printf(ANSI_BOLD "\'%s\': at (line %zu,%zu): " ANSI_RED_FG "error: " ANSI_RESET ANSI_BOLD
-                     "%s%s" ANSI_RESET "\n",
+    printf(ANSI_BOLD_WHITE "\'%s\': at (line %zu,%zu): " ANSI_RED_FG
+                           "error: " ANSI_RESET ANSI_BOLD_WHITE "%s%s" ANSI_RESET "\n",
            list->src_buffer.file_name, line, col, error_message_for_code(err->error_code),
            error_message_context_for(err));
 
@@ -126,7 +126,7 @@ void compiler_error_list_print_all(const compiler_error_list_t* list) {
         puts("1 error generated.");
         return;
     }
-    printf(ANSI_BOLD "%zu errors generated.\n" ANSI_RESET, len);
+    printf("%zu errors generated.\n", len);
 }
 
 bool compiler_error_list_empty(const compiler_error_list_t* list) {
