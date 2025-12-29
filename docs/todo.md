@@ -44,5 +44,9 @@
 - [ ] write a full parser test suite
 
 #### Medium-term
-- [ ] finish parser
+- [ ] finish Crafting Interpreters
+- [ ] start Engineering a Compiler
+- [ ] HIR
+- [ ] MIR 
+- [ ] LLVM IR
 - [ ] revamp CLI to be much more robust using the strimap_t and vector_t containers and set up a proper flag system
