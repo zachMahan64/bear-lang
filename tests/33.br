@@ -1,0 +1,26 @@
+mod foo {
+
+    fn main() -> i32 {
+        var foo = Foo..new();
+        var other = Foo..new();
+        str bar = get_magic();
+        foo.assume_bar(bar);
+        other.copy_bar(&mut foo.bar);
+        return 0;
+    }
+
+    struct Foo {
+        mut str bar;
+        fn new() -> Self {
+            return Self{.bar = ""};
+        }
+        mt assume_bar(str& other_bar) {
+            self.bar = other_bar;
+        }
+        mt copy_bar(str &mut other_bar) {
+            other_bar = self.bar;
+        }
+
+    }
+
+}

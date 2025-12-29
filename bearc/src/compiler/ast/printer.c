@@ -369,12 +369,12 @@ void print_expr(ast_expr_t* expression) {
         printf("name: ");
         print_id_slice(expr.expr.struct_init.id);
         puts(",");
-        print_opening_delim_from_type(TOK_LBRACE);
+        print_delineator_from_type(TOK_LBRACE);
         ast_slice_of_exprs_t inits = expr.expr.struct_init.member_inits;
         for (size_t i = 0; i < inits.len; i++) {
             print_expr(inits.start[i]);
         }
-        print_closing_delim_from_type(TOK_RBRACE);
+        print_delineator_from_type(TOK_RBRACE);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
@@ -386,6 +386,18 @@ void print_expr(ast_expr_t* expression) {
         ast_expr_t* val = expr.expr.struct_member_init.value;
         print_op(op);
         print_expr(val);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
+    case AST_EXPR_BORROW: {
+        puts("borrow: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_AMPER);
+        if (expr.expr.borrow.mut) {
+            print_op_from_type(TOK_MUT);
+        }
+        printer_deindent();
+        print_expr(expr.expr.borrow.borrowed);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }

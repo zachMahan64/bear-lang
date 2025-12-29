@@ -32,6 +32,9 @@ typedef enum {
     // type expr
     AST_EXPR_TYPE,
 
+    // borrow like & or &mut
+    AST_EXPR_BORROW,
+
     // structs
     AST_EXPR_STRUCT_INIT,
     AST_EXPR_STRUCT_MEMBER_INIT,
@@ -84,6 +87,11 @@ typedef struct {
     ast_expr_t* expr;
     token_t* op;
 } ast_expr_unary_t;
+
+typedef struct {
+    ast_expr_t* borrowed;
+    bool mut;
+} ast_expr_borrow_t;
 
 typedef struct {
     token_t* id;
@@ -146,6 +154,7 @@ typedef union {
     ast_expr_type_t type_expr;
     ast_expr_struct_init_t struct_init;
     ast_expr_struct_member_init_t struct_member_init;
+    ast_expr_borrow_t borrow;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

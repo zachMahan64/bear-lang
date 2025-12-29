@@ -84,6 +84,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     if (lhs && parser_peek(p)->type == TOK_LBRACK) {
         return parse_subscript(p, lhs);
     }
+    // try ++x, etc.
     if (is_preunary_op(first_type)) {
         return parse_expr_prec(p, NULL, PREC_INIT);
     }
@@ -119,8 +120,12 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
 }
 
 ast_expr_t* parse_preunary_expr(parser_t* p) {
-    ast_expr_t* preunary_expr = parser_alloc_expr(p);
+    // special preunary case, &mut <expr> or &<expr>
+    if (parser_peek(p)->type == TOK_AMPER) {
+        return parse_expr_borrow(p);
+    }
     token_t* op = parser_eat(p); // already been checked that this token is legit
+    ast_expr_t* preunary_expr = parser_alloc_expr(p);
     // set op
     preunary_expr->type = AST_EXPR_PRE_UNARY;
     preunary_expr->first = op;
@@ -146,7 +151,7 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
         sub_expr = parse_expr_prec(p, NULL, prec_preunary(op->type));
     }
     preunary_expr->expr.unary.expr = sub_expr;
-    preunary_expr->last = sub_expr->last;
+    preunary_expr->last = parser_prev(p);
     return preunary_expr;
 }
 
@@ -377,6 +382,20 @@ ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* opt_id_lhs) {
         parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_struct_member_init);
     parser_expect_token(p, TOK_RBRACE);
     s->first = id.start[0]; // safe becuz the id should be valid given the check passed
+    s->last = parser_prev(p);
+    return s;
+}
+
+ast_expr_t* parse_expr_borrow(parser_t* p) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_BORROW;
+    token_t* amper = parser_expect_token(p, TOK_AMPER);
+    if (!amper) {
+        return parser_sync_expr(p);
+    }
+    s->expr.borrow.mut = parser_match_token(p, TOK_MUT);
+    s->expr.borrow.borrowed = parse_expr(p);
+    s->first = amper;
     s->last = parser_prev(p);
     return s;
 }

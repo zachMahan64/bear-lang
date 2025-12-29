@@ -7,8 +7,9 @@ fn do_work(Foo foo) -> Foo {
 }
 
 struct Foo {
+    i32 foo;
     i32 bar;
     fn new() -> Self {
-        return do_work(Foo{.bar = 64});
+        return do_work(Foo{.foo = 64, .bar = 64});
     }
 }

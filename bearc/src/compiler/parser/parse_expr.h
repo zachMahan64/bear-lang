@@ -57,4 +57,6 @@ ast_expr_t* parse_expr_type(parser_t* p);
 
 ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* id_lhs);
 
+ast_expr_t* parse_expr_borrow(parser_t* p);
+
 #endif
