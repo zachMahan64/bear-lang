@@ -289,6 +289,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_AS] = "as",
 
     // structures
+    [TOK_ENUM] = "enum",
     [TOK_SELF_ID] = "self",
     [TOK_SELF_TYPE] = "Self",
     [TOK_STRUCT] = "struct",
