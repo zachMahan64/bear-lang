@@ -401,6 +401,9 @@ void print_expr(ast_expr_t* expression) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
+    case AST_EXPR_VARIANT_DECOMP: {
+        break;
+    }
     }
     puts(",");
     printer_deindent();

@@ -34,7 +34,7 @@
 - [x] `contract` decls, add kw, add function signature parsing, use updated func ^ to parse body of contract decls are just fn_sig decls, requires clauses
 - [x] struct init-expressions
 - [x] unions (add union tkn)
-- [ ] variants (add variant tkn)
+- [x] variants (add variant tkn)
 - [ ] add is token, add variant exprs as `Foo(Bar(a, b))` impl the `if foo is Some(x) {...}` construct
 - [ ] switch exprs?
 - [ ] switch statements

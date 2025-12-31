@@ -9,6 +9,7 @@
 #ifndef AST_STATEMENTS_H
 #define AST_STATEMENTS_H
 #include "compiler/ast/expr.h"
+#include "compiler/ast/params.h"
 #include "compiler/ast/type.h"
 #include "compiler/token.h"
 #include <stddef.h>

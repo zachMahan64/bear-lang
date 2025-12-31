@@ -9,6 +9,7 @@
 #ifndef AST_EXPRESSIONS_H
 #define AST_EXPRESSIONS_H
 #include "compiler/token.h"
+#include "params.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,6 +39,9 @@ typedef enum {
     // structs
     AST_EXPR_STRUCT_INIT,
     AST_EXPR_STRUCT_MEMBER_INIT,
+
+    // variants
+    AST_EXPR_VARIANT_DECOMP,
 
     // error
     AST_EXPR_INVALID,
@@ -141,6 +145,11 @@ typedef struct {
     ast_type_t* type;
 } ast_expr_type_t;
 
+typedef struct {
+    token_ptr_slice_t* id;
+    ast_slice_of_params_t vars;
+} ast_expr_variant_decomp_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
@@ -155,6 +164,7 @@ typedef union {
     ast_expr_struct_init_t struct_init;
     ast_expr_struct_member_init_t struct_member_init;
     ast_expr_borrow_t borrow;
+    ast_expr_variant_decomp_t variant_decomp;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

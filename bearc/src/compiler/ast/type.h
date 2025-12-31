@@ -67,19 +67,6 @@ typedef struct ast_type {
 } ast_type_t;
 
 typedef struct {
-    ast_type_t* type;
-    token_t* name;
-    bool valid;
-    token_t* first;
-    token_t* last;
-} ast_param_t;
-
-typedef struct {
-    ast_param_t** start;
-    size_t len;
-} ast_slice_of_params_t;
-
-typedef struct {
     token_t* id;
     ast_slice_of_exprs_t contract_ids;
     bool valid;
