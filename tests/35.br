@@ -1,0 +1,5 @@
+variant Foo {
+    Bar,
+    Boo,
+    BarWithInt(i32 num),
+}

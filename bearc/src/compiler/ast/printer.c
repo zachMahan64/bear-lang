@@ -584,7 +584,6 @@ void print_stmt(ast_stmt_t* stmt) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
         printer_deindent();
         break;
-    case AST_MARK_PREAMBLE:
     case AST_STMT_INVALID:
         puts(ANSI_BOLD_RED "invalid statement" ANSI_BOLD_GREEN " {" ANSI_RESET);
         break;
@@ -682,6 +681,36 @@ void print_stmt(ast_stmt_t* stmt) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
         printer_deindent();
         break;
+    }
+    case AST_STMT_VARIANT_DEF: {
+        puts("variant declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_variant_decl_t vari = stmt->stmt.variant_decl;
+        print_delineator_from_type(TOK_VARIANT);
+        print_var_name(vari.name);
+        printer_do_indent();
+        print_indent();
+        puts("fields: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        for (size_t i = 0; i < vari.fields.len; i++) {
+            print_stmt(vari.fields.start[i]);
+        }
+        printer_deindent();
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);
+        printer_deindent();
+        break;
+    }
+    case AST_STMT_VARIANT_FIELD_DECL: {
+        puts("variant field: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_stmt_variant_field_decl_t fd = stmt->stmt.variant_field_decl;
+        print_var_name(fd.name);
+        if (fd.params.len > 0) {
+            print_opening_delim_from_type(TOK_LPAREN);
+            for (size_t i = 0; i < fd.params.len; i++) {
+                print_param(fd.params.start[i]);
+            }
+            print_closing_delim_from_type(TOK_RPAREN);
+            break;
+        }
     }
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);

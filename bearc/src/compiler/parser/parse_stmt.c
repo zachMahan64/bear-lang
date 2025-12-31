@@ -442,6 +442,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_stmt_union_decl(p);
     }
 
+    if (next_type == TOK_VARIANT) {
+        return parse_stmt_variant_decl(p);
+    }
+
     if (token_is_visibility_modifier(next_type)) {
         return parse_stmt_vis_modifier(p, &parse_stmt_decl);
     }
@@ -907,6 +911,51 @@ ast_stmt_t* parse_stmt_union_decl(parser_t* p) {
     s->stmt.contract_decl.fields = parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_var_decl);
     parser_expect_token(p, TOK_RBRACE);
     s->first = union_tkn;
+    s->last = parser_prev(p);
+    return s;
+}
+
+ast_stmt_t* parse_stmt_variant_field_decl(parser_t* p) {
+    ast_stmt_t* s = parser_alloc_stmt(p);
+    s->type = AST_STMT_VARIANT_FIELD_DECL;
+    token_t* name = parser_expect_token(p, TOK_IDENTIFIER);
+    if (!name) {
+        return parser_sync_stmt(p);
+    }
+    s->stmt.variant_field_decl.name = name;
+    if (parser_match_token(p, TOK_LPAREN)) {
+        s->stmt.variant_field_decl.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
+        parser_expect_token(p, TOK_RPAREN);
+    } else {
+        ast_slice_of_params_t params = {.start = NULL, .len = 0};
+        s->stmt.variant_field_decl.params = params;
+    }
+    s->first = name;
+    s->last = parser_prev(p);
+    // terminate w/ `,` unless last entry that proceeds the closing `}`
+    if (!parser_peek_match(p, TOK_RBRACE)) {
+        parser_expect_token(p, TOK_COMMA);
+    }
+    return s;
+}
+
+ast_stmt_t* parse_stmt_variant_decl(parser_t* p) {
+    ast_stmt_t* s = parser_alloc_stmt(p);
+    s->type = AST_STMT_VARIANT_DEF;
+    token_t* vari_tkn = parser_expect_token(p, TOK_VARIANT);
+    if (!vari_tkn) {
+        return parser_sync_stmt(p);
+    }
+    token_t* name = parser_expect_token(p, TOK_IDENTIFIER);
+    if (!name) {
+        return parser_sync_stmt(p);
+    }
+    s->stmt.variant_decl.name = name;
+    parser_expect_token(p, TOK_LBRACE);
+    s->stmt.variant_decl.fields =
+        parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_stmt_variant_field_decl);
+    parser_expect_token(p, TOK_RBRACE);
+    s->first = vari_tkn;
     s->last = parser_prev(p);
     return s;
 }

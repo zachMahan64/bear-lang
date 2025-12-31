@@ -106,10 +106,10 @@ typedef enum token_type {
     TOK_HID,   // like private, but with slightly different semantics because BearLang has no
                // inheritance, so this is really just a hidden data member or function/method
     TOK_PUB,
-    TOK_MUT,  // example: mut i32
-    TOK_HAS,  // like a C++ template, with much more basic features (for), just like a
-              // smarter macro
-    TOK_ENUM, // scoped/type-checked enums
+    TOK_MUT,     // example: mut i32
+    TOK_HAS,     // like a C++ template, with much more basic features (for), just like a
+                 // smarter macro
+    TOK_VARIANT, // scoped/type-checked enums
     // memory location identifiers
     TOK_STATIC,
 

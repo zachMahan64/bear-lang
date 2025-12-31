@@ -93,4 +93,6 @@ ast_stmt_t* parse_stmt_contract_decl(parser_t* p);
 
 ast_stmt_t* parse_stmt_union_decl(parser_t* p);
 
+ast_stmt_t* parse_stmt_variant_decl(parser_t* p);
+
 #endif

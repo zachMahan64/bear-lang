@@ -121,7 +121,7 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "hid", TOK_HID);
     strimap_insert(&string_to_token_map, "pub", TOK_PUB);
     strimap_insert(&string_to_token_map, "has", TOK_HAS);
-    strimap_insert(&string_to_token_map, "enum", TOK_ENUM);
+    strimap_insert(&string_to_token_map, "variant", TOK_VARIANT);
 
     // control flow
     strimap_insert(&string_to_token_map, "if", TOK_IF);
@@ -289,7 +289,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_AS] = "as",
 
     // structures
-    [TOK_ENUM] = "enum",
+    [TOK_VARIANT] = "variant",
     [TOK_SELF_ID] = "self",
     [TOK_SELF_TYPE] = "Self",
     [TOK_STRUCT] = "struct",
