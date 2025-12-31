@@ -213,9 +213,11 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     binary_expr->expr.binary.op = op_tkn;
     max_prec = (max_prec >= prec_binary(op_tkn->type)) ? max_prec : prec_binary(op_tkn->type);
     ast_expr_t* middle_expr = NULL;
-    // try as cast, else just
+    // handle special binary ops
     if (op_tkn->type == TOK_AS) {
         middle_expr = parse_expr_type(p);
+    } else if (op_tkn->type == TOK_IS) {
+        middle_expr = parse_expr_variant_decomp(p);
     } else {
         middle_expr = parse_primary_expr_impl(p, NULL);
     }
@@ -396,6 +398,23 @@ ast_expr_t* parse_expr_borrow(parser_t* p) {
     s->expr.borrow.mut = parser_match_token(p, TOK_MUT);
     s->expr.borrow.borrowed = parse_expr(p);
     s->first = amper;
+    s->last = parser_prev(p);
+    return s;
+}
+
+ast_expr_t* parse_expr_variant_decomp(parser_t* p) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_VARIANT_DECOMP;
+    token_t* first = parser_peek(p);
+    s->expr.variant_decomp.id = parse_id_token_slice(p, TOK_SCOPE_RES);
+    if (parser_match_token(p, TOK_LPAREN)) {
+        s->expr.variant_decomp.vars = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
+        parser_expect_token(p, TOK_RPAREN);
+    } else {
+        ast_slice_of_params_t vars = {.start = NULL, .len = 0};
+        s->expr.variant_decomp.vars = vars;
+    }
+    s->first = first;
     s->last = parser_prev(p);
     return s;
 }

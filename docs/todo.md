@@ -35,12 +35,13 @@
 - [x] struct init-expressions
 - [x] unions (add union tkn)
 - [x] variants (add variant tkn)
-- [ ] add is token, add variant exprs as `Foo(Bar(a, b))` impl the `if foo is Some(x) {...}` construct
-- [ ] switch exprs?
-- [ ] switch statements
+- [x] add is token, add variant exprs as `Foo(var x)` impl the `if foo is Some(x) {...}` construct
+- [ ] switch exprs
+- [ ] switch statements?
 - [ ] closures
 - [ ] rewrite ansi code usages to use toggleable strings
 - [ ] write a full parser test suite
+- [ ] write up full parser documentation
 
 #### Medium-term
 - [ ] finish Crafting Interpreters

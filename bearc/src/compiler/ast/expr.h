@@ -146,7 +146,7 @@ typedef struct {
 } ast_expr_type_t;
 
 typedef struct {
-    token_ptr_slice_t* id;
+    token_ptr_slice_t id;
     ast_slice_of_params_t vars;
 } ast_expr_variant_decomp_t;
 

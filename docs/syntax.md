@@ -8,7 +8,7 @@
 // in main.br 
 import my_mod // a file containing a module
 
-fn main(str[]& argv) -> i32 {
+fn main([&]str args) -> i32 {
     my_mod..do_thing();
     return 0;
 }
@@ -20,14 +20,14 @@ fn main(str[]& argv) -> i32 {
 mod my_mod; // the rest of the file will be apart of the "my_mod" namespace/module
 
 fn do_thing() {
-    cout <<- "I'm doing a thing\n";
+    println("I'm doing a thing\n");
 }
 ```
 #### Built-in types:
 - `i8, u8, ..., i64, u64` supported
 - `f32` single and `f64` double precision
 - char (unicode 32-bit)
-- str (utf-8 string)
+- str (ascii string)
 - bool
 #### Type-related features (will come later)
 - type-deduction: `var x = func_returning_i32(); // x will be i32`
@@ -77,33 +77,19 @@ mut i32& mut z = &x; // mutabe ref to mutable i32
 mut i32* mut z = &x; // same but ptr
 i32 mut *mut z = &x; // also legal, but not preferred
 ```
-#### Marks 
-- Models viable operators and abstract aspects of types
-- Built-in mark hierachies: 
-- TriviallyCopyable
-- NoCopy (implicit for large types)
-    - requires !TriviallyCopyable 
-- NoDt (implicit for small types or types composed of only smalls types)
-- Numeric
-    - requires Addable, Subtractable, Multipliable, Divisable
-- Integral
-    - requires Addable, Subtractable, Multipliable, Divisable, Modable, BitShiftable
-- Floating
-     - requires Addable, Subtractable, Multipliable, Divisable
 
 ```
-mark Contiguous {
+contract Contiguous {
     fn size();
     fn data(); 
 }
 
-#[Contiguous]
-struct I32SliceWrapper { 
+struct I32SliceWrapper has Contiguous { 
     hid usize size;
     hid i32& data;
 
     // ctor
-    fn new(i32[]& from_slice) -> Self {
+    fn new([&]i32 from_slice) -> Self {
         Self self = {
             .size = from_slice.size;
             .data = from_slice.data;
@@ -122,7 +108,6 @@ struct I32SliceWrapper {
 ```
 
 ```
-#[TriviallyCopyable]
 struct Thing {
     i32 my_int;
     fn new() -> Thing {
@@ -133,32 +118,56 @@ struct Thing {
 }
 ```
 ### Built-in Constructs
+
 #### Slices 
 ```
-i32[16] arr;
-i32[]& slice = std..slice(&arr, 8); 
-```
-#### Optionals
-```
-opt::i32 opt_int; // none, opt_i32.some == false
-opt_i32 = 12;     // some, opt_i32.some == true
-
-res::i32 res_int; // err, res_int.ok == false 
-res_int = 12;     // ok, res_int.ok = true;
+[16]i32 arr;
+[&]i32 slice = std..slice(&arr, 8); 
 ```
 
-#### Templated Types (will be a later addition after the core of the language is built)
+#### Generics
 ```
 MyTemplatedType<param1,param2,param3> thing;
 box::MyTemplatedType<param1,param2,param3> boxedThing;
 
-template<A, B, C>
-fn foo() -> bar<A, B, C> {
+fn foo<A, B, C>() -> bar<A, B, C> {
     do_work();
 }
 
-template
 struct Foo<A, B, C> {
 
+}
+
+```
+
+#### Variants
+- The `is` contract is move-only (circumvent with `foo.copy is ...`)
+```
+variant Foo {
+    Bar,
+    Boo,
+    BarWithInt(i32 num),
+}
+
+fn main() {
+    Foo foo1 = way1();
+    Foo foo2 = way2();
+
+    if foo1 is Foo..BarWithInt(var x) {
+        println("foo 1 is {}", x);
+    } else if foo2 is Foo..BarWithInt(var x) {
+        println("foo 2 is {}", x);
+    }
+
+}
+
+fn way1() -> Foo {
+    Foo foo = Foo..BarWithInt{.num = 5};
+    return foo;
+}
+
+fn way2() -> Foo {
+    Foo foo = Foo..BarWithInt(5);
+    return foo;
 }
 ```

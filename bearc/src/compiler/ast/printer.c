@@ -227,6 +227,12 @@ static void print_id_slice(token_ptr_slice_t ids) {
     printer_deindent();
 }
 
+static void print_id_slice_name(token_ptr_slice_t id) {
+    printer_do_indent();
+    print_indent(), printf("name: "), print_id_slice(id), printf(",\n");
+    printer_deindent();
+}
+
 static void print_id_with_contracts(ast_type_with_contracts_t* t) {
     print_indent();
     if (!t->valid) {
@@ -402,6 +408,17 @@ void print_expr(ast_expr_t* expression) {
         break;
     }
     case AST_EXPR_VARIANT_DECOMP: {
+        puts("variant decomposition: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_expr_variant_decomp_t vd = expr.expr.variant_decomp;
+        print_id_slice_name(vd.id);
+        if (vd.vars.len > 0) {
+            print_opening_delim_from_type(TOK_LPAREN);
+            for (size_t i = 0; i < vd.vars.len; i++) {
+                print_param(vd.vars.start[i]);
+            }
+            print_closing_delim_from_type(TOK_RPAREN);
+        }
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
     }

@@ -3,3 +3,25 @@ variant Foo {
     Boo,
     BarWithInt(i32 num),
 }
+
+fn main() {
+    Foo foo1 = way1();
+    Foo foo2 = way2();
+
+    if foo1 is Foo..BarWithInt(var x) {
+        println("foo 1 is {}", x);
+    } else if foo2 is Foo..BarWithInt(var x) {
+        println("foo 2 is {}", x);
+    }
+
+}
+
+fn way1() -> Foo {
+    Foo foo = Foo..BarWithInt{.num = 5};
+    return foo;
+}
+
+fn way2() -> Foo {
+    Foo foo = Foo..BarWithInt(5);
+    return foo;
+}

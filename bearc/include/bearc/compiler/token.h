@@ -118,6 +118,7 @@ typedef enum token_type {
     TOK_ALIGNOF,
     TOK_MOVE,
     TOK_AS,
+    TOK_IS, // for variant decomp
 
     // constructs
     TOK_MARK,
