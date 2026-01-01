@@ -80,11 +80,6 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     if (lhs && is_postunary_op(parser_peek(p)->type)) {
         return parse_postunary(p, lhs);
     }
-    // parse Foo..Bar(var foo)
-    if (lhs && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP || next_type == TOK_LT)
-        && parser_mode(p) == PARSER_MODE_VARIANT_DECOMP && lhs->type == AST_EXPR_ID) {
-        return parse_expr_variant_decomp_with_leading_id(p, lhs->expr.id.slice);
-    }
     // try fn call or variant decomp too
     if (lhs && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP)) {
         return parse_fn_call(p, lhs);
@@ -465,6 +460,7 @@ ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_sli
     return e;
 }
 
+// TODO, parse multiple seperated with |
 ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
     token_t* dflt = parser_match_token(p, TOK_DEFAULT);
     if (dflt) {
@@ -475,11 +471,21 @@ ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
         default_expr->last = dflt;
         return default_expr;
     }
-    parser_mode_e saved = parser_mode(p);
-    parser_mode_set(p, PARSER_MODE_VARIANT_DECOMP);
-    ast_expr_t* expr = parse_expr(p);
-    parser_mode_set(p, saved);
-    return expr;
+    if (parser_peek(p)->type == TOK_IDENTIFIER) {
+        ast_expr_t* id = parse_id(p);
+        token_type_e next_type = parser_peek(p)->type;
+        // parse Foo..Bar(var foo)
+        if (id && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP || next_type == TOK_LT)
+            && id->type == AST_EXPR_ID) {
+            return parse_expr_variant_decomp_with_leading_id(p, id->expr.id.slice);
+        }
+        return id;
+    }
+    if (token_is_literal(parser_peek(p)->type)) {
+        return parse_literal(p);
+    }
+    compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_INVALID_PATTERN);
+    return parser_sync_expr(p);
 }
 
 ast_expr_t* parse_expr_block(parser_t* p) {

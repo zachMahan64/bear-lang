@@ -37,6 +37,8 @@
 - [x] variants (add variant tkn)
 - [x] add is token, add variant exprs as `Foo(var x)` impl the `if foo is Some(x) {...}` construct
 - [ ] switch exprs
+    - [ ] parse multiple arms with `|` (corresponding td in parse_expr.c)
+    - [ ] finish generic arg handling then handle generic params in variant decls (corresponding td in parse_expr.c)
 - [ ] switch statements?
 - [ ] add generics to variants
 - [ ] closures

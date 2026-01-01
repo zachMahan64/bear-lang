@@ -198,27 +198,27 @@ bool is_legal_binary_op(parser_t* p, token_type_e type) {
 }
 
 // map containing look-ups for builtin types
-static const bool parser_builtin_type_map[TOK__NUM] = {
-    [TOK_CHAR] = true,     [TOK_U8] = true,    [TOK_I8] = true,  [TOK_I16] = true,
-    [TOK_U16] = true,      [TOK_I32] = true,   [TOK_U32] = true, [TOK_I64] = true,
-    [TOK_U64] = true,      [TOK_USIZE] = true, [TOK_F32] = true, [TOK_F64] = true,
-    [TOK_BOOL] = true,     [TOK_STR] = true,   [TOK_VAR] = true, [TOK_VOID] = true,
-    [TOK_SELF_TYPE] = true};
+static const bool parser_builtin_type_map[TOK__NUM]
+    = {[TOK_CHAR] = true,     [TOK_U8] = true,    [TOK_I8] = true,  [TOK_I16] = true,
+       [TOK_U16] = true,      [TOK_I32] = true,   [TOK_U32] = true, [TOK_I64] = true,
+       [TOK_U64] = true,      [TOK_USIZE] = true, [TOK_F32] = true, [TOK_F64] = true,
+       [TOK_BOOL] = true,     [TOK_STR] = true,   [TOK_VAR] = true, [TOK_VOID] = true,
+       [TOK_SELF_TYPE] = true};
 
-static const bool parser_builtin_type_mod_map[TOK__NUM] = {
-    [TOK_BOX] = true, [TOK_BAG] = true, [TOK_OPT] = true, [TOK_RES] = true};
+static const bool parser_builtin_type_mod_map[TOK__NUM]
+    = {[TOK_BOX] = true, [TOK_BAG] = true, [TOK_OPT] = true, [TOK_RES] = true};
 
 // match helpers
 bool token_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
 bool token_is_builtin_type_or_id(token_type_e t) {
-    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER || t == TOK_SELF_ID ||
-           parser_builtin_type_mod_map[t];
+    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER || t == TOK_SELF_ID
+           || parser_builtin_type_mod_map[t];
 }
 bool token_is_builtin_type_mod(token_type_e t) { return parser_builtin_type_mod_map[t]; }
 
 bool token_is_literal(token_type_e t) {
-    return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_FALSE || t == TOK_INT_LIT ||
-           t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT || t == TOK_NULL_LIT;
+    return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_FALSE || t == TOK_INT_LIT
+           || t == TOK_DOUB_LIT || t == TOK_STR_LIT || t == TOK_CHAR_LIT || t == TOK_NULL_LIT;
 }
 
 bool token_is_function_leading_kw(token_type_e t) {
@@ -228,13 +228,13 @@ bool token_is_function_leading_kw(token_type_e t) {
 bool token_is_mt_or_fn(token_type_e t) { return t == TOK_FN || t == TOK_MT; }
 
 bool token_is_syncable_delim(token_type_e t) {
-    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
-           token_is_function_leading_kw(t) || t == TOK_COMMA;
+    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN
+           || token_is_function_leading_kw(t) || t == TOK_COMMA || t == TOK_EQ_ARROW;
 }
 
 bool token_is_syncable_stmt_delim(token_type_e t) {
-    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN ||
-           token_is_function_leading_kw(t);
+    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN
+           || token_is_function_leading_kw(t);
 }
 
 bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }
@@ -242,8 +242,8 @@ bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }
 bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t == TOK_ASSIGN_EQ; }
 
 bool token_is_posttype_indicator(token_type_e t) {
-    return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR || t == TOK_LT ||
-           t == TOK_GENERIC_SEP;
+    return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR || t == TOK_LT
+           || t == TOK_GENERIC_SEP;
 }
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }

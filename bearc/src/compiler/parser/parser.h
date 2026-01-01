@@ -22,8 +22,6 @@ typedef enum {
     PARSER_MODE_DEFAULT = 0,
     PARSER_MODE_BAN_LT_GT,
     PARSER_MODE_IN_LOOP,
-    // don't parse functions, but do parse variant decompositions
-    PARSER_MODE_VARIANT_DECOMP,
     PARSER_MODE__NUM,
 } parser_mode_e;
 
