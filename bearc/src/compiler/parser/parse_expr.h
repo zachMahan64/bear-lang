@@ -61,4 +61,8 @@ ast_expr_t* parse_expr_borrow(parser_t* p);
 
 ast_expr_t* parse_expr_variant_decomp(parser_t* p);
 
+ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_slice_t id);
+
+ast_expr_t* parse_expr_switch_case_value(parser_t* p);
+
 #endif

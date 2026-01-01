@@ -76,8 +76,13 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     if (lhs && is_postunary_op(parser_peek(p)->type)) {
         return parse_postunary(p, lhs);
     }
-    // try fn call too
+    // try fn call or variant decomp too
     if (lhs && (parser_peek(p)->type == TOK_LPAREN || parser_peek(p)->type == TOK_GENERIC_SEP)) {
+        // parse Foo..Bar(var foo)
+        if (parser_mode(p) == PARSER_MODE_VARIANT_DECOMP && parser_peek_match(p, TOK_LPAREN) &&
+            lhs->type == AST_EXPR_ID) {
+            return parse_expr_variant_decomp_with_leading_id(p, lhs->expr.id.slice);
+        }
         return parse_fn_call(p, lhs);
     }
     // try subscript
@@ -417,4 +422,30 @@ ast_expr_t* parse_expr_variant_decomp(parser_t* p) {
     s->first = first;
     s->last = parser_prev(p);
     return s;
+}
+
+ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_slice_t id) {
+    ast_expr_t* s = parser_alloc_expr(p);
+    s->type = AST_EXPR_VARIANT_DECOMP;
+    token_t* first = parser_peek(p);
+    s->expr.variant_decomp.id = id;
+    if (parser_match_token(p, TOK_LPAREN)) {
+        s->expr.variant_decomp.vars = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
+        parser_expect_token(p, TOK_RPAREN);
+    } else {
+        ast_slice_of_params_t vars = {.start = NULL, .len = 0};
+        s->expr.variant_decomp.vars = vars;
+    }
+    s->first = first;
+    s->last = parser_prev(p);
+    return s;
+}
+
+// TODO use
+ast_expr_t* parse_expr_switch_case_value(parser_t* p) {
+    parser_mode_e saved = parser_mode(p);
+    parser_mode_set(p, PARSER_MODE_VARIANT_DECOMP);
+    ast_expr_t* expr = parse_expr(p);
+    parser_mode_set(p, saved);
+    return expr;
 }
