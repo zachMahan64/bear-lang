@@ -192,6 +192,23 @@ static void print_type(ast_type_t* type) {
         print_type(type->type.slice.inner);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
+    case AST_TYPE_FN_PTR: {
+        puts("fn-ptr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_delineator_from_type(TOK_STAR);
+        print_delineator_from_type(TOK_FN);
+        print_opening_delim_from_type(TOK_LPAREN);
+        ast_slice_of_types_t types = type->type.fn_ptr.param_types;
+        for (size_t i = 0; i < types.len; i++) {
+            print_type(types.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RPAREN);
+        if (type->type.fn_ptr.return_type) {
+            print_delineator_from_type(TOK_RARROW);
+            print_type(type->type.fn_ptr.return_type);
+        }
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
     }
     puts(",");
     printer_deindent();

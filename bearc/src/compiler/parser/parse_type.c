@@ -56,6 +56,31 @@ ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
     return parser_freeze_params_spill_arr(p, &sarr);
 }
 
+static ast_slice_of_types_t parser_freeze_types_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
+    ast_slice_of_types_t slice = {
+        .start = (ast_type_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_type_t*)),
+        .len = sarr->size,
+    };
+    spill_arr_ptr_flat_copy((void**)slice.start, sarr);
+    spill_arr_ptr_destroy(sarr);
+    return slice;
+}
+
+ast_slice_of_types_t parse_slice_of_types(parser_t* p, token_type_e divider,
+                                          token_type_e terminator) {
+    spill_arr_ptr_t sarr;
+    spill_arr_ptr_init(&sarr);
+
+    while (!parser_peek_match(p, terminator) && !parser_eof(p)) {
+        spill_arr_ptr_push(&sarr, parse_type(p));
+        if (!parser_peek_match(p, terminator)) {
+            parser_expect_token(p, divider);
+        }
+    }
+
+    return parser_freeze_types_spill_arr(p, &sarr);
+}
+
 static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_slice_t id_slice) {
     ast_type_t* base = parser_alloc_type(p);
     // self-referential for canonical_base, although this shouldn't be an issue
@@ -138,6 +163,8 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
             return parser_sync_type(p);
         }
         inner = parse_type_base_with_leading_mut(p);
+    } else if (first_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN) {
+        inner = parse_type_fn_ptr(p);
     } else {
         leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         inner = parse_type_base_with_leading_id(p, leading_id);
@@ -289,8 +316,8 @@ ast_generic_arg_t* parse_generic_arg(parser_t* p) {
 ast_slice_of_generic_args_t parser_freeze_generic_arg_spill_arr(parser_t* p,
                                                                 spill_arr_ptr_t* sarr) {
     ast_slice_of_generic_args_t slice = {
-        .start =
-            (ast_generic_arg_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_generic_arg_t*)),
+        .start
+        = (ast_generic_arg_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_generic_arg_t*)),
         .len = sarr->size,
     };
     spill_arr_ptr_flat_copy((void**)slice.start, sarr);
@@ -303,8 +330,8 @@ ast_slice_of_generic_args_t parse_slice_of_generic_args(parser_t* p) {
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
-    token_t* opener =
-        parser_expect_token_call(p, &token_is_generic_opener, ERR_EXPECT_GENERIC_OPENER);
+    token_t* opener
+        = parser_expect_token_call(p, &token_is_generic_opener, ERR_EXPECT_GENERIC_OPENER);
     // when just, ::, just expect one thing, like box::thing
     ast_generic_arg_t* arg = NULL;
     bool valid = false;
@@ -353,4 +380,33 @@ ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
     outer->first = inner->first;
     outer->last = parser_prev(p);
     return outer;
+}
+
+ast_type_t* parse_type_fn_ptr(parser_t* p) {
+    ast_type_t* fnp = parser_alloc_type(p);
+    fnp->tag = AST_TYPE_FN_PTR;
+    token_t* first = parser_peek(p);
+    if (!parser_expect_token(p, TOK_STAR)) {
+        return parser_sync_type(p);
+    }
+    if (!parser_expect_token(p, TOK_FN)) {
+        return parser_sync_type(p);
+    }
+    if (!parser_expect_token(p, TOK_LPAREN)) {
+        return parser_sync_type(p);
+    }
+    ast_slice_of_types_t params = parse_slice_of_types(p, TOK_COMMA, TOK_RPAREN);
+    if (!parser_expect_token(p, TOK_RPAREN)) {
+        return parser_sync_type(p);
+    }
+    if (parser_match_token(p, TOK_RARROW)) {
+        parser_expect_token(p, TOK_LPAREN);
+        fnp->type.fn_ptr.return_type = parse_type(p);
+        parser_expect_token(p, TOK_RPAREN);
+    }
+    fnp->type.fn_ptr.param_types = params;
+    fnp->canonical_base = fnp;
+    fnp->first = first;
+    fnp->last = parser_prev(p);
+    return fnp;
 }

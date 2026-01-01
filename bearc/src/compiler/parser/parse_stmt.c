@@ -19,6 +19,7 @@
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
@@ -114,7 +115,14 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 
     // handle decls with leading mut or brackets (slices and arrays)
     if (token_is_non_id_type_idicator(next_type)) {
-        return parse_var_decl_from_id_or_mut(p, NULL, true); // leading_mut = true
+        if (next_type == TOK_MUT) {
+            return parse_var_decl_from_id_or_mut(p, NULL, true); // leading_mut = true
+        }
+        return parse_var_decl_from_id_or_mut(p, NULL, false);
+    }
+    // handle fn ptr decls
+    if (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN) {
+        return parse_var_decl_from_id_or_mut(p, NULL, false);
     }
 
     if (next_type == TOK_RETURN) {

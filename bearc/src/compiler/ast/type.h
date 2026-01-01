@@ -20,6 +20,7 @@ typedef enum {
     AST_TYPE_ARR,
     AST_TYPE_SLICE,
     AST_TYPE_GENERIC,
+    AST_TYPE_FN_PTR,
     AST_TYPE_INVALID,
 } ast_type_e;
 
@@ -50,12 +51,24 @@ typedef struct {
     ast_slice_of_generic_args_t generic_args;
 } ast_type_generic_t;
 
+typedef struct ast_slice_of_types {
+    ast_type_t** start;
+    size_t len;
+} ast_slice_of_types_t;
+
+typedef struct {
+    ast_slice_of_types_t param_types;
+    /// optional if void
+    ast_type_t* return_type;
+} ast_type_fn_ptr_t;
+
 typedef union {
     ast_type_base_t base;
     ast_type_ref_t ref;
     ast_type_arr_t arr;
     ast_type_generic_t generic;
     ast_type_slice_t slice;
+    ast_type_fn_ptr_t fn_ptr;
 } ast_type_u;
 
 typedef struct ast_type {

@@ -36,11 +36,11 @@
 - [x] unions (add union tkn)
 - [x] variants (add variant tkn)
 - [x] add is token, add variant exprs as `Foo(var x)` impl the `if foo is Some(x) {...}` construct
-- [ ] switch exprs
-    - [ ] parse multiple arms with `|` (corresponding td in parse_expr.c)
-    - [ ] handle generic params in variant decls (corresponding td in parse_expr.c)
-- [ ] switch statements?
-- [ ] add generics to variants
+- [x] switch exprs
+    - [x] parse multiple arms with `|` (corresponding td in parse_expr.c)
+    - [x] handle generic params in variant decls (corresponding td in parse_expr.c)
+- [x] add generics to variants
+- [ ] fn ptrs
 - [ ] closures
 - [ ] rewrite ansi code usages to use toggleable strings
 - [ ] write a full parser test suite
