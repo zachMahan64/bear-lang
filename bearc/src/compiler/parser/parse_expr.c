@@ -75,20 +75,22 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
         }
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    token_type_e next_type = parser_peek(p)->type;
     // if atom, try to parse postunary, since postunary prec > preunary prec
     if (lhs && is_postunary_op(parser_peek(p)->type)) {
         return parse_postunary(p, lhs);
     }
+    // parse Foo..Bar(var foo)
+    if (lhs && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP || next_type == TOK_LT)
+        && parser_mode(p) == PARSER_MODE_VARIANT_DECOMP && lhs->type == AST_EXPR_ID) {
+        return parse_expr_variant_decomp_with_leading_id(p, lhs->expr.id.slice);
+    }
     // try fn call or variant decomp too
-    if (lhs && (parser_peek(p)->type == TOK_LPAREN || parser_peek(p)->type == TOK_GENERIC_SEP)) {
-        // parse Foo..Bar(var foo)
-        if (parser_mode(p) == PARSER_MODE_VARIANT_DECOMP && lhs->type == AST_EXPR_ID) {
-            return parse_expr_variant_decomp_with_leading_id(p, lhs->expr.id.slice);
-        }
+    if (lhs && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP)) {
         return parse_fn_call(p, lhs);
     }
     // try subscript
-    if (lhs && parser_peek(p)->type == TOK_LBRACK) {
+    if (lhs && next_type == TOK_LBRACK) {
         return parse_subscript(p, lhs);
     }
     // try ++x, etc.
@@ -208,8 +210,8 @@ token_t* parse_var_name(parser_t* p) {
 static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {
     uint8_t curr_prec = prec_binary(curr_op);
     uint8_t next_prec = prec_binary(next_op);
-    return (next_prec < curr_prec) ||
-           (next_prec == curr_prec && is_right_assoc_from_prec(curr_prec));
+    return (next_prec < curr_prec)
+           || (next_prec == curr_prec && is_right_assoc_from_prec(curr_prec));
 }
 
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
@@ -387,8 +389,8 @@ ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* opt_id_lhs) {
     token_ptr_slice_t id = opt_id_lhs->expr.id.slice;
     s->expr.struct_init.id = id;
     parser_expect_token(p, TOK_LBRACE);
-    s->expr.struct_init.member_inits =
-        parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_struct_member_init);
+    s->expr.struct_init.member_inits
+        = parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_struct_member_init);
     parser_expect_token(p, TOK_RBRACE);
     s->first = id.start[0]; // safe becuz the id should be valid given the check passed
     s->last = parser_prev(p);
@@ -426,17 +428,35 @@ ast_expr_t* parse_expr_variant_decomp(parser_t* p) {
     return s;
 }
 
+// TODO, finish here (should be done, but dodgy), add this to the printer and then add generic param
+// parsing to variant decls
 ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_slice_t id) {
     ast_expr_t* e = parser_alloc_expr(p);
     e->type = AST_EXPR_VARIANT_DECOMP;
     token_t* first = parser_peek(p);
     e->expr.variant_decomp.id = id;
+    if (parser_match_token(p, TOK_GENERIC_SEP)) {
+        bool bracks = parser_match_token(p, TOK_LT);
+        e->expr.variant_decomp.is_generic = true;
+        parser_mode_e saved = parser_mode(p);
+        parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
+        e->expr.variant_decomp.generic_args = parse_slice_of_generic_args(p);
+        parser_mode_set(p, saved);
+        if (bracks) {
+            parser_expect_token(p, TOK_GT);
+        }
+    } else if (parser_match_token(p, TOK_LT)) {
+        e->expr.variant_decomp.is_generic = true;
+        parser_mode_e saved = parser_mode(p);
+        parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
+        e->expr.variant_decomp.generic_args = parse_slice_of_generic_args(p);
+        parser_mode_set(p, saved);
+        parser_expect_token(p, TOK_GT);
+    }
     if (parser_match_token(p, TOK_LPAREN)) {
         e->expr.variant_decomp.vars = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
         parser_expect_token(p, TOK_RPAREN);
-    }
-    // TODO handle generic args here
-    else {
+    } else {
         ast_slice_of_params_t vars = {.start = NULL, .len = 0};
         e->expr.variant_decomp.vars = vars;
     }
@@ -511,8 +531,8 @@ ast_expr_t* parse_expr_switch(parser_t* p) {
 
     // {....}
     parser_expect_token(p, TOK_LBRACE);
-    sw->expr.switch_expr.branches =
-        parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_switch_branch);
+    sw->expr.switch_expr.branches
+        = parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_switch_branch);
     parser_expect_token(p, TOK_RBRACE);
     sw->first = first;
     sw->last = parser_prev(p);

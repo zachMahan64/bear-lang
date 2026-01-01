@@ -408,6 +408,15 @@ void print_expr(ast_expr_t* expression) {
         puts("variant decomposition: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         ast_expr_variant_decomp_t vd = expr.expr.variant_decomp;
         print_id_slice_name(vd.id);
+        if (vd.is_generic) {
+            ast_slice_of_generic_args_t args = vd.generic_args;
+            print_delineator_from_type(TOK_GENERIC_SEP);
+            print_opening_delim_from_type(TOK_LT);
+            for (size_t i = 0; i < args.len; i++) {
+                print_generic_type_arg(args.start[i]);
+            }
+            print_closing_delim_from_type(TOK_GT);
+        }
         if (vd.vars.len > 0) {
             print_opening_delim_from_type(TOK_LPAREN);
             for (size_t i = 0; i < vd.vars.len; i++) {

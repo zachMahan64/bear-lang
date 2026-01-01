@@ -155,7 +155,9 @@ typedef struct {
 
 typedef struct {
     token_ptr_slice_t id;
+    ast_slice_of_generic_args_t generic_args;
     ast_slice_of_params_t vars;
+    bool is_generic;
 } ast_expr_variant_decomp_t;
 
 typedef struct {
