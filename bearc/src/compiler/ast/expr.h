@@ -41,6 +41,9 @@ typedef enum {
     AST_EXPR_STRUCT_INIT,
     AST_EXPR_STRUCT_MEMBER_INIT,
 
+    // closure
+    AST_EXPR_CLOSURE,
+
     // variants
     AST_EXPR_VARIANT_DECOMP,
 
@@ -172,6 +175,11 @@ typedef struct {
     ast_slice_of_exprs_t branches;
 } ast_expr_switch_t;
 
+typedef struct {
+    ast_slice_of_params_t params;
+    ast_expr_t* body;
+} ast_expr_closure_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
@@ -190,6 +198,7 @@ typedef union {
     ast_expr_block_t block;
     ast_expr_switch_branch_t switch_branch;
     ast_expr_switch_t switch_expr;
+    ast_expr_closure_t closure;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

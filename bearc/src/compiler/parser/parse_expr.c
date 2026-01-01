@@ -72,6 +72,8 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
             lhs = parse_grouping(p);
         } else if (first_type == TOK_SWITCH) {
             lhs = parse_expr_switch(p);
+        } else if (first_type == TOK_BAR) {
+            lhs = parse_expr_closure(p);
         }
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -484,23 +486,30 @@ ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
     return parser_sync_expr(p);
 }
 
-ast_expr_t* parse_expr_block(parser_t* p) {
+ast_expr_t* parse_expr_block_call(parser_t* p, ast_stmt_t* (*call)(parser_t*)) {
     ast_expr_t* blk = parser_alloc_expr(p);
     blk->type = AST_EXPR_BLOCK;
     token_t* lbrace = parser_expect_token(p, TOK_LBRACE);
     if (!lbrace) {
         return parser_sync_expr(p);
     }
-    blk->expr.block.stmts = parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_stmt_allowing_yield);
+    blk->expr.block.stmts = parse_slice_of_stmts_call(p, TOK_RBRACE, call);
     parser_expect_token(p, TOK_RBRACE);
     blk->first = lbrace;
     blk->last = parser_prev(p);
     return blk;
 }
 
-ast_expr_t* parse_expr_allowing_block_exprs(parser_t* p) {
+ast_expr_t* parse_expr_allowing_block_exprs_with_yields(parser_t* p) {
     if (parser_peek_match(p, TOK_LBRACE)) {
-        return parse_expr_block(p);
+        return parse_expr_block_call(p, &parse_stmt_allowing_yield);
+    }
+    return parse_expr(p);
+}
+
+ast_expr_t* parse_expr_allowing_block_exprs_without_yields(parser_t* p) {
+    if (parser_peek_match(p, TOK_LBRACE)) {
+        return parse_expr_block_call(p, &parse_stmt);
     }
     return parse_expr(p);
 }
@@ -512,7 +521,7 @@ ast_expr_t* parse_expr_switch_branch(parser_t* p) {
     branch->expr.switch_branch.patterns
         = parse_slice_of_exprs_call(p, TOK_BAR, TOK_EQ_ARROW, &parse_expr_switch_pattern);
     parser_expect_token(p, TOK_EQ_ARROW);
-    branch->expr.switch_branch.value = parse_expr_allowing_block_exprs(p);
+    branch->expr.switch_branch.value = parse_expr_allowing_block_exprs_with_yields(p);
     branch->first = first;
     branch->last = parser_prev(p);
     return branch;
@@ -540,4 +549,21 @@ ast_expr_t* parse_expr_switch(parser_t* p) {
     sw->first = first;
     sw->last = parser_prev(p);
     return sw;
+}
+
+ast_expr_t* parse_expr_closure(parser_t* p) {
+    ast_expr_t* cl = parser_alloc_expr(p);
+    cl->type = AST_EXPR_CLOSURE;
+    token_t* first = parser_peek(p);
+    if (!parser_expect_token(p, TOK_BAR)) {
+        return parser_sync_expr(p);
+    }
+    cl->expr.closure.params = parse_slice_of_params(p, TOK_COMMA, TOK_BAR);
+    parser_expect_token(p, TOK_BAR);
+
+    // {....}
+    cl->expr.closure.body = parse_expr_allowing_block_exprs_without_yields(p);
+    cl->first = first;
+    cl->last = parser_prev(p);
+    return cl;
 }

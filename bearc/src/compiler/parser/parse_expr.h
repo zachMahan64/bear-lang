@@ -65,10 +65,12 @@ ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_sli
 
 ast_expr_t* parse_expr_switch_pattern(parser_t* p);
 
-ast_expr_t* parse_expr_allowing_block_exprs(parser_t* p);
+ast_expr_t* parse_expr_allowing_block_exprs_with_yields(parser_t* p);
 
 ast_expr_t* parse_expr_switch_branch(parser_t* p);
 
 ast_expr_t* parse_expr_switch(parser_t* p);
+
+ast_expr_t* parse_expr_closure(parser_t* p);
 
 #endif

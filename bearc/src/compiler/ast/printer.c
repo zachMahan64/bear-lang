@@ -477,6 +477,18 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_DEFAULT:
         printf(ANSI_BOLD_BLUE "%s" ANSI_RESET, token_to_string_map()[TOK_DEFAULT]);
         break;
+    case AST_EXPR_CLOSURE: {
+        puts("closure: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        ast_expr_closure_t cl = expr.expr.closure;
+        print_opening_delim_from_type(TOK_BAR);
+        for (size_t i = 0; i < cl.params.len; i++) {
+            print_param(cl.params.start[i]);
+        }
+        print_closing_delim_from_type(TOK_BAR);
+        print_expr(cl.body);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
     }
     puts(",");
     printer_deindent();

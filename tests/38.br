@@ -9,4 +9,10 @@ fn transform_i32(*fn(i32)->(i32) call, i32 x) -> i32 {
 fn main() {
     *fn(i32)->(i32) funcy = foo;
     [24] *fn(i32)->(i32) arr_of_funcs; // unsafe init, will be an error during later semantic passes
+
+    var foobar = |var x|{do_work();};
+    
+    // immediate invocation
+    i32 arg_val = 32;
+    var closey = |var p|{return do_work_and_get_result(p);}(32);
 }
