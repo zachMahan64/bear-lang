@@ -133,7 +133,10 @@ typedef enum token_type {
     TOK_FOR,
     TOK_IN, // example: for (int a in myArr) {...}
     TOK_RETURN,
+    TOK_YIELD,
     TOK_BREAK,
+    TOK_SWITCH,
+    TOK_DEFAULT,
 
     // structures (incorp after prodcedural is working)
     TOK_SELF_ID,
@@ -153,6 +156,7 @@ typedef enum token_type {
     TOK_NULL_LIT,
 
     // punc
+    TOK_EQ_ARROW,
     TOK_RARROW,      // -> for return types
     TOK_SCOPE_RES,   // ..
     TOK_GENERIC_SEP, // :: , for example, box::int
@@ -249,7 +253,7 @@ const unsigned char* get_char_to_token_map(void);
 /// returns a ptr to a strimap_t {const char*, token_type_e}
 const strimap_t* get_string_to_token_strimap(void);
 /// returns a ptr to a map for token_type_e -> const char*, indexed by token_type_e's!
-const char* const* get_token_to_string_map(void);
+const char* const* token_to_string_map(void);
 /// returns a ptr to a map indicated whether a given char is always associated with a mono-char
 /// token
 const char* get_always_one_char_to_token_map(void);

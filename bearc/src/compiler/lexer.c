@@ -140,7 +140,7 @@ lex_multichar_operator:
     }
     // assignment
     case ('='): {
-        if (n1 == '=') {
+        if (n1 == '=' || n1 == '>') {
             LEX_KNOWN_LEN_PUSH(2);
         }
         LEX_KNOWN_LEN_PUSH(1);

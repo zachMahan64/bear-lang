@@ -38,6 +38,7 @@
 - [x] add is token, add variant exprs as `Foo(var x)` impl the `if foo is Some(x) {...}` construct
 - [ ] switch exprs
 - [ ] switch statements?
+- [ ] add generics to variants
 - [ ] closures
 - [ ] rewrite ansi code usages to use toggleable strings
 - [ ] write a full parser test suite

@@ -13,7 +13,7 @@
 
 // private debug helper
 void print_out_tkn_table(vector_t* tkn_vec) {
-    const char* const* tkn_map = get_token_to_string_map();
+    const char* const* tkn_map = token_to_string_map();
     size_t tkn_map_size = tkn_vec->size;
     puts("                  Lexed tokens");
     puts("=============================================");

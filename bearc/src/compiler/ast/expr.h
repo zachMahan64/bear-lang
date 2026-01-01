@@ -8,6 +8,7 @@
 
 #ifndef AST_EXPRESSIONS_H
 #define AST_EXPRESSIONS_H
+#include "compiler/ast/stmt_slice.h"
 #include "compiler/token.h"
 #include "params.h"
 #ifdef __cplusplus
@@ -42,6 +43,13 @@ typedef enum {
 
     // variants
     AST_EXPR_VARIANT_DECOMP,
+
+    // block expr/switch
+    AST_EXPR_BLOCK,
+    AST_EXPR_SWITCH_BRANCH,
+    AST_EXPR_SWITCH,
+    /// has no associated type in the ast_expr_u union
+    AST_EXPR_DEFAULT,
 
     // error
     AST_EXPR_INVALID,
@@ -150,6 +158,20 @@ typedef struct {
     ast_slice_of_params_t vars;
 } ast_expr_variant_decomp_t;
 
+typedef struct {
+    ast_slice_of_stmts_t stmts;
+} ast_expr_block_t;
+
+typedef struct {
+    ast_expr_t* pattern;
+    ast_expr_t* value;
+} ast_expr_switch_branch_t;
+
+typedef struct {
+    ast_expr_t* matched;
+    ast_slice_of_exprs_t branches;
+} ast_expr_switch_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
@@ -165,6 +187,9 @@ typedef union {
     ast_expr_struct_member_init_t struct_member_init;
     ast_expr_borrow_t borrow;
     ast_expr_variant_decomp_t variant_decomp;
+    ast_expr_block_t block;
+    ast_expr_switch_branch_t switch_branch;
+    ast_expr_switch_t switch_expr;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

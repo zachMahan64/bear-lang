@@ -1,0 +1,23 @@
+import "external/abyss";
+
+// switching on patterns
+
+variant OptI32 {
+    Some(i32 value),
+    None,
+}
+
+fn get_int_if_ready() -> OptI32 {
+    if abyss..is_ready() {
+        return OptI32..Some(abyss..get_val());
+    }
+    return OptI32..None;
+}
+
+fn main() -> i32 {
+    // exhaustive, to be checked at comptime
+    return switch(get_int_if_ready()) {
+        OptI32..Some(var x) => x,
+        OptI32..None => 42,
+    };
+}

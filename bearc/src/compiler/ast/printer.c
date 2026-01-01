@@ -66,23 +66,20 @@ static void print_closing_delim(token_t* delim) {
 
 static void print_opening_delim_from_type(token_type_e delim) {
     printer_do_indent(), print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s",
-               get_token_to_string_map()[delim]),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s", token_to_string_map()[delim]),
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
 }
 
 static void print_closing_delim_from_type(token_type_e delim) {
     print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s",
-               get_token_to_string_map()[delim]),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s", token_to_string_map()[delim]),
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
 }
 
 static void print_delineator_from_type(token_type_e delin) {
     printer_do_indent();
     print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s",
-               get_token_to_string_map()[delin]),
+        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s", token_to_string_map()[delin]),
         puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
     printer_deindent();
 }
@@ -99,7 +96,7 @@ static void print_terminator(token_t* term) {
 static void print_op_from_type(token_type_e t) {
     print_indent(),
         printf(ANSI_BOLD_GREEN "`" ANSI_BOLD_MAGENTA "%s" ANSI_BOLD_GREEN "`" ANSI_RESET ",\n",
-               get_token_to_string_map()[t]);
+               token_to_string_map()[t]);
 }
 
 static void print_mut(void) { print_op_from_type(TOK_MUT); }
@@ -136,7 +133,7 @@ static void print_type(ast_type_t* type) {
             const char* start = ids.start[i]->start;
             printf(ANSI_BOLD_YELLOW "%.*s" ANSI_RESET, len, start);
             if (ids.len != 1 && i != ids.len - 1) {
-                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, token_to_string_map()[TOK_SCOPE_RES]);
             }
         }
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
@@ -220,7 +217,7 @@ static void print_id_slice(token_ptr_slice_t ids) {
         const char* start = ids.start[i]->start;
         printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
         if (ids.len != 1 && i != ids.len - 1) {
-            printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+            printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, token_to_string_map()[TOK_SCOPE_RES]);
         }
     }
     printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
@@ -289,7 +286,7 @@ void print_expr(ast_expr_t* expression) {
     }
     case AST_EXPR_LITERAL: {
         token_t* tkn = expr.expr.literal.tkn;
-        const char* lit_type_str = get_token_to_string_map()[tkn->type];
+        const char* lit_type_str = token_to_string_map()[tkn->type];
         printf("literal (%s): " ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_BLUE "%.*s" ANSI_BOLD_GREEN
                "`" ANSI_RESET,
                lit_type_str, (int)tkn->len, tkn->start);
@@ -421,6 +418,42 @@ void print_expr(ast_expr_t* expression) {
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
         break;
     }
+    case AST_EXPR_BLOCK: {
+        puts("block-expr: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_delineator_from_type(TOK_LBRACE);
+        printer_do_indent();
+        for (size_t i = 0; i < expr.expr.block.stmts.len; i++) {
+            print_stmt(expr.expr.block.stmts.start[i]);
+        }
+        printer_deindent();
+        print_delineator_from_type(TOK_RBRACE);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
+    case AST_EXPR_SWITCH_BRANCH: {
+        puts("switch-branch-expr: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_expr(expr.expr.switch_branch.pattern);
+        print_delineator_from_type(TOK_EQ_ARROW);
+        print_expr(expr.expr.switch_branch.value);
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
+    case AST_EXPR_SWITCH: {
+        puts("switch-expr: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_op_from_type(TOK_SWITCH);
+        print_delineator_from_type(TOK_LPAREN);
+        print_expr(expr.expr.switch_expr.matched);
+        print_delineator_from_type(TOK_RPAREN);
+        ast_slice_of_exprs_t branches = expr.expr.switch_expr.branches;
+        for (size_t i = 0; i < branches.len; i++) {
+            print_expr(branches.start[i]);
+        }
+        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        break;
+    }
+    case AST_EXPR_DEFAULT:
+        printf(ANSI_BOLD_BLUE "%s" ANSI_RESET, token_to_string_map()[TOK_DEFAULT]);
+        break;
     }
     puts(",");
     printer_deindent();
@@ -431,7 +464,7 @@ void print_stmt(ast_stmt_t* stmt) {
     print_indent();
     switch (stmt->type) {
     case AST_STMT_BLOCK:
-        printf("block: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
+        printf("block statement: " ANSI_BOLD_GREEN "{\n" ANSI_RESET);
         print_opening_delim_from_type(TOK_LBRACE);
         for (size_t i = 0; i < stmt->stmt.block.stmts.len; i++) {
             print_stmt(stmt->stmt.block.stmts.start[i]);
@@ -461,13 +494,12 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_op_from_type(TOK_IMPORT);
         print_closing_delim(stmt->stmt.import.file_path);
-        puts(",");
         printer_deindent();
         break;
     case AST_STMT_EXPR:
         puts("expression-statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(stmt->stmt.stmt_expr.expr);
-        print_terminator(stmt->stmt.stmt_expr.terminator);
+        print_delineator_from_type(TOK_SEMICOLON);
         break;
     case AST_STMT_FN_DECL:
         puts("function declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
@@ -482,7 +514,7 @@ void print_stmt(ast_stmt_t* stmt) {
             const char* start = ids.start[i]->start;
             printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
             if (ids.len != 1 && i != ids.len - 1) {
-                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, get_token_to_string_map()[TOK_SCOPE_RES]);
+                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, token_to_string_map()[TOK_SCOPE_RES]);
             }
         }
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
@@ -578,12 +610,12 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_RETURN:
         puts("return statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
-        print_op(stmt->stmt.return_stmt.return_tkn);
+        print_op_from_type(TOK_RETURN);
         ast_expr_t* expr = stmt->stmt.return_stmt.expr;
         if (expr) {
             print_expr(expr);
         }
-        print_terminator(stmt->stmt.return_stmt.terminator);
+        print_delineator_from_type(TOK_SEMICOLON);
         break;
     case AST_STMT_STRUCT_DEF:
         puts("struct declaration: " ANSI_BOLD_GREEN "{" ANSI_RESET);
@@ -729,8 +761,20 @@ void print_stmt(ast_stmt_t* stmt) {
                 print_param(fd.params.start[i]);
             }
             print_closing_delim_from_type(TOK_RPAREN);
-            break;
         }
+        break;
+    }
+    case AST_STMT_YIELD: {
+        puts("yield statement: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        printer_do_indent();
+        print_op_from_type(TOK_YIELD);
+        printer_deindent();
+        ast_expr_t* expr = stmt->stmt.yield_stmt.expr;
+        if (expr) {
+            print_expr(expr);
+        }
+        print_delineator_from_type(TOK_SEMICOLON);
+        break;
     }
     }
     print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_BOLD_BLUE ",\n" ANSI_RESET);

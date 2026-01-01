@@ -130,7 +130,10 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "while", TOK_WHILE);
     strimap_insert(&string_to_token_map, "for", TOK_FOR);
     strimap_insert(&string_to_token_map, "return", TOK_RETURN);
+    strimap_insert(&string_to_token_map, "yield", TOK_YIELD);
     strimap_insert(&string_to_token_map, "break", TOK_BREAK);
+    strimap_insert(&string_to_token_map, "switch", TOK_SWITCH);
+    strimap_insert(&string_to_token_map, "default", TOK_DEFAULT);
 
     // more operators
     strimap_insert(&string_to_token_map, "sizeof", TOK_SIZEOF);
@@ -147,6 +150,7 @@ static void string_to_token_map_init(void) {
 
     // operators / symbols (multi-char tokens)
     strimap_insert(&string_to_token_map, "->", TOK_RARROW);
+    strimap_insert(&string_to_token_map, "=>", TOK_EQ_ARROW);
     strimap_insert(&string_to_token_map, "..", TOK_SCOPE_RES);
     strimap_insert(&string_to_token_map, "::", TOK_GENERIC_SEP);
     strimap_insert(&string_to_token_map, "<-", TOK_ASSIGN_MOVE);
@@ -187,7 +191,7 @@ const strimap_t* get_string_to_token_strimap(void) {
     return &string_to_token_map;
 }
 
-static const char* token_to_string_map[TOK__NUM] = {
+static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_INDETERMINATE] = "INDETER.",
 
     // mono-char tokens
@@ -281,7 +285,10 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_WHILE] = "while",
     [TOK_FOR] = "for",
     [TOK_RETURN] = "return",
+    [TOK_YIELD] = "yield",
     [TOK_BREAK] = "break",
+    [TOK_SWITCH] = "switch",
+    [TOK_DEFAULT] = "default",
 
     // more operators
     [TOK_SIZEOF] = "sizeof",
@@ -309,6 +316,7 @@ static const char* token_to_string_map[TOK__NUM] = {
 
     // special punctuation
     [TOK_RARROW] = "->",
+    [TOK_EQ_ARROW] = "=>",
     [TOK_SCOPE_RES] = "..",
     [TOK_GENERIC_SEP] = "::",
 
@@ -353,7 +361,7 @@ static const char* token_to_string_map[TOK__NUM] = {
     [TOK_LEX_ERROR_EMPTY_TOKEN] = "err_empty_token",
 };
 
-const char* const* get_token_to_string_map(void) { return token_to_string_map; }
+const char* const* token_to_string_map(void) { return token_to_string_map_impl; }
 
 static char always_one_char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE] = {
     // delimiters

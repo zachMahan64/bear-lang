@@ -10,6 +10,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
+#include "compiler/parser/parse_stmt.h"
 #include "compiler/parser/parse_type.h"
 #include "compiler/parser/parser.h"
 #include "compiler/parser/rules.h"
@@ -69,6 +70,8 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
             lhs = parse_literal(p);
         } else if (first_type == TOK_LPAREN) {
             lhs = parse_grouping(p);
+        } else if (first_type == TOK_SWITCH) {
+            lhs = parse_expr_switch(p);
         }
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,8 +82,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     // try fn call or variant decomp too
     if (lhs && (parser_peek(p)->type == TOK_LPAREN || parser_peek(p)->type == TOK_GENERIC_SEP)) {
         // parse Foo..Bar(var foo)
-        if (parser_mode(p) == PARSER_MODE_VARIANT_DECOMP && parser_peek_match(p, TOK_LPAREN) &&
-            lhs->type == AST_EXPR_ID) {
+        if (parser_mode(p) == PARSER_MODE_VARIANT_DECOMP && lhs->type == AST_EXPR_ID) {
             return parse_expr_variant_decomp_with_leading_id(p, lhs->expr.id.slice);
         }
         return parse_fn_call(p, lhs);
@@ -425,27 +427,94 @@ ast_expr_t* parse_expr_variant_decomp(parser_t* p) {
 }
 
 ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_slice_t id) {
-    ast_expr_t* s = parser_alloc_expr(p);
-    s->type = AST_EXPR_VARIANT_DECOMP;
+    ast_expr_t* e = parser_alloc_expr(p);
+    e->type = AST_EXPR_VARIANT_DECOMP;
     token_t* first = parser_peek(p);
-    s->expr.variant_decomp.id = id;
+    e->expr.variant_decomp.id = id;
     if (parser_match_token(p, TOK_LPAREN)) {
-        s->expr.variant_decomp.vars = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
+        e->expr.variant_decomp.vars = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
         parser_expect_token(p, TOK_RPAREN);
-    } else {
-        ast_slice_of_params_t vars = {.start = NULL, .len = 0};
-        s->expr.variant_decomp.vars = vars;
     }
-    s->first = first;
-    s->last = parser_prev(p);
-    return s;
+    // TODO handle generic args here
+    else {
+        ast_slice_of_params_t vars = {.start = NULL, .len = 0};
+        e->expr.variant_decomp.vars = vars;
+    }
+    e->first = first;
+    e->last = parser_prev(p);
+    return e;
 }
 
-// TODO use
-ast_expr_t* parse_expr_switch_case_value(parser_t* p) {
+ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
+    token_t* dflt = parser_match_token(p, TOK_DEFAULT);
+    if (dflt) {
+        ast_expr_t* default_expr = parser_alloc_expr(p);
+        // nothing to set in the expr union here
+        default_expr->type = AST_EXPR_DEFAULT;
+        default_expr->first = dflt;
+        default_expr->last = dflt;
+        return default_expr;
+    }
     parser_mode_e saved = parser_mode(p);
     parser_mode_set(p, PARSER_MODE_VARIANT_DECOMP);
     ast_expr_t* expr = parse_expr(p);
     parser_mode_set(p, saved);
     return expr;
+}
+
+ast_expr_t* parse_expr_block(parser_t* p) {
+    ast_expr_t* blk = parser_alloc_expr(p);
+    blk->type = AST_EXPR_BLOCK;
+    token_t* lbrace = parser_expect_token(p, TOK_LBRACE);
+    if (!lbrace) {
+        return parser_sync_expr(p);
+    }
+    blk->expr.block.stmts = parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_stmt_allowing_yield);
+    parser_expect_token(p, TOK_RBRACE);
+    blk->first = lbrace;
+    blk->last = parser_prev(p);
+    return blk;
+}
+
+ast_expr_t* parse_expr_allowing_block_exprs(parser_t* p) {
+    if (parser_peek_match(p, TOK_LBRACE)) {
+        return parse_expr_block(p);
+    }
+    return parse_expr(p);
+}
+
+ast_expr_t* parse_expr_switch_branch(parser_t* p) {
+    ast_expr_t* branch = parser_alloc_expr(p);
+    branch->type = AST_EXPR_SWITCH_BRANCH;
+    token_t* first = parser_peek(p);
+    branch->expr.switch_branch.pattern = parse_expr_switch_pattern(p);
+    parser_expect_token(p, TOK_EQ_ARROW);
+    branch->expr.switch_branch.value = parse_expr_allowing_block_exprs(p);
+    branch->first = first;
+    branch->last = parser_prev(p);
+    return branch;
+}
+
+ast_expr_t* parse_expr_switch(parser_t* p) {
+    ast_expr_t* sw = parser_alloc_expr(p);
+    sw->type = AST_EXPR_SWITCH;
+    token_t* first = parser_peek(p);
+    if (!parser_expect_token(p, TOK_SWITCH)) {
+        return parser_sync_expr(p);
+    }
+    // switch (<matched_expr>)
+    parser_expect_token(p, TOK_LPAREN);
+    sw->expr.switch_expr.matched = parse_expr(p);
+    parser_expect_token(p, TOK_RPAREN);
+    // guard safely again swtich(<expr>))))))...
+    parser_guard_against_trailing_rparens(p);
+
+    // {....}
+    parser_expect_token(p, TOK_LBRACE);
+    sw->expr.switch_expr.branches =
+        parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_switch_branch);
+    parser_expect_token(p, TOK_RBRACE);
+    sw->first = first;
+    sw->last = parser_prev(p);
+    return sw;
 }

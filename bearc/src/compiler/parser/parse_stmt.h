@@ -21,6 +21,9 @@ ast_stmt_t* parse_file(parser_t* parser, const char* file_name);
 /// - vector must contain type ast_stmt_t
 ast_slice_of_stmts_t parser_freeze_stmt_spill_arr(parser_t* p, spill_arr_ptr_t* sarr);
 
+ast_slice_of_stmts_t parse_slice_of_stmts_call(parser_t* p, token_type_e until_tkn,
+                                               ast_stmt_t* (*call)(parser_t*));
+
 /// parse a sequence of any kind of statement
 ast_slice_of_stmts_t parse_slice_of_stmts(parser_t* p, token_type_e until);
 
@@ -95,4 +98,7 @@ ast_stmt_t* parse_stmt_union_decl(parser_t* p);
 
 ast_stmt_t* parse_stmt_variant_decl(parser_t* p);
 
+ast_stmt_t* parse_stmt_allowing_yield(parser_t* p);
+
+void parser_guard_against_trailing_rparens(parser_t* p);
 #endif

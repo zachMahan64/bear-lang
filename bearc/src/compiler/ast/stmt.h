@@ -10,6 +10,7 @@
 #define AST_STATEMENTS_H
 #include "compiler/ast/expr.h"
 #include "compiler/ast/params.h"
+#include "compiler/ast/stmt_slice.h"
 #include "compiler/ast/type.h"
 #include "compiler/token.h"
 #include <stddef.h>
@@ -55,6 +56,7 @@ typedef enum {
     AST_STMT_FOR,
     AST_STMT_FOR_IN,
     AST_STMT_RETURN,
+    AST_STMT_YIELD,
 
     // visibility
     AST_STMT_VISIBILITY_MODIFIER,
@@ -103,14 +105,6 @@ typedef struct {
     size_t len;
 } ast_slice_of_generic_params_t;
 
-/**
- * slice of statements
- */
-typedef struct {
-    ast_stmt_t** start;
-    size_t len;
-} ast_slice_of_stmts_t;
-
 // stmt types ~~~~~~~~~~~~~~~~~~~~
 /**
  * represents block statements
@@ -156,8 +150,6 @@ typedef struct {
 typedef struct {
     /// sole-expr of this statement
     ast_expr_t* expr;
-    /// ;
-    token_t* terminator;
 } ast_stmt_expr_t;
 
 typedef struct {
@@ -230,10 +222,8 @@ typedef struct {
 } ast_stmt_for_in_t;
 
 typedef struct {
-    token_t* return_tkn;
     // optional
     ast_expr_t* expr;
-    token_t* terminator;
 } ast_stmt_return_t;
 
 typedef struct {
@@ -304,6 +294,7 @@ typedef union {
     ast_stmt_wrapped_t compt_modifier;
     ast_stmt_variant_decl_t variant_decl;
     ast_stmt_variant_field_decl_t variant_field_decl;
+    ast_stmt_return_t yield_stmt;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

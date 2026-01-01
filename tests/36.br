@@ -1,0 +1,16 @@
+// switch expr test
+fn main() -> i32 {
+    i32 a = std..random_i32();
+    i32 x = switch (a) {
+        0 => 12,
+        1 => 13,
+        2 => {
+            i32 b = 2;
+            i32 c = 3;
+            b >>= c;
+            yield b + c; 
+        },
+        default => 0,
+    };
+    return x;
+}

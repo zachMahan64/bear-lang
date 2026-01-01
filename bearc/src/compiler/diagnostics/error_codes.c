@@ -43,7 +43,7 @@ const char* error_message_for_code(error_code_e error_code) {
 
 const char* error_message_context_for(compiler_error_t* error) {
     if (error->expected_token_type != TOK_NONE) {
-        return get_token_to_string_map()[error->expected_token_type];
+        return token_to_string_map()[error->expected_token_type];
     }
     // this can be extended to support additional contexts in the future
     return ""; // empty string, no additional context

@@ -166,14 +166,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
 ast_stmt_t* parse_stmt_expr(parser_t* p, ast_expr_t* expr) {
     ast_stmt_t* stmt = parser_alloc_stmt(p);
     stmt->stmt.stmt_expr.expr = expr;
-    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
-    if (!term) {
-        return parser_sync_stmt(p);
-    }
-    stmt->stmt.stmt_expr.terminator = term;
+    parser_expect_token(p, TOK_SEMICOLON);
     stmt->type = AST_STMT_EXPR;
     stmt->first = stmt->stmt.stmt_expr.expr->first;
-    stmt->last = term;
+    stmt->last = parser_prev(p);
     return stmt;
 }
 
@@ -294,8 +290,7 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
 ast_stmt_t* parse_stmt_return(parser_t* p) {
     ast_stmt_t* ret_stmt = parser_alloc_stmt(p);
     ret_stmt->type = AST_STMT_RETURN;
-    ret_stmt->stmt.return_stmt.return_tkn =
-        parser_eat(p); // safe becuz we knew to enter this function
+    token_t* first = parser_eat(p); // safe becuz we knew to enter this function
     // check if we should parse an expr
     if (!(parser_peek(p)->type == TOK_SEMICOLON)) {
         ret_stmt->stmt.return_stmt.expr = parse_expr(p);
@@ -304,8 +299,24 @@ ast_stmt_t* parse_stmt_return(parser_t* p) {
     if (!term) {
         return parser_sync_stmt(p);
     }
-    ret_stmt->stmt.return_stmt.terminator = term;
-    ret_stmt->first = ret_stmt->stmt.return_stmt.return_tkn;
+    ret_stmt->first = first;
+    ret_stmt->last = term;
+    return ret_stmt;
+}
+
+ast_stmt_t* parse_stmt_yield(parser_t* p) {
+    ast_stmt_t* ret_stmt = parser_alloc_stmt(p);
+    ret_stmt->type = AST_STMT_YIELD;
+    token_t* first = parser_peek(p);
+    if (!parser_expect_token(p, TOK_YIELD)) {
+        return parser_sync_stmt(p);
+    }
+    ret_stmt->stmt.yield_stmt.expr = parse_expr(p);
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (!term) {
+        return parser_sync_stmt(p);
+    }
+    ret_stmt->first = first;
     ret_stmt->last = term;
     return ret_stmt;
 }
@@ -516,7 +527,7 @@ ast_stmt_t* parse_module(parser_t* p) {
     return mod;
 }
 
-static void parser_guard_against_trailing_rparens(parser_t* p) {
+void parser_guard_against_trailing_rparens(parser_t* p) {
     if (parser_peek(p)->type == TOK_RPAREN) {
         token_t* rparen;
         while ((rparen = parser_match_token(p, TOK_RPAREN))) {
@@ -958,4 +969,11 @@ ast_stmt_t* parse_stmt_variant_decl(parser_t* p) {
     s->first = vari_tkn;
     s->last = parser_prev(p);
     return s;
+}
+
+ast_stmt_t* parse_stmt_allowing_yield(parser_t* p) {
+    if (parser_peek_match(p, TOK_YIELD)) {
+        return parse_stmt_yield(p);
+    }
+    return parse_stmt(p);
 }
