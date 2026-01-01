@@ -12,6 +12,7 @@
 const char* error_message_for_code(error_code_e error_code) {
     static const char* error_messages[ERR__COUNT]
         = {[ERR_EXPECTED_IDENTIFER] = "expected identifier",
+           [ERR_EXPECTED_LITERAL] = "expected literal",
            [ERR_EXPECTED_TOKEN] = "expected token: ",
            [ERR_EXPECTED_VARIABLE_NAME] = "expected variable name",
            [ERR_EXPECTED_PARAMETER_IDENTIFIER] = "expected parameter name",
@@ -21,7 +22,7 @@ const char* error_message_for_code(error_code_e error_code) {
            [ERR_INCOMPLETE_VAR_DECLARATION] = "expected ';' or assignment operator",
            [ERR_EXPECT_GENERIC_OPENER] = "expected '::' or '<' in generic type",
            [ERR_EXPECTED_BASE_TYPE_IN_GENERIC]
-           = "templated can only be applied to base types (not &, *, or arrays)",
+           = "generic template can only be applied to base types (not &, *, or arrays)",
            [ERR_REDUNDANT_MUT] = "redundant 'mut' qualifier",
            [ERR_MUT_CANNOT_BIND_TO_ARRAYS] = "'mut' qualifier cannot bind to arrays",
            [ERR_NO_LEADING_MUT_FOR_SLICES] = "'mut' qualifier should be: [&mut] for slices",
@@ -35,11 +36,11 @@ const char* error_message_for_code(error_code_e error_code) {
            [ERR_MISMATCHED_RPAREN] = "mismatched ')' without an opening '('",
            [ERR_BREAK_STMT_OUTSIDE_OF_LOOP] = "break statement outside of loop",
            [ERR_REDUNDANT_COMPT_QUALIFIER] = "redundant 'compt' qualifier",
-           [ERR_INVALID_GENERIC_PARAMETER] = "illegal generic parameter",
+           [ERR_INVALID_GENERIC_PARAMETER] = "invalid generic parameter",
            [ERR_EXPECTED_FN_OR_MT] = "expected function declaration keyword 'fn' or 'mt'",
            [ERR_EXPECTED_ASSIGNMENT] = "expected assignment operator '=' or '<-'",
            [ERR_INVALID_PATTERN]
-           = "invalid patern; expected identifier, literal, or varaint decomposition"};
+           = "invalid patern; expected identifier, literal, or variant decomposition"};
     return error_messages[error_code];
 }
 

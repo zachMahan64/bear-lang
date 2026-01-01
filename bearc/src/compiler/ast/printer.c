@@ -408,15 +408,6 @@ void print_expr(ast_expr_t* expression) {
         puts("variant decomposition: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         ast_expr_variant_decomp_t vd = expr.expr.variant_decomp;
         print_id_slice_name(vd.id);
-        if (vd.is_generic) {
-            ast_slice_of_generic_args_t args = vd.generic_args;
-            print_delineator_from_type(TOK_GENERIC_SEP);
-            print_opening_delim_from_type(TOK_LT);
-            for (size_t i = 0; i < args.len; i++) {
-                print_generic_type_arg(args.start[i]);
-            }
-            print_closing_delim_from_type(TOK_GT);
-        }
         if (vd.vars.len > 0) {
             print_opening_delim_from_type(TOK_LPAREN);
             for (size_t i = 0; i < vd.vars.len; i++) {
@@ -441,7 +432,13 @@ void print_expr(ast_expr_t* expression) {
     }
     case AST_EXPR_SWITCH_BRANCH: {
         puts("switch-branch-expr: " ANSI_BOLD_GREEN "{" ANSI_RESET);
-        print_expr(expr.expr.switch_branch.pattern);
+        ast_slice_of_exprs_t patterns = expr.expr.switch_branch.patterns;
+        for (size_t i = 0; i < patterns.len; i++) {
+            print_expr(patterns.start[i]);
+            if (i != patterns.len - 1) {
+                print_delineator_from_type(TOK_BAR);
+            }
+        }
         print_delineator_from_type(TOK_EQ_ARROW);
         print_expr(expr.expr.switch_branch.value);
         print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
@@ -749,6 +746,9 @@ void print_stmt(ast_stmt_t* stmt) {
         print_delineator_from_type(TOK_VARIANT);
         print_var_name(vari.name);
         printer_do_indent();
+        if (vari.is_generic) {
+            print_generic_params(vari.generic_params);
+        }
         print_indent();
         puts("fields: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         printer_do_indent();

@@ -258,7 +258,9 @@ typedef struct {
 
 typedef struct {
     token_t* name;
+    ast_slice_of_generic_params_t generic_params;
     ast_slice_of_stmts_t fields;
+    bool is_generic;
 } ast_stmt_variant_decl_t;
 
 typedef struct {

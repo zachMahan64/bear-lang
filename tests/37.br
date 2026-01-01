@@ -14,7 +14,23 @@ fn get_int_if_ready() -> OptI32 {
     return OptI32..None;
 }
 
+variant Opt<T> {
+    Some(T value),
+    None,
+}
+
+fn get_if_ready<T>() -> Opt<T> {
+    if abyss..is_ready::<T>() {
+        return Opt..Some::<T>(abyss..get_val::<T>());
+    }
+    return Opt..None;
+}
+
 fn main() -> i32 {
+    var foo = get_int_if_ready::<i32>();
+    if foo == 42 {
+        return 42;
+    }
     // exhaustive, to be checked at comptime
     return switch(get_int_if_ready()) {
         OptI32..Some(var x) => x,

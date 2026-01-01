@@ -155,9 +155,7 @@ typedef struct {
 
 typedef struct {
     token_ptr_slice_t id;
-    ast_slice_of_generic_args_t generic_args;
     ast_slice_of_params_t vars;
-    bool is_generic;
 } ast_expr_variant_decomp_t;
 
 typedef struct {
@@ -165,7 +163,7 @@ typedef struct {
 } ast_expr_block_t;
 
 typedef struct {
-    ast_expr_t* pattern;
+    ast_slice_of_exprs_t patterns;
     ast_expr_t* value;
 } ast_expr_switch_branch_t;
 

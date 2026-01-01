@@ -161,7 +161,10 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
 
 ast_expr_t* parse_literal(parser_t* p) {
     ast_expr_t* lit_expr = parser_alloc_expr(p);
-    token_t* tkn = parser_eat(p);
+    token_t* tkn = parser_expect_token_call(p, token_is_literal, ERR_EXPECTED_LITERAL);
+    if (!tkn) {
+        return parser_sync_expr(p);
+    }
     lit_expr->expr.literal.tkn = tkn;
     lit_expr->type = AST_EXPR_LITERAL;
     lit_expr->first = tkn;
@@ -423,31 +426,11 @@ ast_expr_t* parse_expr_variant_decomp(parser_t* p) {
     return s;
 }
 
-// TODO, finish here (should be done, but dodgy), add this to the printer and then add generic param
-// parsing to variant decls
 ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_slice_t id) {
     ast_expr_t* e = parser_alloc_expr(p);
     e->type = AST_EXPR_VARIANT_DECOMP;
     token_t* first = parser_peek(p);
     e->expr.variant_decomp.id = id;
-    if (parser_match_token(p, TOK_GENERIC_SEP)) {
-        bool bracks = parser_match_token(p, TOK_LT);
-        e->expr.variant_decomp.is_generic = true;
-        parser_mode_e saved = parser_mode(p);
-        parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
-        e->expr.variant_decomp.generic_args = parse_slice_of_generic_args(p);
-        parser_mode_set(p, saved);
-        if (bracks) {
-            parser_expect_token(p, TOK_GT);
-        }
-    } else if (parser_match_token(p, TOK_LT)) {
-        e->expr.variant_decomp.is_generic = true;
-        parser_mode_e saved = parser_mode(p);
-        parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
-        e->expr.variant_decomp.generic_args = parse_slice_of_generic_args(p);
-        parser_mode_set(p, saved);
-        parser_expect_token(p, TOK_GT);
-    }
     if (parser_match_token(p, TOK_LPAREN)) {
         e->expr.variant_decomp.vars = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
         parser_expect_token(p, TOK_RPAREN);
@@ -471,18 +454,31 @@ ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
         default_expr->last = dflt;
         return default_expr;
     }
-    if (parser_peek(p)->type == TOK_IDENTIFIER) {
+    // handle identifier or variant decomp
+
+    token_type_e next_type = parser_peek(p)->type;
+    if (next_type == TOK_IDENTIFIER) {
         ast_expr_t* id = parse_id(p);
-        token_type_e next_type = parser_peek(p)->type;
+
+        next_type = parser_peek(p)->type;
+
         // parse Foo..Bar(var foo)
-        if (id && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP || next_type == TOK_LT)
-            && id->type == AST_EXPR_ID) {
+        if (next_type == TOK_LPAREN && id->type == AST_EXPR_ID) {
             return parse_expr_variant_decomp_with_leading_id(p, id->expr.id.slice);
+        }
+
+        if (next_type == TOK_ELLIPSE || next_type == TOK_ELLIPSE_EQ) {
+            return parse_binary(p, id, PREC_INIT);
         }
         return id;
     }
-    if (token_is_literal(parser_peek(p)->type)) {
-        return parse_literal(p);
+    if (token_is_literal(next_type)) {
+        ast_expr_t* lhs = parse_literal(p);
+        next_type = parser_peek(p)->type;
+        if (next_type == TOK_ELLIPSE || next_type == TOK_ELLIPSE_EQ) {
+            return parse_binary(p, lhs, PREC_INIT);
+        }
+        return lhs;
     }
     compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_INVALID_PATTERN);
     return parser_sync_expr(p);
@@ -513,7 +509,8 @@ ast_expr_t* parse_expr_switch_branch(parser_t* p) {
     ast_expr_t* branch = parser_alloc_expr(p);
     branch->type = AST_EXPR_SWITCH_BRANCH;
     token_t* first = parser_peek(p);
-    branch->expr.switch_branch.pattern = parse_expr_switch_pattern(p);
+    branch->expr.switch_branch.patterns
+        = parse_slice_of_exprs_call(p, TOK_BAR, TOK_EQ_ARROW, &parse_expr_switch_pattern);
     parser_expect_token(p, TOK_EQ_ARROW);
     branch->expr.switch_branch.value = parse_expr_allowing_block_exprs(p);
     branch->first = first;

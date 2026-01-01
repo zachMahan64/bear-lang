@@ -477,8 +477,8 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // if malformed guard passes, try to parse as a var declaration
-    ast_stmt_t* stmt =
-        parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
+    ast_stmt_t* stmt
+        = parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
     if (stmt->type == AST_STMT_INVALID) {
         compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
     }
@@ -781,6 +781,7 @@ ast_generic_parameter_t* parse_generic_param(parser_t* p) {
         gen_param->param.generic_var = parse_param(p);
     } else {
         gen_param->tag = AST_GENERIC_PARAM_INVALID;
+        compiler_error_list_emplace(p->error_list, first, ERR_INVALID_GENERIC_PARAMETER);
         parser_sync(p);
     }
     gen_param->first = first;
@@ -828,8 +829,8 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
     }
     struct_stmt->stmt.struct_decl.name_with_contracts = parse_id_with_contracts(p);
     struct_stmt->stmt.struct_decl.is_generic = false;
-    if (parser_match_token(p, TOK_LT) ||
-        (parser_match_token(p, TOK_GENERIC_SEP) && parser_match_token(p, TOK_LT))) {
+    if (parser_match_token(p, TOK_LT)
+        || (parser_match_token(p, TOK_GENERIC_SEP) && parser_match_token(p, TOK_LT))) {
         struct_stmt->stmt.struct_decl.is_generic = true;
         struct_stmt->stmt.struct_decl.generic_params = parse_generic_params(p);
         parser_expect_token(p, TOK_GT);
@@ -962,9 +963,14 @@ ast_stmt_t* parse_stmt_variant_decl(parser_t* p) {
         return parser_sync_stmt(p);
     }
     s->stmt.variant_decl.name = name;
+    if (parser_match_token(p, TOK_LT)) {
+        s->stmt.variant_decl.is_generic = true;
+        s->stmt.variant_decl.generic_params = parse_generic_params(p);
+        parser_expect_token(p, TOK_GT);
+    }
     parser_expect_token(p, TOK_LBRACE);
-    s->stmt.variant_decl.fields =
-        parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_stmt_variant_field_decl);
+    s->stmt.variant_decl.fields
+        = parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_stmt_variant_field_decl);
     parser_expect_token(p, TOK_RBRACE);
     s->first = vari_tkn;
     s->last = parser_prev(p);
