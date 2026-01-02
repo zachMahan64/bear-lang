@@ -17,6 +17,7 @@ static const char* indent = "|   ";
 static void printer_try_init(void) {
     static bool initialized;
     if (!initialized) {
+        ansi_init();
         indent_str = string_create_and_reserve(36);
         initialized = true;
     }

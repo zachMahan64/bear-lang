@@ -57,8 +57,6 @@ int compile_file(const char* file_name) {
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
     ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);
 
-    ansi_init();
-
 #ifdef DEBUG_BUILD
     print_stmt(file_stmt);
 #endif
