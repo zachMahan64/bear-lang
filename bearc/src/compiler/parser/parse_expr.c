@@ -445,7 +445,6 @@ ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_sli
     return e;
 }
 
-// TODO, parse multiple seperated with |
 ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
     token_t* dflt = parser_match_token(p, TOK_DEFAULT);
     if (dflt) {
