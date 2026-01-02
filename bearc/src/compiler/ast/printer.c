@@ -280,10 +280,9 @@ static void print_id_with_contracts(ast_type_with_contracts_t* t) {
     print_closing_green_brace_newline();
 }
 
-// TODO resume here
 static void print_generic_params(ast_slice_of_generic_params_t params) {
     print_indent();
-    puts("generic parameter list: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    print_title("generic parameter list");
     printer_do_indent();
     for (size_t i = 0; i < params.len; i++) {
         switch (params.start[i]->tag) {
@@ -294,12 +293,12 @@ static void print_generic_params(ast_slice_of_generic_params_t params) {
             print_param(params.start[i]->param.generic_var);
             break;
         case AST_GENERIC_PARAM_INVALID:
-            print_indent(), printf(ANSI_BOLD_RED "invalid generic param" ANSI_RESET ",\n");
+            print_indent(), printf("%sinvalid generic param%s,\n", ansi_bold_red(), ansi_reset());
             break;
         }
     }
     printer_deindent();
-    print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
+    print_closing_green_brace_newline();
 }
 
 void print_expr(ast_expr_t* expression) {
@@ -317,46 +316,45 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_LITERAL: {
         token_t* tkn = expr.expr.literal.tkn;
         const char* lit_type_str = token_to_string_map()[tkn->type];
-        printf("literal (%s): " ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_BLUE "%.*s" ANSI_BOLD_GREEN
-               "`" ANSI_RESET,
-               lit_type_str, (int)tkn->len, tkn->start);
+        printf("literal (%s): %s`%s%.*s%s`%s", lit_type_str, ansi_bold_green(), ansi_bold_blue(),
+               (int)tkn->len, tkn->start, ansi_bold_green(), ansi_reset());
         break;
     }
     case AST_EXPR_BINARY: {
-        puts("binary op: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("binary-expr");
         ast_expr_t* lhs = expr.expr.binary.lhs;
         token_t* op = expr.expr.binary.op;
         ast_expr_t* rhs = expr.expr.binary.rhs;
         print_expr(lhs);
         print_op(op);
         print_expr(rhs);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     case AST_EXPR_GROUPING: {
-        puts("grouping: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("grouping");
         print_expr(expr.expr.grouping.expr);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     case AST_EXPR_PRE_UNARY: {
         token_t* op = expr.expr.unary.op;
-        puts("pre-unary: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("pre-unary");
         print_op(op);
         print_expr(expr.expr.unary.expr);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     case AST_EXPR_POST_UNARY: {
         token_t* op = expr.expr.unary.op;
-        puts("post-unary: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("post-unary");
         print_expr(expr.expr.unary.expr);
         print_op(op);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     case AST_EXPR_FN_CALL:
-        puts("function call: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("function call");
         print_expr(expr.expr.fn_call.left_expr);
         if (expr.expr.fn_call.is_generic) {
             ast_slice_of_generic_args_t args = expr.expr.fn_call.generic_args;
@@ -378,11 +376,12 @@ void print_expr(ast_expr_t* expression) {
         }
 
         print_closing_delim(expr.expr.fn_call.right_paren);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     case AST_EXPR_INVALID:
-        printf(ANSI_BOLD_RED "invalid expression" ANSI_RESET);
+        printf("%sinvalid expression%s", ansi_bold_red(), ansi_reset());
         break;
+        // TODO resume here
     case AST_EXPR_SUBSCRIPT:
         puts("subscript: " ANSI_BOLD_GREEN "{" ANSI_RESET);
         print_expr(expr.expr.subscript.lhs);
