@@ -30,40 +30,41 @@ static void print_indent(void) { printf("%s", string_data(&indent_str)); }
 
 static void print_tkn(token_t* tkn) {
     if (!tkn) {
-        printf(ANSI_BOLD_RED "missing tkn" ANSI_RESET);
+        printf("%smissing tkn%s", ansi_bold_red(), ansi_reset());
         return;
     }
     printf("%.*s", (int)tkn->len, tkn->start);
 }
 
 static void print_op(token_t* op) {
-    printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_MAGENTA),
-        print_tkn(op), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+    printer_do_indent(), print_indent(), printf("%s`%s", ansi_bold_green(), ansi_bold_magenta()),
+        print_tkn(op), printf("%s`%s,\n", ansi_bold_green(), ansi_reset()), printer_deindent();
 }
 
 static void print_var_name(token_t* name) {
-    printer_do_indent(), print_indent(),
-        printf("name: " ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_CYAN), print_tkn(name),
-        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+    printer_do_indent(), print_indent(), printf("name: %s`%s", ansi_bold_green(), ansi_bold_cyan()),
+        print_tkn(name), printf("%s`%s,\n", ansi_bold_green(), ansi_reset()), printer_deindent();
 }
 
 static void print_comma(void) {
     printer_do_indent(), print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "," ANSI_BOLD_GREEN "`" ANSI_RESET
-                               ",\n"),
-        printer_deindent();
+        printf("%s`%s,%s`%s,\n", ansi_bold_green(), ansi_bold_yellow(), ansi_bold_green(),
+               ansi_reset());
+    printer_deindent();
 }
 
 static void print_opening_delim(token_t* delim) {
-    printer_do_indent(), print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW),
-        print_tkn(delim), puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+    printer_do_indent(), print_indent(), printf("%s`%s", ansi_bold_green(), ansi_bold_yellow()),
+        print_tkn(delim), printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
 }
 
 static void print_closing_delim(token_t* delim) {
-    print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(delim),
-        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+    print_indent(), printf("%s`%s", ansi_bold_green(), ansi_bold_yellow()), print_tkn(delim),
+        printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
+    printer_deindent();
 }
 
+// TODO resume ansi replacement here
 static void print_opening_delim_from_type(token_type_e delim) {
     printer_do_indent(), print_indent(),
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s", token_to_string_map()[delim]),
