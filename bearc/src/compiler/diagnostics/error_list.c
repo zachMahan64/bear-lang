@@ -38,8 +38,8 @@ void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_
 
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
                                  error_code_e error_code) {
-    const compiler_error_t err = {
-        .start_tkn = token, .error_code = error_code, .expected_token_type = TOK_NONE};
+    const compiler_error_t err
+        = {.start_tkn = token, .error_code = error_code, .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
 }
 
@@ -55,8 +55,8 @@ void compiler_error_list_emplace_range(compiler_error_list_t* list, token_t* sta
 void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, token_t* token,
                                                 error_code_e error_code,
                                                 token_type_e expected_tkn_type) {
-    const compiler_error_t err = {
-        .start_tkn = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
+    const compiler_error_t err
+        = {.start_tkn = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
     vector_push_back(&list->list_vec, &err);
 }
 
@@ -81,10 +81,9 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstr(&line_under_num_str, "  |");
 
     // do printing now that we have all strings setup
-    printf(ANSI_BOLD_WHITE "\'%s\': at (line %zu,%zu): " ANSI_RED_FG
-                           "error: " ANSI_RESET ANSI_BOLD_WHITE "%s%s" ANSI_RESET "\n",
-           list->src_buffer.file_name, line, col, error_message_for_code(err->error_code),
-           error_message_context_for(err));
+    printf("%s\'%s\': at (line %zu,%zu): %serror: %s%s%s%s\n", ansi_bold_white(),
+           list->src_buffer.file_name, line, col, ansi_bold_red(), ansi_bold_white(),
+           error_message_for_code(err->error_code), error_message_context_for(err), ansi_reset());
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->start_tkn);
 
@@ -104,7 +103,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
 
     printf("%s %.*s\n", string_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
-    string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, ANSI_RED_FG);
+    string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, ansi_bold_red());
 
     printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
 

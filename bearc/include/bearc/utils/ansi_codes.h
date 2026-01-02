@@ -10,6 +10,7 @@
 #define ANSI_CODES_H
 
 /// ansi escape sequence character
+#include <stdbool.h>
 #define ESC "\033"
 
 // reset
@@ -49,5 +50,40 @@
 #define ANSI_BOLD_CYAN ANSI_BOLD ANSI_CYAN_FG
 #define ANSI_BOLD_BLUE ANSI_BOLD ANSI_BLUE_FG
 #define ANSI_BOLD_WHITE ANSI_BOLD ANSI_WHITE_FG
+
+bool ansi_init(void);
+
+const char* ansi_reset(void);
+
+const char* ansi_bold(void);
+const char* ansi_faint(void);
+const char* ansi_italic(void);
+const char* ansi_underline(void);
+
+const char* ansi_black_fg(void);
+const char* ansi_red_fg(void);
+const char* ansi_green_fg(void);
+const char* ansi_yellow_fg(void);
+const char* ansi_blue_fg(void);
+const char* ansi_magenta_fg(void);
+const char* ansi_cyan_fg(void);
+const char* ansi_white_fg(void);
+
+const char* ansi_black_bg(void);
+const char* ansi_red_bg(void);
+const char* ansi_green_bg(void);
+const char* ansi_yellow_bg(void);
+const char* ansi_blue_bg(void);
+const char* ansi_magenta_bg(void);
+const char* ansi_cyan_bg(void);
+const char* ansi_white_bg(void);
+
+const char* ansi_bold_green(void);
+const char* ansi_bold_magenta(void);
+const char* ansi_bold_red(void);
+const char* ansi_bold_yellow(void);
+const char* ansi_bold_cyan(void);
+const char* ansi_bold_blue(void);
+const char* ansi_bold_white(void);
 
 #endif // ANSI_CODES_H

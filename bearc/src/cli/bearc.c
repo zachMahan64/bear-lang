@@ -46,9 +46,8 @@ int br_launch_cli(int argc, char** argv) {
         return -1;
     }
     if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
-        printf(ANSI_BOLD ANSI_RED_FG "error:" ANSI_RESET " file does not exist: " ANSI_BOLD
-                                     "'%s'\n" ANSI_RESET,
-               args.file_name);
+        printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
+               ansi_bold(), ansi_reset(), args.file_name);
         return -1;
     }
     if (args.flag == HELP) {
@@ -80,7 +79,7 @@ void do_cli_help(void) {
 void do_cli_version(void) { puts("bearc v0.0.1"); }
 
 cli_error_status do_cli_compile(const cli_args_t* args) {
-    puts(ANSI_BOLD "(bearc) this feature is a work-in-progress" ANSI_RESET);
+    printf("%s(bearc) this feature is a work-in-progress\n%s", ansi_bold_white(), ansi_reset());
     cli_error_status error_status = {0, ""};
     error_status.error_code = compile_file(args->file_name);
     return error_status;

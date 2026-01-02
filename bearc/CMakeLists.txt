@@ -44,6 +44,7 @@ set(SRC
     src/utils/string.c
     src/utils/file_io.c
     src/utils/spill_arr.c
+    src/utils/ansi_codes.c
 
     src/compiler/debug.c
 

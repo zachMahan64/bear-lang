@@ -40,8 +40,8 @@
     - [x] parse multiple arms with `|` (corresponding td in parse_expr.c)
     - [x] handle generic params in variant decls (corresponding td in parse_expr.c)
 - [x] add generics to variants
-- [ ] fn ptrs
-- [ ] closures
+- [x] fn ptrs
+- [x] closures
 - [ ] rewrite ansi code usages to use toggleable strings
 - [ ] write a full parser test suite
 - [ ] write up full parser documentation

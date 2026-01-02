@@ -52,10 +52,12 @@ int compile_file(const char* file_name) {
     compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
 #define PARSER_ARENA_CHUNK_SIZE_BASE 0x20000
 #define PARSER_ARENA_CHUNK_SIZE_SCALE_FACTOR 8
-    arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE_BASE +
-                                 (PARSER_ARENA_CHUNK_SIZE_SCALE_FACTOR * src_buffer.size));
+    arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE_BASE
+                                 + (PARSER_ARENA_CHUNK_SIZE_SCALE_FACTOR * src_buffer.size));
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
     ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);
+
+    ansi_init();
 
 #ifdef DEBUG_BUILD
     print_stmt(file_stmt);
@@ -66,9 +68,9 @@ int compile_file(const char* file_name) {
     compiler_error_list_print_all(&error_list);
 
     if (compiler_error_list_empty(&error_list)) {
-        printf("successfully compiled: " ANSI_BOLD_WHITE "'%s'\n" ANSI_RESET, file_name);
+        printf("successfully compiled: %s'%s'\n%s", ansi_bold_white(), file_name, ansi_reset());
     } else {
-        printf("compilation terminated: " ANSI_BOLD_WHITE "'%s'\n" ANSI_RESET, file_name);
+        printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(), file_name, ansi_reset());
         error_code = -1;
     }
 
