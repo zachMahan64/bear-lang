@@ -131,3 +131,5 @@ void compiler_error_list_print_all(const compiler_error_list_t* list) {
 bool compiler_error_list_empty(const compiler_error_list_t* list) {
     return list->list_vec.size == 0;
 }
+
+size_t compiler_error_list_count(const compiler_error_list_t* list) { return list->list_vec.size; }

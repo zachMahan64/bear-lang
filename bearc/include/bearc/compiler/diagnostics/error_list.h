@@ -13,6 +13,7 @@
 #include "compiler/token.h"
 #include "utils/file_io.h"
 #include "utils/vector.h"
+#include <stddef.h>
 
 /**
  * list of compiler_error_t's with a file_name
@@ -45,5 +46,8 @@ void compiler_error_list_print_all(const compiler_error_list_t* list);
 
 /// check if a compiler_error_list_t is empty
 bool compiler_error_list_empty(const compiler_error_list_t* list);
+
+/// check a compiler_error_list_t's size
+size_t compiler_error_list_count(const compiler_error_list_t* list);
 
 #endif // COMPILER_DIAGNOSTICS_ERROR_LIST_H

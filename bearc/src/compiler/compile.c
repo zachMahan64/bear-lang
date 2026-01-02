@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 int compile_file(const char* file_name) {
-    int error_code = 0; // return error code if hit error
+    int code = 0; // return error code if hit error
 
     src_buffer_t src_buffer = src_buffer_from_file_create(file_name);
 
@@ -71,7 +71,7 @@ int compile_file(const char* file_name) {
         printf("successfully compiled: %s'%s'\n%s", ansi_bold_white(), file_name, ansi_reset());
     } else {
         printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(), file_name, ansi_reset());
-        error_code = -1;
+        code = (int)compiler_error_list_count(&error_list);
     }
 
     // clean up resources
@@ -80,5 +80,5 @@ int compile_file(const char* file_name) {
 empty_file_clean_up:
     vector_destroy(&tkn_vec);
     src_buffer_destroy(&src_buffer);
-    return error_code;
+    return code;
 }

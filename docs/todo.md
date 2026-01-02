@@ -42,7 +42,7 @@
 - [x] add generics to variants
 - [x] fn ptrs
 - [x] closures
-- [ ] rewrite ansi code usages to use toggleable strings
+- [x] rewrite ansi code usages to use toggleable strings
 - [ ] write a full parser test suite
 - [ ] write up full parser documentation
 
