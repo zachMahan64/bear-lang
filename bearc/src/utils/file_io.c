@@ -69,7 +69,7 @@ src_buffer_t src_buffer_from_file_create(const char* file_name) {
     src_buffer_t buffer;
     buffer.file_name = file_name;
     if (read_file_to_src_buffer(&buffer) < 0) {
-        printf(ANSI_BOLD ANSI_RED_FG "error:" ANSI_RESET " could not read file: %s", file_name);
+        printf("%serror%s: could not read file: %s", ansi_bold_red(), ansi_reset(), file_name);
     }
     return buffer;
 }
