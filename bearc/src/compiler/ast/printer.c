@@ -64,17 +64,16 @@ static void print_closing_delim(token_t* delim) {
     printer_deindent();
 }
 
-// TODO resume ansi replacement here
 static void print_opening_delim_from_type(token_type_e delim) {
     printer_do_indent(), print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s", token_to_string_map()[delim]),
-        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+        printf("%s`%s%s", ansi_bold_green(), ansi_bold_yellow(), token_to_string_map()[delim]),
+        printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
 }
 
 static void print_closing_delim_from_type(token_type_e delim) {
     print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW "%s", token_to_string_map()[delim]),
-        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ","), printer_deindent();
+        printf("%s`%s%s", ansi_bold_green(), ansi_bold_yellow(), token_to_string_map()[delim]),
+        printf("%s`%s,\n", ansi_bold_green(), ansi_reset()), printer_deindent();
 }
 
 static void print_delineator_from_type(token_type_e delin) {
@@ -87,17 +86,16 @@ static void print_delineator_from_type(token_type_e delin) {
 
 static void print_terminator(token_t* term) {
     if (!term) {
-        print_indent(), puts(ANSI_BOLD_RED "missing terminator" ANSI_RESET);
+        print_indent(), printf("%smissing terminator%s\n", ansi_bold_red(), ansi_reset());
         return;
     }
-    print_indent(), printf(ANSI_BOLD_GREEN "`" ANSI_RESET ANSI_BOLD_YELLOW), print_tkn(term),
-        puts(ANSI_BOLD_GREEN "`" ANSI_RESET ",");
+    print_indent(), printf("%s`%s", ansi_bold_green(), ansi_bold_yellow()), print_tkn(term),
+        printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
 }
 
 static void print_op_from_type(token_type_e t) {
-    print_indent(),
-        printf(ANSI_BOLD_GREEN "`" ANSI_BOLD_MAGENTA "%s" ANSI_BOLD_GREEN "`" ANSI_RESET ",\n",
-               token_to_string_map()[t]);
+    print_indent(), printf("%s`%s%s%s`%s,\n", ansi_bold_green(), ansi_bold_magenta(),
+                           token_to_string_map()[t], ansi_bold_green(), ansi_reset());
 }
 
 static void print_mut(void) { print_op_from_type(TOK_MUT); }
@@ -113,9 +111,21 @@ static void print_generic_type_arg(ast_generic_arg_t* arg) {
         }
     } else {
         printer_do_indent();
-        print_indent(), printf(ANSI_BOLD_RED "invalid generic arg" ANSI_RESET ",\n");
+        print_indent(), printf("%sinvalid generic arg%s,\n", ansi_bold_red(), ansi_reset());
         printer_deindent();
     }
+}
+
+static void print_title(const char* title) {
+    printf("%s: %s{%s\n", title, ansi_bold_green(), ansi_reset());
+}
+
+static void print_closing_green_brace(void) {
+    print_indent(), printf("%s}%s", ansi_bold_green(), ansi_reset());
+}
+
+static void print_closing_green_brace_newline(void) {
+    print_indent(), printf("%s}%s\n", ansi_bold_green(), ansi_reset());
 }
 
 static void print_type(ast_type_t* type) {
@@ -125,29 +135,30 @@ static void print_type(ast_type_t* type) {
     switch (type->tag) {
     case AST_TYPE_BASE: {
         token_ptr_slice_t ids = type->type.base.id;
-        puts("base type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("base type");
         printer_do_indent();
         print_indent();
         printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
         for (size_t i = 0; i < ids.len; i++) {
             int len = (int)ids.start[i]->len;
             const char* start = ids.start[i]->start;
-            printf(ANSI_BOLD_YELLOW "%.*s" ANSI_RESET, len, start);
+            printf("%s%.*s%s", ansi_bold_yellow(), len, start, ansi_reset());
             if (ids.len != 1 && i != ids.len - 1) {
-                printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, token_to_string_map()[TOK_SCOPE_RES]);
+                printf("%s%s%s", ansi_bold_green(), token_to_string_map()[TOK_SCOPE_RES],
+                       ansi_bold_yellow());
             }
         }
-        printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+        printf("%s`%s", ansi_bold_green(), ansi_reset());
         printf(",\n");
         if (type->type.base.mut) {
             print_mut();
         }
         printer_deindent();
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     case AST_TYPE_REF_PTR: {
-        puts("ref/ptr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("ref/ptr type");
         print_type(type->type.ref.inner);
         print_op(type->type.ref.modifier);
         if (type->type.ref.mut) {
@@ -155,20 +166,19 @@ static void print_type(ast_type_t* type) {
             print_mut();
             printer_deindent();
         }
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     case AST_TYPE_ARR:
-        puts("arr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("array type");
         print_opening_delim_from_type(TOK_LBRACK);
         print_expr(type->type.arr.size_expr);
         print_closing_delim_from_type(TOK_RBRACK);
         print_type(type->type.arr.inner);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
-
+        print_closing_green_brace();
         break;
     case AST_TYPE_GENERIC:
-        puts("generic type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("generic type");
         print_type(type->type.generic.inner);
         print_delineator_from_type(TOK_GENERIC_SEP);
         print_opening_delim_from_type(TOK_LT);
@@ -176,14 +186,14 @@ static void print_type(ast_type_t* type) {
             print_generic_type_arg(type->type.generic.generic_args.start[i]);
         }
         print_closing_delim_from_type(TOK_GT);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     case AST_TYPE_INVALID:
         print_indent();
-        printf(ANSI_BOLD_RED "invalid type" ANSI_RESET);
+        printf("%sinvalid type%s", ansi_bold_red(), ansi_reset());
         break;
     case AST_TYPE_SLICE:
-        puts("slice type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("slice type");
         print_opening_delim_from_type(TOK_LBRACK);
         print_op_from_type(TOK_AMPER);
         if (type->type.slice.mut) {
@@ -191,10 +201,10 @@ static void print_type(ast_type_t* type) {
         }
         print_closing_delim_from_type(TOK_RBRACK);
         print_type(type->type.slice.inner);
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     case AST_TYPE_FN_PTR: {
-        puts("fn-ptr type: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+        print_title("function-ptr type");
         print_delineator_from_type(TOK_STAR);
         print_delineator_from_type(TOK_FN);
         print_opening_delim_from_type(TOK_LPAREN);
@@ -207,7 +217,7 @@ static void print_type(ast_type_t* type) {
             print_delineator_from_type(TOK_RARROW);
             print_type(type->type.fn_ptr.return_type);
         }
-        print_indent(), printf(ANSI_BOLD_GREEN "}" ANSI_RESET);
+        print_closing_green_brace();
         break;
     }
     }
@@ -218,13 +228,14 @@ static void print_type(ast_type_t* type) {
 static void print_param(ast_param_t* param) {
     print_indent();
     if (!param->valid) {
-        printf(ANSI_BOLD_RED "invalid parameter,\n" ANSI_RESET);
+        printf("%sinvalid parameter,\n%s", ansi_bold_red(), ansi_reset());
         return;
     }
-    puts("parameter: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    print_title("parameter");
     print_type(param->type);
     print_var_name(param->name);
-    print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
+    print_closing_green_brace();
+    puts(",");
 }
 
 static void print_id_slice(token_ptr_slice_t ids) {
@@ -233,12 +244,12 @@ static void print_id_slice(token_ptr_slice_t ids) {
     for (size_t i = 0; i < ids.len; i++) {
         int len = (int)ids.start[i]->len;
         const char* start = ids.start[i]->start;
-        printf(ANSI_BOLD_CYAN "%.*s" ANSI_RESET, len, start);
+        printf("%s%.*s%s", ansi_bold_cyan(), len, start, ansi_reset());
         if (ids.len != 1 && i != ids.len - 1) {
-            printf(ANSI_BOLD_GREEN "%s" ANSI_RESET, token_to_string_map()[TOK_SCOPE_RES]);
+            printf("%s%s%s", ansi_bold_green(), token_to_string_map()[TOK_SCOPE_RES], ansi_reset());
         }
     }
-    printf(ANSI_BOLD_GREEN "`" ANSI_RESET);
+    printf("%s`%s", ansi_bold_green(), ansi_reset());
     printer_deindent();
 }
 
@@ -251,10 +262,10 @@ static void print_id_slice_name(token_ptr_slice_t id) {
 static void print_id_with_contracts(ast_type_with_contracts_t* t) {
     print_indent();
     if (!t->valid) {
-        printf(ANSI_BOLD_RED "invalid parameter,\n" ANSI_RESET);
+        printf("%sinvalid parameter,%s\n", ansi_bold_red(), ansi_reset());
         return;
     }
-    puts("type-name: " ANSI_BOLD_GREEN "{" ANSI_RESET);
+    print_title("type-name");
     print_var_name(t->id);
     if (t->contract_ids.len != 0) {
         printer_do_indent();
@@ -266,9 +277,10 @@ static void print_id_with_contracts(ast_type_with_contracts_t* t) {
         }
         print_closing_delim_from_type(TOK_RPAREN);
     }
-    print_indent(), printf(ANSI_BOLD_GREEN "},\n" ANSI_RESET);
+    print_closing_green_brace_newline();
 }
 
+// TODO resume here
 static void print_generic_params(ast_slice_of_generic_params_t params) {
     print_indent();
     puts("generic parameter list: " ANSI_BOLD_GREEN "{" ANSI_RESET);
