@@ -43,7 +43,7 @@
 - [x] fn ptrs
 - [x] closures
 - [x] rewrite ansi code usages to use toggleable strings
-- [ ] fix broken move closure kw (see `tests/38.br`)
+- [x] fix broken move closure kw (see `tests/38.br`)
 - [ ] write a full parser test suite
 - [ ] write up full parser documentation
 
