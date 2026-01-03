@@ -36,7 +36,7 @@ strimap_t strimap_create_from_arena(size_t capacity, arena_t arena) {
 }
 
 void strimap_destroy(strimap_t* map) {
-    if (!map || !map->buckets) {
+    if (!map || !map->buckets || !map->arena.head) {
         return;
     }
     arena_destroy(&map->arena);
@@ -170,8 +170,8 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
     if (new_capacity < STRIMAP_MINIMUM_CAPACITY) {
         return; // guard
     }
-    strimap_entry_t** new_buckets =
-        (strimap_entry_t**)arena_alloc(&map->arena, new_capacity * sizeof(strimap_entry_t*));
+    strimap_entry_t** new_buckets
+        = (strimap_entry_t**)arena_alloc(&map->arena, new_capacity * sizeof(strimap_entry_t*));
     // init to NULL
     for (size_t i = 0; i < new_capacity; i++) {
         new_buckets[i] = NULL;

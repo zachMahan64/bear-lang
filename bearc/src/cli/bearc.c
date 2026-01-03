@@ -9,6 +9,7 @@
 #include "bearc.h"
 #include "cli/args.h"
 #include "compiler/compile.h"
+#include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"
 #include "utils/log.h"
@@ -82,6 +83,7 @@ cli_error_status do_cli_compile(const cli_args_t* args) {
     printf("%s(bearc) this feature is a work-in-progress\n%s", ansi_bold_white(), ansi_reset());
     cli_error_status error_status = {0, ""};
     error_status.error_code = compile_file(args->file_name);
+    token_maps_free(); // after all operations involving token lookups are done
     return error_status;
 }
 cli_error_status do_cli_no_args(void) {

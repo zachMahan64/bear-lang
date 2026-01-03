@@ -61,11 +61,11 @@ static unsigned char char_to_token_map[TOKEN_CHAR_TO_TOKEN_MAP_SIZE] = {
 };
 const unsigned char* get_char_to_token_map(void) { return char_to_token_map; }
 
-static pthread_once_t string_to_token_map_once = PTHREAD_ONCE_INIT;
+static pthread_once_t string_to_token_map_init_once = PTHREAD_ONCE_INIT;
 static strimap_t string_to_token_map;
 static void string_to_token_map_init(void) {
-    string_to_token_map =
-        strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
+    string_to_token_map
+        = strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
 
     // bool literals
     strimap_insert(&string_to_token_map, "true", TOK_BOOL_LIT_TRUE);
@@ -187,9 +187,19 @@ static void string_to_token_map_init(void) {
 }
 
 const strimap_t* get_string_to_token_strimap(void) {
-    pthread_once(&string_to_token_map_once, &string_to_token_map_init);
+    pthread_once(&string_to_token_map_init_once, &string_to_token_map_init);
     return &string_to_token_map;
 }
+
+static void string_to_token_strimap_destroy_impl() { strimap_destroy(&string_to_token_map); }
+
+static pthread_once_t string_to_token_map_destroy_once = PTHREAD_ONCE_INIT;
+
+static void string_to_token_strimap_destroy(void) {
+    pthread_once(&string_to_token_map_destroy_once, &string_to_token_strimap_destroy_impl);
+}
+
+void token_maps_free(void) { string_to_token_strimap_destroy(); }
 
 static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_INDETERMINATE] = "INDETER.",
@@ -463,8 +473,8 @@ token_type_e token_determine_token_type_for_fixed_symbols(const char* start, siz
                                      // INDETERMINATE = 0
     }
     const strimap_t* string_to_token_map = get_string_to_token_strimap();
-    token_type_e* tkn_type_ptr_from_multi_char_map =
-        (token_type_e*)strimap_viewn(string_to_token_map, start, length);
+    token_type_e* tkn_type_ptr_from_multi_char_map
+        = (token_type_e*)strimap_viewn(string_to_token_map, start, length);
 
     if (tkn_type_ptr_from_multi_char_map != NULL) {
         return *tkn_type_ptr_from_multi_char_map; // derefence and return because it

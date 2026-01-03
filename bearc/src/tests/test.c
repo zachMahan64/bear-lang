@@ -8,6 +8,7 @@
 
 #include "tests/test.h"
 #include "compiler/compile.h"
+#include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/vector.h"
 #include <stdbool.h>
@@ -28,6 +29,8 @@ int main(void) {
     }
     printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
     print_result(&total);
+    vector_destroy(&results);
+    token_maps_free(); // after all operations involving token lookups are done
     return 0;
 }
 /*

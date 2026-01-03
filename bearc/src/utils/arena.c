@@ -9,12 +9,13 @@
 #include "utils/arena.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 // arena chunk, composes the arena
 typedef struct arena_chunk {
-    uint8_t* buffer;
+    uint8_t* data;
     size_t used;
     size_t cap;
     struct arena_chunk* next;
@@ -22,10 +23,12 @@ typedef struct arena_chunk {
 
 // ctor for an arena chunk, private helper
 arena_chunk_t* arena_chunk_new(size_t chunk_cap_bytes) {
-    arena_chunk_t* chunk = malloc(sizeof(arena_chunk_t));
+    // meta data head + data
+    arena_chunk_t* chunk = malloc(sizeof(arena_chunk_t) + chunk_cap_bytes);
     chunk->used = 0; // set filled size to zero
     chunk->cap = chunk_cap_bytes;
-    chunk->buffer = malloc(chunk_cap_bytes);
+    chunk->data
+        = (uint8_t*)chunk + sizeof(arena_chunk_t); // put data at an offset from meta data head
     chunk->next = NULL;
     return chunk;
 }
@@ -36,8 +39,7 @@ void arena_destroy_chunk_chain(arena_chunk_t* first_chunk) {
     arena_chunk_t* next = NULL;
     while (curr) {
         next = curr->next;
-        free(curr->buffer); // free chunk's internal buffer
-        free(curr);         // free chunk itself
+        free(curr); // free chunk itself
         curr = next;
     }
 }
@@ -76,7 +78,7 @@ void* arena_alloc(arena_t* arena, size_t req_size_bytes) {
     }
 
     // allocation always begins at the aligned offset
-    void* allocation = curr->buffer + aligned;
+    void* allocation = curr->data + aligned;
 
     // bump the used
     size_t new_used = aligned + req_size_bytes;

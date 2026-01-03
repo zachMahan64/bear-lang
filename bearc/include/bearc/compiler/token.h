@@ -267,4 +267,11 @@ const char* get_first_char_in_multichar_operator_token_map(void);
  */
 token_t token_build(const char* start, size_t length, src_loc_t* loc);
 
+/**
+ * destroy global token look-up maps
+ * - this operation is thread-safe although should probably only ever be called after all threads
+ * are joined and/or do not need to use any token look=up tables
+ */
+void token_maps_free(void);
+
 #endif // !COMPILER_TOKEN_H
