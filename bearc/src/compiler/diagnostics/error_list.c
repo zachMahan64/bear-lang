@@ -77,8 +77,9 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstr(&line_num_str, "  ");
     string_push_cstr(&line_num_str, line_num_buf);
     string_t line_under_num_str = string_create_and_fill(string_size(&line_num_str), ' ');
-    string_push_cstr(&line_num_str, "  |");
-    string_push_cstr(&line_under_num_str, "  |");
+#define COMP_ERR_SIDE_BAR "  |"
+    string_push_cstr(&line_num_str, COMP_ERR_SIDE_BAR);
+    string_push_cstr(&line_under_num_str, COMP_ERR_SIDE_BAR);
 
     // do printing now that we have all strings setup
     printf("%s\'%s\': at (line %zu,%zu): %serror: %s%s%s%s\n", ansi_bold_white(),
@@ -106,6 +107,8 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, ansi_bold_red());
 
     printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
+    // print an extra "   |   "
+    printf("%s\n", string_data(&line_under_num_str));
 
     // free resources
     string_destroy(&cursor_string);

@@ -31,7 +31,7 @@ int main(void) {
     print_result(&total);
     vector_destroy(&results);
     token_maps_free(); // after all operations involving token lookups are done
-    return 0;
+    return !(total.cnt_total == total.cnt_success);
 }
 /*
  * macros to easily test tests in the form tests/00.br
