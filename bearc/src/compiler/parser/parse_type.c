@@ -105,21 +105,16 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
     base->type.base.mut = pre_mut || post_mut;
 
     // handle tkn ordering due to mut order
-    if (post_mut && !pre_mut) {
+    if (!pre_mut) {
         base->first = base->type.base.id.start[0];
-        base->last = parser_prev(p); // gets post mut token
     } else if (post_mut && pre_mut) {
         assert(pre_mut_tkn != NULL && "[parse_type_base] mut_tkn must not be NULL");
         base->first = pre_mut_tkn;
-        base->last = parser_prev(p); // gets post mut token
         compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
-    } else if (!post_mut && !pre_mut) {
-        base->first = base->type.base.id.start[0];
-        base->last = base->type.base.id.start[base->type.base.id.len - 1];
     } else {
         base->first = pre_mut_tkn;
-        base->last = base->type.base.id.start[base->type.base.id.len - 1];
     }
+    base->last = parser_prev(p);
     base->tag = AST_TYPE_BASE;
     return base;
 }
@@ -162,7 +157,12 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
             compiler_error_list_emplace(p->error_list, first_tkn, ERR_MUT_CANNOT_BIND_TO_ARRAYS);
             return parser_sync_type(p);
         }
-        inner = parse_type_base_with_leading_mut(p);
+        // try function ptr (effectively a special case)
+        if (t1 == TOK_STAR && t2 == TOK_FN) {
+            inner = parse_type_fn_ptr(p);
+        } else {
+            inner = parse_type_base_with_leading_mut(p);
+        }
     } else if (first_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN) {
         inner = parse_type_fn_ptr(p);
     } else {
@@ -386,12 +386,22 @@ ast_type_t* parse_type_fn_ptr(parser_t* p) {
     ast_type_t* fnp = parser_alloc_type(p);
     fnp->tag = AST_TYPE_FN_PTR;
     token_t* first = parser_peek(p);
+    bool leading_mut = parser_match_token(p, TOK_MUT);
+    fnp->type.fn_ptr.mut = leading_mut;
     if (!parser_expect_token(p, TOK_STAR)) {
         return parser_sync_type(p);
     }
     if (!parser_expect_token(p, TOK_FN)) {
         return parser_sync_type(p);
     }
+    if (!leading_mut) {
+        fnp->type.fn_ptr.mut = parser_match_token(p, TOK_MUT);
+    }
+    // shed redundant muts
+    while (parser_match_token(p, TOK_MUT)) {
+        compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
+    }
+
     if (!parser_expect_token(p, TOK_LPAREN)) {
         return parser_sync_type(p);
     }

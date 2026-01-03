@@ -1,0 +1,14 @@
+fn main() {
+    static i32 x = Magic..magic();
+    *fn mut(i32)->(Opt<i32>) funky_func = &foo; 
+    *fn mut mut mut (i32)->(Opt<i32>) malformed_func = &foo;
+    mut *fn(i32)->(Opt<i32>) func = &foo;
+    mut *fn mut (i32)->(Opt<i32>) oops_func = &foo; 
+}
+
+fn foo(i32 x) -> Opt<i32> {
+    if x < 100000000000000 {
+        return Opt..Some<i32>(x);
+    }
+    return Opt..None;
+}

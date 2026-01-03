@@ -212,6 +212,11 @@ static void print_type(ast_type_t* type) {
         print_title("function-ptr type");
         print_delineator_from_type(TOK_STAR);
         print_delineator_from_type(TOK_FN);
+        if (type->type.fn_ptr.mut) {
+            printer_do_indent();
+            print_mut();
+            printer_deindent();
+        }
         print_opening_delim_from_type(TOK_LPAREN);
         ast_slice_of_types_t types = type->type.fn_ptr.param_types;
         for (size_t i = 0; i < types.len; i++) {
@@ -668,7 +673,9 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_RETURN:
         print_title("return statement");
+        printer_do_indent();
         print_op_from_type(TOK_RETURN);
+        printer_deindent();
         ast_expr_t* expr = stmt->stmt.return_stmt.expr;
         if (expr) {
             print_expr(expr);

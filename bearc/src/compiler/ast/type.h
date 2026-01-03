@@ -60,6 +60,7 @@ typedef struct {
     ast_slice_of_types_t param_types;
     /// optional if void
     ast_type_t* return_type;
+    bool mut;
 } ast_type_fn_ptr_t;
 
 typedef union {
