@@ -32,6 +32,7 @@ br_test_result_t test_parser(void) {
                 ++result.cnt_success;
             }
             ++result.cnt_total;
+            string_destroy(&str);
         }
     }
     return result;

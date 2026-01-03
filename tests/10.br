@@ -1,5 +1,4 @@
-fn main() 
-{
+fn main(i32 a) {
 mut i32& mut a;
 
 mut str && b = &b;

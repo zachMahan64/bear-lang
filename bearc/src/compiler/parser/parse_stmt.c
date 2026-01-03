@@ -19,6 +19,7 @@
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
@@ -278,9 +279,7 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
         return parser_sync_stmt(p);
     }
 
-    if (parser_peek(p)->type != TOK_RPAREN) {
-        decl->stmt.fn_decl.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
-    }
+    decl->stmt.fn_decl.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
 
     token_t* rparen = parser_expect_token(p, TOK_RPAREN);
     if (!rparen) {
@@ -290,6 +289,8 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     token_t* rarrow = parser_match_token(p, TOK_RARROW);
     if (rarrow) {
         decl->stmt.fn_decl.return_type = parse_type(p);
+    } else {
+        decl->stmt.fn_decl.return_type = NULL;
     }
     decl->stmt.fn_decl.block = parse_stmt_block(p);
 

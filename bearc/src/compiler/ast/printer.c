@@ -696,7 +696,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         break;
     case AST_STMT_INVALID:
-        printf("%sinvalid statement%s {%s", ansi_bold_red(), ansi_bold_green(), ansi_reset());
+        printf("%sinvalid statement%s {\n%s", ansi_bold_red(), ansi_bold_green(), ansi_reset());
         break;
     case AST_STMT_EMPTY:
         print_title("empty statement");
