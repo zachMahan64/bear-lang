@@ -577,6 +577,7 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
         // handle last
         if_stmt->last = if_stmt->stmt.if_stmt.else_stmt->last;
     } else {
+        if_stmt->stmt.if_stmt.has_else = false;
         if_stmt->last = if_stmt->stmt.if_stmt.body_stmt->last;
     }
     if_stmt->first = if_tkn;
@@ -875,6 +876,8 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
     decl->stmt.fn_prototype.name = parse_id_token_slice(p, TOK_SCOPE_RES);
 
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine
+
+    decl->stmt.fn_prototype.is_generic = false;
     if (parser_match_token(p, TOK_LT)) {
         decl->stmt.fn_prototype.is_generic = true;
         decl->stmt.fn_prototype.generic_params = parse_generic_params(p);
@@ -886,9 +889,7 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
         return parser_sync_stmt(p);
     }
 
-    if (parser_peek(p)->type != TOK_RPAREN) {
-        decl->stmt.fn_prototype.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
-    }
+    decl->stmt.fn_prototype.params = parse_slice_of_params(p, TOK_COMMA, TOK_RPAREN);
 
     token_t* rparen = parser_expect_token(p, TOK_RPAREN);
     if (!rparen) {
@@ -981,6 +982,7 @@ ast_stmt_t* parse_stmt_variant_decl(parser_t* p) {
         return parser_sync_stmt(p);
     }
     s->stmt.variant_decl.name = name;
+    s->stmt.variant_decl.is_generic = false;
     if (parser_match_token(p, TOK_LT)) {
         s->stmt.variant_decl.is_generic = true;
         s->stmt.variant_decl.generic_params = parse_generic_params(p);
