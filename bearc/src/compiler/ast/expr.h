@@ -178,6 +178,7 @@ typedef struct {
 typedef struct {
     ast_slice_of_params_t params;
     ast_expr_t* body;
+    bool is_move;
 } ast_expr_closure_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^

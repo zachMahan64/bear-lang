@@ -101,4 +101,7 @@ ast_stmt_t* parse_stmt_variant_decl(parser_t* p);
 ast_stmt_t* parse_stmt_allowing_yield(parser_t* p);
 
 void parser_guard_against_trailing_rparens(parser_t* p);
+
+ast_stmt_t* parse_stmt_static_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t* p));
+
 #endif

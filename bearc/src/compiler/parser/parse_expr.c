@@ -72,7 +72,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
             lhs = parse_grouping(p);
         } else if (first_type == TOK_SWITCH) {
             lhs = parse_expr_switch(p);
-        } else if (first_type == TOK_BAR) {
+        } else if (first_type == TOK_BAR || first_type == TOK_MOVE) {
             lhs = parse_expr_closure(p);
         }
     }
@@ -554,6 +554,8 @@ ast_expr_t* parse_expr_closure(parser_t* p) {
     ast_expr_t* cl = parser_alloc_expr(p);
     cl->type = AST_EXPR_CLOSURE;
     token_t* first = parser_peek(p);
+    // move |...|{...}
+    cl->expr.closure.is_move = parser_match_token(p, TOK_MOVE); // match into bool
     if (!parser_expect_token(p, TOK_BAR)) {
         return parser_sync_expr(p);
     }

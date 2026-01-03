@@ -58,9 +58,10 @@ typedef enum {
     AST_STMT_RETURN,
     AST_STMT_YIELD,
 
-    // visibility
+    // stmt decl modifiers
     AST_STMT_VISIBILITY_MODIFIER,
     AST_STMT_COMPT_MODIFIER,
+    AST_STMT_STATIC_MODIFIER,
 
     // structures
     AST_STMT_STRUCT_DEF,
@@ -297,6 +298,7 @@ typedef union {
     ast_stmt_variant_decl_t variant_decl;
     ast_stmt_variant_field_decl_t variant_field_decl;
     ast_stmt_return_t yield_stmt;
+    ast_stmt_wrapped_t static_modifier;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

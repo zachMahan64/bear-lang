@@ -136,6 +136,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_compt_modifier(p, &parse_var_decl);
     }
 
+    if (next_type == TOK_STATIC) {
+        return parse_stmt_static_modifier(p, &parse_var_decl);
+    }
+
     if (next_type == TOK_USE) {
         return parse_stmt_use(p);
     }
@@ -415,7 +419,7 @@ keep_shedding:
     if (parser_shed_visibility_qualis_with_error(p)) {
         goto keep_shedding;
     }
-    ast_stmt_t* stmt = call(p); // expect a declaration, namely a function or var decl
+    ast_stmt_t* stmt = call(p);
     vis->stmt.compt_modifier.stmt = stmt;
     vis->first = modif;
     vis->last = stmt->last;
@@ -470,6 +474,11 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     if (next_type == TOK_COMPT) {
         return parse_stmt_compt_modifier(p, &parse_stmt_decl);
+    }
+
+    // handle static variable decls
+    if (next_type == TOK_STATIC) {
+        return parse_stmt_static_modifier(p, &parse_var_decl);
     }
 
     if (next_type == TOK_USE) {
@@ -990,4 +999,25 @@ ast_stmt_t* parse_stmt_allowing_yield(parser_t* p) {
         return parse_stmt_yield(p);
     }
     return parse_stmt(p);
+}
+
+ast_stmt_t* parse_stmt_static_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t* p)) {
+    ast_stmt_t* vis = parser_alloc_stmt(p);
+    vis->type = AST_STMT_STATIC_MODIFIER;
+    token_t* modif = parser_expect_token(p, TOK_STATIC);
+    if (!modif) {
+        return parser_sync_stmt(p);
+    }
+    // shed redundant qualifiers
+    // this goto structure handles any kind of stupid compt pub compt hid ... input
+keep_shedding:
+    parser_shed_compt_qualis_with_error(p);
+    if (parser_shed_visibility_qualis_with_error(p)) {
+        goto keep_shedding;
+    }
+    ast_stmt_t* stmt = call(p);
+    vis->stmt.static_modifier.stmt = stmt;
+    vis->first = modif;
+    vis->last = stmt->last;
+    return vis;
 }

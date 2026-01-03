@@ -80,7 +80,7 @@ static void print_closing_delim_from_type(token_type_e delim) {
 static void print_delineator_from_type(token_type_e delin) {
     printer_do_indent();
     print_indent(),
-        printf("%s`%s%s", ansi_bold_green(), token_to_string_map()[delin], ansi_bold_yellow()),
+        printf("%s`%s%s", ansi_bold_green(), ansi_bold_yellow(), token_to_string_map()[delin]),
         printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
     printer_deindent();
 }
@@ -495,6 +495,9 @@ void print_expr(ast_expr_t* expression) {
     case AST_EXPR_CLOSURE: {
         print_title("closure");
         ast_expr_closure_t cl = expr.expr.closure;
+        if (cl.is_move) {
+            print_delineator_from_type(TOK_MOVE);
+        }
         print_opening_delim_from_type(TOK_BAR);
         for (size_t i = 0; i < cl.params.len; i++) {
             print_param(cl.params.start[i]);
@@ -833,6 +836,13 @@ void print_stmt(ast_stmt_t* stmt) {
         print_delineator_from_type(TOK_SEMICOLON);
         break;
     }
+    case AST_STMT_STATIC_MODIFIER:
+        print_title("static variable declaration");
+        print_delineator_from_type(TOK_STATIC);
+        printer_do_indent();
+        print_stmt(stmt->stmt.static_modifier.stmt);
+        printer_deindent();
+        break;
     }
     print_closing_green_brace();
     puts(",");
