@@ -73,8 +73,8 @@ int compile_file(const char* file_name) {
     }
 
     // clean up resources
-    arena_destroy(&arena);
     compiler_error_list_destroy(&error_list);
+    arena_destroy(&arena);
 empty_file_clean_up:
     vector_destroy(&tkn_vec);
     src_buffer_destroy(&src_buffer);

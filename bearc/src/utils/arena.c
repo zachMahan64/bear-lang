@@ -98,6 +98,7 @@ void arena_log_debug_info(arena_t* arena) {
 
     while (curr) {
         next = curr->next;
+        printf("[DEBUG|arena_log_debug_info]:\n");
         printf("chunk #%zu\n", chunk_num);
         printf("-> cap : %zu\n", curr->cap);
         printf("-> used: %zu\n", curr->used);

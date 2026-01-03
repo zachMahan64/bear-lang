@@ -9,7 +9,8 @@ Checks: >
   -readability-function-cognitive-complexity,
   -readability-identifier-length,
   -bugprone-easily-swappable-parameters,
-  -bugprone-assignment-in-if-condition
+  -bugprone-assignment-in-if-condition,
+  -bugprone-too-small-loop-variable
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none

@@ -12,5 +12,6 @@
 #include "compiler/ast/stmt.h"
 void print_stmt(ast_stmt_t* stmt);
 void print_expr(ast_expr_t* expr);
+void printer_reset(void);
 
 #endif

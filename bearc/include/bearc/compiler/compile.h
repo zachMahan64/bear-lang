@@ -10,9 +10,9 @@
 #define COMPILE_H
 
 /**
- * Compiles a source file given the file_name
+ * compiles a source file given the file name
  *
- * returns an error code
+ * returns the count of compiler errors
  */
 int compile_file(const char* file_name);
 

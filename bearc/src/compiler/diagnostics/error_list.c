@@ -114,6 +114,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
 }
 
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
+    ansi_init();
     size_t len = list->list_vec.size;
     for (size_t i = 0; i < len; i++) {
         compiler_error_print_err(list, i);

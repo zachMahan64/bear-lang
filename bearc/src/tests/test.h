@@ -9,9 +9,15 @@
 #ifndef TEST_H
 #define TEST_H
 
-#include "utils/vector.h"
-#include <stdio.h>
+#include <stddef.h>
 
-void tests_run(void);
+typedef struct {
+    /// subtest total count
+    size_t cnt_total;
+    /// subtest success count
+    size_t cnt_success;
+} br_test_result_t;
+
+br_test_result_t test_parser(void);
 
 #endif // !TEST_H

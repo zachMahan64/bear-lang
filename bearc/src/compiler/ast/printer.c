@@ -13,14 +13,18 @@ static string_t indent_str;
 static const char* indent = "|   ";
 #define PRINTER_INDENT_LEN 4
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+static bool initialized;
 static void printer_try_init(void) {
-    static bool initialized;
     if (!initialized) {
         ansi_init();
         indent_str = string_create_and_reserve(36);
         initialized = true;
     }
+}
+
+void printer_reset(void) {
+    initialized = false;
+    string_destroy(&indent_str);
 }
 
 static void printer_do_indent(void) { string_push_cstr(&indent_str, indent); }
