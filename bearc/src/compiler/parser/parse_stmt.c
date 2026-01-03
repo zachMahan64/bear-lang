@@ -265,7 +265,7 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     parser_shed_visibility_qualis_with_error(p);
 
     decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
-
+    decl->stmt.fn_decl.is_generic = false;
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine
     if (parser_match_token(p, TOK_LT)) {
         decl->stmt.fn_decl.is_generic = true;
