@@ -19,6 +19,7 @@ typedef enum {
     // atoms/primary exprs
     AST_EXPR_ID,
     AST_EXPR_LITERAL,
+    AST_EXPR_LIST_LITERAL,
     // binary
     AST_EXPR_BINARY, // binary arithmetic expression: +, -, *, /, %, bitwise, comparison, boolean
     // grouping
@@ -181,6 +182,10 @@ typedef struct {
     bool is_move;
 } ast_expr_closure_t;
 
+typedef struct {
+    ast_slice_of_exprs_t slice;
+} ast_expr_list_literal_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union {
@@ -200,6 +205,7 @@ typedef union {
     ast_expr_switch_branch_t switch_branch;
     ast_expr_switch_t switch_expr;
     ast_expr_closure_t closure;
+    ast_expr_list_literal_t list_literal;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

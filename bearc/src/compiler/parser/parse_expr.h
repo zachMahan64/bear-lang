@@ -73,4 +73,6 @@ ast_expr_t* parse_expr_switch(parser_t* p);
 
 ast_expr_t* parse_expr_closure(parser_t* p);
 
+ast_expr_t* parse_expr_list_literal(parser_t* p);
+
 #endif

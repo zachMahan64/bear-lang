@@ -516,6 +516,17 @@ void print_expr(ast_expr_t* expression) {
         print_closing_green_brace();
         break;
     }
+    case AST_EXPR_LIST_LITERAL: {
+        print_title("list literal");
+        print_opening_delim_from_type(TOK_LBRACK);
+        ast_slice_of_exprs_t list = expr.expr.list_literal.slice;
+        for (size_t i = 0; i < list.len; i++) {
+            print_expr(list.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RBRACK);
+        print_closing_green_brace();
+        break;
+    }
     }
     puts(",");
     printer_deindent();

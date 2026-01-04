@@ -74,6 +74,8 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
             lhs = parse_expr_switch(p);
         } else if (first_type == TOK_BAR || first_type == TOK_MOVE) {
             lhs = parse_expr_closure(p);
+        } else if (first_type == TOK_LBRACK) {
+            lhs = parse_expr_list_literal(p);
         }
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -564,6 +566,20 @@ ast_expr_t* parse_expr_closure(parser_t* p) {
 
     // {....}
     cl->expr.closure.body = parse_expr_allowing_block_exprs_without_yields(p);
+    cl->first = first;
+    cl->last = parser_prev(p);
+    return cl;
+}
+
+ast_expr_t* parse_expr_list_literal(parser_t* p) {
+    ast_expr_t* cl = parser_alloc_expr(p);
+    cl->type = AST_EXPR_LIST_LITERAL;
+    token_t* first = parser_peek(p);
+    if (!parser_expect_token(p, TOK_LBRACK)) {
+        return parser_sync_expr(p);
+    }
+    cl->expr.list_literal.slice = parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACK, &parse_expr);
+    parser_expect_token(p, TOK_RBRACK);
     cl->first = first;
     cl->last = parser_prev(p);
     return cl;
