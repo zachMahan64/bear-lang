@@ -44,12 +44,16 @@
 - [x] closures
 - [x] rewrite ansi code usages to use toggleable strings
 - [x] fix broken move closure kw (see `tests/38.br`)
-- [ ] write a full parser test suite
+- [x] write a full parser test suite
+- [x] list literals: `[1, 2, 3, 4, 5]`
+- [ ] `import C "foo.h"`
+- [ ] `import "foo.br" -> <mod_name>`
+- [ ] `deftype foo = Foo..Bar<i32>`
 - [ ] write up full parser documentation
 
 #### Medium-term
 - [ ] finish Crafting Interpreters
-- [ ] start Engineering a Compiler
+- [ ] finish Engineering a Compiler
 - [ ] HIR
 - [ ] MIR 
 - [ ] LLVM IR

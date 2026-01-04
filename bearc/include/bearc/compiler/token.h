@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 #define TOKEN_CHAR_TO_TOKEN_MAP_SIZE 256   // unsigned char max value
-#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 256 // abitrary, but large enough to reduce hashing conflicts
+#define TOKEN_STRING_TO_TOKEN_MAP_SIZE 277 // abitrary, but large and prime to reduce hash conflicts
 
 /// enum representing a type of token in the lexer
 typedef enum token_type {
@@ -106,9 +106,9 @@ typedef enum token_type {
     TOK_HID,   // like private, but with slightly different semantics because BearLang has no
                // inheritance, so this is really just a hidden data member or function/method
     TOK_PUB,
-    TOK_MUT,     // example: mut i32
-    TOK_HAS,     // like a C++ template, with much more basic features (for), just like a
-                 // smarter macro
+    TOK_MUT, // example: mut i32
+    TOK_HAS,
+    TOK_DEFTYPE,
     TOK_VARIANT, // scoped/type-checked enums
     // memory location identifiers
     TOK_STATIC,

@@ -124,6 +124,8 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "is", TOK_IS);
     strimap_insert(&string_to_token_map, "variant", TOK_VARIANT);
 
+    strimap_insert(&string_to_token_map, "deftype", TOK_DEFTYPE);
+
     // control flow
     strimap_insert(&string_to_token_map, "if", TOK_IF);
     strimap_insert(&string_to_token_map, "else", TOK_ELSE);
@@ -191,7 +193,7 @@ const strimap_t* get_string_to_token_strimap(void) {
     return &string_to_token_map;
 }
 
-static void string_to_token_strimap_destroy_impl() { strimap_destroy(&string_to_token_map); }
+static void string_to_token_strimap_destroy_impl(void) { strimap_destroy(&string_to_token_map); }
 
 static pthread_once_t string_to_token_map_destroy_once = PTHREAD_ONCE_INIT;
 
@@ -313,6 +315,7 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_SELF_TYPE] = "Self",
     [TOK_STRUCT] = "struct",
     [TOK_UNION] = "union",
+    [TOK_DEFTYPE] = "deftype",
 
     // variable / literal types
     [TOK_IDENTIFIER] = "identifier",

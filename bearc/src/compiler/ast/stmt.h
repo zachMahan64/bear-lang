@@ -72,6 +72,8 @@ typedef enum {
     AST_STMT_VARIANT_DEF,
     AST_STMT_VARIANT_FIELD_DECL,
 
+    AST_STMT_DEFTYPE,
+
     AST_STMT_INVALID,
 } ast_stmt_type_e;
 
@@ -139,7 +141,12 @@ typedef struct {
  * imports a file given my a path as my.path.to.file
  */
 typedef struct {
+    /// NULLable/optional
+    token_t* extern_language;
     token_t* file_path;
+    /// introduce inside a module
+    token_ptr_slice_t into_mod;
+    bool has_into_mod;
 } ast_stmt_import_t;
 
 /// bring a module into current scope
@@ -269,6 +276,11 @@ typedef struct {
     ast_slice_of_params_t params;
 } ast_stmt_variant_field_decl_t;
 
+typedef struct {
+    token_t* name;
+    ast_type_t original_type;
+} ast_stmt_deftype_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// union of all stmt types
@@ -299,6 +311,7 @@ typedef union {
     ast_stmt_variant_field_decl_t variant_field_decl;
     ast_stmt_return_t yield_stmt;
     ast_stmt_wrapped_t static_modifier;
+    ast_stmt_deftype_t deftype;
 } ast_stmt_u;
 
 typedef struct ast_stmt {
