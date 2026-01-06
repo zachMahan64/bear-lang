@@ -19,7 +19,6 @@
 #include "utils/arena.h"
 #include "utils/spill_arr.h"
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 
 ast_stmt_t* parse_file(parser_t* p, const char* file_name) {

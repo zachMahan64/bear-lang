@@ -319,12 +319,12 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
 
     // variable / literal types
     [TOK_IDENTIFIER] = "identifier",
-    [TOK_CHAR_LIT] = "char_lit",
-    [TOK_INT_LIT] = "int_lit",
-    [TOK_DOUB_LIT] = "doub_lit",
-    [TOK_STR_LIT] = "str_lit",
-    [TOK_BOOL_LIT_TRUE] = "true_lit",
-    [TOK_BOOL_LIT_FALSE] = "false_lit",
+    [TOK_CHAR_LIT] = "char literal",
+    [TOK_INT_LIT] = "integer literal",
+    [TOK_FLOAT_LIT] = "float literal",
+    [TOK_STR_LIT] = "string literal",
+    [TOK_BOOL_LIT_TRUE] = "true",
+    [TOK_BOOL_LIT_FALSE] = "false",
     [TOK_NULL_LIT] = "null",
 
     // special punctuation
@@ -577,7 +577,7 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
             endptr++;
         }
         if (*endptr == '\0') {
-            tkn->type = TOK_DOUB_LIT;
+            tkn->type = TOK_FLOAT_LIT;
             tkn->val.floating = floating_val;
             return;
         }
