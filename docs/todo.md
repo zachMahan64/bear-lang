@@ -46,8 +46,9 @@
 - [x] fix broken move closure kw (see `tests/38.br`)
 - [x] write a full parser test suite
 - [x] list literals: `[1, 2, 3, 4, 5]`
-- [ ] `import C "foo.h"`
-- [ ] `import "foo.br" -> <mod_name>`
+- [x] `import C "foo.h"`
+- [x] `import "foo.br" -> <mod_name>`
+- [ ] `extern C {...}`
 - [ ] `deftype foo = Foo..Bar<i32>`
 - [ ] write up full parser documentation
 

@@ -647,12 +647,18 @@ ast_stmt_t* parse_stmt_import(parser_t* p) {
     if (!import_tkn) {
         return parser_sync_stmt(p);
     }
+    import_stmt->stmt.import.extern_language = parser_match_token(p, TOK_IDENTIFIER);
     token_t* path = parser_expect_token(p, TOK_STR_LIT);
     if (!path) {
         return parser_sync_stmt(p);
     }
     import_stmt->stmt.import.file_path = path;
     import_stmt->first = import_tkn;
+    import_stmt->stmt.import.has_into_mod = false;
+    if (parser_match_token(p, TOK_RARROW)) {
+        import_stmt->stmt.import.has_into_mod = true;
+        import_stmt->stmt.import.into_mod = parse_id_token_slice(p, TOK_SCOPE_RES);
+    }
     token_t* term = parser_expect_token(p, TOK_SEMICOLON);
     if (!term) {
         import_stmt->last = path;

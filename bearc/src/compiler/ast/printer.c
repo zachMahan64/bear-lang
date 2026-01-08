@@ -51,6 +51,11 @@ static void print_var_name(token_t* name) {
         print_tkn(name), printf("%s`%s,\n", ansi_bold_green(), ansi_reset()), printer_deindent();
 }
 
+static void print_id_tok(token_t* tkn) {
+    printer_do_indent(), print_indent(), printf("%s`%s", ansi_bold_green(), ansi_bold_cyan()),
+        print_tkn(tkn), printf("%s`%s,\n", ansi_bold_green(), ansi_reset()), printer_deindent();
+}
+
 static void print_comma(void) {
     printer_do_indent(), print_indent(),
         printf("%s`%s,%s`%s,\n", ansi_bold_green(), ansi_bold_yellow(), ansi_bold_green(),
@@ -268,6 +273,12 @@ static void print_id_slice(token_ptr_slice_t ids) {
 static void print_id_slice_name(token_ptr_slice_t id) {
     printer_do_indent();
     print_indent(), printf("name: "), print_id_slice(id), printf(",\n");
+    printer_deindent();
+}
+
+static void print_id_slice_title(token_ptr_slice_t id, const char* title) {
+    printer_do_indent();
+    print_indent(), printf("%s: ", title), print_id_slice(id), printf(",\n");
     printer_deindent();
 }
 
@@ -564,10 +575,15 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_IMPORT:
         print_title("import statement");
-        printer_do_indent();
-        print_op_from_type(TOK_IMPORT);
-        print_closing_delim(stmt->stmt.import.file_path);
-        printer_deindent();
+        print_delineator_from_type(TOK_IMPORT);
+        if (stmt->stmt.import.extern_language) {
+            print_id_tok(stmt->stmt.import.extern_language);
+        }
+        print_id_tok(stmt->stmt.import.file_path);
+        if (stmt->stmt.import.has_into_mod) {
+            print_delineator_from_type(TOK_RARROW);
+            print_id_slice_title(stmt->stmt.import.into_mod, "into module");
+        }
         break;
     case AST_STMT_EXPR:
         print_title("expression-statement");
@@ -864,6 +880,8 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_stmt(stmt->stmt.static_modifier.stmt);
         printer_deindent();
+        break;
+    case AST_STMT_DEFTYPE:
         break;
     }
     print_closing_green_brace();

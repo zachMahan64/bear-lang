@@ -1,4 +1,6 @@
-import "foo.br";
+import "foobar.br";
+import "foo.br" -> foo;
+import C "foo.h" -> foo;
 fn main() {
     [3]i32 a = [1, 2, 3];
 }
