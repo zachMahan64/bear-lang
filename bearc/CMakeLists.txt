@@ -64,7 +64,7 @@ set(TEST_SRC
 
 
 set(CMAKE_C_FLAGS_DEBUG
-    "-Wall -Wextra -Wpedantic -g -gdwarf-4" CACHE STRING "" FORCE)
+    "-Wall -Wextra -Wpedantic -g -gdwarf-4 -O1" CACHE STRING "" FORCE)
 set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
