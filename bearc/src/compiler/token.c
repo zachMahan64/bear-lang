@@ -117,6 +117,7 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "void", TOK_VOID);
     strimap_insert(&string_to_token_map, "var", TOK_VAR);
     strimap_insert(&string_to_token_map, "static", TOK_STATIC);
+    strimap_insert(&string_to_token_map, "extern", TOK_EXTERN);
     strimap_insert(&string_to_token_map, "compt", TOK_COMPT);
     strimap_insert(&string_to_token_map, "hid", TOK_HID);
     strimap_insert(&string_to_token_map, "pub", TOK_PUB);
@@ -287,6 +288,7 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_VOID] = "void",
     [TOK_VAR] = "var",
     [TOK_STATIC] = "static",
+    [TOK_EXTERN] = "extern",
     [TOK_COMPT] = "compt",
     [TOK_HID] = "hid",
     [TOK_PUB] = "pub",

@@ -191,7 +191,6 @@ ast_stmt_t* parse_stmt_block(parser_t* p) {
     if (!lbrace) {
         return parser_sync_stmt(p);
     }
-    stmt->stmt.block.left_delim = lbrace;
     stmt->stmt.block.stmts = parse_slice_of_stmts(p, TOK_RBRACE);
     token_t* rbrace = parser_expect_token(p, TOK_RBRACE);
     if (!rbrace) {
@@ -462,6 +461,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     if (next_type == TOK_UNION) {
         return parse_stmt_union_decl(p);
+    }
+
+    if (next_type == TOK_EXTERN) {
+        return parse_stmt_extern_block(p);
     }
 
     if (next_type == TOK_VARIANT) {
@@ -1028,4 +1031,31 @@ keep_shedding:
     vis->first = modif;
     vis->last = stmt->last;
     return vis;
+}
+
+ast_stmt_t* parse_stmt_extern_block(parser_t* p) {
+    ast_stmt_t* stmt = parser_alloc_stmt(p);
+    stmt->type = AST_STMT_EXTERN_BLOCK;
+    token_t* first = parser_expect_token(p, TOK_EXTERN);
+    if (!first) {
+        return parser_sync_stmt(p);
+    }
+    token_t* extern_language = parser_expect_token(p, TOK_IDENTIFIER);
+    if (!extern_language) {
+        return parser_sync_stmt(p);
+    }
+    stmt->stmt.extern_block.extern_language = extern_language;
+    token_t* lbrace = parser_expect_token(p, TOK_LBRACE);
+    if (!lbrace) {
+        return parser_sync_stmt(p);
+    }
+    // only parse fn declarations in extern blocks
+    stmt->stmt.extern_block.decls = parse_slice_of_stmts_call(p, TOK_RBRACE, &parse_fn_decl);
+    token_t* rbrace = parser_expect_token(p, TOK_RBRACE);
+    if (!rbrace) {
+        return parser_sync_stmt(p);
+    }
+    stmt->first = first;
+    stmt->last = rbrace;
+    return stmt;
 }

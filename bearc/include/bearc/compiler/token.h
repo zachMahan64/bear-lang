@@ -112,6 +112,7 @@ typedef enum token_type {
     TOK_VARIANT, // scoped/type-checked enums
     // memory location identifiers
     TOK_STATIC,
+    TOK_EXTERN,
 
     // more operators
     TOK_SIZEOF,

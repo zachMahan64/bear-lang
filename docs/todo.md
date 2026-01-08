@@ -48,7 +48,7 @@
 - [x] list literals: `[1, 2, 3, 4, 5]`
 - [x] `import C "foo.h"`
 - [x] `import "foo.br" -> <mod_name>`
-- [ ] `extern C {...}`
+- [x] `extern C {...}`
 - [ ] `deftype foo = Foo..Bar<i32>`
 - [ ] write up full parser documentation
 

@@ -4,3 +4,9 @@ import C "foo.h" -> foo;
 fn main() {
     [3]i32 a = [1, 2, 3];
 }
+
+extern C {
+    fn foobar() -> i32 {
+        return 42;
+    }
+}

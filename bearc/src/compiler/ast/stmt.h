@@ -22,6 +22,7 @@ typedef enum {
     // blocks
     AST_STMT_BLOCK, // {...} sequence of statements
     AST_STMT_FILE,  // top-level flat seq of statements w/ metadata
+    AST_STMT_EXTERN_BLOCK,
 
     // var decls
     AST_STMT_VAR_DECL,      // type foo;
@@ -114,9 +115,7 @@ typedef struct {
  * {...series of statements...}
  */
 typedef struct {
-    token_t* left_delim;
     ast_slice_of_stmts_t stmts;
-    token_t* right_delim;
 } ast_stmt_block_t;
 
 /**
@@ -281,6 +280,11 @@ typedef struct {
     ast_type_t original_type;
 } ast_stmt_deftype_t;
 
+typedef struct {
+    token_t* extern_language;
+    ast_slice_of_stmts_t decls;
+} ast_stmt_extern_block_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// union of all stmt types
@@ -312,6 +316,7 @@ typedef union {
     ast_stmt_return_t yield_stmt;
     ast_stmt_wrapped_t static_modifier;
     ast_stmt_deftype_t deftype;
+    ast_stmt_extern_block_t extern_block;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

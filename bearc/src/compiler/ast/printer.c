@@ -1,6 +1,7 @@
 #include "compiler/ast/printer.h"
 #include "compiler/ast/expr.h"
 #include "compiler/ast/stmt.h"
+#include "compiler/ast/stmt_slice.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/string.h"
@@ -883,6 +884,18 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_DEFTYPE:
         break;
+    case AST_STMT_EXTERN_BLOCK: {
+        print_title("extern block");
+        print_delineator_from_type(TOK_EXTERN);
+        print_id_tok(stmt->stmt.extern_block.extern_language);
+        printer_do_indent();
+        ast_slice_of_stmts_t decls = stmt->stmt.extern_block.decls;
+        for (size_t i = 0; i < decls.len; i++) {
+            print_stmt(decls.start[i]);
+        }
+        printer_deindent();
+        break;
+    }
     }
     print_closing_green_brace();
     puts(",");
