@@ -187,13 +187,11 @@ typedef struct {
     token_t* name;
     token_t* assign_op;
     ast_expr_t* rhs;
-    token_t* terminator;
 } ast_stmt_var_decl_init_t;
 
 typedef struct {
     ast_type_t* type;
     token_t* name;
-    token_t* terminator;
 } ast_stmt_var_decl_t;
 
 typedef struct {
@@ -276,14 +274,14 @@ typedef struct {
 } ast_stmt_variant_field_decl_t;
 
 typedef struct {
-    token_t* name;
-    ast_type_t original_type;
-} ast_stmt_deftype_t;
-
-typedef struct {
     token_t* extern_language;
     ast_slice_of_stmts_t decls;
 } ast_stmt_extern_block_t;
+
+typedef struct {
+    token_t* alias_id;
+    ast_type_t* aliased_type;
+} ast_stmt_deftype_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

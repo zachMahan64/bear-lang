@@ -635,13 +635,11 @@ void print_stmt(ast_stmt_t* stmt) {
         print_var_name(stmt->stmt.var_init_decl.name);
         print_op(stmt->stmt.var_init_decl.assign_op);
         print_expr(stmt->stmt.var_init_decl.rhs);
-        print_terminator(stmt->stmt.var_init_decl.terminator);
         break;
     case AST_STMT_VAR_DECL:
         print_title("variable declaration");
         print_type(stmt->stmt.var_decl.type);
         print_var_name(stmt->stmt.var_decl.name);
-        print_terminator(stmt->stmt.var_decl.terminator);
         break;
     case AST_STMT_IF:
         print_title("if statement");
@@ -883,6 +881,13 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         break;
     case AST_STMT_DEFTYPE:
+        print_title("deftype alias");
+        print_delineator_from_type(TOK_DEFTYPE);
+        print_var_name(stmt->stmt.deftype.alias_id);
+        printer_do_indent();
+        print_op_from_type(TOK_ASSIGN_EQ);
+        printer_deindent();
+        print_type(stmt->stmt.deftype.aliased_type);
         break;
     case AST_STMT_EXTERN_BLOCK: {
         print_title("extern block");

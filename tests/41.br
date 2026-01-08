@@ -10,3 +10,5 @@ extern C {
         return 42;
     }
 }
+
+deftype Foo = FooBar<i32>;

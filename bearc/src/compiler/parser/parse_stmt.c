@@ -235,7 +235,6 @@ ast_stmt_t* parse_var_decl_from_id_or_mut(parser_t* p, token_ptr_slice_t* opt_id
         if (!term) {
             return parser_sync_stmt(p);
         }
-        stmt->stmt.var_init_decl.terminator = term;
     } else if (next_type == TOK_SEMICOLON) {
         stmt->type = AST_STMT_VAR_DECL;
         stmt->stmt.var_decl.type = type;
@@ -244,14 +243,13 @@ ast_stmt_t* parse_var_decl_from_id_or_mut(parser_t* p, token_ptr_slice_t* opt_id
         if (!term) {
             return parser_sync_stmt(p);
         }
-        stmt->stmt.var_decl.terminator = term;
     } else {
         compiler_error_list_emplace(p->error_list, next_tkn, ERR_INCOMPLETE_VAR_DECLARATION);
         return parser_sync_stmt(p);
     }
 
     stmt->first = type->first;
-    stmt->last = stmt->stmt.var_decl.terminator;
+    stmt->last = parser_prev(p);
     return stmt;
 }
 
@@ -465,6 +463,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     if (next_type == TOK_EXTERN) {
         return parse_stmt_extern_block(p);
+    }
+
+    if (next_type == TOK_DEFTYPE) {
+        return parse_stmt_deftype(p);
     }
 
     if (next_type == TOK_VARIANT) {
@@ -1058,4 +1060,28 @@ ast_stmt_t* parse_stmt_extern_block(parser_t* p) {
     stmt->first = first;
     stmt->last = rbrace;
     return stmt;
+}
+
+ast_stmt_t* parse_stmt_deftype(parser_t* p) {
+    ast_stmt_t* s = parser_alloc_stmt(p);
+    s->type = AST_STMT_DEFTYPE;
+    token_t* first = parser_expect_token(p, TOK_DEFTYPE);
+    if (!first) {
+        return parser_sync_stmt(p);
+    }
+    token_t* alias = parser_expect_token(p, TOK_IDENTIFIER);
+    if (!alias) {
+        return parser_sync_stmt(p);
+    }
+    s->stmt.deftype.alias_id = alias;
+    token_t* eq = parser_expect_token(p, TOK_ASSIGN_EQ);
+    if (!eq) {
+        return parser_sync_stmt(p);
+    }
+    // only parse fn declarations in extern blocks
+    s->stmt.deftype.aliased_type = parse_type(p);
+    parser_expect_token(p, TOK_SEMICOLON);
+    s->first = first;
+    s->last = parser_prev(p);
+    return s;
 }

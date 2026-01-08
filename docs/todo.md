@@ -49,7 +49,7 @@
 - [x] `import C "foo.h"`
 - [x] `import "foo.br" -> <mod_name>`
 - [x] `extern C {...}`
-- [ ] `deftype foo = Foo..Bar<i32>`
+- [x] `deftype foo = Foo..Bar<i32>`
 - [ ] write up full parser documentation
 
 #### Medium-term
