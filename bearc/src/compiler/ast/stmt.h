@@ -169,18 +169,8 @@ typedef struct {
     ast_type_t* return_type;
     ast_stmt_t* block;
     bool is_generic;
+    bool is_mut;
 } ast_stmt_fn_decl_t;
-
-typedef struct {
-    /// fn, mt, or dt
-    token_t* kw;
-    token_ptr_slice_t name;
-    ast_slice_of_generic_params_t generic_params;
-    ast_slice_of_params_t params;
-    /// NULLable if no return type
-    ast_type_t* return_type;
-    bool is_generic;
-} ast_stmt_fn_prototype_t;
 
 typedef struct {
     ast_type_t* type;
@@ -294,7 +284,7 @@ typedef union {
     ast_stmt_use_t use;
     ast_stmt_expr_t stmt_expr;
     ast_stmt_fn_decl_t fn_decl;
-    ast_stmt_fn_prototype_t fn_prototype;
+    ast_stmt_fn_decl_t fn_prototype;
     ast_stmt_var_decl_init_t var_init_decl;
     ast_stmt_var_decl_t var_decl;
     ast_stmt_if_t if_stmt;

@@ -44,6 +44,7 @@ typedef enum {
     ERR_EXPECTED_FN_OR_MT,
     ERR_EXPECTED_ASSIGNMENT,
     ERR_INVALID_PATTERN,
+    ERR_MUT_QUALIFIER_ON_NON_MT,
     ERR__COUNT
 } error_code_e;
 

@@ -50,7 +50,7 @@
 - [x] `import "foo.br" -> <mod_name>`
 - [x] `extern C {...}`
 - [x] `deftype foo = Foo..Bar<i32>`
-- [ ] hanlde `mut` keyword in method decls
+- [x] hanlde `mut` keyword in method decls
 - [ ] handle ... in parameters (function and generic params) for variadic parameters
 - [ ] write up full parser documentation
 

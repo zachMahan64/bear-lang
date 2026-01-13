@@ -40,7 +40,8 @@ const char* error_message_for_code(error_code_e error_code) {
            [ERR_EXPECTED_FN_OR_MT] = "expected function declaration keyword 'fn' or 'mt'",
            [ERR_EXPECTED_ASSIGNMENT] = "expected assignment operator '=' or '<-'",
            [ERR_INVALID_PATTERN]
-           = "invalid patern; expected identifier, literal, or variant decomposition"};
+           = "invalid patern; expected identifier, literal, or variant decomposition",
+           [ERR_MUT_QUALIFIER_ON_NON_MT] = "'mut' qualifier can only be used on 'mt' methods"};
     return error_messages[error_code];
 }
 

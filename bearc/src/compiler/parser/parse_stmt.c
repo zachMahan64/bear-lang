@@ -261,6 +261,16 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
 
     parser_shed_visibility_qualis_with_error(p);
 
+    token_t* mut = parser_match_token(p, TOK_MUT);
+
+    if (mut && decl->stmt.fn_decl.kw->type != TOK_MT) {
+        compiler_error_list_emplace(p->error_list, mut, ERR_MUT_QUALIFIER_ON_NON_MT);
+    }
+
+    decl->stmt.fn_decl.is_mut = mut; // token ptr into bool
+
+    parser_shed_visibility_qualis_with_error(p);
+
     decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
     decl->stmt.fn_decl.is_generic = false;
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine
@@ -880,6 +890,14 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
 
     token_t* kw = parser_expect_token_call(p, &token_is_mt_or_fn, ERR_EXPECTED_FN_OR_MT);
     decl->stmt.fn_prototype.kw = kw;
+
+    token_t* mut = parser_match_token(p, TOK_MUT);
+
+    if (mut && decl->stmt.fn_decl.kw->type != TOK_MT) {
+        compiler_error_list_emplace(p->error_list, mut, ERR_MUT_QUALIFIER_ON_NON_MT);
+    }
+
+    decl->stmt.fn_decl.is_mut = mut; // token ptr into bool
 
     parser_shed_visibility_qualis_with_error(p);
 

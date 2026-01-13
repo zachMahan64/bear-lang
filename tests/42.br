@@ -1,0 +1,18 @@
+fn main() -> i32 {
+    return 0;
+}
+
+struct Foo {
+    i32 num;
+    mt mut set_num(i32 num) {
+        self.num = num;
+    }
+    fn mut oops() {
+        println("oops");
+    }
+}
+
+contract Thing {
+    mt mut modify();
+    mt control(Foo& foo);
+}

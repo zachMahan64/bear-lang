@@ -596,6 +596,9 @@ void print_stmt(ast_stmt_t* stmt) {
         ast_stmt_fn_decl_t fn = stmt->stmt.fn_decl;
         print_op(fn.kw);
         printer_do_indent();
+        if (fn.is_mut) {
+            print_mut();
+        }
         print_indent();
         printf("%s`%s", ansi_bold_green(), ansi_reset());
         token_ptr_slice_t ids = fn.name;
@@ -768,9 +771,12 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_FN_PROTOTYPE: {
         print_title("function prototype");
-        ast_stmt_fn_prototype_t fd = stmt->stmt.fn_prototype;
+        ast_stmt_fn_decl_t fd = stmt->stmt.fn_prototype;
         print_op(fd.kw);
         printer_do_indent();
+        if (fd.is_mut) {
+            print_mut();
+        }
         print_indent();
         print_id_slice(fd.name);
         printf(",\n");

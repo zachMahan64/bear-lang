@@ -20,7 +20,7 @@ int main(void) {
     vector_t results = vector_create_and_reserve(sizeof(br_test_result_t), 8);
     *((br_test_result_t*)vector_emplace_back(&results)) = test_parser();
     printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
-    printf(" |%s         test results      %s|\n", ansi_bold_blue(), ansi_bold_white());
+    printf(" |%s        test results       %s|\n", ansi_bold_blue(), ansi_bold_white());
     printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
     for (size_t i = 0; i < results.size; i++) {
         br_test_result_t* res = (br_test_result_t*)vector_at(&results, i);
@@ -107,6 +107,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("39", 0);
     ASSERT_EQ_ERR("40", 3);
     ASSERT_EQ_ERR("41", 0);
+    ASSERT_EQ_ERR("42", 1);
     return TEST_RESULT;
 }
 
