@@ -48,7 +48,7 @@ int br_launch_cli(int argc, char** argv) {
     }
     if (strlen(args.file_name) != 0 && !file_exists(args.file_name)) {
         printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
-               ansi_bold(), ansi_reset(), args.file_name);
+               ansi_bold(), args.file_name, ansi_reset());
         return -1;
     }
     if (args.flag == HELP) {

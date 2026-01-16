@@ -63,7 +63,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
         if (token_is_builtin_type_or_id(first_type)) {
             lhs = parse_id(p);
             // try struct init in form Foo{.thing = 1, .bar = 2}
-            if (parser_peek_match(p, TOK_LBRACE)) {
+            if (parser_peek_match(p, TOK_LBRACE) && parser_mode(p) != PARSER_MODE_BAN_STRUCT_INIT) {
                 lhs = parse_expr_struct_init(p, lhs);
             }
         } else if (token_is_literal(first_type)) {
@@ -583,4 +583,13 @@ ast_expr_t* parse_expr_list_literal(parser_t* p) {
     cl->first = first;
     cl->last = parser_prev(p);
     return cl;
+}
+
+// TODO impl in ctrl flow
+ast_expr_t* parse_expr_before_opening_brace(parser_t* p) {
+    parser_mode_e saved = parser_mode(p);
+    parser_mode_set(p, PARSER_MODE_BAN_STRUCT_INIT);
+    ast_expr_t* expr = parse_expr(p);
+    parser_mode_set(p, saved);
+    return expr;
 }

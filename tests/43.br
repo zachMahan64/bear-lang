@@ -1,0 +1,9 @@
+fn main() {
+    do_work();
+}
+
+fn foo(i32... nums) {
+    for var x in nums {
+        bar(x);
+    }
+}
