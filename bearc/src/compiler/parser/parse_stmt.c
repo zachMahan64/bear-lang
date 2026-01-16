@@ -790,19 +790,13 @@ ast_type_with_contracts_t* parse_id_with_contracts(parser_t* p) {
     } else {
         t->valid = true;
         t->id = id;
-        spill_arr_ptr_t ids;
-        spill_arr_ptr_init(&ids);
         // optionally match has, then if there is, expect the has(id, id, id) structure
-        if (parser_match_token(p, TOK_HAS)) {
-            parser_expect_token(p, TOK_LPAREN);
-            if (!parser_peek_match(p, TOK_RPAREN)) {
-                do {
-                    *((ast_expr_t**)spill_arr_ptr_emplace(&ids)) = parse_id(p);
-                } while (parser_match_token(p, TOK_COMMA));
-            }
-            parser_expect_token(p, TOK_RPAREN);
+        if (parser_peek_match(p, TOK_HAS)) {
+            t->contract_ids = parse_has_contracts_clause(p);
+        } else {
+            ast_slice_of_exprs_t ids = {.start = NULL, .len = 0};
+            t->contract_ids = ids;
         }
-        t->contract_ids = parser_freeze_expr_spill_arr(p, &ids);
     }
     return t;
 }
@@ -866,7 +860,7 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
     if (!struct_tkn) {
         return parser_sync_stmt(p);
     }
-    struct_stmt->stmt.struct_decl.name_with_contracts = parse_id_with_contracts(p);
+    struct_stmt->stmt.struct_decl.name = parser_expect_token(p, TOK_IDENTIFIER);
     struct_stmt->stmt.struct_decl.is_generic = false;
     if (parser_match_token(p, TOK_LT)
         || (parser_match_token(p, TOK_GENERIC_SEP) && parser_match_token(p, TOK_LT))) {
@@ -874,6 +868,15 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
         struct_stmt->stmt.struct_decl.generic_params = parse_generic_params(p);
         parser_expect_token(p, TOK_GT);
     }
+
+    // check for contracts clause
+    if (parser_peek_match(p, TOK_HAS)) {
+        struct_stmt->stmt.struct_decl.contracts = parse_has_contracts_clause(p);
+    } else {
+        struct_stmt->stmt.struct_decl.contracts.start = NULL;
+        struct_stmt->stmt.struct_decl.contracts.len = 0;
+    }
+
     parser_expect_token(p, TOK_LBRACE);
     struct_stmt->stmt.struct_decl.fields = parse_slice_of_decls(p, TOK_RBRACE);
     parser_expect_token(p, TOK_RBRACE);

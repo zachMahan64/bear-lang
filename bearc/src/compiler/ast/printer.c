@@ -291,6 +291,19 @@ static void print_id_slice_title(token_ptr_slice_t id, const char* title) {
     printer_deindent();
 }
 
+static void print_any_has_contracts_clause(ast_slice_of_exprs_t s) {
+    if (s.len != 0) {
+        printer_do_indent();
+        print_op_from_type(TOK_HAS);
+        printer_deindent();
+        print_opening_delim_from_type(TOK_LPAREN);
+        for (size_t i = 0; i < s.len; i++) {
+            print_expr(s.start[i]);
+        }
+        print_closing_delim_from_type(TOK_RPAREN);
+    }
+}
+
 static void print_id_with_contracts(ast_type_with_contracts_t* t) {
     print_indent();
     if (!t->valid) {
@@ -299,16 +312,7 @@ static void print_id_with_contracts(ast_type_with_contracts_t* t) {
     }
     print_title("type-name");
     print_var_name(t->id);
-    if (t->contract_ids.len != 0) {
-        printer_do_indent();
-        print_op_from_type(TOK_HAS);
-        printer_deindent();
-        print_opening_delim_from_type(TOK_LPAREN);
-        for (size_t i = 0; i < t->contract_ids.len; i++) {
-            print_expr(t->contract_ids.start[i]);
-        }
-        print_closing_delim_from_type(TOK_RPAREN);
-    }
+    print_any_has_contracts_clause(t->contract_ids);
     print_closing_green_brace_newline();
 }
 
@@ -719,15 +723,18 @@ void print_stmt(ast_stmt_t* stmt) {
         }
         print_delineator_from_type(TOK_SEMICOLON);
         break;
-    case AST_STMT_STRUCT_DEF:
+    case AST_STMT_STRUCT_DEF: {
         print_title("struct declaration");
         ast_stmt_struct_decl_t st = stmt->stmt.struct_decl;
         print_delineator_from_type(TOK_STRUCT);
+        print_var_name(st.name);
         printer_do_indent();
-        print_id_with_contracts(st.name_with_contracts);
         if (st.is_generic) {
             print_generic_params(st.generic_params);
         }
+        printer_deindent();
+        print_any_has_contracts_clause(st.contracts);
+        printer_do_indent();
         print_indent();
         printf("fields: %s{%s\n", ansi_bold_green(), ansi_reset());
         printer_do_indent();
@@ -739,6 +746,7 @@ void print_stmt(ast_stmt_t* stmt) {
         puts(",");
         printer_deindent();
         break;
+    }
     case AST_STMT_INVALID:
         printf("%sinvalid statement%s {\n%s", ansi_bold_red(), ansi_bold_green(), ansi_reset());
         break;

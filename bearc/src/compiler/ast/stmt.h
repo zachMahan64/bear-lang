@@ -222,8 +222,10 @@ typedef struct {
 } ast_stmt_return_t;
 
 typedef struct {
-    ast_type_with_contracts_t* name_with_contracts;
+    token_t* name;
     ast_slice_of_generic_params_t generic_params;
+    /// contracts.len == 0 indicates no contracts
+    ast_slice_of_exprs_t contracts;
     ast_slice_of_stmts_t fields;
     bool is_generic;
 } ast_stmt_struct_decl_t;
