@@ -14,3 +14,7 @@ has(Bar, Copy)
         return copy;
     }
 }
+
+struct Bar has(Copy) {
+    // ...
+}
