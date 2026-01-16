@@ -108,6 +108,8 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("40", 3);
     ASSERT_EQ_ERR("41", 0);
     ASSERT_EQ_ERR("42", 1);
+    ASSERT_EQ_ERR("43", 0);
+
     return TEST_RESULT;
 }
 

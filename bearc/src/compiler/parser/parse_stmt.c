@@ -575,7 +575,7 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
     if (!if_tkn) {
         return parser_sync_stmt(p);
     }
-    ast_expr_t* cond_expr = parse_expr(p);
+    ast_expr_t* cond_expr = parse_expr_before_opening_brace(p);
     if_stmt->stmt.if_stmt.condition = cond_expr;
     // make sure a block will succeed the conditional expression
     parser_guard_against_trailing_rparens(p);
@@ -618,7 +618,7 @@ ast_stmt_t* parse_stmt_while(parser_t* p) {
     if (!while_tkn) {
         return parser_sync_stmt(p);
     }
-    ast_expr_t* cond_expr = parse_expr(p);
+    ast_expr_t* cond_expr = parse_expr_before_opening_brace(p);
     while_stmt->stmt.while_stmt.condition = cond_expr;
     parser_guard_against_trailing_rparens(p);
     // make sure a block will succeed the conditional expression
@@ -711,7 +711,7 @@ ast_stmt_t* parse_stmt_for_in(parser_t* p) {
     for_stmt->type = AST_STMT_FOR_IN;
     ast_param_t* param = parse_param(p);
     parser_expect_token(p, TOK_IN);
-    ast_expr_t* iter = parse_expr(p);
+    ast_expr_t* iter = parse_expr_before_opening_brace(p);
     for_stmt->stmt.for_in_stmt.each = param;
     for_stmt->stmt.for_in_stmt.iterator = iter;
 

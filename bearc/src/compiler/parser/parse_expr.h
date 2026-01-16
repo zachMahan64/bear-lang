@@ -75,6 +75,12 @@ ast_expr_t* parse_expr_closure(parser_t* p);
 
 ast_expr_t* parse_expr_list_literal(parser_t* p);
 
+/**
+ * parses an expression before an opering brace in the form:
+ * - `... <expr> { ...`
+ * - used for the last expressions in the condtions of while & if statements & also after the
+ * iterable expr in for-in statements
+ */
 ast_expr_t* parse_expr_before_opening_brace(parser_t* p);
 
 #endif

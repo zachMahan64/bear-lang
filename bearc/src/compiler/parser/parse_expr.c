@@ -585,7 +585,6 @@ ast_expr_t* parse_expr_list_literal(parser_t* p) {
     return cl;
 }
 
-// TODO impl in ctrl flow
 ast_expr_t* parse_expr_before_opening_brace(parser_t* p) {
     parser_mode_e saved = parser_mode(p);
     parser_mode_set(p, PARSER_MODE_BAN_STRUCT_INIT);

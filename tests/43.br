@@ -1,9 +1,31 @@
 fn main() {
     do_work();
+    foo1(5, 6, 1, 2);
+    foo2();
 }
+
+i32 magic = magic();
 
 fn foo(i32... nums) {
     for var x in nums {
         bar(x);
+    }
+    if magic {
+        do_something();
+    }
+    while magic {
+        do_work();
+    }
+}
+
+contract Format {
+    mt format() -> String;
+}
+
+fn print_example(str& format_string, Format&... formats) {
+    String string;
+    usize idx;
+    for var fmt in formats {
+        append_based_on_format(string, idx, fmt);
     }
 }
