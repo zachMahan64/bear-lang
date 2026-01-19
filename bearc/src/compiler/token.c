@@ -81,14 +81,6 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "fn", TOK_FN);
     strimap_insert(&string_to_token_map, "mt", TOK_MT);
     strimap_insert(&string_to_token_map, "dt", TOK_DT);
-    strimap_insert(&string_to_token_map, "cout", TOK_COUT);
-    strimap_insert(&string_to_token_map, "cin", TOK_CIN);
-
-    strimap_insert(&string_to_token_map, "box", TOK_BOX);
-    strimap_insert(&string_to_token_map, "bag", TOK_BAG);
-
-    strimap_insert(&string_to_token_map, "opt", TOK_OPT);
-    strimap_insert(&string_to_token_map, "res", TOK_RES);
 
     strimap_insert(&string_to_token_map, "mut", TOK_MUT);
     strimap_insert(&string_to_token_map, "mark", TOK_MARK);
@@ -250,14 +242,6 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_FN] = "fn",
     [TOK_MT] = "mt",
     [TOK_DT] = "dt",
-    [TOK_COUT] = "cout",
-    [TOK_CIN] = "cin",
-
-    [TOK_BOX] = "box",
-    [TOK_BAG] = "bag",
-
-    [TOK_OPT] = "opt",
-    [TOK_RES] = "res",
 
     [TOK_MUT] = "mut",
     [TOK_MARK] = "mark",

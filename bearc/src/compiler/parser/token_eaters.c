@@ -205,16 +205,11 @@ static const bool parser_builtin_type_map[TOK__NUM]
        [TOK_BOOL] = true,     [TOK_STR] = true,   [TOK_VAR] = true, [TOK_VOID] = true,
        [TOK_SELF_TYPE] = true};
 
-static const bool parser_builtin_type_mod_map[TOK__NUM]
-    = {[TOK_BOX] = true, [TOK_BAG] = true, [TOK_OPT] = true, [TOK_RES] = true};
-
 // match helpers
 bool token_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
 bool token_is_builtin_type_or_id(token_type_e t) {
-    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER || t == TOK_SELF_ID
-           || parser_builtin_type_mod_map[t];
+    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER || t == TOK_SELF_ID;
 }
-bool token_is_builtin_type_mod(token_type_e t) { return parser_builtin_type_mod_map[t]; }
 
 bool token_is_literal(token_type_e t) {
     return t == TOK_BOOL_LIT_TRUE || t == TOK_BOOL_LIT_FALSE || t == TOK_INT_LIT

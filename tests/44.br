@@ -1,0 +1,3 @@
+fn main([&]str args) -> i32 {
+
+}

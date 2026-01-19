@@ -72,15 +72,6 @@ typedef enum token_type {
     TOK_FN,
     TOK_MT, // method, for implicit this ptr for data-associated behavior in structs
     TOK_DT, // dtor
-    // stdio
-    TOK_COUT, // example: cout <<- "Hello World";
-    TOK_CIN,  // example: str myString <<- cin; // distinct from C++ which does std::cin >>
-              // some_val;
-    // built-in constructs
-    TOK_OPT, // example: opt::i32
-    TOK_RES, // example: res::u64
-    TOK_BOX, // example: box::i32
-    TOK_BAG, // example: bag::i32
     // integers
     TOK_I8,
     TOK_U8,
