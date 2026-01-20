@@ -11,6 +11,7 @@
 - Floating points: `f32, f64`
 - Primitive strings: `str`
 - Booleans: `bool`
+- *TODO, finish*
 
 #### Expressions
 - Identifier: \[contains `A`-`Z`, `a`-`z`, `0`-`9`, and `_`; cannot begin with `0`-`9`] 
@@ -27,6 +28,19 @@
 - Preunary: `--` | `++` Expression
 - SizeOf: `sizeof` `(` Type `)`
 - AlignOf: `alignof` `(` Type `)`
+- TypeOf: `typeof` Expression
+- Postunary: *TODO, write this out*
+- Subscript: Expression `[` Expression `]`
+- Grouping: `(` Expression `)`
+- FunctionCall: Expression `(` Argument(s) `)`
+    - Arguments: Expression `,` Expression `,` ...
+- Borrow: `&` `mut`? Expression
+- Dereference: `*` Expression
+- StructInitialization: Identifier `{` StructFieldInitialization(s) `}`
+    - StructFieldInitialization: `.` Identifier `=` | `<-` Expression 
+- Closure: `move`? `|` Parameter(s) `|` `{` BodyStatement(s) `}`
+- VariantDecomposition: Identifier `(` Parameter(s) `)`
+- *TODO, finish*
 
 #### Statements
 - *File*: TopLevelStatement(s)
@@ -36,6 +50,7 @@
 - *ModuleDeclaration*: `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
 - ImportStatement: `import` ExternalLanguage? -> PathLiteral -> \[`->` -> ModuleIdentifier]? -> `;` 
 - *FunctionDeclaration*: `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
+- GenericParams: `<` Identifier -> HasClause? `,` ... `>` 
 - *StructDeclaration*: `struct` Identifier -> GenericParams? -> HasClause? -> `{` TopLevelStatement(s) | MethodDeclaration(s) | DestructorDeclaration(s) `}` 
     - *MethodDeclaration*: `mt` `mut`? Identifier -> GenericParams? -> `(` -> Parameter(s) -> `)` -> `;` | `{` BodyStatement(s) `}`
     - *DestructorDeclaration*: `dt` `self` GenericParams? -> `(` -> Parameters -> `)` -> `;` | `{` BodyStatement(s) `}`
