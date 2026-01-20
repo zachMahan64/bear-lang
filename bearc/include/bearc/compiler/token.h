@@ -108,6 +108,7 @@ typedef enum token_type {
     // more operators
     TOK_SIZEOF,
     TOK_ALIGNOF,
+    TOK_TYPEOF,
     TOK_MOVE,
     TOK_AS,
     TOK_IS, // for variant decomp

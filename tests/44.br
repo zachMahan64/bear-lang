@@ -1,3 +1,10 @@
 fn main([&]str args) -> i32 {
+    typeof(thing);
+}
 
+struct Foo {
+    Vec<Foo>& tally;
+    dt self() {
+        tally.remove(self);
+    }
 }
