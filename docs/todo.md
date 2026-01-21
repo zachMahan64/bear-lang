@@ -52,8 +52,8 @@
 - [x] `deftype foo = Foo..Bar<i32>`
 - [x] hanlde `mut` keyword in method decls
 - [x] handle ... in parameters (function params) for variadic parameters -> handled in types
-- [ ] fix `typeof` impl by using proper type expressions within `deftype` declarations
 - [x] reorder has(foo, bar) to be after generic params in struct decls
+- [x] fix `typeof` impl by using proper type expressions within `deftype` declarations
 - [ ] write up full parser documentation
 
 #### Medium-term
