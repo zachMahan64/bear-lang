@@ -54,7 +54,8 @@
 - [x] handle ... in parameters (function params) for variadic parameters -> handled in types
 - [x] reorder has(foo, bar) to be after generic params in struct decls
 - [x] fix `typeof` impl by using proper type expressions within `deftype` declarations
-- [ ] write up full parser documentation
+- [ ] finish up parser grammar documentation
+- [ ] overhaul CLI using a strimap_t, add support for options (flags with -- variants only for now)
 
 #### Medium-term
 - [ ] finish Crafting Interpreters
@@ -62,4 +63,3 @@
 - [ ] HIR
 - [ ] MIR 
 - [ ] LLVM IR
-- [ ] revamp CLI to be much more robust using the strimap_t and vector_t containers and set up a proper flag system
