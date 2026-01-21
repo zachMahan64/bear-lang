@@ -53,7 +53,7 @@ typedef enum {
     AST_EXPR_SWITCH_BRANCH,
     AST_EXPR_SWITCH,
     /// has no associated type in the ast_expr_u union
-    AST_EXPR_DEFAULT,
+    AST_EXPR_ELSE_SWITCH_BRANCH,
 
     // error
     AST_EXPR_INVALID,

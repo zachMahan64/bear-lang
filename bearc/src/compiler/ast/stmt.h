@@ -272,7 +272,8 @@ typedef struct {
 
 typedef struct {
     token_t* alias_id;
-    ast_type_t* aliased_type;
+    /// of type AST_EXPR_TYPE or AST_UNARY where token_t* op = typeof
+    ast_expr_t* aliased_type_expr;
 } ast_stmt_deftype_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

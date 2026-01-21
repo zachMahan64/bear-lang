@@ -11,7 +11,7 @@ fn main() -> i32 {
             yield b + c; 
         },
         7...=2048 => 2048,
-        default => 0,
+        else => 0,
     };
     return x;
 }

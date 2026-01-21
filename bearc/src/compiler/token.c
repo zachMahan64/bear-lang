@@ -128,7 +128,6 @@ static void string_to_token_map_init(void) {
     strimap_insert(&string_to_token_map, "yield", TOK_YIELD);
     strimap_insert(&string_to_token_map, "break", TOK_BREAK);
     strimap_insert(&string_to_token_map, "switch", TOK_SWITCH);
-    strimap_insert(&string_to_token_map, "default", TOK_DEFAULT);
 
     // more operators
     strimap_insert(&string_to_token_map, "sizeof", TOK_SIZEOF);
@@ -287,7 +286,6 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_YIELD] = "yield",
     [TOK_BREAK] = "break",
     [TOK_SWITCH] = "switch",
-    [TOK_DEFAULT] = "default",
 
     // more operators
     [TOK_SIZEOF] = "sizeof",

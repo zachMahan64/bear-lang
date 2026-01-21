@@ -522,8 +522,8 @@ void print_expr(ast_expr_t* expression) {
         print_closing_green_brace();
         break;
     }
-    case AST_EXPR_DEFAULT:
-        printf("%s%s%s", ansi_bold_blue(), token_to_string_map()[TOK_DEFAULT], ansi_reset());
+    case AST_EXPR_ELSE_SWITCH_BRANCH:
+        printf("%s%s%s", ansi_bold_blue(), token_to_string_map()[TOK_ELSE], ansi_reset());
         break;
     case AST_EXPR_CLOSURE: {
         print_title("closure");
@@ -909,7 +909,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_op_from_type(TOK_ASSIGN_EQ);
         printer_deindent();
-        print_type(stmt->stmt.deftype.aliased_type);
+        print_expr(stmt->stmt.deftype.aliased_type_expr);
         break;
     case AST_STMT_EXTERN_BLOCK: {
         print_title("extern block");

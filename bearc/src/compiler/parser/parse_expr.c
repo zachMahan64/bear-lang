@@ -448,13 +448,13 @@ ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_sli
 }
 
 ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
-    token_t* dflt = parser_match_token(p, TOK_DEFAULT);
-    if (dflt) {
+    token_t* el = parser_match_token(p, TOK_ELSE);
+    if (el) {
         ast_expr_t* default_expr = parser_alloc_expr(p);
         // nothing to set in the expr union here
-        default_expr->type = AST_EXPR_DEFAULT;
-        default_expr->first = dflt;
-        default_expr->last = dflt;
+        default_expr->type = AST_EXPR_ELSE_SWITCH_BRANCH;
+        default_expr->first = el;
+        default_expr->last = el;
         return default_expr;
     }
     // handle identifier or variant decomp

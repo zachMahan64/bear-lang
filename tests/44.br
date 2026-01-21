@@ -1,9 +1,16 @@
 fn main([&]str args) -> i32 {
     typeof(thing);
+    deftype Thing = Foo;
+    Thing a; 
+    deftype ThingAgain = typeof(a);
 }
 
 struct Foo {
-    Vec<Foo>& tally;
+    Rc::Vec<Foo> tally;
+    fn default() {
+        Rc::Vec<Foo> tally = Rc..from(Vec..new());
+        return Self{.tally <- tally};
+    }
     dt self() {
         tally.remove(self);
     }

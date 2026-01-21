@@ -144,6 +144,10 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_use(p);
     }
 
+    if (next_type == TOK_DEFTYPE) {
+        return parse_stmt_deftype(p);
+    }
+
     // vis modifers are illegal on plain statements
     if (token_is_visibility_modifier(next_type)) {
         parser_shed_visibility_qualis_with_error(p);
@@ -1099,8 +1103,12 @@ ast_stmt_t* parse_stmt_deftype(parser_t* p) {
     if (!eq) {
         return parser_sync_stmt(p);
     }
-    // only parse fn declarations in extern blocks
-    s->stmt.deftype.aliased_type = parse_type(p);
+    // either a type expression or typeof(expr)
+    if (parser_peek_match(p, TOK_TYPEOF)) {
+        s->stmt.deftype.aliased_type_expr = parse_expr(p);
+    } else {
+        s->stmt.deftype.aliased_type_expr = parse_expr_type(p);
+    }
     parser_expect_token(p, TOK_SEMICOLON);
     s->first = first;
     s->last = parser_prev(p);
