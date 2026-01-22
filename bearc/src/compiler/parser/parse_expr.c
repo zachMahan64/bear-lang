@@ -191,11 +191,6 @@ ast_expr_t* parse_id(parser_t* p) {
 }
 
 ast_expr_t* parse_expr_from_id_slice(parser_t* p, token_ptr_slice_t id_slice) {
-    // consider this, but parser may be overstepping boundaries here
-    // if (token_is_builtin_type(id_slice.start[0]->type) && id_slice.len > 0) {
-    //    compiler_error_list_emplace(p->error_list, id_slice.start[0], ERR_EXPECTED_EXPRESSION);
-    //    return parser_sync_expr(p);
-    //}
     ast_expr_t* id_expr = parser_alloc_expr(p);
     id_expr->expr.id.slice = id_slice;
     id_expr->type = AST_EXPR_ID;

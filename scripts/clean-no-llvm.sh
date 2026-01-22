@@ -10,5 +10,5 @@ case "$config" in
 esac
 
 rm -rf build
-cmake -DCMAKE_BUILD_TYPE="$config" -B build
+cmake -DCMAKE_BUILD_TYPE="$config" -DNO_LLVM=ON -B build
 cmake --build build -j"$(nproc)"
