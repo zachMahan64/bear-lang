@@ -93,7 +93,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
         return parse_subscript(p, lhs);
     }
     // try ++x, etc.
-    if (is_preunary_op(first_type)) {
+    if (!lhs && is_preunary_op(first_type)) {
         return parse_expr_prec(p, NULL, PREC_INIT);
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

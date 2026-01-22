@@ -22,7 +22,8 @@ const cli_flag_e short_flag_map[256] = {['h'] = CLI_FLAG_HELP, ['v'] = CLI_FLAG_
 cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
                                                {"version", CLI_FLAG_VERSION},
                                                {"pretty-print", CLI_FLAG_PRETTY_PRINT},
-                                               {"token-table", CLI_FLAG_TOKEN_TABLE}};
+                                               {"token-table", CLI_FLAG_TOKEN_TABLE},
+                                               {"silent", CLI_FLAG_SILENT}};
 
 static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
     if (args->flags[flag]) {

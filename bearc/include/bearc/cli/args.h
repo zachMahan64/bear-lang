@@ -22,6 +22,7 @@ typedef enum {
     CLI_FLAG_VERSION,
     CLI_FLAG_TOKEN_TABLE,
     CLI_FLAG_PRETTY_PRINT,
+    CLI_FLAG_SILENT,
     CLI_FLAG__NUM,
 } cli_flag_e;
 

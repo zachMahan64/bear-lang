@@ -1,4 +1,5 @@
 fn main([&]str args) -> i32 {
+    oopsie
     typeof(thing);
     deftype Thing = Foo;
     Thing a; 

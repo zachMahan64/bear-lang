@@ -64,12 +64,15 @@ int compile_file(const bearc_args_t* args) {
     // ----------------------------------------------------
 
     // display all comptime errors
-    compiler_error_list_print_all(&error_list);
-
-    if (compiler_error_list_empty(&error_list)) {
-        printf("successfully compiled: %s'%s'\n%s", ansi_bold_white(), file_name, ansi_reset());
-    } else {
-        printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(), file_name, ansi_reset());
+    bool silent = args->flags[CLI_FLAG_SILENT];
+    if (!silent) {
+        compiler_error_list_print_all(&error_list);
+    }
+    if (!compiler_error_list_empty(&error_list)) {
+        if (!silent) {
+            printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(), file_name,
+                   ansi_reset());
+        }
         code = (int)compiler_error_list_count(&error_list);
     }
 

@@ -21,6 +21,8 @@ static bearc_args_t args;
 
 int main(int argc, char** argv) {
 
+    ansi_init();
+
     args = parse_cli_args(argc, argv);
 
     br_test_result_t total = test_total_init();
@@ -53,10 +55,11 @@ int main(int argc, char** argv) {
     if (true_cnt == (err_cnt)) {                                                                   \
         br_test_result.cnt_success++;                                                              \
     } else {                                                                                       \
-        printf("\n%sTEST FAILED %s('"                                                              \
+        printf("%s [!] %sTEST FAILED %s('"                                                         \
                "tests/" file_name ".br"                                                            \
                "'): expected %d errors, got %d %s\n\n",                                            \
-               ansi_bold_red(), ansi_bold_white(), err_cnt, true_cnt, ansi_reset());               \
+               ansi_bold_white(), ansi_bold_red(), ansi_bold_white(), err_cnt, true_cnt,           \
+               ansi_reset());                                                                      \
     }                                                                                              \
     br_test_result.cnt_total++;
 #define ASSERT_GTE_ERR(file_name, err_cnt)                                                         \
@@ -117,7 +120,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("41", 0);
     ASSERT_EQ_ERR("42", 1);
     ASSERT_EQ_ERR("43", 0);
-    ASSERT_EQ_ERR("44", 0);
+    ASSERT_EQ_ERR("44", 1);
 
     return TEST_RESULT;
 }
