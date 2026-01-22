@@ -16,8 +16,8 @@
 ./scripts/clean-all.sh [Release|Debug] # builds bearc; defaults to Debug with no args
 ./scripts/build-tests.sh               # build and run tests
                                        # additionally, there are non-LLVM-dependent options available,
-                                       # which are recommended until the compiler is truly no longer 
-                                       # in a front-end only state
+./scripts/clean-no-llvm.sh             # which are recommended until the compiler is truly no longer 
+./scripts/build-tests-no-llvm.sh       # in a front-end only state
 ```
 #### Run 
 ```
