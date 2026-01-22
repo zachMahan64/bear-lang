@@ -1,4 +1,4 @@
-// switch expr test
+// match expr test
 fn main() -> i32 {
     i32 a = std..random_i32();
     i32 x = match (a) {
