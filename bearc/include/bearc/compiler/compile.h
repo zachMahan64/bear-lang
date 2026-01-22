@@ -8,12 +8,13 @@
 
 #ifndef COMPILE_H
 #define COMPILE_H
+#include "cli/args.h"
 
 /**
  * compiles a source file given the file name
  *
  * returns the count of compiler errors
  */
-int compile_file(const char* file_name);
+int compile_file(const bearc_args_t* args);
 
 #endif // !COMPILE_H

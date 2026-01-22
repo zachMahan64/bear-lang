@@ -7,41 +7,61 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "cli/args.h"
+#include "stddef.h"
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-// LONG FLAG NAME MAP
-cli_flag_long_mapping_t cli_flag_long_map[CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES] = {
-    {"help", HELP}, {"version", VERSION}};
+bool is_valid_cli_flag_long(const char* flag);
+cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag);
 
-cli_args_t parse_cli_args(int argc, char** argv) {
-    cli_args_t args = {NO_FLAG, ""}; // WIP
-    if (argc > 3) {
-        args.flag = ERROR;
-        return args;
+const cli_flag_e short_flag_map[256] = {['h'] = CLI_FLAG_HELP, ['v'] = CLI_FLAG_VERSION};
+
+// LONG FLAG NAME MAP
+cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
+                                               {"version", CLI_FLAG_VERSION},
+                                               {"pretty-print", CLI_FLAG_PRETTY_PRINT},
+                                               {"token-table", CLI_FLAG_TOKEN_TABLE}};
+
+static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
+    if (args->flags[flag]) {
+        args->flags[CLI_FLAG_DUPLICATE] = true;
+        return true;
     }
+    return false;
+}
+
+bearc_args_t parse_cli_args(int argc, char** argv) {
+    bearc_args_t args = {.flags = {0}, .input_file_name = ""}; // WIP
     for (int i = 1; i < argc; ++i) {
         // attempt to extract the char from a -<something> flag
-        if (strlen(argv[i]) == 2 && argv[i][0] == '-' && is_valid_cli_flag_short(argv[i][1])) {
-            args.flag = (cli_flag_e)argv[i][1];
+        if (strlen(argv[i]) == 2 && argv[i][0] == '-'
+            && short_flag_map[(unsigned char)argv[i][1]]) {
+            cli_flag_e flag = short_flag_map[(unsigned char)argv[i][1]];
+            if (check_duplicate(&args, flag)) {
+                return args;
+            }
+            args.flags[flag] = true;
         }
         // extract from a --<something> flag
         else if (is_valid_cli_flag_long(argv[i])) {
-            args.flag = search_cli_long_flags_for_valid_flag(argv[i]);
+            cli_flag_e flag = search_cli_long_flags_for_valid_flag(argv[i]);
+            if (check_duplicate(&args, flag)) {
+                return args;
+            }
+            args.flags[flag] = true;
         } else {
             if (strlen(argv[i]) >= 2 && argv[i][0] == '-') {
-                args.flag = ERROR; // invalid flag
+                args.flags[CLI_FLAG_UNKNOWN] = true; // invalid flag
             } else {
                 // try to interpret as filename, deal with faulty filenames later
-                strcpy(args.file_name, argv[i]);
+                strcpy(args.input_file_name, argv[i]);
             }
         }
     }
     return args;
 }
-
-bool is_valid_cli_flag_short(const char flag) { return (flag == 'h' || flag == 'v'); }
 
 bool is_valid_cli_flag_long(const char* flag) {
     size_t FLAG_PREFIX_LENGTH = 2;
@@ -59,7 +79,7 @@ bool is_valid_cli_flag_long(const char* flag) {
         return false; // would overflow buffer if copied
     }
 
-    for (int i = 0; i < CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES; i++) {
+    for (size_t i = 0; i < (sizeof cli_flag_long_map / sizeof cli_flag_long_map[0]); i++) {
         if (strcmp(cli_flag_long_map[i].name, flag_long_name) == 0) {
             return true;
         }
@@ -67,12 +87,13 @@ bool is_valid_cli_flag_long(const char* flag) {
     return false;
 }
 
+// linear lookup, which is fast until that option list gets real long
 cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag) {
     size_t FLAG_PREFIX_LENGTH = 2;
-    for (int i = 0; i < CLI_ARGS_NUM_VALID_LONG_FLAG_NAMES; i++) {
+    for (size_t i = 0; i < (sizeof cli_flag_long_map / sizeof cli_flag_long_map[0]); i++) {
         if (strcmp(cli_flag_long_map[i].name, (flag + FLAG_PREFIX_LENGTH)) == 0) {
             return cli_flag_long_map[i].flag;
         }
     }
-    return ERROR;
+    return CLI_FLAG_UNKNOWN;
 }

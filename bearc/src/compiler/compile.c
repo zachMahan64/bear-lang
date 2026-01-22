@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/compile.h"
+#include "cli/args.h"
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/debug.h"
@@ -21,9 +22,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
-int compile_file(const char* file_name) {
+int compile_file(const bearc_args_t* args) {
     int code = 0; // return error code if hit error
 
+    const char* file_name = args->input_file_name;
     src_buffer_t src_buffer = src_buffer_from_file_create(file_name);
 
     if (!src_buffer.data) {
@@ -39,11 +41,10 @@ int compile_file(const char* file_name) {
     if (vector_size(&tkn_vec) == 1) {
         goto empty_file_clean_up;
     }
-
-#ifdef DEBUG_BUILD
-    print_out_src_buffer(&src_buffer);
-    print_out_tkn_table(&tkn_vec);
-#endif
+    if (args->flags[CLI_FLAG_TOKEN_TABLE]) {
+        print_out_src_buffer(&src_buffer);
+        print_out_tkn_table(&tkn_vec);
+    }
 
     // ----------------------------------------------------
 
@@ -57,9 +58,9 @@ int compile_file(const char* file_name) {
     parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
     ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);
 
-#ifdef DEBUG_BUILD
-    print_stmt(file_stmt);
-#endif
+    if (args->flags[CLI_FLAG_PRETTY_PRINT]) {
+        pretty_print_stmt(file_stmt);
+    }
     // ----------------------------------------------------
 
     // display all comptime errors

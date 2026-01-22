@@ -23,7 +23,7 @@ static void printer_try_init(void) {
     }
 }
 
-void printer_reset(void) {
+void pretty_printer_reset(void) {
     initialized = false;
     string_destroy(&indent_str);
 }
@@ -118,7 +118,7 @@ static void print_generic_type_arg(ast_generic_arg_t* arg) {
         if (arg->tag == AST_GENERIC_ARG_TYPE) {
             print_type(arg->arg.type);
         } else if (arg->tag == AST_GENERIC_ARG_EXPR) {
-            print_expr(arg->arg.expr);
+            pretty_print_expr(arg->arg.expr);
         }
     } else {
         printer_do_indent();
@@ -183,7 +183,7 @@ static void print_type(ast_type_t* type) {
     case AST_TYPE_ARR:
         print_title("array type");
         print_opening_delim_from_type(TOK_LBRACK);
-        print_expr(type->type.arr.size_expr);
+        pretty_print_expr(type->type.arr.size_expr);
         print_closing_delim_from_type(TOK_RBRACK);
         print_type(type->type.arr.inner);
         print_closing_green_brace();
@@ -298,7 +298,7 @@ static void print_any_has_contracts_clause(ast_slice_of_exprs_t s) {
         printer_deindent();
         print_opening_delim_from_type(TOK_LPAREN);
         for (size_t i = 0; i < s.len; i++) {
-            print_expr(s.start[i]);
+            pretty_print_expr(s.start[i]);
         }
         print_closing_delim_from_type(TOK_RPAREN);
     }
@@ -337,7 +337,7 @@ static void print_generic_params(ast_slice_of_generic_params_t params) {
     print_closing_green_brace_newline();
 }
 
-void print_expr(ast_expr_t* expression) {
+void pretty_print_expr(ast_expr_t* expression) {
     printer_try_init();
     printer_do_indent();
     print_indent();
@@ -361,15 +361,15 @@ void print_expr(ast_expr_t* expression) {
         ast_expr_t* lhs = expr.expr.binary.lhs;
         token_t* op = expr.expr.binary.op;
         ast_expr_t* rhs = expr.expr.binary.rhs;
-        print_expr(lhs);
+        pretty_print_expr(lhs);
         print_op(op);
-        print_expr(rhs);
+        pretty_print_expr(rhs);
         print_closing_green_brace();
         break;
     }
     case AST_EXPR_GROUPING: {
         print_title("grouping");
-        print_expr(expr.expr.grouping.expr);
+        pretty_print_expr(expr.expr.grouping.expr);
         print_closing_green_brace();
         break;
     }
@@ -377,21 +377,21 @@ void print_expr(ast_expr_t* expression) {
         token_t* op = expr.expr.unary.op;
         print_title("pre-unary");
         print_op(op);
-        print_expr(expr.expr.unary.expr);
+        pretty_print_expr(expr.expr.unary.expr);
         print_closing_green_brace();
         break;
     }
     case AST_EXPR_POST_UNARY: {
         token_t* op = expr.expr.unary.op;
         print_title("post-unary");
-        print_expr(expr.expr.unary.expr);
+        pretty_print_expr(expr.expr.unary.expr);
         print_op(op);
         print_closing_green_brace();
         break;
     }
     case AST_EXPR_FN_CALL:
         print_title("function call");
-        print_expr(expr.expr.fn_call.left_expr);
+        pretty_print_expr(expr.expr.fn_call.left_expr);
         if (expr.expr.fn_call.is_generic) {
             ast_slice_of_generic_args_t args = expr.expr.fn_call.generic_args;
             print_delineator_from_type(TOK_GENERIC_SEP);
@@ -405,7 +405,7 @@ void print_expr(ast_expr_t* expression) {
 
         ast_slice_of_exprs_t args = expr.expr.fn_call.args;
         for (size_t i = 0; i < args.len; i++) {
-            print_expr(args.start[i]);
+            pretty_print_expr(args.start[i]);
             if (i != args.len - 1) {
                 print_comma();
             }
@@ -420,9 +420,9 @@ void print_expr(ast_expr_t* expression) {
         // TODO resume here
     case AST_EXPR_SUBSCRIPT:
         print_title("subscript");
-        print_expr(expr.expr.subscript.lhs);
+        pretty_print_expr(expr.expr.subscript.lhs);
         print_opening_delim_from_type(TOK_LBRACK);
-        print_expr(expr.expr.subscript.subexpr);
+        pretty_print_expr(expr.expr.subscript.subexpr);
         print_closing_delim_from_type(TOK_RBRACK);
         print_closing_green_brace();
         break;
@@ -440,7 +440,7 @@ void print_expr(ast_expr_t* expression) {
         print_delineator_from_type(TOK_LBRACE);
         ast_slice_of_exprs_t inits = expr.expr.struct_init.member_inits;
         for (size_t i = 0; i < inits.len; i++) {
-            print_expr(inits.start[i]);
+            pretty_print_expr(inits.start[i]);
         }
         print_delineator_from_type(TOK_RBRACE);
         print_closing_green_brace();
@@ -453,7 +453,7 @@ void print_expr(ast_expr_t* expression) {
         token_t* op = expr.expr.struct_member_init.assign_op;
         ast_expr_t* val = expr.expr.struct_member_init.value;
         print_op(op);
-        print_expr(val);
+        pretty_print_expr(val);
         print_closing_green_brace();
         break;
     }
@@ -465,7 +465,7 @@ void print_expr(ast_expr_t* expression) {
             print_op_from_type(TOK_MUT);
         }
         printer_deindent();
-        print_expr(expr.expr.borrow.borrowed);
+        pretty_print_expr(expr.expr.borrow.borrowed);
         print_closing_green_brace();
         break;
     }
@@ -488,7 +488,7 @@ void print_expr(ast_expr_t* expression) {
         print_delineator_from_type(TOK_LBRACE);
         printer_do_indent();
         for (size_t i = 0; i < expr.expr.block.stmts.len; i++) {
-            print_stmt(expr.expr.block.stmts.start[i]);
+            pretty_print_stmt(expr.expr.block.stmts.start[i]);
         }
         printer_deindent();
         print_delineator_from_type(TOK_RBRACE);
@@ -499,13 +499,13 @@ void print_expr(ast_expr_t* expression) {
         print_title("switch-branch");
         ast_slice_of_exprs_t patterns = expr.expr.switch_branch.patterns;
         for (size_t i = 0; i < patterns.len; i++) {
-            print_expr(patterns.start[i]);
+            pretty_print_expr(patterns.start[i]);
             if (i != patterns.len - 1) {
                 print_delineator_from_type(TOK_BAR);
             }
         }
         print_delineator_from_type(TOK_EQ_ARROW);
-        print_expr(expr.expr.switch_branch.value);
+        pretty_print_expr(expr.expr.switch_branch.value);
         print_closing_green_brace();
         break;
     }
@@ -513,11 +513,11 @@ void print_expr(ast_expr_t* expression) {
         print_title("switch-expression");
         print_op_from_type(TOK_SWITCH);
         print_delineator_from_type(TOK_LPAREN);
-        print_expr(expr.expr.switch_expr.matched);
+        pretty_print_expr(expr.expr.switch_expr.matched);
         print_delineator_from_type(TOK_RPAREN);
         ast_slice_of_exprs_t branches = expr.expr.switch_expr.branches;
         for (size_t i = 0; i < branches.len; i++) {
-            print_expr(branches.start[i]);
+            pretty_print_expr(branches.start[i]);
         }
         print_closing_green_brace();
         break;
@@ -536,7 +536,7 @@ void print_expr(ast_expr_t* expression) {
             print_param(cl.params.start[i]);
         }
         print_closing_delim_from_type(TOK_BAR);
-        print_expr(cl.body);
+        pretty_print_expr(cl.body);
         print_closing_green_brace();
         break;
     }
@@ -545,7 +545,7 @@ void print_expr(ast_expr_t* expression) {
         print_opening_delim_from_type(TOK_LBRACK);
         ast_slice_of_exprs_t list = expr.expr.list_literal.slice;
         for (size_t i = 0; i < list.len; i++) {
-            print_expr(list.start[i]);
+            pretty_print_expr(list.start[i]);
         }
         print_closing_delim_from_type(TOK_RBRACK);
         print_closing_green_brace();
@@ -556,7 +556,7 @@ void print_expr(ast_expr_t* expression) {
     printer_deindent();
 }
 
-void print_stmt(ast_stmt_t* stmt) {
+void pretty_print_stmt(ast_stmt_t* stmt) {
     printer_try_init();
     print_indent();
     switch (stmt->type) {
@@ -564,7 +564,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("block statement");
         print_opening_delim_from_type(TOK_LBRACE);
         for (size_t i = 0; i < stmt->stmt.block.stmts.len; i++) {
-            print_stmt(stmt->stmt.block.stmts.start[i]);
+            pretty_print_stmt(stmt->stmt.block.stmts.start[i]);
         }
         print_closing_delim_from_type(TOK_RBRACE);
         break;
@@ -576,14 +576,14 @@ void print_stmt(ast_stmt_t* stmt) {
         print_var_name(stmt->stmt.module.id);
         printer_do_indent();
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
-            print_stmt(stmt->stmt.module.decls.start[i]);
+            pretty_print_stmt(stmt->stmt.module.decls.start[i]);
         }
         printer_deindent();
         break;
     case AST_STMT_FILE:
         printf("file '%s': %s{%s\n", stmt->stmt.file.file_name, ansi_bold_green(), ansi_reset());
         for (size_t i = 0; i < stmt->stmt.file.stmts.len; i++) {
-            print_stmt(stmt->stmt.file.stmts.start[i]);
+            pretty_print_stmt(stmt->stmt.file.stmts.start[i]);
         }
         break;
     case AST_STMT_IMPORT:
@@ -600,7 +600,7 @@ void print_stmt(ast_stmt_t* stmt) {
         break;
     case AST_STMT_EXPR:
         print_title("expression-statement");
-        print_expr(stmt->stmt.stmt_expr.expr);
+        pretty_print_expr(stmt->stmt.stmt_expr.expr);
         print_delineator_from_type(TOK_SEMICOLON);
         break;
     case AST_STMT_FN_DECL:
@@ -641,7 +641,7 @@ void print_stmt(ast_stmt_t* stmt) {
             print_type(fn.return_type);
         }
         printer_do_indent();
-        print_stmt(fn.block);
+        pretty_print_stmt(fn.block);
         printer_deindent();
         break;
     case AST_STMT_VAR_INIT_DECL:
@@ -649,7 +649,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_type(stmt->stmt.var_init_decl.type);
         print_var_name(stmt->stmt.var_init_decl.name);
         print_op(stmt->stmt.var_init_decl.assign_op);
-        print_expr(stmt->stmt.var_init_decl.rhs);
+        pretty_print_expr(stmt->stmt.var_init_decl.rhs);
         break;
     case AST_STMT_VAR_DECL:
         print_title("variable declaration");
@@ -661,13 +661,13 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_op_from_type(TOK_IF);
         printer_deindent();
-        print_expr(stmt->stmt.if_stmt.condition);
+        pretty_print_expr(stmt->stmt.if_stmt.condition);
         printer_do_indent();
-        print_stmt(stmt->stmt.if_stmt.body_stmt);
+        pretty_print_stmt(stmt->stmt.if_stmt.body_stmt);
         printer_deindent();
         if (stmt->stmt.if_stmt.has_else) {
             printer_do_indent();
-            print_stmt(stmt->stmt.if_stmt.else_stmt);
+            pretty_print_stmt(stmt->stmt.if_stmt.else_stmt);
             printer_deindent();
         }
         break;
@@ -675,7 +675,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("else statement");
         printer_do_indent();
         print_op_from_type(TOK_ELSE);
-        print_stmt(stmt->stmt.else_stmt.body_stmt);
+        pretty_print_stmt(stmt->stmt.else_stmt.body_stmt);
         printer_deindent();
         break;
     case AST_STMT_WHILE:
@@ -683,21 +683,21 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_op_from_type(TOK_WHILE);
         printer_deindent();
-        print_expr(stmt->stmt.while_stmt.condition);
+        pretty_print_expr(stmt->stmt.while_stmt.condition);
         printer_do_indent();
-        print_stmt(stmt->stmt.while_stmt.body_stmt);
+        pretty_print_stmt(stmt->stmt.while_stmt.body_stmt);
         printer_deindent();
         break;
     case AST_STMT_FOR:
         print_title("for-loop statement");
         printer_do_indent();
         print_op_from_type(TOK_FOR);
-        print_stmt(stmt->stmt.for_stmt.init);
+        pretty_print_stmt(stmt->stmt.for_stmt.init);
         printer_deindent();
-        print_expr(stmt->stmt.for_stmt.condition);
-        print_expr(stmt->stmt.for_stmt.step);
+        pretty_print_expr(stmt->stmt.for_stmt.condition);
+        pretty_print_expr(stmt->stmt.for_stmt.step);
         printer_do_indent();
-        print_stmt(stmt->stmt.for_stmt.body_stmt);
+        pretty_print_stmt(stmt->stmt.for_stmt.body_stmt);
         printer_deindent();
         break;
     case AST_STMT_FOR_IN:
@@ -707,9 +707,9 @@ void print_stmt(ast_stmt_t* stmt) {
         print_param(stmt->stmt.for_in_stmt.each);
         printer_deindent();
         print_delineator_from_type(TOK_IN);
-        print_expr(stmt->stmt.for_in_stmt.iterator);
+        pretty_print_expr(stmt->stmt.for_in_stmt.iterator);
         printer_do_indent();
-        print_stmt(stmt->stmt.for_in_stmt.body_stmt);
+        pretty_print_stmt(stmt->stmt.for_in_stmt.body_stmt);
         printer_deindent();
         break;
     case AST_STMT_RETURN:
@@ -719,7 +719,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         ast_expr_t* expr = stmt->stmt.return_stmt.expr;
         if (expr) {
-            print_expr(expr);
+            pretty_print_expr(expr);
         }
         print_delineator_from_type(TOK_SEMICOLON);
         break;
@@ -739,7 +739,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printf("fields: %s{%s\n", ansi_bold_green(), ansi_reset());
         printer_do_indent();
         for (size_t i = 0; i < st.fields.len; i++) {
-            print_stmt(st.fields.start[i]);
+            pretty_print_stmt(st.fields.start[i]);
         }
         printer_deindent();
         print_closing_green_brace();
@@ -758,7 +758,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("visibility-modified declaration");
         print_op(stmt->stmt.vis_modifier.modifier);
         printer_do_indent();
-        print_stmt(stmt->stmt.vis_modifier.stmt);
+        pretty_print_stmt(stmt->stmt.vis_modifier.stmt);
         printer_deindent();
         break;
     case AST_STMT_BREAK:
@@ -782,7 +782,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("comptime-declaration statement");
         print_delineator_from_type(TOK_COMPT);
         printer_do_indent();
-        print_stmt(stmt->stmt.compt_modifier.stmt);
+        pretty_print_stmt(stmt->stmt.compt_modifier.stmt);
         printer_deindent();
         break;
     case AST_STMT_FN_PROTOTYPE: {
@@ -824,7 +824,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("fields");
         printer_do_indent();
         for (size_t i = 0; i < con.fields.len; i++) {
-            print_stmt(con.fields.start[i]);
+            pretty_print_stmt(con.fields.start[i]);
         }
         printer_deindent();
         print_closing_green_brace_newline();
@@ -841,7 +841,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("fields");
         printer_do_indent();
         for (size_t i = 0; i < un.fields.len; i++) {
-            print_stmt(un.fields.start[i]);
+            pretty_print_stmt(un.fields.start[i]);
         }
         printer_deindent();
         print_closing_green_brace();
@@ -862,7 +862,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("fields");
         printer_do_indent();
         for (size_t i = 0; i < vari.fields.len; i++) {
-            print_stmt(vari.fields.start[i]);
+            pretty_print_stmt(vari.fields.start[i]);
         }
         printer_deindent();
         print_closing_green_brace();
@@ -890,7 +890,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_deindent();
         ast_expr_t* expr = stmt->stmt.yield_stmt.expr;
         if (expr) {
-            print_expr(expr);
+            pretty_print_expr(expr);
         }
         print_delineator_from_type(TOK_SEMICOLON);
         break;
@@ -899,7 +899,7 @@ void print_stmt(ast_stmt_t* stmt) {
         print_title("static variable declaration");
         print_delineator_from_type(TOK_STATIC);
         printer_do_indent();
-        print_stmt(stmt->stmt.static_modifier.stmt);
+        pretty_print_stmt(stmt->stmt.static_modifier.stmt);
         printer_deindent();
         break;
     case AST_STMT_DEFTYPE:
@@ -909,7 +909,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         print_op_from_type(TOK_ASSIGN_EQ);
         printer_deindent();
-        print_expr(stmt->stmt.deftype.aliased_type_expr);
+        pretty_print_expr(stmt->stmt.deftype.aliased_type_expr);
         break;
     case AST_STMT_EXTERN_BLOCK: {
         print_title("extern block");
@@ -918,7 +918,7 @@ void print_stmt(ast_stmt_t* stmt) {
         printer_do_indent();
         ast_slice_of_stmts_t decls = stmt->stmt.extern_block.decls;
         for (size_t i = 0; i < decls.len; i++) {
-            print_stmt(decls.start[i]);
+            pretty_print_stmt(decls.start[i]);
         }
         printer_deindent();
         break;
