@@ -85,7 +85,6 @@ int br_launch_cli(int argc, char** argv) {
         cli_no_args();
     }
     if (error_status.error_code < 0) {
-        // printf("error: %s", error_status.error_message);
         return error_status.error_code;
     }
     return 0;
