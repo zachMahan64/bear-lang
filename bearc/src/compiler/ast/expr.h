@@ -50,10 +50,10 @@ typedef enum {
 
     // block expr/switch
     AST_EXPR_BLOCK,
-    AST_EXPR_SWITCH_BRANCH,
-    AST_EXPR_SWITCH,
+    AST_EXPR_MATCH_BRANCH,
+    AST_EXPR_MATCH,
     /// has no associated type in the ast_expr_u union
-    AST_EXPR_ELSE_SWITCH_BRANCH,
+    AST_EXPR_ELSE_MATCH_BRANCH,
 
     // error
     AST_EXPR_INVALID,
@@ -169,12 +169,12 @@ typedef struct {
 typedef struct {
     ast_slice_of_exprs_t patterns;
     ast_expr_t* value;
-} ast_expr_switch_branch_t;
+} ast_expr_match_branch_t;
 
 typedef struct {
     ast_expr_t* matched;
     ast_slice_of_exprs_t branches;
-} ast_expr_switch_t;
+} ast_expr_match_t;
 
 typedef struct {
     ast_slice_of_params_t params;
@@ -202,8 +202,8 @@ typedef union {
     ast_expr_borrow_t borrow;
     ast_expr_variant_decomp_t variant_decomp;
     ast_expr_block_t block;
-    ast_expr_switch_branch_t switch_branch;
-    ast_expr_switch_t switch_expr;
+    ast_expr_match_branch_t match_branch;
+    ast_expr_match_t match_expr;
     ast_expr_closure_t closure;
     ast_expr_list_literal_t list_literal;
 } ast_expr_u;

@@ -42,11 +42,11 @@ int br_launch_cli(int argc, char** argv) {
 
     // error that dispatched cli functions can return, default to inoffensive values
     cli_error_status error_status = {0, ""};
-    if (args.flags[CLI_FLAG_UNKNOWN]) {
+    if (args.flags[CLI_FLAG_ERR_UNKNOWN]) {
         cli_announce_unknown_flag();
         return -1;
     }
-    if (args.flags[CLI_FLAG_DUPLICATE]) {
+    if (args.flags[CLI_FLAG_ERR_DUPLICATE]) {
         warn_duplicate_flag();
         return -1;
     }
@@ -72,10 +72,16 @@ int br_launch_cli(int argc, char** argv) {
         cli_version();
     }
 
+    if (args.flags[CLI_FLAG_ERR_FILE_NAME_TOO_LONG]) {
+
+        printf("%s(bearc)%s file name exessively long\n", ansi_bold(), ansi_reset());
+    }
+
     // compilation
     if (strlen(args.input_file_name)) {
         error_status = cli_compile(&args);
-    } else if (!strlen(args.input_file_name) && cli_args_otherwise_empty(&args, CLI_FLAG_UNKNOWN)) {
+    } else if (!strlen(args.input_file_name)
+               && cli_args_otherwise_empty(&args, CLI_FLAG_ERR_UNKNOWN)) {
         cli_no_args();
     }
     if (error_status.error_code < 0) {

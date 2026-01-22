@@ -495,9 +495,9 @@ void pretty_print_expr(ast_expr_t* expression) {
         print_closing_green_brace();
         break;
     }
-    case AST_EXPR_SWITCH_BRANCH: {
-        print_title("switch-branch");
-        ast_slice_of_exprs_t patterns = expr.expr.switch_branch.patterns;
+    case AST_EXPR_MATCH_BRANCH: {
+        print_title(" match-branch");
+        ast_slice_of_exprs_t patterns = expr.expr.match_branch.patterns;
         for (size_t i = 0; i < patterns.len; i++) {
             pretty_print_expr(patterns.start[i]);
             if (i != patterns.len - 1) {
@@ -505,24 +505,24 @@ void pretty_print_expr(ast_expr_t* expression) {
             }
         }
         print_delineator_from_type(TOK_EQ_ARROW);
-        pretty_print_expr(expr.expr.switch_branch.value);
+        pretty_print_expr(expr.expr.match_branch.value);
         print_closing_green_brace();
         break;
     }
-    case AST_EXPR_SWITCH: {
-        print_title("switch-expression");
-        print_op_from_type(TOK_SWITCH);
+    case AST_EXPR_MATCH: {
+        print_title("match-expression");
+        print_op_from_type(TOK_MATCH);
         print_delineator_from_type(TOK_LPAREN);
-        pretty_print_expr(expr.expr.switch_expr.matched);
+        pretty_print_expr(expr.expr.match_expr.matched);
         print_delineator_from_type(TOK_RPAREN);
-        ast_slice_of_exprs_t branches = expr.expr.switch_expr.branches;
+        ast_slice_of_exprs_t branches = expr.expr.match_expr.branches;
         for (size_t i = 0; i < branches.len; i++) {
             pretty_print_expr(branches.start[i]);
         }
         print_closing_green_brace();
         break;
     }
-    case AST_EXPR_ELSE_SWITCH_BRANCH:
+    case AST_EXPR_ELSE_MATCH_BRANCH:
         printf("%s%s%s", ansi_bold_blue(), token_to_string_map()[TOK_ELSE], ansi_reset());
         break;
     case AST_EXPR_CLOSURE: {

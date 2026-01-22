@@ -26,7 +26,7 @@ cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
 
 static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
     if (args->flags[flag]) {
-        args->flags[CLI_FLAG_DUPLICATE] = true;
+        args->flags[CLI_FLAG_ERR_DUPLICATE] = true;
         return true;
     }
     return false;
@@ -53,10 +53,14 @@ bearc_args_t parse_cli_args(int argc, char** argv) {
             args.flags[flag] = true;
         } else {
             if (strlen(argv[i]) >= 2 && argv[i][0] == '-') {
-                args.flags[CLI_FLAG_UNKNOWN] = true; // invalid flag
+                args.flags[CLI_FLAG_ERR_UNKNOWN] = true; // invalid flag
             } else {
                 // try to interpret as filename, deal with faulty filenames later
-                strcpy(args.input_file_name, argv[i]);
+                if (strlen(argv[i]) < CLI_ARGS_MAX_FILE_NAME_LENGTH) {
+                    strcpy(args.input_file_name, argv[i]);
+                } else {
+                    args.flags[CLI_FLAG_ERR_FILE_NAME_TOO_LONG] = true;
+                }
             }
         }
     }
@@ -95,5 +99,5 @@ cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag) {
             return cli_flag_long_map[i].flag;
         }
     }
-    return CLI_FLAG_UNKNOWN;
+    return CLI_FLAG_ERR_UNKNOWN;
 }

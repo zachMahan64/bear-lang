@@ -934,6 +934,8 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
     token_t* rarrow = parser_match_token(p, TOK_RARROW);
     if (rarrow) {
         decl->stmt.fn_prototype.return_type = parse_type(p);
+    } else {
+        decl->stmt.fn_prototype.return_type = NULL;
     }
     parser_expect_token(p, TOK_SEMICOLON);
     decl->first = decl->stmt.fn_prototype.kw;

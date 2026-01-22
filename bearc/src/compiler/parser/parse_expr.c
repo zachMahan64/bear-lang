@@ -70,8 +70,8 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
             lhs = parse_literal(p);
         } else if (first_type == TOK_LPAREN) {
             lhs = parse_grouping(p);
-        } else if (first_type == TOK_SWITCH) {
-            lhs = parse_expr_switch(p);
+        } else if (first_type == TOK_MATCH) {
+            lhs = parse_expr_match(p);
         } else if (first_type == TOK_BAR || first_type == TOK_MOVE) {
             lhs = parse_expr_closure(p);
         } else if (first_type == TOK_LBRACK) {
@@ -447,12 +447,12 @@ ast_expr_t* parse_expr_variant_decomp_with_leading_id(parser_t* p, token_ptr_sli
     return e;
 }
 
-ast_expr_t* parse_expr_switch_pattern(parser_t* p) {
+ast_expr_t* parse_expr_match_pattern(parser_t* p) {
     token_t* el = parser_match_token(p, TOK_ELSE);
     if (el) {
         ast_expr_t* default_expr = parser_alloc_expr(p);
         // nothing to set in the expr union here
-        default_expr->type = AST_EXPR_ELSE_SWITCH_BRANCH;
+        default_expr->type = AST_EXPR_ELSE_MATCH_BRANCH;
         default_expr->first = el;
         default_expr->last = el;
         return default_expr;
@@ -515,37 +515,37 @@ ast_expr_t* parse_expr_allowing_block_exprs_without_yields(parser_t* p) {
     return parse_expr(p);
 }
 
-ast_expr_t* parse_expr_switch_branch(parser_t* p) {
+ast_expr_t* parse_expr_match_branch(parser_t* p) {
     ast_expr_t* branch = parser_alloc_expr(p);
-    branch->type = AST_EXPR_SWITCH_BRANCH;
+    branch->type = AST_EXPR_MATCH_BRANCH;
     token_t* first = parser_peek(p);
-    branch->expr.switch_branch.patterns
-        = parse_slice_of_exprs_call(p, TOK_BAR, TOK_EQ_ARROW, &parse_expr_switch_pattern);
+    branch->expr.match_branch.patterns
+        = parse_slice_of_exprs_call(p, TOK_BAR, TOK_EQ_ARROW, &parse_expr_match_pattern);
     parser_expect_token(p, TOK_EQ_ARROW);
-    branch->expr.switch_branch.value = parse_expr_allowing_block_exprs_with_yields(p);
+    branch->expr.match_branch.value = parse_expr_allowing_block_exprs_with_yields(p);
     branch->first = first;
     branch->last = parser_prev(p);
     return branch;
 }
 
-ast_expr_t* parse_expr_switch(parser_t* p) {
+ast_expr_t* parse_expr_match(parser_t* p) {
     ast_expr_t* sw = parser_alloc_expr(p);
-    sw->type = AST_EXPR_SWITCH;
+    sw->type = AST_EXPR_MATCH;
     token_t* first = parser_peek(p);
-    if (!parser_expect_token(p, TOK_SWITCH)) {
+    if (!parser_expect_token(p, TOK_MATCH)) {
         return parser_sync_expr(p);
     }
-    // switch (<matched_expr>)
+    // match (<matched_expr>)
     parser_expect_token(p, TOK_LPAREN);
-    sw->expr.switch_expr.matched = parse_expr(p);
+    sw->expr.match_expr.matched = parse_expr(p);
     parser_expect_token(p, TOK_RPAREN);
     // guard safely again swtich(<expr>))))))...
     parser_guard_against_trailing_rparens(p);
 
     // {....}
     parser_expect_token(p, TOK_LBRACE);
-    sw->expr.switch_expr.branches
-        = parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_switch_branch);
+    sw->expr.match_expr.branches
+        = parse_slice_of_exprs_call(p, TOK_COMMA, TOK_RBRACE, &parse_expr_match_branch);
     parser_expect_token(p, TOK_RBRACE);
     sw->first = first;
     sw->last = parser_prev(p);

@@ -1,7 +1,7 @@
 // switch expr test
 fn main() -> i32 {
     i32 a = std..random_i32();
-    i32 x = switch (a) {
+    i32 x = match (a) {
         0 => 12,
         1 => 13,
         2 | 3 | 4 | 5 | 6 => {

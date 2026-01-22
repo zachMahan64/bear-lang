@@ -7,15 +7,22 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "tests/test.h"
+#include "cli/args.h"
 #include "compiler/compile.h"
 #include "compiler/token.h"
+#include "string.h"
 #include "utils/ansi_codes.h"
 #include "utils/vector.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 
-int main(void) {
+static bearc_args_t args;
+
+int main(int argc, char** argv) {
+
+    args = parse_cli_args(argc, argv);
+
     br_test_result_t total = test_total_init();
     vector_t results = vector_create_and_reserve(sizeof(br_test_result_t), 8);
     *((br_test_result_t*)vector_emplace_back(&results)) = test_parser();
@@ -41,7 +48,8 @@ int main(void) {
     br_test_result_t br_test_result = {.cnt_success = 0, .cnt_total = 0, .name = (_name)};         \
     int true_cnt = 0;
 #define ASSERT_EQ_ERR(file_name, err_cnt)                                                          \
-    true_cnt = compile_file("tests/" file_name ".br");                                             \
+    strcpy(args.input_file_name, "tests/" file_name ".br");                                        \
+    true_cnt = compile_file(&args);                                                                \
     if (true_cnt == (err_cnt)) {                                                                   \
         br_test_result.cnt_success++;                                                              \
     } else {                                                                                       \
@@ -52,7 +60,7 @@ int main(void) {
     }                                                                                              \
     br_test_result.cnt_total++;
 #define ASSERT_GTE_ERR(file_name, err_cnt)                                                         \
-    if (compile_file("tests/" file_name ".br") >= (err_cnt)) {                                     \
+    if (compile_file({"tests/" file_name ".br", {0}) >= (err_cnt)) {                                     \
         br_test_result.cnt_success++;                                                              \
     };                                                                                             \
     br_test_result.cnt_total++;

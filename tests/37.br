@@ -32,7 +32,7 @@ fn main() -> i32 {
         return 42;
     }
     // exhaustive, to be checked at comptime
-    return switch(get_int_if_ready()) {
+    return match(get_int_if_ready()) {
         OptI32..Some(var x) => x,
         OptI32..None => 42,
     };

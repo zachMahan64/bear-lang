@@ -128,7 +128,7 @@ typedef enum token_type {
     TOK_RETURN,
     TOK_YIELD,
     TOK_BREAK,
-    TOK_SWITCH,
+    TOK_MATCH,
 
     // structures (incorp after prodcedural is working)
     TOK_SELF_ID,
