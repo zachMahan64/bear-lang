@@ -93,10 +93,17 @@ int br_launch_cli(int argc, char** argv) {
 
 void cli_help(void) {
     const char* help_message = "usage:\n"
-                               "        bearc <file_name> <flags> \n"
+                               "        bearc <file_name> [flags]\n"
+                               "        bearc [options]\n"
+                               "options:\n"
+                               "        [--version | -v]  display current bearc version\n"
+                               "        [--help | -h]     display this help message\n"
                                "flags:\n"
-                               "        [--version | -v]\n"
-                               "        [--help | -h]\n";
+                               "        [--silent]        suppress all compiler messages\n"
+                               "        [--token-table]   print a list of lexed tokens\n"
+                               "        [--pretty-print]  print a syntax tree diagram\n"
+
+        ;
 
     printf("%s", help_message);
 }
@@ -111,8 +118,8 @@ cli_error_status cli_compile(const bearc_args_t* args) {
 }
 
 void cli_no_args(void) {
-    cli_version();
     printf("run '%sbearc --help%s' to see available operations.\n", ansi_bold(), ansi_reset());
+    cli_version();
 }
 void cli_announce_unknown_flag(void) {
     printf("%s(bearc)%s unknown flag(s)\n", ansi_bold(), ansi_reset());
