@@ -1,0 +1,69 @@
+// test/45.br
+// some idiomatic bear code demo 
+
+import "std/result.br";
+
+fn main() {
+    var my_cat = Animal..Cat(
+                    AnimalInfo{
+                        .name = String..from("Whiskers"), 
+                        .age = 4},
+                    3);
+    var my_dog = Animal..Dog(
+                    AnimalInfo{
+                        .name = String..from("Sparky"), 
+                        .age = 2},
+                    3);
+   pet_animal(my_cat); 
+   pet_animal(my_dog);
+   pet_animal(make_anacoda());
+}
+
+struct AnimalInfo {
+    String name;
+    u8 age;
+}
+
+deftype Decibel = i32;
+deftype Inch = i32;
+
+variant Animal {
+    Dog(AnimalInfo info, Decibel barking_volume),
+    Cat(AnimalInfo info, Inch whisker_length),
+    Snake(AnimalInfo info),
+    Lizard(AnimalInfo info),
+}
+
+fn make_anacoda() -> Animal..Snake {
+    return Animal..Snake {
+        .info = AnimalInfo {
+            .name = String..from("Anacoda"),
+            .age = 1,
+        }
+    };
+}
+
+
+fn pet_animal(Animal animal) { 
+    var state = String..from("Reaching to pet a ");
+    
+    match (animal) {
+        Animal..Cat(var info, var whis_len) => {
+            state.append("cat!");
+            state.append(" Its whiskers are ");
+            state.append_string(String..from(whis_len));
+            state.append(" inches long!");
+        },
+        Animal..Dog(var info, var bark_vol) => {
+            state.append("dog!");
+            state.append(" Its barks are ");
+            state.append_string(String..from(bark_vol));
+            state.append(" decibels loud!");
+        }
+        Animal..Snake | Animal..Lizard => {
+            state.append(" repitilian! Oh hell nah!");
+        }
+    };
+    use std;
+    println(state);
+}

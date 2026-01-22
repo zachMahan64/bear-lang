@@ -4,7 +4,6 @@
 - Right now, I'm working on the frontend but plan on using LLVM for the backend.
 
 ## Documentation
-- [Project Timeline](/docs/timeline.md)
 - [Syntax](docs/syntax.md)
 - [References](docs/references.md)
 
@@ -13,128 +12,588 @@
 - See the [build docs](docs/build.md).
 - With git, gcc or clang, CMake, and Ninja installed, you can use these scripts: 
 ```
-./scripts/llvm-install.sh          # for installing the LLVM distribution
+./scripts/llvm-install.sh              # for installing the LLVM distribution
 ./scripts/clean-all.sh [Release|Debug] # builds bearc; defaults to Debug with no args
+./scripts/build-tests.sh               # build and run tests
+                                       # additionally, there are non-LLVM-dependent options available,
+                                       # which are recommended until the compiler is truly no longer 
+                                       # in a front-end only state
 ```
 #### Run 
 ```
 bearc --help          # to see CLI usage
 ```
 #### Preview
-- Heres a preview of my AST pretty-printer as of 20251219:
+- Heres a preview of my AST pretty-printer as of 20260122:
+
 ```
-// tests/11.br
+// test/45.br
+// some idiomatic bear code demo 
+
+import "std/result.br";
 
 fn main() {
-    foo();
+    var my_cat = Animal..Cat(
+                    AnimalInfo{
+                        .name = String..from("Whiskers"), 
+                        .age = 4},
+                    3);
+    var my_dog = Animal..Dog(
+                    AnimalInfo{
+                        .name = String..from("Sparky"), 
+                        .age = 2},
+                    3);
+   pet_animal(my_cat); 
+   pet_animal(my_dog);
+   pet_animal(make_anacoda());
 }
 
-fn foo() -> i32 { 
-    i32 a = 2;
-    a += 4;
-    b = 4;
-    c <- b;
-    return c;
+struct AnimalInfo {
+    String name;
+    u8 age;
 }
 
-fn bar() {
-    waste_effort();
-    return;
+deftype Decibel = i32;
+deftype Inch = i32;
+
+variant Animal {
+    Dog(AnimalInfo info, Decibel barking_volume),
+    Cat(AnimalInfo info, Inch whisker_length),
+    Snake(AnimalInfo info),
+    Lizard(AnimalInfo info),
+}
+
+fn make_anacoda() -> Animal..Snake {
+    return Animal..Snake {
+        .info = AnimalInfo {
+            .name = String..from("Anacoda"),
+            .age = 1,
+        }
+    };
+}
+
+
+fn pet_animal(Animal animal) { 
+    var state = String..from("Reaching to pet a ");
+    
+    match (animal) {
+        Animal..Cat(var info, var whis_len) => {
+            state.append("cat!");
+            state.append(" Its whiskers are ");
+            state.append_string(String..from(whis_len));
+            state.append(" inches long!");
+        },
+        Animal..Dog(var info, var bark_vol) => {
+            state.append("dog!");
+            state.append(" Its barks are ");
+            state.append_string(String..from(bark_vol));
+            state.append(" decibels loud!");
+        }
+        Animal..Snake | Animal..Lizard => {
+            state.append(" repitilian! Oh hell nah!");
+        }
+    };
+    use std;
+    println(state);
 }
 ```
+
 ```
-file 'tests/11.br': {
+file 'tests/45.br': {
+import statement: {
+|   `import`,
+|   `"std/result.br"`,
+},
 function declaration: {
 |   `fn`,
 |   `main`,
 |   `(`,
 |   `)`,
-|   block: {
+|   block statement: {
 |   |   `{`,
-|   |   expression-statement: {
+|   |   variable initialization: {
+|   |   |   base type: {
+|   |   |   |   `var`,
+|   |   |   },
+|   |   |   name: `my_cat`,
+|   |   |   `=`,
 |   |   |   function call: {
-|   |   |   |   identifer: `foo`,
+|   |   |   |   identifier: `Animal..Cat`,
 |   |   |   |   `(`,
+|   |   |   |   |   struct-init expression: {
+|   |   |   |   |   name: `AnimalInfo`,
+|   |   |   |   |   |   `{`,
+|   |   |   |   |   |   member-init: {
+|   |   |   |   |   |   |   `name`,
+|   |   |   |   |   |   |   `=`,
+|   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   identifier: `String..from`,
+|   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   literal (string literal): `"Whiskers"`,
+|   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   },
+|   |   |   |   |   |   member-init: {
+|   |   |   |   |   |   |   `age`,
+|   |   |   |   |   |   |   `=`,
+|   |   |   |   |   |   |   literal (integer literal): `4`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `}`,
+|   |   |   |   |   },
+|   |   |   |   |   `,`,
+|   |   |   |   |   literal (integer literal): `3`,
 |   |   |   |   `)`,
 |   |   |   },
-|   |   `;`,
-|   |   }
+|   |   },
+|   |   variable initialization: {
+|   |   |   base type: {
+|   |   |   |   `var`,
+|   |   |   },
+|   |   |   name: `my_dog`,
+|   |   |   `=`,
+|   |   |   function call: {
+|   |   |   |   identifier: `Animal..Dog`,
+|   |   |   |   `(`,
+|   |   |   |   |   struct-init expression: {
+|   |   |   |   |   name: `AnimalInfo`,
+|   |   |   |   |   |   `{`,
+|   |   |   |   |   |   member-init: {
+|   |   |   |   |   |   |   `name`,
+|   |   |   |   |   |   |   `=`,
+|   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   identifier: `String..from`,
+|   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   literal (string literal): `"Sparky"`,
+|   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   },
+|   |   |   |   |   |   member-init: {
+|   |   |   |   |   |   |   `age`,
+|   |   |   |   |   |   |   `=`,
+|   |   |   |   |   |   |   literal (integer literal): `2`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `}`,
+|   |   |   |   |   },
+|   |   |   |   |   `,`,
+|   |   |   |   |   literal (integer literal): `3`,
+|   |   |   |   `)`,
+|   |   |   },
+|   |   },
+|   |   expression-statement: {
+|   |   |   function call: {
+|   |   |   |   identifier: `pet_animal`,
+|   |   |   |   `(`,
+|   |   |   |   |   identifier: `my_cat`,
+|   |   |   |   `)`,
+|   |   |   },
+|   |   |   `;`,
+|   |   },
+|   |   expression-statement: {
+|   |   |   function call: {
+|   |   |   |   identifier: `pet_animal`,
+|   |   |   |   `(`,
+|   |   |   |   |   identifier: `my_dog`,
+|   |   |   |   `)`,
+|   |   |   },
+|   |   |   `;`,
+|   |   },
+|   |   expression-statement: {
+|   |   |   function call: {
+|   |   |   |   identifier: `pet_animal`,
+|   |   |   |   `(`,
+|   |   |   |   |   function call: {
+|   |   |   |   |   |   identifier: `make_anacoda`,
+|   |   |   |   |   |   `(`,
+|   |   |   |   |   |   `)`,
+|   |   |   |   |   },
+|   |   |   |   `)`,
+|   |   |   },
+|   |   |   `;`,
+|   |   },
 |   |   `}`,
-|   }
-}
+|   },
+},
+struct declaration: {
+|   `struct`,
+|   name: `AnimalInfo`,
+|   fields: {
+|   |   variable declaration: {
+|   |   |   base type: {
+|   |   |   |   `String`,
+|   |   |   },
+|   |   |   name: `name`,
+|   |   },
+|   |   variable declaration: {
+|   |   |   base type: {
+|   |   |   |   `u8`,
+|   |   |   },
+|   |   |   name: `age`,
+|   |   },
+|   },
+},
+deftype alias: {
+|   `deftype`,
+|   name: `Decibel`,
+|   `=`,
+|   type-expression: {
+|   |   base type: {
+|   |   |   `i32`,
+|   |   },
+|   },
+},
+deftype alias: {
+|   `deftype`,
+|   name: `Inch`,
+|   `=`,
+|   type-expression: {
+|   |   base type: {
+|   |   |   `i32`,
+|   |   },
+|   },
+},
+variant declaration: {
+|   `variant`,
+|   name: `Animal`,
+|   fields: {
+|   |   variant field: {
+|   |   |   name: `Dog`,
+|   |   |   `(`,
+|   |   |   parameter: {
+|   |   |   |   base type: {
+|   |   |   |   |   `AnimalInfo`,
+|   |   |   |   },
+|   |   |   |   name: `info`,
+|   |   |   },
+|   |   |   parameter: {
+|   |   |   |   base type: {
+|   |   |   |   |   `Decibel`,
+|   |   |   |   },
+|   |   |   |   name: `barking_volume`,
+|   |   |   },
+|   |   |   `)`,
+|   |   },
+|   |   variant field: {
+|   |   |   name: `Cat`,
+|   |   |   `(`,
+|   |   |   parameter: {
+|   |   |   |   base type: {
+|   |   |   |   |   `AnimalInfo`,
+|   |   |   |   },
+|   |   |   |   name: `info`,
+|   |   |   },
+|   |   |   parameter: {
+|   |   |   |   base type: {
+|   |   |   |   |   `Inch`,
+|   |   |   |   },
+|   |   |   |   name: `whisker_length`,
+|   |   |   },
+|   |   |   `)`,
+|   |   },
+|   |   variant field: {
+|   |   |   name: `Snake`,
+|   |   |   `(`,
+|   |   |   parameter: {
+|   |   |   |   base type: {
+|   |   |   |   |   `AnimalInfo`,
+|   |   |   |   },
+|   |   |   |   name: `info`,
+|   |   |   },
+|   |   |   `)`,
+|   |   },
+|   |   variant field: {
+|   |   |   name: `Lizard`,
+|   |   |   `(`,
+|   |   |   parameter: {
+|   |   |   |   base type: {
+|   |   |   |   |   `AnimalInfo`,
+|   |   |   |   },
+|   |   |   |   name: `info`,
+|   |   |   },
+|   |   |   `)`,
+|   |   },
+|   },
+},
 function declaration: {
 |   `fn`,
-|   `foo`,
+|   `make_anacoda`,
 |   `(`,
 |   `)`,
 |   `->`,
 |   base type: {
-|   |   `i32`,
-|   }
-|   block: {
+|   |   `Animal..Snake`,
+|   },
+|   block statement: {
+|   |   `{`,
+|   |   return statement: {
+|   |   |   `return`,
+|   |   |   struct-init expression: {
+|   |   |   name: `Animal..Snake`,
+|   |   |   |   `{`,
+|   |   |   |   member-init: {
+|   |   |   |   |   `info`,
+|   |   |   |   |   `=`,
+|   |   |   |   |   struct-init expression: {
+|   |   |   |   |   name: `AnimalInfo`,
+|   |   |   |   |   |   `{`,
+|   |   |   |   |   |   member-init: {
+|   |   |   |   |   |   |   `name`,
+|   |   |   |   |   |   |   `=`,
+|   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   identifier: `String..from`,
+|   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   literal (string literal): `"Anacoda"`,
+|   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   },
+|   |   |   |   |   |   member-init: {
+|   |   |   |   |   |   |   `age`,
+|   |   |   |   |   |   |   `=`,
+|   |   |   |   |   |   |   literal (integer literal): `1`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `}`,
+|   |   |   |   |   },
+|   |   |   |   },
+|   |   |   |   `}`,
+|   |   |   },
+|   |   |   `;`,
+|   |   },
+|   |   `}`,
+|   },
+},
+function declaration: {
+|   `fn`,
+|   `pet_animal`,
+|   `(`,
+|   parameter: {
+|   |   base type: {
+|   |   |   `Animal`,
+|   |   },
+|   |   name: `animal`,
+|   },
+|   `)`,
+|   block statement: {
 |   |   `{`,
 |   |   variable initialization: {
 |   |   |   base type: {
-|   |   |   |   `i32`,
-|   |   |   }
-|   |   |   name: `a`,
+|   |   |   |   `var`,
+|   |   |   },
+|   |   |   name: `state`,
 |   |   |   `=`,
-|   |   |   literal (int_lit): `2`,
-|   |   `;`,
-|   |   }
-|   |   expression-statement: {
-|   |   |   binary op: {
-|   |   |   |   identifer: `a`,
-|   |   |   |   `+=`,
-|   |   |   |   literal (int_lit): `4`,
-|   |   |   },
-|   |   `;`,
-|   |   }
-|   |   expression-statement: {
-|   |   |   binary op: {
-|   |   |   |   identifer: `b`,
-|   |   |   |   `=`,
-|   |   |   |   literal (int_lit): `4`,
-|   |   |   },
-|   |   `;`,
-|   |   }
-|   |   expression-statement: {
-|   |   |   binary op: {
-|   |   |   |   identifer: `c`,
-|   |   |   |   `<-`,
-|   |   |   |   identifer: `b`,
-|   |   |   },
-|   |   `;`,
-|   |   }
-|   |   return statement: {
-|   |   |   `return`,
-|   |   |   identifer: `c`,
-|   |   `;`,
-|   |   }
-|   |   `}`,
-|   }
-}
-function declaration: {
-|   `fn`,
-|   `bar`,
-|   `(`,
-|   `)`,
-|   block: {
-|   |   `{`,
-|   |   expression-statement: {
 |   |   |   function call: {
-|   |   |   |   identifer: `waste_effort`,
+|   |   |   |   identifier: `String..from`,
 |   |   |   |   `(`,
+|   |   |   |   |   literal (string literal): `"Reaching to pet a "`,
 |   |   |   |   `)`,
 |   |   |   },
-|   |   `;`,
-|   |   }
-|   |   return statement: {
-|   |   |   `return`,
-|   |   `;`,
-|   |   }
+|   |   },
+|   |   expression-statement: {
+|   |   |   match-expression: {
+|   |   |   `match`,
+|   |   |   |   `(`,
+|   |   |   |   identifier: `animal`,
+|   |   |   |   `)`,
+|   |   |   |    match-branch: {
+|   |   |   |   |   variant decomposition: {
+|   |   |   |   |   |   name: `Animal..Cat`,
+|   |   |   |   |   |   `(`,
+|   |   |   |   |   |   parameter: {
+|   |   |   |   |   |   |   base type: {
+|   |   |   |   |   |   |   |   `var`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   name: `info`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   parameter: {
+|   |   |   |   |   |   |   base type: {
+|   |   |   |   |   |   |   |   `var`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   name: `whis_len`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `)`,
+|   |   |   |   |   },
+|   |   |   |   |   `=>`,
+|   |   |   |   |   block-expression: {
+|   |   |   |   |   |   `{`,
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `"cat!"`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `" Its whiskers are "`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append_string`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   |   |   identifier: `String..from`,
+|   |   |   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   |   |   identifier: `whis_len`,
+|   |   |   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `" inches long!"`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `}`,
+|   |   |   |   |   },
+|   |   |   |   },
+|   |   |   |    match-branch: {
+|   |   |   |   |   variant decomposition: {
+|   |   |   |   |   |   name: `Animal..Dog`,
+|   |   |   |   |   |   `(`,
+|   |   |   |   |   |   parameter: {
+|   |   |   |   |   |   |   base type: {
+|   |   |   |   |   |   |   |   `var`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   name: `info`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   parameter: {
+|   |   |   |   |   |   |   base type: {
+|   |   |   |   |   |   |   |   `var`,
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   name: `bark_vol`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `)`,
+|   |   |   |   |   },
+|   |   |   |   |   `=>`,
+|   |   |   |   |   block-expression: {
+|   |   |   |   |   |   `{`,
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `"dog!"`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `" Its barks are "`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append_string`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   |   |   identifier: `String..from`,
+|   |   |   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   |   |   identifier: `bark_vol`,
+|   |   |   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `" decibels loud!"`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `}`,
+|   |   |   |   |   },
+|   |   |   |   },
+|   |   |   |    match-branch: {
+|   |   |   |   |   identifier: `Animal..Snake`,
+|   |   |   |   |   `|`,
+|   |   |   |   |   identifier: `Animal..Lizard`,
+|   |   |   |   |   `=>`,
+|   |   |   |   |   block-expression: {
+|   |   |   |   |   |   `{`,
+|   |   |   |   |   |   expression-statement: {
+|   |   |   |   |   |   |   binary-expr: {
+|   |   |   |   |   |   |   |   identifier: `state`,
+|   |   |   |   |   |   |   |   `.`,
+|   |   |   |   |   |   |   |   function call: {
+|   |   |   |   |   |   |   |   |   identifier: `append`,
+|   |   |   |   |   |   |   |   |   `(`,
+|   |   |   |   |   |   |   |   |   |   literal (string literal): `" repitilian! Oh hell nah!"`,
+|   |   |   |   |   |   |   |   |   `)`,
+|   |   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   },
+|   |   |   |   |   |   |   `;`,
+|   |   |   |   |   |   },
+|   |   |   |   |   |   `}`,
+|   |   |   |   |   },
+|   |   |   |   },
+|   |   |   },
+|   |   |   `;`,
+|   |   },
+|   |   use statement|   |   |   `import`,
+|   |   |   module name: `std`,
+|   |   },
+|   |   expression-statement: {
+|   |   |   function call: {
+|   |   |   |   identifier: `println`,
+|   |   |   |   `(`,
+|   |   |   |   |   identifier: `state`,
+|   |   |   |   `)`,
+|   |   |   },
+|   |   |   `;`,
+|   |   },
 |   |   `}`,
-|   }
-}
-}
+|   },
+},
+},
 ```
