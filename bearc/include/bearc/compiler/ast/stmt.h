@@ -150,7 +150,7 @@ typedef struct {
 
 /// bring a module into current scope
 typedef struct {
-    token_ptr_slice_t module_id;
+    token_ptr_slice_t id;
 } ast_stmt_use_t;
 
 /// a statement expr, like `foo();`

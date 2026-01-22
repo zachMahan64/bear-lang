@@ -580,8 +580,8 @@ function declaration: {
 |   |   |   },
 |   |   |   `;`,
 |   |   },
-|   |   use statement|   |   |   `import`,
-|   |   |   module name: `std`,
+|   |   use statement {
+|   |   |   identifier: `std`,
 |   |   },
 |   |   expression-statement: {
 |   |   |   function call: {

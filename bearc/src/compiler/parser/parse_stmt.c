@@ -698,7 +698,7 @@ ast_stmt_t* parse_stmt_use(parser_t* p) {
     if (id.len == 0) {
         return parser_sync_stmt(p);
     }
-    use_stmt->stmt.use.module_id = id;
+    use_stmt->stmt.use.id = id;
     use_stmt->first = use_tkn;
     token_t* term = parser_expect_token(p, TOK_SEMICOLON);
     if (!term) {

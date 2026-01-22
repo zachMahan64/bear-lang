@@ -769,12 +769,12 @@ void pretty_print_stmt(ast_stmt_t* stmt) {
         print_delineator_from_type(TOK_SEMICOLON);
         break;
     case AST_STMT_USE:
-        printf("use statement");
+        print_title("use statement");
         printer_do_indent();
-        print_op_from_type(TOK_IMPORT);
+        print_op_from_type(TOK_USE);
         print_indent();
-        printf("module name: ");
-        print_id_slice(stmt->stmt.use.module_id);
+        printf("identifier: ");
+        print_id_slice(stmt->stmt.use.id);
         puts(",");
         printer_deindent();
         break;
