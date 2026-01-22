@@ -98,7 +98,6 @@ void cli_help(void) {
 void cli_version(void) { puts("bearc v0.0.1"); }
 
 cli_error_status cli_compile(const bearc_args_t* args) {
-    printf("%s(bearc) this feature is a work-in-progress\n%s", ansi_bold_white(), ansi_reset());
     cli_error_status error_status = {0, ""};
     error_status.error_code = compile_file(args);
     token_maps_free(); // after all operations involving token lookups are done
