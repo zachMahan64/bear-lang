@@ -2,78 +2,90 @@
 - **Work In Progress:** This document will be the main syntax reference before a more formalized reference is created.
 
 #### Grammar Diagrams
-- Bear is comprised of a few distinct syntax constructs: Expressions, Statements, Clauses, and Types
+- Bear is comprised of a few distinct syntax constructs: Expressions, Statements, Types, (and Clauses, which are subcomponents of certain statements)
 
 #### Types
-##### Basic built-in types:
-- Signed integers: `i8, i16, i32, i64`
-- Unsigned integers: `u8, u16, u32, u64, usize`
-- Floating points: `f32, f64`
-- Primitive strings: `str`
-- Booleans: `bool`
-- *TODO, finish*
+- Type: 
+    - MutType: `mut`? Type `mut`? *** `mut`s bind leftward, unless nothing is to the left, where they will then bind rightward
+    - | FnPtr: `*` `fn` `mut`? `(` Parameter(s) `)` `->` ReturnType(s)
+    - | BaseType:
+        - Signed integers: `i8, i16, i32, i64`
+        - | Unsigned integers: `u8, u16, u32, u64, usize`
+        - | Floating points: `f32, f64`
+        - | Primitive strings: `str`
+        - | Boolean: `bool`
+        - | Variant: (implicit: `variant`) Identifier
+        - | Struct: (implicit: `struct`) Identifier
+        - | Union: (implicit: `union`) Identifier
+    - | Generic: \[BaseType `::`? `<` GenericParam(s) `>`] | BaseType `::` GenericParam
+    - | Array: `[` CompileTimeExpression `]` Type 
+    - | Slice: `[` `&` `mut`? `]` Type
+    - | Reference: Type `&`
+    - | Pointer: Type `*`
+    - | Variadic: Type `...`
 
 #### Expressions
-- Identifier: \[contains `A`-`Z`, `a`-`z`, `0`-`9`, and `_`; cannot begin with `0`-`9`] 
-- ScopableIdentier: Identifier \[`..` Identifier...]?
-
-- IntegerLiteral: \[follows C conventions for decimal and hexidecimal literals, minus suffixes]
-- FloatingPointLiteral: \[follows C conventions for floating point literals, minus suffixes]
-- StringLiteral: \[follows C conventions for string literals]
-
-- ListLiteral: `[` Expression `,` Expression `,` ... `]`
-
-- BinaryExpression: `Expression` BinaryOp `Expression`
-    - BinaryOp: *TODO, write out precedence table* 
-- Preunary: `--` | `++` Expression
-- SizeOf: `sizeof` `(` Type `)`
-- AlignOf: `alignof` `(` Type `)`
-- TypeOf: `typeof` Expression
-- Postunary: *TODO, write this out*
-- Subscript: Expression `[` Expression `]`
-- Grouping: `(` Expression `)`
-- FunctionCall: Expression `(` Argument(s) `)`
-    - Arguments: Expression `,` Expression `,` ...
-- Borrow: `&` `mut`? Expression
-- Dereference: `*` Expression
-- StructInitialization: Identifier `{` StructFieldInitialization(s) `}`
-    - StructFieldInitialization: `.` Identifier `=` | `<-` Expression 
-- Closure: `move`? `|` Parameter(s) `|` `{` BodyStatement(s) `}`
-- VariantDecomposition: Identifier `(` Parameter(s) `)`
-- *TODO, finish*
+- Expression:
+    - Identifier: \[contains `A`-`Z`, `a`-`z`, `0`-`9`, and `_`; cannot begin with `0`-`9`] 
+    - | ScopableIdentier: Identifier \[`..` Identifier...]?
+    - | IntegerLiteral: \[follows C conventions for decimal and hexidecimal literals, minus suffixes]
+    - | FloatingPointLiteral: \[follows C conventions for floating point literals, minus suffixes]
+    - | StringLiteral: \[follows C conventions for string literals]
+    - | ListLiteral: `[` Expression `,` Expression `,` ... `]`
+    - | BinaryExpression: `Expression` BinaryOp `Expression`
+        - BinaryOp: a full precedence chart is in the works, for now refer to the maps in the [parser rules file](bearc/src/compiler/parser/rules.c) 
+    - | Preunary: `--` | `++` | `typeof` Expression
+    - | SizeOf: `sizeof` `(` Type `)`
+    - | AlignOf: `alignof` `(` Type `)`
+    - | Postunary: *TODO, write this out*
+    - | Subscript: Expression `[` Expression `]`
+    - | Grouping: `(` Expression `)`
+    - | FunctionCall: Expression `(` Argument(s) `)`
+        - Arguments: Expression `,` Expression `,` ...
+    - | Borrow: `&` `mut`? Expression
+    - | Dereference: `*` Expression
+    - | StructInitialization: Identifier `{` StructFieldInitialization(s) `}`
+       - StructFieldInitialization: `.` Identifier `=` | `<-` Expression 
+    - | Closure: `move`? `|` Parameter(s) `|` `{` BodyStatement(s) `}`
+    - | VariantDecomposition: Identifier `(` Parameter(s) `)`
+    - | Match: `match` `(` Expression `)` `{` MatchBranch(s) `}`
+    - | MatchBranch: VariantDecomposition | Expression `=>` Expression | BlockExpression
+       - BlockExpression: `{` Statement(s) | YieldStatement(s) `}` 
+            - YieldStatement: `yield` Expression
 
 #### Statements
 - *File*: TopLevelStatement(s)
+- *TopLevelStatement*: 
+    - | *ModuleDeclaration*: `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
+    - | ImportStatement: `import` ExternalLanguage? -> PathLiteral -> \[`->` -> ModuleIdentifier]? -> `;` 
+    - | *FunctionDeclaration*: `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
+    - | GenericParams: `<` Identifier -> HasClause? `,` ... `>` 
+        - *HasClause*: `has` `(` Contract(s) `)`
+    - | *StructDeclaration*: `struct` Identifier -> GenericParams? -> HasClause? -> `{` TopLevelStatement(s) | MethodDeclaration(s) | DestructorDeclaration(s) `}` 
+    - | *MethodDeclaration*: `mt` `mut`? Identifier -> GenericParams? -> `(` -> Parameter(s) -> `)` -> `;` | `{` BodyStatement(s) `}`
+    - | *DestructorDeclaration*: `dt` `self` GenericParams? -> `(` -> Parameters -> `)` -> `;` | `{` BodyStatement(s) `}`
+    - | *VariantDeclaration*: `variant` Identifier -> GenericParams? `{` VariantFieldDeclaration(s) `}`
+    - | *VariantFieldDeclaration*: Identifier `(` Parameter(s) `)`
+    - | *ContractDeclaration*: `contract` Identifier `{` MethodPrototypes `}`
+    - | *UnionDeclaration*: `union` Identifier `{` MemberVariableDeclaration(s) `}`
+    - | *ExternBlock*: `extern` ExternalLanguage `{` -> FunctionDeclaration(s) `}`
+    - | *DefTypeDeclaration*: `deftype` Identifier `=` Type `;`
+    - | *VariableDeclaration*: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
+    - | *UseStatement*: `use` Identifier `;`
 
-- *TopLevelStatement*: ModuleDeclaration | ImportStatement | FunctionDeclaration | StructDeclaration | VariantDeclaration | ContractDeclaration | UnionDeclaration | ExternBlock | DefTypeDeclaration | VariableDeclaration | UseStatement
+- *BodyStatement*: 
+- | FunctionDeclaration
+- | *BlockStatement*: `{` BodyStatement(s) `}`
+- | *IfStatement*: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
+- | WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`
+- | ForLoopStatement: `for` `(` BodyStatement `;` Expression `;` Expression `)` `{` LoopBodyStatement(s) `}`
+- | ForInLoopStatement: `for` `var` Identifier `in` Expression `{` LoopBodyStatement(s) `}`
+- | ReturnStatement: `return` Expression? `;`
+- | EmptyStatement: `;`
+- | ExpressionStatement: Expression `;`
 
-- *ModuleDeclaration*: `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
-- ImportStatement: `import` ExternalLanguage? -> PathLiteral -> \[`->` -> ModuleIdentifier]? -> `;` 
-- *FunctionDeclaration*: `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
-- GenericParams: `<` Identifier -> HasClause? `,` ... `>` 
-- *StructDeclaration*: `struct` Identifier -> GenericParams? -> HasClause? -> `{` TopLevelStatement(s) | MethodDeclaration(s) | DestructorDeclaration(s) `}` 
-    - *MethodDeclaration*: `mt` `mut`? Identifier -> GenericParams? -> `(` -> Parameter(s) -> `)` -> `;` | `{` BodyStatement(s) `}`
-    - *DestructorDeclaration*: `dt` `self` GenericParams? -> `(` -> Parameters -> `)` -> `;` | `{` BodyStatement(s) `}`
-- *HasClause*: `has` `(` Contract(s) `)`
-- *VariantDeclaration*: `variant` Identifier -> GenericParams? `{` VariantFieldDeclaration(s) `}`
-- *VariantFieldDeclaration*: Identifier `(` Parameter(s) `)`
-- *ContractDeclaration*: `contract` Identifier `{` MethodPrototypes `}`
-- *UnionDeclaration*: `union` Identifier `{` MemberVariableDeclaration(s) `}`
-- *ExternBlock*: `extern` ExternalLanguage `{` -> FunctionDeclaration(s) `}`
-- *DefTypeDeclaration*: `deftype` Identifier `=` Type `;`
-- *VariableDeclaration*: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
-- *UseStatement*: `use` Identifier `;`
+- *LoopBodyStatement*: 
+    - BodyStatement
+    - | BreakStatement: `break` `;`
 
-- *BodyStatement*: FunctionDeclaration | BlockStatement | IfStatement | WhileStatement | ForLoopStatement | ForInLoopStatement | VariableDeclaration | ReturnStatement | EmptyStatement | UseStatement | ExpressionStatement
-- *LoopBodyStatement*: BodyStatement | BreakStatement
-
-- *BlockStatement*: `{` BodyStatement(s) `}`
-- *IfStatement*: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
-- WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`
-- ForLoopStatement: `for` `(` BodyStatement `;` Expression `;` Expression `)` `{` LoopBodyStatement(s) `}`
-- ForInLoopStatement: `for` `var` Identifier `in` Expression `{` LoopBodyStatement(s) `}`
-- ReturnStatement: `return` Expression? `;`
-- EmptyStatement: `;`
-- ExpressionStatement: Expression `;`
-- BreakStatement: `break` `;`
 

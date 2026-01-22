@@ -48,7 +48,7 @@ typedef enum {
     // variants
     AST_EXPR_VARIANT_DECOMP,
 
-    // block expr/switch
+    // block expr/match
     AST_EXPR_BLOCK,
     AST_EXPR_MATCH_BRANCH,
     AST_EXPR_MATCH,
