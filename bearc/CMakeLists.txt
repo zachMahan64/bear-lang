@@ -38,6 +38,8 @@ set(SRC
     src/compiler/parser/parse_token_slice.c
     src/compiler/parser/parser.c
 
+    src/compiler/span/span.c
+
     src/utils/strimap.c
     src/utils/vector.c
     src/utils/arena.c

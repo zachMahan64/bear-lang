@@ -6,13 +6,13 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
+#ifndef COMPILER_AST_TYPE
+#define COMPILER_AST_TYPE
+
 #include "compiler/ast/expr.h"
 #include "compiler/token.h"
 #include <stdbool.h>
 #include <stddef.h>
-
-#ifndef COMPILER_AST_TYPE
-#define COMPILER_AST_TYPE
 
 typedef enum {
     AST_TYPE_BASE,

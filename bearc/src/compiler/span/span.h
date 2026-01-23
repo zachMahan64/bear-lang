@@ -6,15 +6,23 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef UTILS_STRING_VIEW
-#define UTILS_STRING_VIEW
+#ifndef COMPILER_SPAN_SPAN
+#define COMPILER_SPAN_SPAN
+
+#include "utils/file_io.h"
+#include "utils/string_view.h"
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct {
-    const char* start;
-    size_t len;
-} string_view_t;
+    const char* src_file_name;
+    uint32_t start;
+    uint32_t end;
+} span_t;
 
-typedef string_view_t sv_t;
+span_t span_normalize_src_view(src_buffer_t* src_buffer, const char* start, size_t len);
 
-#endif // !UTILS_STRING_VIEW
+string_view_t span_retrieve(const char* data, span_t span);
+
+#endif

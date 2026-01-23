@@ -6,15 +6,15 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef UTILS_STRING_VIEW
-#define UTILS_STRING_VIEW
-#include <stddef.h>
+#ifndef COMPILER_HIR_TYPE
+#define COMPILER_HIR_TYPE
+
+#include "utils/string_view.h"
+#include <stdbool.h>
 
 typedef struct {
-    const char* start;
-    size_t len;
-} string_view_t;
+    string_view_t id;
+    bool mut;
+} hir_base_type_t;
 
-typedef string_view_t sv_t;
-
-#endif // !UTILS_STRING_VIEW
+#endif
