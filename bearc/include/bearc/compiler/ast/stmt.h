@@ -19,9 +19,9 @@ extern "C" {
 #endif
 
 typedef enum {
+    // --------- declaration statements ---------
     // blocks
-    AST_STMT_BLOCK, // {...} sequence of statements
-    AST_STMT_FILE,  // top-level flat seq of statements w/ metadata
+    AST_STMT_FILE, // top-level flat seq of statements w/ metadata
     AST_STMT_EXTERN_BLOCK,
 
     // var decls
@@ -30,34 +30,6 @@ typedef enum {
 
     // module stuff
     AST_STMT_MODULE,
-
-    // import
-    AST_STMT_IMPORT,
-
-    // use foo;
-    AST_STMT_USE,
-
-    // statement expr
-    AST_STMT_EXPR,
-
-    // statement empty
-    AST_STMT_EMPTY,
-
-    // break statement
-    AST_STMT_BREAK,
-
-    // function declarations
-    AST_STMT_FN_DECL,
-    AST_STMT_FN_PROTOTYPE,
-
-    // control flow
-    AST_STMT_IF,
-    AST_STMT_ELSE,
-    AST_STMT_WHILE,
-    AST_STMT_FOR,
-    AST_STMT_FOR_IN,
-    AST_STMT_RETURN,
-    AST_STMT_YIELD,
 
     // stmt decl modifiers
     AST_STMT_VISIBILITY_MODIFIER,
@@ -73,7 +45,40 @@ typedef enum {
     AST_STMT_VARIANT_DEF,
     AST_STMT_VARIANT_FIELD_DECL,
 
+    // function declarations
+    AST_STMT_FN_DECL,
+    AST_STMT_FN_PROTOTYPE,
+
     AST_STMT_DEFTYPE,
+
+    // --------- directives ---------
+    // import
+    AST_STMT_IMPORT,
+
+    // use foo;
+    AST_STMT_USE,
+
+    // --------- pure statements ---------
+
+    AST_STMT_BLOCK, // {...} sequence of statements
+
+    // statement expr
+    AST_STMT_EXPR,
+
+    // statement empty
+    AST_STMT_EMPTY,
+
+    // break statement
+    AST_STMT_BREAK,
+
+    // control flow
+    AST_STMT_IF,
+    AST_STMT_ELSE,
+    AST_STMT_WHILE,
+    AST_STMT_FOR,
+    AST_STMT_FOR_IN,
+    AST_STMT_RETURN,
+    AST_STMT_YIELD,
 
     AST_STMT_INVALID,
 } ast_stmt_type_e;

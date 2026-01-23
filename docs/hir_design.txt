@@ -25,19 +25,50 @@ HIR STRUCTURES
 (declarations)
 insert a String representing the name (none-scoped newly bound identifier) into the Map of the local HirScope
 
-(usages)
-HirIdentifierId -> HirIdentifier (eg. std..println):
-    []HirSymbolId -> perform scoped-aware String look-up -> HirId (perform a hash look-up to tie the HirSymbolId's to store a fixed HirId)
+(usages, used in types and exprs)
+HirIdentifier (eg. std..println):
+    []HirId -> perform scoped-aware String look-up -> HirId (perform a hash look-up to tie the HirSymbolId's to store a fixed HirId)
 
 HirId ->
-    | HirDeclarationId -> HirDeclaration:
-        | HirModuleId -> HirModule -> []HirId 
-        | HirFunctionId -> HirFunction
-    | HirTypeId -> HirType: [HirTypeBuiltinId | HirStructId | HirVariantId] -> (data forms of those ids)
-    | HirExprId -> HirExpr 
-    | HirStatementId -> HirStatement
+    | HirDeclaration:
+        | HirModule -> []HirId
+        | HirFunctionDecl:
+            name: Span
+            params: Params
+            body: HirBody
+            HirBody?
+        | HirDestructorDecl:
+            HirFunctionDecl
+        | HirExternCFunctionDecl
+        | HirVarDecl
+        | HirStructDecl
+        | HirVariantDecl
+        | HirUnionDecl
+        | HirContractDecl
+        | HirDefTypeDecl
+    | HirType: 
+        | HirTypeBuiltin
+        | HirStruct
+        | HirVariant
+        | HirUnion
+    | HirStatement:
+        | HirBlockStmt:
+            block: HirBody
+        | HirExprStmt
+        | HirEmptyStmt
+        | HirBreakStmt
+        | HirIfStmt
+        | HirElseStmt
+        | HirLoopStmt
+        | HirReturnStmt
+        | HirYieldStmt
+    | HirExpr
+    | HirIdentifier:
+        id: HirId
+    | HirBody (executable):
+        nodes: []HirId
 
-TODO, add more subtypes and members for various Hir_____ types (eg. HirExpr -> HirBinaryExpr, etc.)
+TODO, finish HirExpr variants and fill out fields
 
 HIR SCOPE-RES SCHEME
 --------------------
