@@ -1,0 +1,11 @@
+import "foo.br";
+
+fn main() {
+    foo();
+}
+
+variant State {
+    State0,
+    State1,
+    State2,
+}
