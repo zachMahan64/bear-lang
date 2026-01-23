@@ -1,0 +1,46 @@
+HIR DESIGN DOC
+--------------
+
+===============
+|     key     |
+--------------- 
+':' composed of
+'|' or 
+'->' mapped to
+'[]' sliceof
+'()' descript.
+lowercase = 
+    function
+capitalized =
+    HirType
+===============
+
+HIR STRUCTURES
+--------------
+- Declarations will define Hir nodes tied to scoped hash-tables and HirIdentifierId's will be the paths locating those definied nodes.
+- Usages of any identifiers will explore those paths to ensure the existence of any mentioned identifiers by walking the scope tree and 
+  then storing the HirId's at those the referenced Strings inside an HirIdentifierId.
+- Declarations much check their local scope to ensure no redefinitions occur.
+
+(declarations)
+insert a String representing the name (none-scoped newly bound identifier) into the Map of the local HirScope
+
+(usages)
+HirIdentifierId -> HirIdentifier (eg. std..println):
+    []HirSymbolId -> perform scoped-aware String look-up -> HirId (perform a hash look-up to tie the HirSymbolId's to store a fixed HirId)
+
+HirId ->
+    | HirModuleId -> HirModule -> []HirId 
+    | HirFunctionId -> HirFunction 
+    | HirTypeId -> HirType: [HirTypeBuiltinId | HirStructId | HirVariantId] -> (data forms of those ids)
+    | HirExprId -> HirExpr 
+    | HirStatementId -> HirStatement
+
+TODO, add more subtypes and members for various Hir_____ types (eg. HirExpr -> HirBinaryExpr, etc.)
+
+HIR SCOPE-RES SCHEME
+--------------------
+HirScope:
+    ParentMap -> HirScope
+    Map: String -> HirId
+    ChildMaps: String -> HirScope 
