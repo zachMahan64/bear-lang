@@ -30,8 +30,9 @@ HirIdentifierId -> HirIdentifier (eg. std..println):
     []HirSymbolId -> perform scoped-aware String look-up -> HirId (perform a hash look-up to tie the HirSymbolId's to store a fixed HirId)
 
 HirId ->
-    | HirModuleId -> HirModule -> []HirId 
-    | HirFunctionId -> HirFunction 
+    | HirDeclarationId -> HirDeclaration:
+        | HirModuleId -> HirModule -> []HirId 
+        | HirFunctionId -> HirFunction
     | HirTypeId -> HirType: [HirTypeBuiltinId | HirStructId | HirVariantId] -> (data forms of those ids)
     | HirExprId -> HirExpr 
     | HirStatementId -> HirStatement
