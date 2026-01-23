@@ -74,5 +74,5 @@ HIR SCOPE-RES SCHEME
 --------------------
 HirScope:
     ParentMap -> HirScope
-    Map: String -> HirId
+    LocalMap: String -> HirId
     ChildMaps: String -> HirScope 
