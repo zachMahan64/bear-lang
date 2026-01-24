@@ -112,7 +112,71 @@ HirExecId -> HirExec:
         | HirYieldStmt:
             HirExecId? -> HirExpr
     | HirExpr:
-        TODO
+        type: HirTypeId?   (filled after typecheck)
+        kind: HirExprKind
+
+HirExprKind:
+    (atoms)
+    | HirExprIdentifier:
+        ident: HirIdentifier (resolved DefId inside)
+    | HirExprLiteral:
+        literal: LiteralValue
+    | HirExprListLiteral:
+        elems: []HirExecId -> HirExpr
+    | HirExprAssignMove:
+        into: HirExecId 
+        out_of: HirExecId
+    | HirExprAssignEqual:
+        to: HirExecId 
+        from: HirExecId
+    | HirExprIs 
+        lhs: HirExecId 
+        rhs: HirExecId -> HirExprVariantDecomp
+    | HirExprBinary:
+        op: BinaryOp
+        left: HirExecId
+        right: HirExecId
+    | HirExprPreUnary:
+        op: UnaryOp
+        expr: HirExecId
+    | HirExprPostUnary:
+        op: PostUnaryOp
+        expr: HirExecId
+    | HirExprSubscript:
+        base: HirExecId
+        index: HirExecId
+    | HirExprFnCall:
+        callee: HirExecId
+        args: []HirExecId
+    | HirExprType:
+        type: HirTypeId
+    | HirExprBorrow:
+        mutable: bool
+        expr: HirExecId
+    | HirExprStructInit:
+        struct_def: HirDefId
+        fields: []HirExecId -> HirExprStructMemberInit
+    | HirExprStructMemberInit:
+        field_def: HirDefId
+        move_into: bool
+        value: HirExecId
+    | HirExprClosure:
+        params: []HirParamId
+        return_type: HirTypeId
+        body: HirExecId -> HirBlockStmt
+        captures: []HirDefId? (filled by capture analysis)
+    | HirExprVariantDecomp:
+        variant_def: HirDefId
+        fields: []HirParamId?
+    | HirExprBlock:
+        block: HirExecId -> HirStmtBlock
+    | HirExprMatch:
+        scrutinee: HirExecId
+        branches: []HirExecId -> HirMatchBranch
+    HirMatchBranch:
+        patterns: []HirExecId
+        body: HirExecId
+    | HirExprInvalid
 
 (these are specifically type mentions, not definitions)
 HirTypeId->
@@ -157,6 +221,8 @@ HirDefId ->
         | HirVarDef:
             type: HirTypeId
             name: Span
+        | MovedVarDef:
+            orig: HirDefId
         | HirModDef:
             scope: HirScopeId
             name: Span
