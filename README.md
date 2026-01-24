@@ -1,10 +1,10 @@
 # bear-lang (Work in Progress)
 - A modern, C-like language inspired by C++ and Rust.
-- BearLang is statically-typed and compiled aiming for simplicity and clarity.
+- Bear is statically-typed and compiled aiming for simplicity and clarity.
 - Right now, I'm working on the frontend but plan on using LLVM for the backend.
 
 ## Documentation
-- [Syntax](docs/syntax.md)
+- [Formal Grammar](docs/syntax.md)
 - [References](docs/references.md)
 
 ## Set up

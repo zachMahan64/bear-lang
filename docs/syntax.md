@@ -1,5 +1,5 @@
 ### Bear syntax
-- **Work In Progress:** This document will be the main syntax reference before a more formalized reference is created.
+- **Work In Progress:** This document is the primary grammar reference for Bear.
 
 #### Grammar Diagrams
 - Bear is comprised of a few distinct syntax constructs: Expressions, Statements, Types, (and Clauses, which are subcomponents of certain statements)
