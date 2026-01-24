@@ -2,6 +2,8 @@ import "foo.br";
 
 fn main() {
     foo();
+    State a = State..State0;
+    a is State0..State1;
 }
 
 variant State {

@@ -35,19 +35,31 @@ HirSymbolIdIdx -> HirSymbolId
 HirSymbolId -> HirSymbol
 HirSpanId -> Span
 
+*block scopes should not be saved/stored
+
+(persisent, serializable)
 HirScopeId->
     HirScope:
         parent: HirScopeId?
-        modules: SymbolId -> HirDefId     (namespace/module names/static struct members)
-        values:  SymbolId -> HirDefId     (variables, functions)
-        types:   SymbolId -> HirDefId    (structs, unions, deftypes, variants)
+        ScopeTable:
+            modules: SymbolId -> HirDefId     (namespace/module names/static struct members)
+            values:  SymbolId -> HirDefId     (variables, functions)
+            types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
 
+(temporary, not serialized)
+HirScopeAnonId->
+    HirScopeAnon:
+        parent: HirScopeId
+        anon_parent: HirScopeAnonId?
+        table: ScopeTable
+            
 HirExecIdIdx-> HirExecId
 HirExecId -> HirExec
 
 HirDefIdIdx -> HirDefId
 HirDefId -> HirDef
 
+HirTypeIdIdx -> HirTypeId
 HirTypeId -> HirType
 
 HirParamIdIdx -> HirParamId 
@@ -60,7 +72,7 @@ HirGenericArgIdIdx -> HirGenericArgId
 HirGenericArgId -> HirGenericArg
 
 HASH TABLES
-*persisent, must be serializable
+*temporary, not serialized
 ========================================
 StringToSymbolTable: String → HirSymbolId
 
@@ -73,14 +85,15 @@ HirIdentifier (used in type, expr, and module references; eg: std..println):
     spans:
         start: HirSpanId
         len: uint32_t 
-    resolved: DefId?
+    resolved: DefId? (non-optional after resolution)
 
 HirExecId -> HirExec:
+    span: Span
     | HirStatement:
         | HirBlockStmt:
             HirBody:
-                []Hir
-                []HirExecId
+                locals: HirScopeAnonId
+                execs: []HirExecId
         | HirExprStmt:
             HirExecId -> HirExpr
         | HirEmptyStmt:
@@ -104,15 +117,34 @@ HirExecId -> HirExec:
 (these are specifically type mentions, not definitions)
 HirTypeId->
     HirType:
+        span: Span
         | HirTypeBuiltin
-        | HirDefId
-        []HirGenericArg?
+        | HirTypeStructure:
+            HirIdentifier
+            resolved: HirDefId? (non-optional after resolution)
+        | HirGenericStructure:
+            HirTypeId
+            []HirGenericArg
+        | HirTypeArr:
+            size: size_t? (non-optional after resolution)
+            inner: HirTypeId
+        | HirTypeRef:
+            inner: HirTypeId
+        | HirTypeFnPtr:
+            []HirTypeId
+            return_type: HirTypeId
+        | HirTypeVariadic
+            inner: HirTypeId
+
+
 
 HirDefId ->
+    span: Span
     HirDef:
         | HirFunctionDef:
             name: Span
-            Params
+            []HirParamId
+            return_type: HirTypeId
             HirExecId? -> HirBody
             orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
         | HirGenericFunctionDef:
@@ -154,9 +186,14 @@ HirDefId ->
             name: Span 
 
 HirParam:
-    HirId -> HirVarDef 
+    def: HirDefId -> HirVarDef
 
 HirGenericParam:
-    | HirIdentifier 
+    | HirIdentifier (placeholder for types)
+    | HirParam (placeholder for exprs)
+
+HirGenericArg:
+    | HirExecId -> HirExpr
+    | HirTypeId
 
 ** note: generic defs will be stored as sugared and specifically instantiated as desugared defs that point to their orginal def
