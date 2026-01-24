@@ -325,4 +325,4 @@ typedef struct ast_stmt {
 #ifdef __cplusplus
 } // extern "C"
 #endif
-#endif // !AST_STATEMENTS_H
+#endif // !AST_STATEMENTS

@@ -38,9 +38,9 @@ HirSpanId -> Span
 HirScopeId->
     HirScope:
         parent: HirScopeId?
-        modules: SymbolId -> HirScope     (namespace/module names/static struct members)
+        modules: SymbolId -> HirDefId     (namespace/module names/static struct members)
         values:  SymbolId -> HirDefId     (variables, functions)
-        types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
+        types:   SymbolId -> HirDefId    (structs, unions, deftypes, variants)
 
 HirExecIdIdx-> HirExecId
 HirExecId -> HirExec
@@ -66,7 +66,7 @@ StringToSymbolTable: String → HirSymbolId
 
 --------------------------------------------------------------------------
 
-HirIdentifier (used in types, exprs, and module namespaces; eg: std..println):
+HirIdentifier (used in type, expr, and module references; eg: std..println):
     segments:
         start: HirSymbolIdIdx
         len: uint32_t
@@ -101,10 +101,12 @@ HirExecId -> HirExec:
     | HirExpr:
         TODO
 
+(these are specifically type mentions, not definitions)
 HirTypeId->
     HirType:
         | HirTypeBuiltin
-        | HirDefId 
+        | HirDefId
+        []HirGenericArg?
 
 HirDefId ->
     HirDef:
@@ -114,25 +116,47 @@ HirDefId ->
             HirExecId? -> HirBody
             orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
         | HirGenericFunctionDef:
-            HirGenericParams 
+            []HirGenericParam 
             HirFunctionDef
         | HirDestructorDef:
             HirFunctionDef
-        | HirExternCFunctionDef
+        | HirExternCFunctionDef:
             HirFunctionDef
-        | HirVarDef
+        | HirVarDef:
             type: HirTypeId
             name: Span
+        | HirModDef:
+            scope: HirScopeId
+            name: Span
         | HirStructDef
-           HirScopeId
-           TODO
+            scope: HirScopeId 
+            name: Span
+            contracts: []HirDefId -> HirContractDef
+            orig: HirDefId? -> HirGenericStructDef (if was originally generic and then was generated)
         | HirGenericStructDef
+            HirStructDef
+           []HirGenericParam 
         | HirVariantDef
+            scope: HirScopeId 
+            name: Span
+            orig: HirDefId? -> HirGenericVariantDef (if was originally generic and then was generated)
         | HirGenericVariantDef
+            HirVariantDef
+            []HirGenericParam
         | HirUnionDef
+            scope: HirScopeId 
+            name: Span 
         | HirContractDef
+            scope: HirScopeId 
+            name: Span 
         | HirDefTypeDef
+            type: HirTypeId
+            name: Span 
 
-** note: generic defs will be stored as sugared and then the desugared defs will point to their orginal def
+HirParam:
+    HirId -> HirVarDef 
 
-TODO, finish HirExpr variants and fill out fields for DefIds
+HirGenericParam:
+    | HirIdentifier 
+
+** note: generic defs will be stored as sugared and specifically instantiated as desugared defs that point to their orginal def
