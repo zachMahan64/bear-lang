@@ -80,9 +80,7 @@ HirIdentifier (used in type, expr, and module references; eg: std..println):
     segments:
         start: HirSymbolIdIdx
         len: uint32_t
-    spans:
-        start: HirSpanId
-        len: uint32_t 
+    span: Span
     resolved: DefId? (non-optional after resolution)
 
 HirExecId -> HirExec:

@@ -9,12 +9,4 @@
 #ifndef COMPILER_HIR_TYPE
 #define COMPILER_HIR_TYPE
 
-#include "utils/string_view.h"
-#include <stdbool.h>
-
-typedef struct {
-    string_view_t id;
-    bool mut;
-} hir_base_type_t;
-
 #endif
