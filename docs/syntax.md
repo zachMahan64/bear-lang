@@ -37,7 +37,7 @@
     - | Preunary: `--` | `++` | `typeof` Expression
     - | SizeOf: `sizeof` `(` Type `)`
     - | AlignOf: `alignof` `(` Type `)`
-    - | Postunary: *TODO, write this out*
+    - | Postunary: Expression `++` | `--`
     - | Subscript: Expression `[` Expression `]`
     - | Grouping: `(` Expression `)`
     - | FunctionCall: Expression `(` Argument(s) `)`
@@ -74,15 +74,15 @@
     - | *UseStatement*: `use` Identifier `;`
 
 - *BodyStatement*: 
-- | FunctionDeclaration
-- | *BlockStatement*: `{` BodyStatement(s) `}`
-- | *IfStatement*: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
-- | WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`
-- | ForLoopStatement: `for` `(` BodyStatement `;` Expression `;` Expression `)` `{` LoopBodyStatement(s) `}`
-- | ForInLoopStatement: `for` `var` Identifier `in` Expression `{` LoopBodyStatement(s) `}`
-- | ReturnStatement: `return` Expression? `;`
-- | EmptyStatement: `;`
-- | ExpressionStatement: Expression `;`
+    - | FunctionDeclaration
+    - | *BlockStatement*: `{` BodyStatement(s) `}`
+    - | *IfStatement*: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
+    - | WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`
+    - | ForLoopStatement: `for` `(` BodyStatement `;` Expression `;` Expression `)` `{` LoopBodyStatement(s) `}`
+    - | ForInLoopStatement: `for` `var` Identifier `in` Expression `{` LoopBodyStatement(s) `}`
+    - | ReturnStatement: `return` Expression? `;`
+    - | EmptyStatement: `;`
+    - | ExpressionStatement: Expression `;`
 
 - *LoopBodyStatement*: 
     - BodyStatement

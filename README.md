@@ -5,6 +5,7 @@
 
 ## Documentation
 - [Formal Grammar](docs/syntax.md)
+- [HIR Design](docs/hir_design.md)
 - [References](docs/references.md)
 
 ## Set up

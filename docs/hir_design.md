@@ -1,9 +1,7 @@
-HIR DESIGN DOC
---------------
-
-===============
+```
+---------------
 |     key     |
---------------- 
+=============== 
 ':' composed of
 '|' or 
 '->' mapped to
@@ -13,10 +11,11 @@ lowercase =
     name
 capitalized =
     HirType
-===============
-
-HIR STRUCTURES
---------------
+---------------
+```
+```
+RESOLUTION FLOW
+---------------
 - Declarations will define Hir nodes tied to scoped SymbolId tables and HirIdentifers will be the paths locating those definied nodes.
 - Usages of any identifiers will explore those paths to ensure the existence of any mentioned identifiers by walking the scope tree and 
   then storing the HirId's at those the referenced Strings inside an HirIdentifier.
@@ -25,19 +24,17 @@ HIR STRUCTURES
      of the newly declared node
 
 CONTAINERS
--------------------------------------------------------------------------
+=========================================================================
 VECTOR TABLES (used like arenas, but memory is pointed to by ids/indices)
 *persisent, must be serializable
-=========================================================================
+-------------------------------------------------------------------------
 note: the *IdIdx are necessary for contiguous slices of *Id's!
 
 HirSymbolIdIdx -> HirSymbolId
 HirSymbolId -> HirSymbol
 HirSpanId -> Span
 
-*block scopes should not be saved/stored
-
-(persisent, serializable)
+(*persisent, serializable)
 HirScopeId->
     HirScope:
         parent: HirScopeId?
@@ -46,7 +43,7 @@ HirScopeId->
             values:  SymbolId -> HirDefId     (variables, functions)
             types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
 
-(temporary, not serialized)
+(temporary, for block scopes; not serialized)
 HirScopeAnonId->
     HirScopeAnon:
         parent: HirScopeId
@@ -71,12 +68,12 @@ HirGenericParamId -> HirGenericParam
 HirGenericArgIdIdx -> HirGenericArgId 
 HirGenericArgId -> HirGenericArg
 
-HASH TABLES
-*temporary, not serialized
-========================================
+HASH TABLES, *temporary, not serialized
+---------------------------------------
 StringToSymbolTable: String → HirSymbolId
 
---------------------------------------------------------------------------
+HIR NODE STRUCTURES
+============================================================================
 
 HirIdentifier (used in type, expr, and module references; eg: std..println):
     segments:
@@ -121,6 +118,7 @@ HirExprKind:
         ident: HirIdentifier (resolved DefId inside)
     | HirExprLiteral:
         literal: LiteralValue
+    (computed exprs)
     | HirExprListLiteral:
         elems: []HirExecId -> HirExpr
     | HirExprAssignMove:
@@ -200,8 +198,6 @@ HirTypeId->
         | HirTypeVariadic
             inner: HirTypeId
 
-
-
 HirDefId ->
     span: Span
     HirDef:
@@ -263,3 +259,4 @@ HirGenericArg:
     | HirTypeId
 
 ** note: generic defs will be stored as sugared and specifically instantiated as desugared defs that point to their orginal def
+```
