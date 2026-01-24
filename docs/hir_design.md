@@ -201,9 +201,9 @@ HirTypeId->
 
 HirDefId ->
     span: Span
+    name: SymbolId
     HirDef:
         | HirFunctionDef:
-            name: Span
             []HirParamId
             return_type: HirTypeId
             HirExecId? -> HirBody
