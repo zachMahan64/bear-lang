@@ -1,3 +1,4 @@
+### Bear HIR Design Overview
 ```
 ---------------
 |     key     |
