@@ -21,7 +21,7 @@ HIR STRUCTURES
 - Usages of any identifiers will explore those paths to ensure the existence of any mentioned identifiers by walking the scope tree and 
   then storing the HirId's at those the referenced Strings inside an HirIdentifier.
 - Declarations must check their local scope to ensure no redefinitions occur.
-   - hash look-up -> SymbolId representing the name (unscoped newly bound identifier) -> Map of the local HirScope pointing to the DeclId
+   - hash look-up -> SymbolId representing the name (unscoped newly bound identifier) -> Map of the local HirScope pointing to the DefId
      of the newly declared node
 
 CONTAINERS
@@ -29,74 +29,110 @@ CONTAINERS
 VECTOR TABLES (used like arenas, but memory is pointed to by ids/indices)
 *persisent, must be serializable
 =========================================================================
-HirSymbolId -> HirSymbol
-HirId -> HirNode 
-HirTypeId -> HirType
+note: the *IdIdx are necessary for contiguous slices of *Id's!
+
 HirSymbolIdIdx -> HirSymbolId
-HirSpanIdx -> Span
+HirSymbolId -> HirSymbol
+HirSpanId -> Span
+
+HirScopeId->
+    HirScope:
+        parent: HirScopeId?
+        modules: SymbolId -> HirScope     (namespace/module names/static struct members)
+        values:  SymbolId -> HirDefId     (variables, functions)
+        types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
+
+HirExecIdIdx-> HirExecId
+HirExecId -> HirExec
+
+HirDefIdIdx -> HirDefId
+HirDefId -> HirDef
+
+HirTypeId -> HirType
+
+HirParamIdIdx -> HirParamId 
+HirParamId -> HirParam 
+
+HirGenericParamIdIdx -> HirGenericParamId 
+HirGenericParamId -> HirGenericParam 
+
+HirGenericArgIdIdx -> HirGenericArgId 
+HirGenericArgId -> HirGenericArg
 
 HASH TABLES
-*temporary, dropped at end of resolution
+*persisent, must be serializable
 ========================================
-SymbolTable: String → HirSymbolId
+StringToSymbolTable: String → HirSymbolId
 
-HIR SCOPE-RES SCHEME
-*temporary, dropped at end of resolution 
-========================================
-HirScope:
-    parent: HirScope?
-    modules: SymbolId → HirScope     (namespace/module names)
-    values:  SymbolId → DeclId       (variables, functions)
-    types:   SymbolId → TypeDeclId   (structs, unions, deftypes, variants)
 --------------------------------------------------------------------------
+
 HirIdentifier (used in types, exprs, and module namespaces; eg: std..println):
     segments:
         start: HirSymbolIdIdx
         len: uint32_t
     spans:
-        start: HirSpanIdx
-        len: uint32_t
-        
-    resolved: DeclId?
+        start: HirSpanId
+        len: uint32_t 
+    resolved: DefId?
 
 HirExecId -> HirExec:
     | HirStatement:
         | HirBlockStmt:
-            []HirExecId
-        | HirExprStmt
-        | HirEmptyStmt
-        | HirBreakStmt
-        | HirIfStmt
-        | HirElseStmt
-        | HirLoopStmt
-        | HirReturnStmt
-        | HirYieldStmt
-    | HirExpr
+            HirBody:
+                []Hir
+                []HirExecId
+        | HirExprStmt:
+            HirExecId -> HirExpr
+        | HirEmptyStmt:
+            ()
+        | HirBreakStmt:
+            HirExecId? -> HirExpr
+        | HirIfStmt:
+            condition: HirExecId -> HirExpr
+            body: HirExecId -> HirBlockStmt
+        | HirElseStmt:
+            body: HirExecId -> HirBlockStmt
+        | HirLoopStmt:
+            body: HirExecId -> HirBlockStmt
+        | HirReturnStmt:
+            HirExecId? -> HirExpr
+        | HirYieldStmt:
+            HirExecId? -> HirExpr
+    | HirExpr:
+        TODO
 
 HirTypeId->
-    HirType
+    HirType:
         | HirTypeBuiltin
-        | HirStruct
-        | HirVariant
-        | HirUnion
+        | HirDefId 
 
-HirDeclId ->
-    HirDecl:
-        | HirFunctionDecl:
+HirDefId ->
+    HirDef:
+        | HirFunctionDef:
             name: Span
             Params
-            HirBody?
-        | HirGenericFunctionDecl
+            HirExecId? -> HirBody
+            orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
+        | HirGenericFunctionDef:
             HirGenericParams 
-            HirFunctionDecl
-        | HirDestructorDecl:
-            HirFunctionDecl
-        | HirExternCFunctionDecl
-        | HirVarDecl
-        | HirStructDecl
-        | HirVariantDecl
-        | HirUnionDecl
-        | HirContractDecl
-        | HirDefTypeDecl
+            HirFunctionDef
+        | HirDestructorDef:
+            HirFunctionDef
+        | HirExternCFunctionDef
+            HirFunctionDef
+        | HirVarDef
+            type: HirTypeId
+            name: Span
+        | HirStructDef
+           HirScopeId
+           TODO
+        | HirGenericStructDef
+        | HirVariantDef
+        | HirGenericVariantDef
+        | HirUnionDef
+        | HirContractDef
+        | HirDefTypeDef
 
-TODO, finish HirExpr variants and fill out fields
+** note: generic defs will be stored as sugared and then the desugared defs will point to their orginal def
+
+TODO, finish HirExpr variants and fill out fields for DefIds
