@@ -10,6 +10,7 @@
 #define COMPILER_SPAN_SPAN
 
 #include "compiler/hir/indexing.h"
+#include "compiler/token.h"
 #include "utils/file_io.h"
 #include "utils/string_view.h"
 #include <stdbool.h>
@@ -22,9 +23,16 @@ typedef struct {
     hir_file_id_t file_id;
 } span_t;
 
-span_t span_normalize_src_view(src_buffer_t* src_buffer, hir_file_id_t file_id, const char* start,
-                               size_t len);
+/// does not own the src_view
+typedef struct {
+    const src_buffer_t* const src_view;
+    hir_file_id_t file_id;
+} spannable_file_t;
 
-string_view_t span_retrieve(const char* data, span_t span);
+span_t span_normalize_src_view_from_tkn(spannable_file_t file, token_t* tkn);
+
+span_t span_normalize_src_view(spannable_file_t file, const char* start, size_t len);
+
+string_view_t span_retrieve_from_buffer(const char* data, span_t span);
 
 #endif

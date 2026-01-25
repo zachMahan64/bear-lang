@@ -24,7 +24,7 @@ typedef hir_size_t hir_id_t;
 /// *** wrap in a struct for proper type checking
 typedef hir_size_t hir_id_idx_t;
 
-/// primary means of tracking interns strings in the hir
+/// primary means of tracking interned strings in the hir
 typedef struct {
     hir_id_t val;
 } hir_symbol_id_t;
