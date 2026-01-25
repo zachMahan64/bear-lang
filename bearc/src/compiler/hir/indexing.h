@@ -34,10 +34,16 @@ typedef struct {
     hir_id_idx_t val;
 } hir_symbol_id_idx_t;
 
+/// to be stored in a hir_symbol_id_t -> hir_symbol_t table
 typedef struct {
     /// string view in src file of first mention
     /// used purely as a string for reversing symbol ids back into strings
     string_view_t string_view;
 } hir_symbol_t;
+
+/// for indexing interned file names
+typedef struct {
+    hir_id_t val;
+} hir_file_id_t;
 
 #endif
