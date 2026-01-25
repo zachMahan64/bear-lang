@@ -33,13 +33,13 @@ note: the *IdIdx are necessary for contiguous slices of *Id's!
 
 HirSymbolIdIdx -> HirSymbolId
 HirSymbolId -> HirSymbol
-HirSpanId -> Span
 
 (*persisent, serializable)
 HirScopeId->
     HirScope:
         parent: HirScopeId?
         ScopeTable:
+        (these need to be uint32_t -> uint32_t hashmaps!)
             modules: SymbolId -> HirDefId     (namespace/module names/static struct members)
             values:  SymbolId -> HirDefId     (variables, functions)
             types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
@@ -129,7 +129,10 @@ HirExprKind:
     | HirExprBinary:
         op: BinaryOp
         left: HirExecId
-        right: HirExecId
+        right: HirExecId 
+    | HirExprCast
+        expr: HirExecId
+        target: HirTypeId
     | HirExprPreUnary:
         op: UnaryOp
         expr: HirExecId
