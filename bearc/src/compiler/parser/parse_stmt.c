@@ -316,6 +316,8 @@ ast_stmt_t* parse_stmt_return(parser_t* p) {
     // check if we should parse an expr
     if (!(parser_peek(p)->type == TOK_SEMICOLON)) {
         ret_stmt->stmt.return_stmt.expr = parse_expr(p);
+    } else {
+        ret_stmt->stmt.return_stmt.expr = NULL;
     }
     token_t* term = parser_expect_token(p, TOK_SEMICOLON);
     if (!term) {
