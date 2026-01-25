@@ -60,9 +60,6 @@ HirDefId -> HirDef
 HirTypeIdIdx -> HirTypeId
 HirTypeId -> HirType
 
-HirParamIdIdx -> HirParamId 
-HirParamId -> HirParam 
-
 HirGenericParamIdIdx -> HirGenericParamId 
 HirGenericParamId -> HirGenericParam 
 
@@ -202,10 +199,12 @@ HirDefId ->
     name: SymbolId
     HirDef:
         | HirFunctionDef:
-            []HirParamId
+            []HirDefId -> HirParam
             return_type: HirTypeId
             HirExecId? -> HirBody
             orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
+        | HirParam:
+            def: HirDefId -> HirVarDef
         | HirGenericFunctionDef:
             []HirGenericParam 
             HirFunctionDef
@@ -215,15 +214,15 @@ HirDefId ->
             HirFunctionDef
         | HirVarDef:
             type: HirTypeId
-            name: Span
+            name: SymbolId
         | MovedVarDef:
             orig: HirDefId
         | HirModDef:
             scope: HirScopeId
-            name: Span
+            name: SymbolId
         | HirStructDef
             scope: HirScopeId 
-            name: Span
+            name: SymbolId
             contracts: []HirDefId -> HirContractDef
             orig: HirDefId? -> HirGenericStructDef (if was originally generic and then was generated)
         | HirGenericStructDef
@@ -231,23 +230,20 @@ HirDefId ->
            []HirGenericParam 
         | HirVariantDef
             scope: HirScopeId 
-            name: Span
+            name: SymbolId
             orig: HirDefId? -> HirGenericVariantDef (if was originally generic and then was generated)
         | HirGenericVariantDef
             HirVariantDef
             []HirGenericParam
         | HirUnionDef
             scope: HirScopeId 
-            name: Span 
+            name: SymbolId 
         | HirContractDef
             scope: HirScopeId 
-            name: Span 
+            name: SymbolId 
         | HirDefTypeDef
             type: HirTypeId
-            name: Span 
-
-HirParam:
-    def: HirDefId -> HirVarDef
+            name: SymbolId 
 
 HirGenericParam:
     | HirIdentifier (placeholder for types)
