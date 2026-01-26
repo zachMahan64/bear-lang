@@ -70,7 +70,7 @@ int read_file_to_src_buffer(src_buffer_t* buffer, const char* file_name) {
         return -1;
     }
     strncpy(buffer->data + src_len + 1, file_name, strlen(file_name));
-    buffer->file_name = buffer->data + src_len;
+    buffer->file_name = buffer->data + src_len + 1;
     // ensure null term for both src and file name
     buffer->data[src_len] = '\0';
     buffer->data[size - 1] = '\0';

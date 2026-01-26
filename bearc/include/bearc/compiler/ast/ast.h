@@ -10,6 +10,7 @@
 #define AST_AST_H
 
 #include "compiler/ast/stmt.h"
+#include "compiler/diagnostics/error_list.h"
 #include "utils/file_io.h"
 #include "utils/vector.h"
 typedef struct {
@@ -18,9 +19,10 @@ typedef struct {
     arena_t arena;
     /// root ast node
     ast_stmt_t* file_stmt_root_node;
+    compiler_error_list_t error_list;
 } br_ast_t;
 
 br_ast_t ast_create_from_file(const char* file_name);
-br_ast_t ast_destroy(br_ast_t* ast);
+void ast_destroy(br_ast_t* ast);
 
 #endif

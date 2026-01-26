@@ -8,17 +8,11 @@
 
 #include "compiler/compile.h"
 #include "cli/args.h"
+#include "compiler/ast/ast.h"
 #include "compiler/ast/printer.h"
-#include "compiler/ast/stmt.h"
 #include "compiler/debug.h"
 #include "compiler/diagnostics/error_list.h"
-#include "compiler/lexer.h"
-#include "compiler/parser/parse_stmt.h"
-#include "compiler/parser/parser.h"
 #include "utils/ansi_codes.h"
-#include "utils/arena.h"
-#include "utils/file_io.h"
-#include "utils/vector.h"
 #include <stddef.h>
 #include <stdio.h>
 
@@ -26,45 +20,20 @@ int compile_file(const bearc_args_t* args) {
     int code = 0; // return error code if hit error
 
     const char* file_name = args->input_file_name;
-    src_buffer_t src_buffer = src_buffer_from_file_create(file_name);
+    br_ast_t ast = ast_create_from_file(file_name);
 
-    if (!src_buffer.data) {
-        return -1;
-    }
-
-    // ---------------------- LEXING ----------------------
-    // build up token vector by lexing the source buffer
-    vector_t tkn_vec = lexer_tokenize_src_buffer(&src_buffer);
-    // detect errors in lexing
-
-    // if ONLY EOF TKN
-    if (vector_size(&tkn_vec) == 1) {
-        goto empty_file_clean_up;
-    }
     if (args->flags[CLI_FLAG_TOKEN_TABLE]) {
-        print_out_src_buffer(&src_buffer);
-        print_out_tkn_table(&tkn_vec);
+        print_out_src_buffer(&ast.src_buffer);
+        print_out_tkn_table(&ast.tokens);
     }
-
-    // ----------------------------------------------------
-
-    // ---------------------- PARSING ---------------------
-    // init error list for error tracking
-    compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
-#define PARSER_ARENA_CHUNK_SIZE_BASE 0x20000
-#define PARSER_ARENA_CHUNK_SIZE_SCALE_FACTOR 8
-    arena_t arena = arena_create(PARSER_ARENA_CHUNK_SIZE_BASE
-                                 + (PARSER_ARENA_CHUNK_SIZE_SCALE_FACTOR * src_buffer.size));
-    parser_t parser = parser_create(&tkn_vec, &arena, &error_list);
-    ast_stmt_t* file_stmt = parse_file(&parser, src_buffer.file_name);
-
     if (args->flags[CLI_FLAG_PRETTY_PRINT]) {
-        pretty_print_stmt(file_stmt);
+        pretty_print_stmt(ast.file_stmt_root_node);
     }
     // ----------------------------------------------------
 
     // display all comptime errors
     bool silent = args->flags[CLI_FLAG_SILENT];
+    compiler_error_list_t error_list = ast.error_list;
     if (!silent) {
         compiler_error_list_print_all(&error_list);
     }
@@ -77,10 +46,6 @@ int compile_file(const bearc_args_t* args) {
     }
 
     // clean up resources
-    compiler_error_list_destroy(&error_list);
-    arena_destroy(&arena);
-empty_file_clean_up:
-    vector_destroy(&tkn_vec);
-    src_buffer_destroy(&src_buffer);
+    ast_destroy(&ast);
     return code;
 }

@@ -30,7 +30,7 @@ string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn)
     // find end of line
     ptrdiff_t diff_to_line_end = 0;
     while (*(tkn->start + diff_to_line_end) != '\n' && *(tkn->start + diff_to_line_end) != '\0'
-           && tkn->start + diff_to_line_end < src_buffer->data + src_buffer->size) {
+           && tkn->start + diff_to_line_end < src_buffer->data + src_buffer->src_len) {
         diff_to_line_end++;
     }
 
