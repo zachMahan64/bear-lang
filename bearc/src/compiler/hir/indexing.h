@@ -41,9 +41,79 @@ typedef struct {
     string_view_t string_view;
 } hir_symbol_t;
 
-/// for indexing interned file names
+/// for addressing interned file names
 typedef struct {
     hir_id_t val;
 } hir_file_id_t;
+
+/// for addressing named scopes
+typedef struct {
+    hir_id_t val;
+} hir_scope_id_t;
+
+/// for addressing anonymous scopes
+typedef struct {
+    hir_id_t val;
+} hir_scope_anon_id_t;
+
+/// for addressing exec nodes
+typedef struct {
+    hir_id_t val;
+} hir_exec_id_t;
+
+/// for addressing exec node ids
+typedef struct {
+    hir_id_idx_t val;
+} hir_exec_id_idx_t;
+
+/// for addressing definition nodes
+typedef struct {
+    hir_id_t val;
+} hir_def_id_t;
+
+/// for addressing contiguous slices of definition ids
+typedef struct {
+    hir_id_idx_t val;
+} hir_def_id_idx_t;
+
+/// for addressing type nodes
+typedef struct {
+    hir_id_t val;
+} hir_type_id_t;
+
+/// for addressing contiguous slices of type ids
+typedef struct {
+    hir_id_idx_t val;
+} hir_type_id_idx_t;
+
+/// for addressing generic parameter nodes
+typedef struct {
+    hir_id_t val;
+} hir_generic_param_id_t;
+
+/// for addressing contiguous slices of generic parameter ids
+typedef struct {
+    hir_id_idx_t val;
+} hir_generic_param_id_idx_t;
+
+/// for addressing generic argument nodes
+typedef struct {
+    hir_id_t val;
+} hir_generic_arg_id_t;
+
+/// for addressing contiguous slices of generic argument ids
+typedef struct {
+    hir_id_idx_t val;
+} hir_generic_arg_id_idx_t;
+
+/// for addressing parameter nodes
+typedef struct {
+    hir_id_t val;
+} hir_param_id_t;
+
+/// for addressing contiguous slices of parameter ids
+typedef struct {
+    hir_id_idx_t val;
+} hir_param_id_idx_t;
 
 #endif

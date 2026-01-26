@@ -13,8 +13,8 @@
 #include <stddef.h>
 
 vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
-    vector_t tkn_vec =
-        vector_create_and_reserve(sizeof(token_t), buf->size / LEXER_ESTIMATED_CHARS_PER_TOKEN);
+    vector_t tkn_vec
+        = vector_create_and_reserve(sizeof(token_t), buf->size / LEXER_ESTIMATED_CHARS_PER_TOKEN);
 
     // tkn string view params
     char* start = buf->data;               // start of tkn's view into buf
@@ -30,8 +30,8 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
 
     // maps
     const char* always_one_char_map = get_always_one_char_to_token_map();
-    const char* first_char_in_multichar_operator_token_map =
-        get_first_char_in_multichar_operator_token_map();
+    const char* first_char_in_multichar_operator_token_map
+        = get_first_char_in_multichar_operator_token_map();
 
 // pushes any previous token and delimits by pushing new token of a known length N in chars
 #define LEX_KNOWN_LEN_PUSH(N)                                                                      \
@@ -100,7 +100,7 @@ lex_start:
         LEX_IN_LITERAL('\"');
     }
 
-    if (c == '\0') {
+    if (pos >= buf->data + buf->size) {
         goto lex_end;
     }
     ++pos;
