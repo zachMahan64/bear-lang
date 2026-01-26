@@ -27,6 +27,9 @@ typedef struct {
 /// creates an src_buffer_t from a file,
 /// - must call src_buffer_destroy(src_buffer_t*) to free resources
 src_buffer_t src_buffer_from_file_create(const char* file_name);
+/// creates an src_buffer_t from a file (name string with a specifed length)
+/// - must call src_buffer_destroy(src_buffer_t*) to free resources
+src_buffer_t src_buffer_from_file_createn(const char* file_name, size_t name_len);
 /// frees the underlying buffer
 void src_buffer_destroy(src_buffer_t* buffer);
 /// gets a ptr to the underlying string buffer of the src file

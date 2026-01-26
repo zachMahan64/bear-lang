@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "utils/file_io.h"
+#include "cli/args.h"
 #include "utils/ansi_codes.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -80,6 +81,19 @@ int read_file_to_src_buffer(src_buffer_t* buffer, const char* file_name) {
 
 // returns an src_buffer_t by value, which will need to be destructed by src_buffer_destroy
 src_buffer_t src_buffer_from_file_create(const char* file_name) {
+    src_buffer_t buffer;
+    if (read_file_to_src_buffer(&buffer, file_name) < 0) {
+        printf("%serror%s: could not read file: %s\n", ansi_bold_red(), ansi_reset(), file_name);
+    }
+    return buffer;
+}
+
+// TODO make sure this works
+src_buffer_t src_buffer_from_file_createn(const char* file_name, size_t name_len) {
+    // get in null-terminated form for proper fopen behavior
+    char file_name_nt[CLI_ARGS_MAX_FILE_NAME_LENGTH];
+    strncpy(file_name_nt, file_name, name_len);
+    file_name_nt[name_len] = '\0';
     src_buffer_t buffer;
     if (read_file_to_src_buffer(&buffer, file_name) < 0) {
         printf("%serror%s: could not read file: %s\n", ansi_bold_red(), ansi_reset(), file_name);
