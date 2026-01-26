@@ -21,7 +21,7 @@
 typedef struct strimap_entry_t {
     char* key;
     size_t len;
-    int val;
+    int32_t val;
     struct strimap_entry_t* next;
 } strimap_entry_t;
 
@@ -50,21 +50,21 @@ strimap_t strimap_create_from_arena(size_t capacity, arena_t arena);
 void strimap_destroy(strimap_t* map);
 
 /// insert an elem {keu, value} destructively/will override anything at the location
-void strimap_insert(strimap_t* map, const char* key, int val);
+void strimap_insert(strimap_t* map, const char* key, int32_t val);
 /// remove an elem at the provided key
 void strimap_remove(strimap_t* map, const char* key);
 /// rehash the map with a different capacity, does nothing if the capacity is lower than the current
 void strimap_rehash(strimap_t* map, size_t new_capacity);
 /// returns a mut int* to the value at a provided key
-int* strimap_at(strimap_t* map, const char* key);
+int32_t* strimap_at(strimap_t* map, const char* key);
 /// returns a mut int* to the value at a provided key of some length (does not have to be
 /// null-terminated)
-int* strimap_atn(strimap_t* map, const char* key, size_t key_len);
+int32_t* strimap_atn(strimap_t* map, const char* key, size_t key_len);
 
 /// returns a view/const ptr to the value at a provided key
-const int* strimap_view(const strimap_t* map, const char* key);
+const int32_t* strimap_view(const strimap_t* map, const char* key);
 /// returns a view/const ptr to the value at a provided key of some length
-const int* strimap_viewn(const strimap_t* map, const char* key, size_t key_len);
+const int32_t* strimap_viewn(const strimap_t* map, const char* key, size_t key_len);
 /// check if the map contains the provided key
 /// - returns true if the map contains the key, else returns false
 bool strimap_contains(const strimap_t* map, const char* key);

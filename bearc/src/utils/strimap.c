@@ -46,7 +46,7 @@ void strimap_destroy(strimap_t* map) {
 }
 
 // inserts integer value index at specified key
-void strimap_insert(strimap_t* map, const char* key, int val) {
+void strimap_insert(strimap_t* map, const char* key, int32_t val) {
     if ((double)map->size / (double)map->capacity >= STRIMAP_LOAD_FACTOR) {
         strimap_rehash(map, 2 * map->capacity);
     }
@@ -99,7 +99,7 @@ void strimap_remove(strimap_t* map, const char* key) {
 }
 
 // gets a mutatable pointer to the value at a specified key
-int* strimap_at(strimap_t* map, const char* key) {
+int32_t* strimap_at(strimap_t* map, const char* key) {
     uint64_t raw_hash = hash_str(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
@@ -116,7 +116,7 @@ int* strimap_at(strimap_t* map, const char* key) {
 
 // gets a mutatable pointer to the value at a specified key and finds string by length, so the
 // key does not have to be null-terminated
-int* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
+int32_t* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
     uint64_t raw_hash = hash_strn(key, key_len);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
@@ -132,7 +132,7 @@ int* strimap_atn(strimap_t* map, const char* key, size_t key_len) {
 }
 
 // gets an immutatable pointer to the value at a specified key
-const int* strimap_view(const strimap_t* map, const char* key) {
+const int32_t* strimap_view(const strimap_t* map, const char* key) {
     uint64_t raw_hash = hash_str(key);
     uint64_t bucket_idx = raw_hash % map->capacity;
 
@@ -149,7 +149,7 @@ const int* strimap_view(const strimap_t* map, const char* key) {
 
 // gets an immutatable pointer to the value at a specified key and finds string by length, so the
 // key does not have to be null-terminated
-const int* strimap_viewn(const strimap_t* map, const char* key, size_t key_len) {
+const int32_t* strimap_viewn(const strimap_t* map, const char* key, size_t key_len) {
     uint64_t raw_hash = hash_strn(key, key_len);
     uint64_t bucket_idx = raw_hash % map->capacity;
 

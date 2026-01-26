@@ -69,7 +69,7 @@ HirGenericArgId -> HirGenericArg
 
 HASH TABLES, *temporary, not serialized
 ---------------------------------------
-StringToSymbolTable: String → HirSymbolId
+StringToSymbolTable: String -> HirSymbolId
 
 HIR NODE STRUCTURES
 ============================================================================
