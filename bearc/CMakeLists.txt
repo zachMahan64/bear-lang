@@ -41,6 +41,7 @@ set(SRC
     src/compiler/span/span.c
 
     src/utils/strimap.c
+    src/utils/mapu32u32.c
     src/utils/vector.c
     src/utils/arena.c
     src/utils/string.c
