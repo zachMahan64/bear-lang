@@ -100,7 +100,7 @@ lex_start:
         LEX_IN_LITERAL('\"');
     }
 
-    if (pos >= buf->data + buf->size) {
+    if (pos >= buf->data + buf->src_len) {
         goto lex_end;
     }
     ++pos;

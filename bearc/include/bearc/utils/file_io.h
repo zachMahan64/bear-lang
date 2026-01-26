@@ -20,6 +20,8 @@ typedef struct {
     char* data;
     // size of char buffer, in bytes/chars
     size_t size;
+    /// length of src file
+    size_t src_len;
 } src_buffer_t;
 
 /// creates an src_buffer_t from a file,
