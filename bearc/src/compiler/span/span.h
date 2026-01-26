@@ -17,10 +17,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/// trivially copyable src span, always pass by value
 typedef struct {
     uint32_t start;
     uint32_t end;
     hir_file_id_t file_id;
+    // col can be found be backtracking to sof or last \n
+    uint32_t line;
 } span_t;
 
 /// does not own the src_view
