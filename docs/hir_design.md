@@ -43,7 +43,8 @@ HirScopeId->
         ScopeTable:
         (these need to be uint32_t -> uint32_t hashmaps!)
             modules: SymbolId -> HirDefId     (namespace/module names/static struct members)
-            values:  SymbolId -> HirDefId     (variables, functions)
+            values:  SymbolId -> HirDefId     (variables)
+            funcs:  SymbolId -> HirDefId      (functions)
             types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
 
 (temporary, for block scopes; not serialized)
@@ -84,6 +85,8 @@ HirIdentifier (used in type, expr, and module references; eg: std..println):
 
 HirExecId -> HirExec:
     span: Span
+    compt: bool 
+    depends_on: []HirExecId (for compt resolvability)
     | HirStatement:
         | HirBlockStmt:
             HirBody:
@@ -206,6 +209,7 @@ HirDefId ->
         | HirFunctionDef:
             []HirDefId -> HirParam
             return_type: HirTypeId
+            compt: bool
             HirExecId? -> HirBody
             orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
         | HirParam:
@@ -220,6 +224,7 @@ HirDefId ->
         | HirVarDef:
             type: HirTypeId
             name: SymbolId
+            compt: bool
         | MovedVarDef:
             orig: HirDefId
         | HirModDef:
