@@ -30,6 +30,7 @@ VECTOR TABLES (used like arenas, but memory is pointed to by ids/indices)
 *persisent, must be serializable
 -------------------------------------------------------------------------
 note: the *IdIdx are necessary for contiguous slices of *Id's!
+note: all Id Tables should reserve 0 to indicate an invalid Id!
 
 HirSymbolIdIdx -> HirSymbolId
 HirSymbolId -> HirSymbol
@@ -78,7 +79,7 @@ HirIdentifier (used in type, expr, and module references; eg: std..println):
         start: HirSymbolIdIdx
         len: uint32_t
     span: Span
-    resolved: DefId? (non-optional after resolution)
+    resolved: DefId
 
 HirExecId -> HirExec:
     span: Span
@@ -182,7 +183,6 @@ HirTypeId->
         | HirTypeBuiltin
         | HirTypeStructure:
             HirIdentifier
-            resolved: HirDefId? (non-optional after resolution)
         | HirGenericStructure:
             HirTypeId
             []HirGenericArg
@@ -200,6 +200,7 @@ HirTypeId->
 HirDefId ->
     span: Span
     name: SymbolId
+    resolved: bool
     HirDef:
         | HirFunctionDef:
             []HirDefId -> HirParam
@@ -207,7 +208,7 @@ HirDefId ->
             HirExecId? -> HirBody
             orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
         | HirParam:
-            def: HirDefId -> HirVarDef
+            def: HirDefId? -> HirVarDef (non-optional after resolution)
         | HirGenericFunctionDef:
             []HirGenericParam 
             HirFunctionDef
@@ -257,4 +258,63 @@ HirGenericArg:
     | HirTypeId
 
 ** note: generic defs will be stored as sugared and specifically instantiated as desugared defs that point to their orginal def
+
+```
+
+```
+PASSES 
+====== 
+
+PHASE 1: PREDECLARE
+--------------------
+walk AST declarations only
+allocate HirDefIds for:
+- modules
+- structs / unions / variants
+- deftypes
+- functions / externs functions
+- global vars
+- import: coalesce imports (build dependency tree?)
+
+insert SymbolId -> HirDefId into current ScopeTable
+create child HirScopes where needed
+postpone building bodies, no identifiers resolved yet
+
+result: all namespaces populated.
+
+failure modes:
+    REDEFINITION
+
+PHASE 2: BUILD BODIES/RESOLVE
+-----------------------------
+walk AST again
+build HIR for:
+- function signatures/bodies
+- struct / variant / union fields
+- type syntax trees
+- expressions / statements
+
+create anonymous block scopes
+insert local variables on sight
+
+on identifier (type or variable reference):
+- create HirIdentifier with resolved pointing a to a DefId by searching available scopes
+- insert locals into local scope as defined and resolve naturally linearly
+
+compile-time constructs:
+    on generic(type structure or function):
+        - attempt a concrete instantiation
+
+    on compt value/array size/expression arg in generic:
+        - ensure compile time computatbility (do simple checks for first resolver version)
+
+failure modes: 
+    | DNE 
+    | REDEFINITION
+    | CIRCULAR_DEPENDENCY
+    -> emit errors
+
+PHASE 3: TYPECHECK
+----------------------------------
+now walk HIR (since all DefIds fully resolved)
 ```
