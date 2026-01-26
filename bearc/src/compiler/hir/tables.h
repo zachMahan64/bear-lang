@@ -10,9 +10,27 @@
 #define COMPILER_HIR_TABLES
 
 #include "utils/strimap.h"
+#include "utils/vector.h"
 
+/**
+ * primary data container for hir structures
+ * - *_vec holds hir node data whereas *_id_vec holds simply ids pointing to hir nodes
+ * - this model allows for slices with purely ids (no pointers)
+ */
 typedef struct {
     strimap_t str_to_symbol_id_map;
+    vector_t symbol_id_vec;
+    vector_t symbol_vec;
+    vector_t exec_id_vec;
+    vector_t exec_vec;
+    vector_t def_id_vec;
+    vector_t def_vec;
+    vector_t type_id_vec;
+    vector_t type_vec;
+    vector_t generic_param_id_vec;
+    vector_t generic_param_vec;
+    vector_t generic_arg_id_vec;
+    vector_t generic_arg_vec;
 } hir_tables_t;
 
 #endif

@@ -21,8 +21,7 @@ RESOLUTION FLOW
 - Usages of any identifiers will explore those paths to ensure the existence of any mentioned identifiers by walking the scope tree and 
   then storing the HirId's at those the referenced Strings inside an HirIdentifier.
 - Declarations must check their local scope to ensure no redefinitions occur.
-   - hash look-up -> SymbolId representing the name (unscoped newly bound identifier) -> Map of the local HirScope pointing to the DefId
-     of the newly declared node
+   - hash look-up -> SymbolId representing the name (unscoped newly bound identifier) -> Map of the local HirScope pointing to the DefId of the newly declared node
 
 CONTAINERS
 =========================================================================
@@ -34,6 +33,8 @@ note: all Id Tables should reserve 0 to indicate an invalid Id!
 
 HirSymbolIdIdx -> HirSymbolId
 HirSymbolId -> HirSymbol
+
+HirFileId -> String (file name)
 
 (*persisent, serializable)
 HirScopeId->
