@@ -35,4 +35,6 @@ typedef struct {
     vector_t generic_arg_vec;
 } hir_tables_t;
 
+// TODO finish impl
+
 #endif

@@ -88,7 +88,6 @@ src_buffer_t src_buffer_from_file_create(const char* file_name) {
     return buffer;
 }
 
-// TODO make sure this works
 src_buffer_t src_buffer_from_file_createn(const char* file_name, size_t name_len) {
     // get in null-terminated form for proper fopen behavior
     char file_name_nt[CLI_ARGS_MAX_FILE_NAME_LENGTH];

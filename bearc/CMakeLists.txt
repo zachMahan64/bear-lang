@@ -25,6 +25,7 @@ set(SRC
     src/compiler/token.c
 
     src/compiler/ast/printer.c
+    src/compiler/ast/ast.c
 
     src/compiler/diagnostics/error_list.c
     src/compiler/diagnostics/error_codes.c

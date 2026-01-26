@@ -417,7 +417,6 @@ void pretty_print_expr(ast_expr_t* expression) {
     case AST_EXPR_INVALID:
         printf("%sinvalid expression%s", ansi_bold_red(), ansi_reset());
         break;
-        // TODO resume here
     case AST_EXPR_SUBSCRIPT:
         print_title("subscript");
         pretty_print_expr(expr.expr.subscript.lhs);

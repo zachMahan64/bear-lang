@@ -1,6 +1,6 @@
 #### todos
-- [ ] finish Crafting Interpreters
-- [ ] finish Engineering a Compiler
+- [ ] finish hir structural impls
+#### Medium term
 - [ ] HIR
 - [ ] MIR 
 - [ ] LLVM IR

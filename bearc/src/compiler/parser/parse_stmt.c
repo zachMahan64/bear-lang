@@ -590,7 +590,7 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
                                     ERR_BODY_MUST_BE_WRAPPED_IN_BRACES);
         return parser_sync_stmt(p);
     }
-    if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p); // TODO potential cascade risk
+    if_stmt->stmt.if_stmt.body_stmt = parse_stmt_block(p);
     if (parser_peek_match(p, TOK_ELSE)) {
         if_stmt->stmt.if_stmt.has_else = true;
         if_stmt->stmt.if_stmt.else_stmt = parse_stmt_else(p);
