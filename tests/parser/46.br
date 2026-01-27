@@ -3,7 +3,11 @@ import "foo.br";
 fn main() {
     foo();
     State a = State..State0;
-    a is State0..State1;
+    bool b = a is State0..State1;
+    var c = | | -> b;
+    var d = |bool boole| {return c() && b;};
+    var e = |bool boole| -> c() && b;
+    print(d(b || e()).to_string());
 }
 
 variant State {

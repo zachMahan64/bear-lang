@@ -558,9 +558,13 @@ ast_expr_t* parse_expr_closure(parser_t* p) {
     }
     cl->expr.closure.params = parse_slice_of_params(p, TOK_COMMA, TOK_BAR);
     parser_expect_token(p, TOK_BAR);
-
-    // {....}
-    cl->expr.closure.body = parse_expr_allowing_block_exprs_without_yields(p);
+    // allow '|thingie| -> thing' syntax
+    if (parser_match_token(p, TOK_RARROW)) {
+        cl->expr.closure.body = parse_expr_allowing_block_exprs_without_yields(p);
+    } else {
+        // {....}
+        cl->expr.closure.body = parse_expr_block_call(p, &parse_stmt);
+    }
     cl->first = first;
     cl->last = parser_prev(p);
     return cl;

@@ -46,7 +46,7 @@
     - | Dereference: `*` Expression
     - | StructInitialization: Identifier `{` StructFieldInitialization(s) `}`
        - StructFieldInitialization: `.` Identifier `=` | `<-` Expression 
-    - | Closure: `move`? `|` Parameter(s) `|` `{` BodyStatement(s) `}`
+    - | Closure: `move`? `|` Parameter(s) `|` \[`->` Expression] | BlockExpression 
     - | VariantDecomposition: Identifier `(` Parameter(s) `)`
     - | Match: `match` `(` Expression `)` `{` MatchBranch(s) `}`
     - | MatchBranch: VariantDecomposition | Expression `=>` Expression | BlockExpression
