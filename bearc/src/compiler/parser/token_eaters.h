@@ -68,6 +68,9 @@ bool parser_eof(const parser_t* parser);
 // sync the parser and returns a range of tokens consumed while syncing
 token_range_t parser_sync(parser_t* p);
 
+// sync the parser until a given type
+token_range_t parser_sync_until(parser_t* p, token_type_e tok_type);
+
 /// ensure binary op is legal
 bool is_legal_binary_op(parser_t* p, token_type_e type);
 

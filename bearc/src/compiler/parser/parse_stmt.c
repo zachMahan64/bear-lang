@@ -79,6 +79,24 @@ static ast_stmt_t* parser_sync_stmt(parser_t* p) {
     return dummy_stmt;
 }
 
+ast_stmt_t* parser_sync_stmt_call(parser_t* p, bool (*call)(token_type_e)) {
+    token_range_t range = parser_sync_call(p, call);
+    ast_stmt_t* dummy_stmt = parser_alloc_stmt(p);
+    dummy_stmt->type = AST_STMT_INVALID;
+    dummy_stmt->first = range.first;
+    dummy_stmt->last = range.last;
+    return dummy_stmt;
+}
+
+static ast_stmt_t* parser_sync_stmt_until(parser_t* p, token_type_e tok_type) {
+    token_range_t range = parser_sync_until(p, tok_type);
+    ast_stmt_t* dummy_stmt = parser_alloc_stmt(p);
+    dummy_stmt->type = AST_STMT_INVALID;
+    dummy_stmt->first = range.first;
+    dummy_stmt->last = range.last;
+    return dummy_stmt;
+}
+
 ast_stmt_t* parse_stmt(parser_t* p) {
     token_t* first_tkn = parser_peek(p);
     token_type_e next_type = first_tkn->type;
@@ -107,7 +125,7 @@ ast_stmt_t* parse_stmt(parser_t* p) {
     if (next_type == TOK_BREAK) {
         if (parser_mode(p) != PARSER_MODE_IN_LOOP) {
             compiler_error_list_emplace(p->error_list, first_tkn, ERR_BREAK_STMT_OUTSIDE_OF_LOOP);
-            return parser_sync_stmt(p);
+            return parser_sync_stmt_until(p, TOK_SEMICOLON);
         }
         return parse_stmt_break(p);
     }

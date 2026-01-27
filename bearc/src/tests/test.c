@@ -76,16 +76,16 @@ int main(int argc, char** argv) {
 
 br_test_result_t test_parser(void) {
     TEST_INIT("parser");
-    ASSERT_EQ_ERR("parser/00", 6);
+    ASSERT_EQ_ERR("parser/00", 5);
     ASSERT_EQ_ERR("parser/01", 0);
     ASSERT_EQ_ERR("parser/02", 5);
     ASSERT_EQ_ERR("parser/03", 0);
-    ASSERT_EQ_ERR("parser/04", 8);
+    ASSERT_EQ_ERR("parser/04", 6);
     ASSERT_EQ_ERR("parser/05", 0);
-    ASSERT_EQ_ERR("parser/06", 14);
-    ASSERT_EQ_ERR("parser/07", 10);
+    ASSERT_EQ_ERR("parser/06", 12);
+    ASSERT_EQ_ERR("parser/07", 9);
     ASSERT_EQ_ERR("parser/08", 0);
-    ASSERT_EQ_ERR("parser/09", 13);
+    ASSERT_EQ_ERR("parser/09", 11);
     ASSERT_EQ_ERR("parser/10", 1);
     ASSERT_EQ_ERR("parser/11", 0);
     ASSERT_EQ_ERR("parser/12", 0);

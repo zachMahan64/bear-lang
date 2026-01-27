@@ -191,6 +191,26 @@ token_range_t parser_sync_call(parser_t* p, bool (*match)(token_type_e)) {
     return range;
 }
 
+token_range_t parser_sync_until(parser_t* p, token_type_e tok_type) {
+    token_t* first_tkn = parser_peek(p);
+    token_t* last_tkn = first_tkn; // init in case loop never runs!
+    while (!parser_eof(p)) {
+        if (parser_peek_match(p, tok_type)) {
+            break;
+        }
+        parser_toss(p);
+        last_tkn = parser_prev(p);
+    }
+    if (first_tkn == last_tkn) {
+        parser_toss(p);
+    }
+    token_range_t range = {
+        .first = first_tkn,
+        .last = last_tkn,
+    };
+    return range;
+}
+
 token_range_t parser_sync(parser_t* p) { return parser_sync_call(p, &token_is_syncable_delim); }
 
 bool is_legal_binary_op(parser_t* p, token_type_e type) {
@@ -228,7 +248,7 @@ bool token_is_syncable_delim(token_type_e t) {
 }
 
 bool token_is_syncable_stmt_delim(token_type_e t) {
-    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE || t == TOK_RPAREN
+    return t == TOK_LBRACE || t == TOK_SEMICOLON || t == TOK_RBRACE
            || token_is_function_leading_kw(t);
 }
 
