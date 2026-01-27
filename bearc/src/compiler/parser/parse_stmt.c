@@ -494,7 +494,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     }
 
     if (next_type == TOK_COMPT) {
-        return parse_stmt_compt_modifier(p, &parse_stmt_decl);
+        return parse_stmt_compt_modifier(p, &parse_stmt_var_or_fn_decl);
     }
 
     // handle static variable decls
@@ -1117,4 +1117,45 @@ ast_stmt_t* parse_stmt_deftype(parser_t* p) {
     s->first = first;
     s->last = parser_prev(p);
     return s;
+}
+
+ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p) {
+
+    token_type_e next_type = parser_peek(p)->type;
+    // if prev was discarded, that means that the semicolon was certainly part of an already
+    // adressed malformed statement, so consum it and otherwise return an invalid statement w/ an
+    // error
+    if (next_type == TOK_SEMICOLON) {
+        if (!p->prev_discarded) {
+            compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXTRANEOUS_SEMICOLON);
+            return parser_sync_stmt(p);
+        }
+        parser_eat(p); // consume lingering semicolon
+        next_type = parser_peek(p)->type;
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (token_is_function_leading_kw(next_type)) {
+        return parse_fn_decl(p);
+    }
+
+    // handle static variable decls
+    if (next_type == TOK_STATIC) {
+        return parse_stmt_static_modifier(p, &parse_var_decl);
+    }
+
+    // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type)
+          || (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN))) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
+        return parser_sync_stmt(p);
+    }
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    // if malformed guard passes, try to parse as a var declaration
+    ast_stmt_t* stmt
+        = parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
+    if (stmt->type == AST_STMT_INVALID) {
+        compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
+    }
+    return stmt;
 }

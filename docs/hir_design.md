@@ -85,8 +85,7 @@ HirIdentifier (used in type, expr, and module references; eg: std..println):
 
 HirExecId -> HirExec:
     span: Span
-    compt: bool 
-    depends_on: []HirExecId (for compt resolvability)
+    compt: bool (literals implicity compt) 
     | HirStatement:
         | HirBlockStmt:
             HirBody:
@@ -205,6 +204,7 @@ HirDefId ->
     span: Span
     name: SymbolId
     resolved: bool
+    pub: bool
     HirDef:
         | HirFunctionDef:
             []HirDefId -> HirParam
@@ -225,6 +225,7 @@ HirDefId ->
             type: HirTypeId
             name: SymbolId
             compt: bool
+            static: bool
         | MovedVarDef:
             orig: HirDefId
         | HirModDef:
@@ -306,13 +307,15 @@ insert local variables on sight
 on identifier (type or variable reference):
 - create HirIdentifier with resolved pointing a to a DefId by searching available scopes
 - insert locals into local scope as defined and resolve naturally linearly
+- typecheck
 
 compile-time constructs:
     on generic(type structure or function):
         - attempt a concrete instantiation
 
     on compt value/array size/expression arg in generic:
-        - ensure compile time computatbility (do simple checks for first resolver version)
+        - ensure compile time computatbility (do simple visiting checks for first resolver version)
+        - recursive visiting nodes and checking compt all the way down will be necessary  
 
 failure modes: 
     | DNE 
@@ -320,7 +323,4 @@ failure modes:
     | CIRCULAR_DEPENDENCY
     -> emit errors
 
-PHASE 3: TYPECHECK
-----------------------------------
-now walk HIR (since all DefIds fully resolved)
 ```

@@ -55,28 +55,29 @@
 
 #### Statements
 - *File*: TopLevelStatement(s)
+- Visibility: [`pub` | `hid`]?
 - *TopLevelStatement*: 
-    - | *ModuleDeclaration*: `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
+    - | *ModuleDeclaration*: Visibility `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
     - | ImportStatement: `import` ExternalLanguage? -> PathLiteral -> \[`->` -> ModuleIdentifier]? -> `;` 
-    - | *FunctionDeclaration*: `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
+    - | *FunctionDeclaration*: Visibility `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
     - | GenericParams: `<` Identifier -> HasClause? `,` ... `>` 
         - *HasClause*: `has` `(` Contract(s) `)`
-    - | *StructDeclaration*: `struct` Identifier -> GenericParams? -> HasClause? -> `{` TopLevelStatement(s) | MethodDeclaration(s) | DestructorDeclaration(s) `}` 
-    - | *MethodDeclaration*: `mt` `mut`? Identifier -> GenericParams? -> `(` -> Parameter(s) -> `)` -> `;` | `{` BodyStatement(s) `}`
+    - | *StructDeclaration*: Visibility `struct` Identifier -> GenericParams? -> HasClause? -> `{` TopLevelStatement(s) | MethodDeclaration(s) | DestructorDeclaration(s) `}` 
+    - | *MethodDeclaration*: Visibility `mt` `mut`? Identifier -> GenericParams? -> `(` -> Parameter(s) -> `)` -> `;` | `{` BodyStatement(s) `}`
     - | *DestructorDeclaration*: `dt` `self` GenericParams? -> `(` -> Parameters -> `)` -> `;` | `{` BodyStatement(s) `}`
-    - | *VariantDeclaration*: `variant` Identifier -> GenericParams? `{` VariantFieldDeclaration(s) `}`
+    - | *VariantDeclaration*: Visibility `variant` Identifier -> GenericParams? `{` VariantFieldDeclaration(s) `}`
     - | *VariantFieldDeclaration*: Identifier `(` Parameter(s) `)`
-    - | *ContractDeclaration*: `contract` Identifier `{` MethodPrototypes `}`
-    - | *UnionDeclaration*: `union` Identifier `{` MemberVariableDeclaration(s) `}`
+    - | *ContractDeclaration*: Visibility `contract` Identifier `{` MethodPrototypes `}`
+    - | *UnionDeclaration*: Visibility `union` Identifier `{` MemberVariableDeclaration(s) `}`
     - | *ExternBlock*: `extern` ExternalLanguage `{` -> FunctionDeclaration(s) `}`
-    - | *DefTypeDeclaration*: `deftype` Identifier `=` Type `;`
-    - | *VariableDeclaration*: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
+    - | *DefTypeDeclaration*: Visibility `deftype` Identifier `=` Type `;`
+    - | *TopLevelVariableDeclaration*: Visibility Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
     - | *UseStatement*: `use` Identifier `;`
 
 - *BodyStatement*: 
-    - | FunctionDeclaration
-    - | *BlockStatement*: `{` BodyStatement(s) `}`
-    - | *IfStatement*: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
+    - | VariableDeclaration: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
+    - | BlockStatement: `{` BodyStatement(s) `}`
+    - | IfStatement: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
     - | WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`
     - | ForLoopStatement: `for` `(` BodyStatement `;` Expression `;` Expression `)` `{` LoopBodyStatement(s) `}`
     - | ForInLoopStatement: `for` `var` Identifier `in` Expression `{` LoopBodyStatement(s) `}`

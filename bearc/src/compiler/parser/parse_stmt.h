@@ -108,4 +108,6 @@ ast_stmt_t* parse_stmt_extern_block(parser_t* p);
 
 ast_stmt_t* parse_stmt_deftype(parser_t* p);
 
+ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p);
+
 #endif
