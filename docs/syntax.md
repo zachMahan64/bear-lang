@@ -71,7 +71,7 @@
     - | *UnionDeclaration*: Visibility `union` Identifier `{` MemberVariableDeclaration(s) `}`
     - | *ExternBlock*: `extern` ExternalLanguage `{` -> FunctionDeclaration(s) `}`
     - | *DefTypeDeclaration*: Visibility `deftype` Identifier `=` Type `;`
-    - | *TopLevelVariableDeclaration*: Visibility Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
+    - | *TopLevelVariableDeclaration*: Visibility \[Type | `var`] Identifier `;` | \[`=` | `<-`] Expression `;`
     - | *UseStatement*: `use` Identifier `;`
 
 - *BodyStatement*: 
