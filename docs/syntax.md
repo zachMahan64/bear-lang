@@ -55,7 +55,7 @@
 
 #### Statements
 - *File*: TopLevelStatement(s)
-- Visibility: [`pub` | `hid`]?
+- Visibility: \[`pub` | `hid`]?
 - *TopLevelStatement*: 
     - | *ModuleDeclaration*: Visibility `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
     - | ImportStatement: `import` ExternalLanguage? -> PathLiteral -> \[`->` -> ModuleIdentifier]? -> `;` 
@@ -72,10 +72,10 @@
     - | *ExternBlock*: `extern` ExternalLanguage `{` -> FunctionDeclaration(s) `}`
     - | *DefTypeDeclaration*: Visibility `deftype` Identifier `=` Type `;`
     - | *TopLevelVariableDeclaration*: Visibility \[Type | `var`] Identifier `;` | \[`=` | `<-`] Expression `;`
-    - | *UseStatement*: `use` Identifier `;`
 
 - *BodyStatement*: 
     - | VariableDeclaration: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
+    - | *UseStatement*: `use` Identifier `;`
     - | BlockStatement: `{` BodyStatement(s) `}`
     - | IfStatement: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
     - | WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`

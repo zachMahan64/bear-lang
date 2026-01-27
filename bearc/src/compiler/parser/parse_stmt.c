@@ -106,10 +106,6 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_block(p);
     }
 
-    if (token_is_function_leading_kw(next_type)) {
-        return parse_fn_decl(p);
-    }
-
     if (next_type == TOK_IF) {
         return parse_stmt_if(p);
     }
@@ -518,10 +514,6 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     // handle static variable decls
     if (next_type == TOK_STATIC) {
         return parse_stmt_static_modifier(p, &parse_var_decl);
-    }
-
-    if (next_type == TOK_USE) {
-        return parse_stmt_use(p);
     }
 
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
