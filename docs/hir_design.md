@@ -109,7 +109,7 @@ HirExecId -> HirExec:
         | HirYieldStmt:
             HirExecId? -> HirExpr
     | HirExpr:
-        type: HirTypeId?   (filled after typecheck)
+        type: HirTypeId
         kind: HirExprKind
 
 HirExprKind:

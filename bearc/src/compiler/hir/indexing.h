@@ -6,8 +6,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_HIR_INDEXING
-#define COMPILER_HIR_INDEXING
+#ifndef COMPILER_HIR_INDEXING_H
+#define COMPILER_HIR_INDEXING_H
 
 #include "utils/string_view.h"
 #include <stdint.h>
@@ -16,12 +16,12 @@
 typedef uint32_t hir_size_t;
 
 /// abstract typedef id for indexing into vectors of HIR nodes
-/// *** wrap in a struct for proper type checking
+/// wrapped in structs for proper type checking
 typedef hir_size_t hir_id_t;
 
 /// abstract typedef indices for indexing into vectors of HIR node ids
 /// useful for making contiguous slices of hir_id_* types
-/// *** wrap in a struct for proper type checking
+/// wrapped in structs for proper type checking
 typedef hir_size_t hir_id_idx_t;
 
 /// primary means of tracking interned strings in the hir
@@ -65,6 +65,11 @@ typedef struct {
 typedef struct {
     hir_id_idx_t val;
 } hir_exec_id_idx_t;
+
+typedef struct {
+    hir_exec_id_idx_t start;
+    hir_size_t len;
+} hir_exec_id_slice_t;
 
 /// for addressing definition nodes
 typedef struct {

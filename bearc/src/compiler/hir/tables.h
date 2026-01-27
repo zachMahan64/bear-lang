@@ -6,8 +6,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_HIR_TABLES
-#define COMPILER_HIR_TABLES
+#ifndef COMPILER_HIR_TABLES_H
+#define COMPILER_HIR_TABLES_H
 
 #include "utils/strimap.h"
 #include "utils/vector.h"
