@@ -6,7 +6,7 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#include "compiler/span/span.h"
+#include "compiler/hir/span.h"
 #include "utils/file_io.h"
 #include "utils/string_view.h"
 #include <stddef.h>

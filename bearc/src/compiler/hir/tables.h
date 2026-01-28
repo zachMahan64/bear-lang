@@ -37,4 +37,7 @@ typedef struct {
 
 // TODO finish impl
 
+void hir_tables_init(hir_tables_t* tables);
+void hir_tables_destroy(hir_tables_t* tables);
+
 #endif

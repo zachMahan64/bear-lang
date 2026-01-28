@@ -10,7 +10,7 @@
 #define COMPILER_HIR_IDENTIFER
 
 #include "compiler/hir/indexing.h"
-#include "compiler/span/span.h"
+#include "compiler/hir/span.h"
 
 /// represents an atom identifer in either type mention or variable mentions
 typedef struct {

@@ -10,7 +10,7 @@
 #define COMPILER_HIR_EXEC_H
 
 #include "compiler/hir/indexing.h"
-#include "compiler/span/span.h"
+#include "compiler/hir/span.h"
 
 // ------ struct impls -------
 // TODO: finish impl structures
