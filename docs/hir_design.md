@@ -63,6 +63,8 @@ HirExecId -> HirExec
 HirDefIdIdx -> HirDefId
 HirDefId -> HirDef
 
+child -> parent: HirDefId -> HirDefId
+
 HirTypeIdIdx -> HirTypeId
 HirTypeId -> HirType
 
@@ -290,7 +292,7 @@ insert SymbolId -> HirDefId into current ScopeTable
 create child HirScopes where needed
 postpone building bodies, no identifiers resolved yet
 
-result: all namespaces populated.
+result: all namespaces populated (with corresponding HirScopes).
 
 failure modes:
     REDEFINITION
@@ -323,7 +325,7 @@ compile-time constructs:
 failure modes: 
     | DNE 
     | REDEFINITION
-    | CIRCULAR_DEPENDENCY
+    | CIRCULAR_DEPENDENCY/SELF_REFERENTIAL_STRUCT
     -> emit errors
 
 ```

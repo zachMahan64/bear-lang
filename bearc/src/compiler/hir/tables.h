@@ -29,6 +29,7 @@ typedef struct {
     vector_t exec_vec;
     vector_t def_id_vec;
     vector_t def_vec;
+    vector_t child_to_parent_def_id;
     vector_t type_id_vec;
     vector_t type_vec;
     vector_t generic_param_id_vec;
