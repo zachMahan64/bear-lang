@@ -1,6 +1,7 @@
 #### todos
-- [ ] add typed scope table accessor/mutator functions
-- [ ] add scope ctor & dtor
+- [x] add typed scope table accessor/mutator functions
+- [x] add scope ctor & dtor
+- [ ] fill-in cache-able symbol_id_t fields in ast decl statements 
 - [ ] finish hir structural impls
     - [ ] defs
     - [ ] types

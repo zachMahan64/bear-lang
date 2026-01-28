@@ -32,7 +32,9 @@ note: the *IdIdx are necessary for contiguous slices of *Id's!
 note: all Id Tables should reserve 0 to indicate an invalid Id!
 
 HirSymbolIdIdx -> HirSymbolId
-HirSymbolId -> HirSymbol
+HirSymbolId ->
+    HirSymbol:
+        strv: string_view_t (into arena-backed storage)
 
 HirFileId -> String (file name)
 
@@ -289,6 +291,7 @@ allocate HirDefIds for:
 - import: coalesce imports (build dependency tree?)
 
 insert SymbolId -> HirDefId into current ScopeTable
+cache SymbolId into the AST decl node for faster walking the 2nd time around
 create child HirScopes where needed
 postpone building bodies, no identifiers resolved yet
 

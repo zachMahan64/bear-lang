@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_TABLES_H
 #define COMPILER_HIR_TABLES_H
 
+#include "utils/arena.h"
 #include "utils/strimap.h"
 #include "utils/vector.h"
 
@@ -20,20 +21,30 @@
  */
 typedef struct {
     strimap_t str_to_symbol_id_map;
+
     vector_t file_vec;
+
     vector_t scope_vec;
     vector_t scope_anon_vec;
+
     vector_t symbol_id_vec;
     vector_t symbol_vec;
+    arena_t symbol_arena;
+
     vector_t exec_id_vec;
     vector_t exec_vec;
+
     vector_t def_id_vec;
     vector_t def_vec;
+
     vector_t child_to_parent_def_id;
+
     vector_t type_id_vec;
     vector_t type_vec;
+
     vector_t generic_param_id_vec;
     vector_t generic_param_vec;
+
     vector_t generic_arg_id_vec;
     vector_t generic_arg_vec;
 } hir_tables_t;
