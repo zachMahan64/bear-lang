@@ -41,6 +41,7 @@ set(SRC
 
     src/compiler/hir/span.c
     src/compiler/hir/tables.c
+    src/compiler/hir/scope.c
 
     src/utils/strimap.c
     src/utils/mapu32u32.c

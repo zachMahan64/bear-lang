@@ -12,6 +12,9 @@
 #include "utils/string_view.h"
 #include <stdint.h>
 
+/// represents a null hir_id_t or its derivations, valued 0
+#define HIR_ID_NONE 0
+
 /// defines the underlying size of indices of vectors storing HIR nodes
 typedef uint32_t hir_size_t;
 

@@ -6,6 +6,7 @@
     - [ ] types
     - [ ] exec
     - [ ] generics args/params
+- [ ] impl hir_tables_t for hir node allocation/access 
 - [ ] hir phase 1: begin handling top level decl lowering
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### Medium term
