@@ -50,9 +50,12 @@ HirScopeId->
 (temporary, for block scopes; not serialized)
 HirScopeAnonId->
     HirScopeAnon:
-        parent: HirScopeId
+        named_parent: HirScopeId?
         anon_parent: HirScopeAnonId?
         table: ScopeTable
+        used_defs: []HirDefId
+        has_used_defs: bool
+        is_top_level: bool
             
 HirExecIdIdx-> HirExecId
 HirExecId -> HirExec
