@@ -42,7 +42,8 @@ mapu32u32_t mapu32u32_create(size_t capacity);
 /// create a mapu32u32 from an arena
 mapu32u32_t mapu32u32_create_from_arena(size_t capacity, arena_t arena);
 
-/// dtor for mapu32u32_t, will leak if not called (frees the internal arena)
+/// dtor for mapu32u32_t, only use when this map owns its internal arena; otherwise, will leak if
+/// not called (frees the internal arena)
 void mapu32u32_destroy(mapu32u32_t* map);
 
 /// insert an elem {key, value} destructively/will override anything at the location

@@ -22,6 +22,7 @@ typedef struct {
     strimap_t str_to_symbol_id_map;
     vector_t file_vec;
     vector_t scope_vec;
+    vector_t scope_anon_vec;
     vector_t symbol_id_vec;
     vector_t symbol_vec;
     vector_t exec_id_vec;

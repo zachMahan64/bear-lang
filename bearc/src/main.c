@@ -10,5 +10,6 @@
 
 int main(int argc, char** argv) {
     int exit_code = br_launch_cli(argc, argv);
+
     return exit_code;
 }
