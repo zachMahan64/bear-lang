@@ -13,6 +13,8 @@
 #include "utils/strimap.h"
 #include "utils/vector.h"
 
+// TODO add file_id/ast tracking logic
+
 /**
  * primary data container for hir structures
  * - *_vec holds hir node data whereas *_id_vec holds simply ids pointing to hir nodes

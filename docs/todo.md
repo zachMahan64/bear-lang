@@ -1,6 +1,7 @@
 #### todos
 - [x] add typed scope table accessor/mutator functions
 - [x] add scope ctor & dtor
+- [ ] write the new file tracking system into tables.h
 - [ ] fill-in cache-able symbol_id_t fields in ast decl statements 
 - [ ] finish hir structural impls
     - [ ] defs

@@ -6,6 +6,7 @@
 ':' composed of
 '|' or 
 '->' mapped to
+'#>' hashmapped
 '[]' sliceof
 '()' descript.
 lowercase = 
@@ -36,7 +37,22 @@ HirSymbolId ->
     HirSymbol:
         strv: string_view_t (into arena-backed storage)
 
-HirFileId -> String (file name)
+------- TODO impl -------
+* write a u63 -> u32 hashmap?
+hashn(canonical_path: StringView) ->
+    HirFileId #>
+        HirFile:
+            path: HirSymbolId         (interned canonical path)
+            source_hash: u64          (hash of file contents, don't calculate this unless incrementally compiling)
+
+HirFileDepTable:
+    HirFileId -> []HirFileId
+
+AstFileIdToAstId:
+    HirFileId #> AstId
+
+AstId -> Ast
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 (*persisent, serializable)
 HirScopeId->
@@ -44,10 +60,10 @@ HirScopeId->
         parent: HirScopeId?
         ScopeTable:
         (these need to be uint32_t -> uint32_t hashmaps!)
-            modules: SymbolId -> HirDefId     (namespace/module names/static struct members)
-            values:  SymbolId -> HirDefId     (variables)
-            funcs:  SymbolId -> HirDefId      (functions)
-            types:   SymbolId -> HirDefId     (structs, unions, deftypes, variants)
+            modules: SymbolId #> HirDefId     (namespace/module names/static struct members)
+            values:  SymbolId #> HirDefId     (variables)
+            funcs:  SymbolId #> HirDefId      (functions)
+            types:   SymbolId #> HirDefId     (structs, unions, deftypes, variants)
 
 (temporary, for block scopes; not serialized)
 HirScopeAnonId->
