@@ -253,8 +253,6 @@ HirDefId ->
             }
         | HirMovedVarDef:
             orig: HirDefId
-        | ComptConstant
-            value: 
         | HirModDef:
             scope: HirScopeId
             name: SymbolId
