@@ -6,6 +6,7 @@
     - [ ] defs
     - [ ] types
     - [ ] exec
+        - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params
 - [ ] impl hir_tables_t for hir node allocation/access 
 - [ ] hir phase 1: begin handling top level decl lowering
