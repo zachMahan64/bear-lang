@@ -10,10 +10,11 @@
 #define COMPILER_HIR_TABLES_H
 
 #include "utils/arena.h"
+#include "utils/mapu32u32.h"
 #include "utils/strimap.h"
 #include "utils/vector.h"
 
-// TODO add file_id/ast tracking logic
+// TODO, write typed accessor/mutator wrappers around the tables
 
 /**
  * primary data container for hir structures
@@ -22,9 +23,17 @@
  * - all vector tables MUST reserve id/idx 0 to store value 0!
  */
 typedef struct {
+    // TODO annonate types that are inside each map/table/arena
     strimap_t str_to_symbol_id_map;
 
+    vector_t file_id_vec;
     vector_t file_vec;
+    mapu32u32_t symbol_id_to_file_id_map;
+
+    vector_t importer_to_importees_vec;
+    vector_t importee_to_importers_vec;
+
+    vector_t ast_vec;
 
     vector_t scope_vec;
     vector_t scope_anon_vec;

@@ -49,6 +49,16 @@ typedef struct {
     hir_id_t val;
 } hir_file_id_t;
 
+/// for addressing hir_file_id_t's
+typedef struct {
+    hir_id_t val;
+} hir_file_id_idx_t;
+
+/// for addressing asts
+typedef struct {
+    hir_id_t val;
+} hir_ast_id_t;
+
 /// for addressing named scopes
 typedef struct {
     hir_id_t val;

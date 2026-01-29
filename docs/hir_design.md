@@ -37,22 +37,17 @@ HirSymbolId ->
     HirSymbol:
         strv: string_view_t (into arena-backed storage)
 
-------- TODO impl -------
-* write a u63 -> u32 hashmap?
-hashn(canonical_path: StringView) ->
-    HirFileId #>
-        HirFile:
-            path: HirSymbolId         (interned canonical path)
-            source_hash: u64          (hash of file contents, don't calculate this unless incrementally compiling)
-
-HirFileDepTable:
-    HirFileId -> []HirFileId
-
-AstFileIdToAstId:
-    HirFileId #> AstId
+HirFileIdIdx -> HirFileId
+HirFileId -> 
+    HirFile:
+        path: HirSymbolId
+        ast: HirAstId
+(for tracking dependencies during phases 2, so necessary files can be re-entered)
+dependencies_forward: []HirFileId (importer -> importees)
+(for tracking dependencies for recompilation)
+dependencies_reverse: []HirFileId (imported -> importers)
 
 AstId -> Ast
-^^^^^^^^^^^^^^^^^^^^^^^^^
 
 (*persisent, serializable)
 HirScopeId->
@@ -65,7 +60,7 @@ HirScopeId->
             funcs:  SymbolId #> HirDefId      (functions)
             types:   SymbolId #> HirDefId     (structs, unions, deftypes, variants)
 
-(temporary, for block scopes; not serialized)
+(unless top-level: temporary, for block scopes, not serialized)
 HirScopeAnonId->
     HirScopeAnon:
         named_parent: HirScopeId?
@@ -94,7 +89,8 @@ HirGenericArgId -> HirGenericArg
 
 HASH TABLES, *temporary, not serialized
 ---------------------------------------
-StringToSymbolTable: String -> HirSymbolId
+StringToSymbolTable: String #> HirSymbolId
+FilePathTable: HirSymbolId #> HirFileId
 
 HIR NODE STRUCTURES
 ============================================================================
@@ -304,7 +300,7 @@ allocate HirDefIds for:
 - deftypes
 - functions / externs functions
 - global vars
-- import: coalesce imports (build dependency tree?)
+- import: coalesce imports, build forward & reverse file dependency tree
 
 insert SymbolId -> HirDefId into current ScopeTable
 cache SymbolId into the AST decl node for faster walking the 2nd time around
