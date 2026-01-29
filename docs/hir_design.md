@@ -136,7 +136,10 @@ HirExprKind:
     | HirExprIdentifier:
         ident: HirIdentifier (resolved DefId inside)
     | HirExprLiteral:
-        literal: LiteralValue
+        LiteralValue:
+            | HirIntegralLit
+            | HirFloatingLit
+            | HirStringLit
     (computed exprs)
     | HirExprListLiteral:
         elems: []HirExecId -> HirExpr
@@ -243,10 +246,15 @@ HirDefId ->
         | HirVarDef:
             type: HirTypeId
             name: SymbolId
+            static: bool (implies pinned too)
+            {
             compt: bool
-            static: bool
-        | MovedVarDef:
+            constant: HirExecId? -> HirExprLiteral
+            }
+        | HirMovedVarDef:
             orig: HirDefId
+        | ComptConstant
+            value: 
         | HirModDef:
             scope: HirScopeId
             name: SymbolId
