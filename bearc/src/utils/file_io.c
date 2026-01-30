@@ -28,38 +28,30 @@ bool file_exists(const char* file_name) {
 int read_file_to_src_buffer(src_buffer_t* buffer, const char* file_name) {
     FILE* file = fopen(file_name, "rb");
     if (!file) {
-        printf("e0\n");
         return -1;
     }
 
     // find file size
     if (fseek(file, 0, SEEK_END) != 0) {
         fclose(file);
-        printf("e1\n");
         return -1;
     }
     long src_len = ftell(file);
     if (src_len < 0) {
         fclose(file);
-        printf("e2\n");
         return -1;
     }
     if (fseek(file, 0, SEEK_SET) != 0) {
         fclose(file);
-        printf("e3\n");
         return -1;
     }
-
     // allocate buffer (+1 for null terminator in case treating as string)
     size_t size = (size_t)src_len + strlen(file_name) + 2;
     buffer->data = malloc(size);
     if (!buffer->data) {
         fclose(file);
-
-        printf("e4\n");
         return -1;
     }
-
     // read file into buffer
     size_t read_size = fread(buffer->data, 1, (size_t)src_len, file);
     fclose(file);
@@ -81,7 +73,7 @@ int read_file_to_src_buffer(src_buffer_t* buffer, const char* file_name) {
 
 // returns an src_buffer_t by value, which will need to be destructed by src_buffer_destroy
 src_buffer_t src_buffer_from_file_create(const char* file_name) {
-    src_buffer_t buffer;
+    src_buffer_t buffer = {.file_name = file_name, .data = NULL, .size = 0, .src_len = 0};
     if (read_file_to_src_buffer(&buffer, file_name) < 0) {
         printf("%serror%s: could not read file: %s\n", ansi_bold_red(), ansi_reset(), file_name);
     }

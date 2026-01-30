@@ -15,6 +15,7 @@ br_ast_t ast_create_from_file(const char* file_name) {
     src_buffer_t src_buffer = src_buffer_from_file_create(file_name);
 
     compiler_error_list_t error_list = compiler_error_list_create(&src_buffer);
+
     br_ast_t ast = {{0}, {0}, {0}, NULL, error_list};
     if (!src_buffer.data) {
         return ast;
