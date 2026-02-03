@@ -149,9 +149,13 @@ static inline void hir_scope_anon_init_impl(hir_scope_anon_t* scope, hir_scope_i
     scope->arena = arena;
     scope->variables = mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena);
     scope->types = mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena);
-    // unused, so zero-init for more safety
+    // ~~~~~~~ unused, so zero-init for more safety ~~~~~~~~~~~
+    // since this scope is NOT the top level and is anonymous, it can NEVER contain function
+    // (function scopes), struct/variant/union/module (namespace scopes).
+    // We do however reuse the hir_scope_anon_t since the behavior is otherwise identical.
     scope->functions = (mapu32u32_t){.arena = {0}, .size = 0, .buckets = 0, .capacity = 0};
-    scope->namespaces = scope->functions;
+    scope->namespaces = scope->functions; // intentionally copy over the zero-init'd values
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     scope->is_top_level = false;
     scope->has_used_defs = false;
 }
