@@ -150,7 +150,7 @@ static inline void hir_scope_anon_init_impl(hir_scope_anon_t* scope, hir_scope_i
     scope->variables = mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena);
     scope->types = mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena);
     // unused, so zero-init for more safety
-    scope->functions = (mapu32u32_t){.arena = NULL, .size = 0, .buckets = 0, .capacity = 0};
+    scope->functions = (mapu32u32_t){.arena = {0}, .size = 0, .buckets = 0, .capacity = 0};
     scope->namespaces = scope->functions;
     scope->is_top_level = false;
     scope->has_used_defs = false;
