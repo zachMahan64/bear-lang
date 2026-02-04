@@ -318,14 +318,19 @@ result: all namespaces populated (with corresponding HirScopes).
 failure modes:
     REDEFINITION
 
-PHASE 2: BUILD BODIES/RESOLVE
------------------------------
+PHASE 2: RESOLVE SIGNATURES -> BODIES
+-------------------------------------
+a)
 walk AST again
 build HIR for:
-- function signatures/bodies
+- function signatures
 - struct / variant / union fields
-- type syntax trees
-- expressions / statements
+- type syntax trees inside fields/params/return types
+- place bodies to be populated into a vector of the form {HirDefId, AstNode} to be 
+later iteratively resolved without fully rewalking the AST
+
+b)
+- bodies { types / expressions (typecheck) / statements (typecheck) }
 
 create anonymous block scopes
 insert local variables on sight
@@ -333,7 +338,6 @@ insert local variables on sight
 on identifier (type or variable reference):
 - create HirIdentifier with resolved pointing a to a DefId by searching available scopes
 - insert locals into local scope as defined and resolve naturally linearly
-- typecheck
 
 compile-time constructs:
     on generic(type structure or function):
