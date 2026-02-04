@@ -9,4 +9,6 @@
 #ifndef COMPILER_HIR_TYPE_H
 #define COMPILER_HIR_TYPE_H
 
+// TODO
+
 #endif

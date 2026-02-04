@@ -2,8 +2,8 @@
 - [x] add typed scope table accessor/mutator functions
 - [x] add scope ctor & dtor
 - [x] write the new file tracking system into tables.h 
-- [ ] revise parser briefly to allow:
-    - [ ] literal (or compt-expr?) initialized variant values
+- [ ] fix anonymous struct decls, make includes `__cplusplus` safe
+- [ ] C++ify HIR and later
 - [ ] finish hir structural impls
     - [ ] defs
     - [ ] types

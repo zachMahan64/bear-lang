@@ -35,6 +35,11 @@ typedef struct {
     hir_def_u def;
     span_t span;
     hir_def_tag_e tag;
+    /// value of HIR_ID_NONE (0) indicates no parent
+    hir_def_id_t def_id;
+    bool resolved;
+    bool top_level_visited;
+    bool pub;
 } hir_def_t;
 
 #endif

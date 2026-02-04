@@ -23,40 +23,61 @@
  * - all vector tables MUST reserve id/idx 0 to store value 0!
  */
 typedef struct {
-    // TODO annonate types that are inside each map/table/arena
+    /// const char* -> hir_symbol_id_t
     strimap_t str_to_symbol_id_map;
 
+    /// hir_file_id_idx_t -> hir_file_id_t
     vector_t file_id_vec;
+    /// hir_file_id_t -> hir_file_id_t
     vector_t file_vec;
+    /// hir_symbol_id_t -> hir_file_id_t
     mapu32u32_t symbol_id_to_file_id_map;
 
+    /// hir_file_id_t -> {hir_file_id_idx_t, hir_size_t}
     vector_t importer_to_importees_vec;
+
+    /// hir_file_id_t -> {hir_file_id_idx_t, hir_size_t}
     vector_t importee_to_importers_vec;
 
+    /// hir_ast_id -> ast_t
     vector_t ast_vec;
 
+    /// hir_scope_id -> hir_scope_t
     vector_t scope_vec;
+
+    /// hir_scope_anon_id_t -> hir_scope_anon_t
     vector_t scope_anon_vec;
 
+    /// hir_symbol_id_idx_t -> hir_symbol_id_t
     vector_t symbol_id_vec;
+    /// hir_symbol_id_t -> hir_symbol_t
     vector_t symbol_vec;
+    /// stores interned strings pointed to by hir_symbol_id_t's
     arena_t symbol_arena;
 
+    /// hir_exec_id_idx_t -> hir_exec_id_t
     vector_t exec_id_vec;
+    /// hir_exec_id_t -> hir_exec_t
     vector_t exec_vec;
 
+    /// hir_def_id_idx_t -> hir_def_id_t
     vector_t def_id_vec;
+    /// hir_def_id_t -> hir_def_t
     vector_t def_vec;
 
-    vector_t child_to_parent_def_id;
-
+    /// hir_type_id_idx_t -> hir_type_id_t
     vector_t type_id_vec;
+    /// hir_type_id_t -> hir_type_t
     vector_t type_vec;
 
+    /// hir_generic_param_id_idx_t -> hir_generic_param_id_t
     vector_t generic_param_id_vec;
+    /// hir_generic_param_id_t -> hir_generic_param_t
     vector_t generic_param_vec;
 
+    /// hir_generic_arg_id_idx_t -> hir_generic_param_id_t
     vector_t generic_arg_id_vec;
+    /// hir_generic_arg_id_t -> hir_generic_param_t
     vector_t generic_arg_vec;
 } hir_tables_t;
 

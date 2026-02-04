@@ -76,8 +76,6 @@ HirExecId -> HirExec
 HirDefIdIdx -> HirDefId
 HirDefId -> HirDef
 
-child -> parent: HirDefId -> HirDefId
-
 HirTypeIdIdx -> HirTypeId
 HirTypeId -> HirType
 
@@ -225,7 +223,9 @@ HirTypeId->
 HirDefId ->
     span: Span
     name: SymbolId
+    parent: HirDefId?
     resolved: bool
+    top_leveL_visited: bool // prevent and detect circular dependencies
     pub: bool
     HirDef:
         | HirFunctionDef:
@@ -246,13 +246,12 @@ HirDefId ->
         | HirVarDef:
             type: HirTypeId
             name: SymbolId
-            static: bool (implies pinned too)
+            is_static: bool (implies pinned too)
+            moved: bool
             {
             compt: bool
             constant: HirExecId? -> HirExprLiteral
             }
-        | HirMovedVarDef:
-            orig: HirDefId
         | HirModDef:
             scope: HirScopeId
             name: SymbolId
