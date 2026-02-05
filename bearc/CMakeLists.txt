@@ -54,6 +54,7 @@ set(SRC
     src/cli/args.c
 
     src/compiler/hir/span.cpp
+    src/compiler/hir/file.cpp
     src/compiler/hir/tables.cpp
     src/compiler/hir/scope.cpp
 

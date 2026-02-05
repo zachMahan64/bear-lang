@@ -264,7 +264,7 @@ ScopeLookUpResult ScopeAnon::look_up_type(const HirTables& tables, ScopeAnonId l
 // ------------------ insert helpers ----------------------
 
 /// insert symbol -> def into a named hir_scope
-void Scope::scope_insert(SymbolId symbol, DefId def, scope_kind kind) {
+void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
     switch (kind) {
     case scope_kind::NAMESPACE:
         mapu32u32_insert(&this->namespaces, symbol.val(), def.val());
@@ -323,16 +323,16 @@ ScopeAnon::~ScopeAnon() {
 
 // ------------------------- named scope inserters -------------------------------
 void Scope::insert_namespace(SymbolId symbol, DefId def) {
-    scope_insert(symbol, def, scope_kind::NAMESPACE);
+    insert(symbol, def, scope_kind::NAMESPACE);
 }
 void Scope::insert_function(SymbolId symbol, DefId def) {
 
-    scope_insert(symbol, def, scope_kind::FUNCTION);
+    insert(symbol, def, scope_kind::FUNCTION);
 }
 void Scope::insert_variable(SymbolId symbol, DefId def) {
-    scope_insert(symbol, def, scope_kind::VARIABLE);
+    insert(symbol, def, scope_kind::VARIABLE);
 }
-void Scope::insert_type(SymbolId symbol, DefId def) { scope_insert(symbol, def, scope_kind::TYPE); }
+void Scope::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::TYPE); }
 
 // -------------------------------------- anonymous scope inserters ----------------
 void ScopeAnon::insert_variable(SymbolId symbol, DefId def) {

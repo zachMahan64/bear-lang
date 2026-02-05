@@ -20,11 +20,11 @@ namespace hir {
 
 /// trivially copyable src span, always pass by value
 class Span {
-    const HirSize start;
-    const HirSize end;
-    const FileId file_id;
+    HirSize start;
+    HirSize end;
+    FileId file_id;
     // col can be found be backtracking to sof or last \n
-    const HirSize line;
+    HirSize line;
     Span(HirSize start, HirSize end, FileId file_id, HirSize line) noexcept;
 
   public:

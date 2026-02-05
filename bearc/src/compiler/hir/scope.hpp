@@ -58,7 +58,7 @@ struct Scope {
     arena_t arena;
 
     const bool top_level;
-    void scope_insert(SymbolId symbol, DefId def, scope_kind kind);
+    void insert(SymbolId symbol, DefId def, scope_kind kind);
 
   public:
     bool is_top_level() const { return top_level; };

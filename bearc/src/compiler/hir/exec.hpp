@@ -33,7 +33,7 @@ typedef struct {
     ExecValue exec;
     Span span;
     const bool compt;
-} hir_exec_t;
+} Exec;
 
 } // namespace hir
 

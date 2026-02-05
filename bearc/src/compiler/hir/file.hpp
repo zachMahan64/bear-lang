@@ -8,7 +8,10 @@
 
 #ifndef COMPILER_HIR_FILE_HPP
 #define COMPILER_HIR_FILE_HPP
+#include "compiler/ast/ast.h"
+#include "compiler/ast/stmt_slice.h"
 #include "compiler/hir/indexing.hpp"
+#include "utils/file_io.h"
 #include <cstdint>
 
 namespace hir {
@@ -23,6 +26,17 @@ struct File {
     SymbolId path;
     file_load_state load_state;
     AstId ast_id;
+};
+
+class FileAst {
+    br_ast_t ast;
+
+  public:
+    const src_buffer& buffer() const noexcept;
+    const compiler_error_list_t& error_list() const noexcept;
+    const ast_stmt_t* root() const noexcept;
+    FileAst(const char* file_name);
+    ~FileAst();
 };
 
 } // namespace hir
