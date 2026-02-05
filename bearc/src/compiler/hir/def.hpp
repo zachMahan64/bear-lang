@@ -9,37 +9,44 @@
 #ifndef COMPILER_HIR_DEF_H
 #define COMPILER_HIR_DEF_H
 
-#include "compiler/hir/indexing.h"
-#include "compiler/hir/span.h"
+#include "compiler/hir/indexing.hpp"
+#include "compiler/hir/span.hpp"
+#include <variant>
+
+namespace hir {
 
 // ------ struct impls -------
 // TODO: finish impl structures
 
-typedef enum {
-    HIR_DEF_MODULE,
-} hir_def_tag_e;
-
-typedef struct {
-    hir_scope_id_t scope;
-} hir_def_module_t;
+struct DefModule {
+    ScopeId scope;
+};
 
 // ^^^^^^ struct impls ^^^^^^^^
 
-/// main exec union
-typedef union {
-    hir_def_module_t module;
-} hir_def_u;
+/// main exec variant
+using DefValue = std::variant<DefModule>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
-typedef struct {
-    hir_def_u def;
-    span_t span;
-    hir_def_tag_e tag;
+struct Def {
+    /*
+        span: Span
+        name: SymbolId
+        parent: HirDefId?
+        resolved: bool
+        top_leveL_visited: bool // prevent and detect circular dependencies
+        pub: bool
+     */
+    DefValue value;
+    const Span span;
+    const SymbolId name;
     /// value of HIR_ID_NONE (0) indicates no parent
-    hir_def_id_t def_id;
-    bool resolved;
+    OptId<DefId> parent;
+    const bool pub;
     bool top_level_visited;
-    bool pub;
-} hir_def_t;
+    bool resolved;
+};
+
+} // namespace hir
 
 #endif

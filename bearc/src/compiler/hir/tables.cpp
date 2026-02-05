@@ -6,11 +6,11 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#include "compiler/hir/tables.h"
+#include "compiler/hir/tables.hpp"
 
-void hir_tables_init(hir_tables_t* tables) {
+void hir_tables_init(hir::HirTables* tables) {
     // TODO
 }
-void hir_tables_destroy(hir_tables_t* tables) {
+void hir_tables_destroy(hir::HirTables* tables) {
     // TODO
 }

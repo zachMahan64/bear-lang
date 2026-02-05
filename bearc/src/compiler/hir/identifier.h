@@ -9,14 +9,16 @@
 #ifndef COMPILER_HIR_IDENTIFER
 #define COMPILER_HIR_IDENTIFER
 
-#include "compiler/hir/indexing.h"
-#include "compiler/hir/span.h"
+#include "compiler/hir/span.hpp"
+
+namespace hir {
 
 /// represents an atom identifer in either type mention or variable mentions
 typedef struct {
-    hir_symbol_id_idx_t symbol_ids_start;
-    hir_size_t symbols_ids_len;
-    span_t span;
+    IdSlice<SymbolId> symbols;
+    Span span;
 } hir_identifier_t;
+
+} // namespace hir
 
 #endif

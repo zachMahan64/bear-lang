@@ -10,7 +10,8 @@ Checks: >
   -readability-identifier-length,
   -bugprone-easily-swappable-parameters,
   -bugprone-assignment-in-if-condition,
-  -bugprone-too-small-loop-variable
+  -bugprone-too-small-loop-variable,
+  -readability-implicit-bool-conversion
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none

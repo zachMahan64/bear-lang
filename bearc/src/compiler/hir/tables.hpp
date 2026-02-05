@@ -6,13 +6,18 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_HIR_TABLES_H
-#define COMPILER_HIR_TABLES_H
+#ifndef COMPILER_HIR_TABLES_HPP
+#define COMPILER_HIR_TABLES_HPP
 
+#include "compiler/hir/indexing.hpp"
+#include "compiler/hir/scope.hpp"
 #include "utils/arena.h"
 #include "utils/mapu32u32.h"
 #include "utils/strimap.h"
 #include "utils/vector.h"
+#include <vector>
+
+namespace hir {
 
 // TODO, write typed accessor/mutator wrappers around the tables
 
@@ -22,12 +27,13 @@
  * - this model allows for slices with purely ids (no pointers)
  * - all vector tables MUST reserve id/idx 0 to store value 0!
  */
-typedef struct {
+class HirTables {
+  public:
     /// const char* -> hir_symbol_id_t
     strimap_t str_to_symbol_id_map;
 
     /// hir_file_id_idx_t -> hir_file_id_t
-    vector_t file_id_vec;
+    std::vector<FileId> file_id_vec;
     /// hir_file_id_t -> hir_file_id_t
     vector_t file_vec;
     /// hir_symbol_id_t -> hir_file_id_t
@@ -79,11 +85,13 @@ typedef struct {
     vector_t generic_arg_id_vec;
     /// hir_generic_arg_id_t -> hir_generic_param_t
     vector_t generic_arg_vec;
-} hir_tables_t;
+
+    HirTables();
+    Scope scope_at();
+};
 
 // TODO finish impl
 
-void hir_tables_init(hir_tables_t* tables);
-void hir_tables_destroy(hir_tables_t* tables);
+} // namespace hir
 
 #endif

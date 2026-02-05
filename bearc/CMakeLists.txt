@@ -39,10 +39,6 @@ set(SRC
     src/compiler/parser/parse_token_slice.c
     src/compiler/parser/parser.c
 
-    src/compiler/hir/span.c
-    src/compiler/hir/tables.c
-    src/compiler/hir/scope.c
-
     src/utils/strimap.c
     src/utils/mapu32u32.c
     src/utils/vector.c
@@ -56,6 +52,11 @@ set(SRC
 
     src/cli/bearc.c
     src/cli/args.c
+
+    src/compiler/hir/span.cpp
+    src/compiler/hir/tables.cpp
+    src/compiler/hir/scope.cpp
+
 )
 
 set(NO_TEST_SRC

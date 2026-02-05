@@ -17,6 +17,10 @@
 #define MAPU32U32_MINIMUM_CAPACITY 8
 #define MAPU32U32_LOAD_FACTOR .75
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// an entry in the string to int map
 typedef struct mapu32u32_entry {
     uint32_t key;
@@ -80,4 +84,9 @@ mapu32u32_entry_t* mapu32u32_iter_next(mapu32u32_iter_t* iter);
 
 uint32_t hash_uint32(uint32_t x);
 uint32_t unhash_uint32(uint32_t x);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // ! UTILS_mapu32u32_H

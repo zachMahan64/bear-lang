@@ -9,33 +9,31 @@
 #ifndef COMPILER_SPAN_SPAN
 #define COMPILER_SPAN_SPAN
 
-#include "compiler/hir/indexing.h"
+#include "compiler/hir/indexing.hpp"
 #include "compiler/token.h"
-#include "utils/file_io.h"
-#include "utils/string_view.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string_view>
+
+namespace hir {
 
 /// trivially copyable src span, always pass by value
-typedef struct {
-    uint32_t start;
-    uint32_t end;
-    hir_file_id_t file_id;
+class Span {
+    const HirSize start;
+    const HirSize end;
+    const FileId file_id;
     // col can be found be backtracking to sof or last \n
-    uint32_t line;
-} span_t;
+    const HirSize line;
+    Span(HirSize start, HirSize end, FileId file_id, HirSize line) noexcept;
 
-/// does not own the src_view
-typedef struct {
-    const src_buffer_t* const src_view;
-    hir_file_id_t file_id;
-} spannable_file_t;
+  public:
+    /// constructs an hir::Span from an existing FileId and none-owned ptrs to a src buffer and a
+    /// token_t
+    Span(FileId file_id, const char* src, token_t* tkn);
+    [[nodiscard]] static std::string_view retrieve_from_buffer(const char* data, Span span);
+};
 
-span_t span_normalize_src_view_from_tkn(spannable_file_t file, token_t* tkn);
-
-span_t span_normalize_src_view(spannable_file_t file, const char* start, size_t len);
-
-string_view_t span_retrieve_from_buffer(const char* data, span_t span);
+} // namespace hir
 
 #endif
