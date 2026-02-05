@@ -4,14 +4,14 @@
 - [x] write the new file tracking system into tables.h 
 - [x] fix anonymous struct decls, make includes `__cplusplus` safe
 - [x] C++ify HIR
-- [ ] Make Scope fully c++ified (finish translating Cisms)
+- [x] Make Scope fully c++ified (finish translating Cisms)
 - [ ] finish hir structural impls
     - [ ] defs
     - [ ] types
     - [ ] exec
         - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params
-- [ ] impl hir_tables_t for hir node allocation/access 
+- [ ] impl HirTables for hir node allocation/access 
 - [ ] hir phase 1: begin handling top level decl lowering
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### Medium term

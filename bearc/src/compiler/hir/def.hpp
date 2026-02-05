@@ -29,22 +29,16 @@ using DefValue = std::variant<DefModule>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
-    /*
-        span: Span
-        name: SymbolId
-        parent: HirDefId?
-        resolved: bool
-        top_leveL_visited: bool // prevent and detect circular dependencies
-        pub: bool
-     */
+    /// underlying structure
     DefValue value;
+    /// span in src
     const Span span;
+    /// id corresponding to the interned identifier
     const SymbolId name;
-    /// value of HIR_ID_NONE (0) indicates no parent
+    /// parent's definition, if any
     OptId<DefId> parent;
+    /// indicates pub (true) or hid (false) visibility
     const bool pub;
-    bool top_level_visited;
-    bool resolved;
 };
 
 } // namespace hir

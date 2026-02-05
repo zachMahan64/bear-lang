@@ -7,10 +7,8 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/tables.hpp"
+namespace hir {
 
-void hir_tables_init(hir::HirTables* tables) {
-    // TODO
-}
-void hir_tables_destroy(hir::HirTables* tables) {
-    // TODO
-}
+HirTables::HirTables() {}
+
+} // namespace hir

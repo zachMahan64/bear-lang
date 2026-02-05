@@ -19,7 +19,7 @@
 
 namespace hir {
 
-// TODO, write typed accessor/mutator wrappers around the tables
+// !! TODO, finish impl and improve impl (switch to entire STL vectors/other STL)
 
 /**
  * primary data container for hir structures
@@ -55,21 +55,27 @@ class HirTables {
     vector_t scope_anon_vec;
 
     /// hir_symbol_id_idx_t -> hir_symbol_id_t
-    vector_t symbol_id_vec;
+    std::vector<SymbolId> symbol_id_vec;
     /// hir_symbol_id_t -> hir_symbol_t
     vector_t symbol_vec;
     /// stores interned strings pointed to by hir_symbol_id_t's
     arena_t symbol_arena;
 
     /// hir_exec_id_idx_t -> hir_exec_id_t
-    vector_t exec_id_vec;
+    std::vector<ExecId> exec_id_vec;
     /// hir_exec_id_t -> hir_exec_t
     vector_t exec_vec;
 
     /// hir_def_id_idx_t -> hir_def_id_t
-    vector_t def_id_vec;
+    std::vector<DefId> def_id_vec;
     /// hir_def_id_t -> hir_def_t
     vector_t def_vec;
+
+    /// indicated whether this node has been visited during top-level traversal/resolution; this
+    /// flag helps prevent illegal circular dependencies
+    std::vector<uint8_t> def_resolved; // index with DefId
+    bool resolved;
+    std::vector<uint8_t> def_top_level_visited; // index with DefId
 
     /// hir_type_id_idx_t -> hir_type_id_t
     vector_t type_id_vec;
@@ -89,8 +95,6 @@ class HirTables {
     HirTables();
     Scope scope_at();
 };
-
-// TODO finish impl
 
 } // namespace hir
 

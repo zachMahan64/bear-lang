@@ -168,7 +168,7 @@ template <hir::Id T> class OptId {
   public:
     OptId() = default;
     OptId(T id_value) : underlying(id_value) {}
-    T val() const { return underlying.val(); }
+    HirId val() const { return underlying.val(); }
     constexpr T as_id() const noexcept { return underlying; }
     [[nodiscard]] bool has_value() const noexcept { return underlying.val() != HIR_ID_NONE; }
     void set(T id_value) noexcept { this->underlying = id_value; }
@@ -180,7 +180,7 @@ template <hir::Id T> class IdIdx {
     HirId value;
 
   public:
-    IdIdx(HirId value) : value(value) {};
+    explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
 };
 template <hir::Id T> class IdSlice {
