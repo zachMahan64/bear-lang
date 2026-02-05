@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-typedef enum {
+typedef enum ast_statement_type {
     // --------- declaration statements ---------
     // blocks
     AST_STMT_FILE, // top-level flat seq of statements w/ metadata
@@ -90,18 +90,18 @@ typedef struct ast_stmt_else ast_stmt_else_t;
 
 /// generic parmeters
 
-typedef enum {
+typedef enum ast_generic_parameter_e {
     AST_GENERIC_PARAM_TYPE,
     AST_GENERIC_PARAM_VAR,
     AST_GENERIC_PARAM_INVALID,
 } ast_generic_parameter_e;
 
-typedef struct {
+typedef struct ast_generic_parameter_u {
     ast_param_t* generic_var;
     ast_type_with_contracts_t* generic_type;
 } ast_generic_parameter_u;
 
-typedef struct {
+typedef struct ast_generic_parameter {
     ast_generic_parameter_u param;
     ast_generic_parameter_e tag;
     token_t* first;
@@ -109,7 +109,7 @@ typedef struct {
 } ast_generic_parameter_t;
 
 /// this is the <T has(foo, bar), var N> clause
-typedef struct {
+typedef struct ast_slice_of_generic_params {
     ast_generic_parameter_t** start;
     size_t len;
 } ast_slice_of_generic_params_t;
@@ -119,7 +119,7 @@ typedef struct {
  * represents block statements
  * {...series of statements...}
  */
-typedef struct {
+typedef struct ast_stmt_block {
     ast_slice_of_stmts_t stmts;
 } ast_stmt_block_t;
 
@@ -127,7 +127,7 @@ typedef struct {
  * represents a top level sequence of statements in a file
  * this is the highest-order statement construct
  */
-typedef struct {
+typedef struct ast_stmt_file {
     const char* file_name;
     ast_slice_of_stmts_t stmts;
 } ast_stmt_file_t;
@@ -136,7 +136,7 @@ typedef struct {
  * represents a module decl or insertion in a module
  * mod my_mod {...} // module will enclosed
  */
-typedef struct {
+typedef struct ast_stmt_module {
     token_t* id;
     ast_slice_of_stmts_t decls;
 } ast_stmt_module_t;
@@ -144,7 +144,7 @@ typedef struct {
 /**
  * imports a file given my a path as my.path.to.file
  */
-typedef struct {
+typedef struct ast_stmt_import {
     /// NULLable/optional
     token_t* extern_language;
     token_t* file_path;
@@ -154,17 +154,17 @@ typedef struct {
 } ast_stmt_import_t;
 
 /// bring a module into current scope
-typedef struct {
+typedef struct ast_stmt_use {
     token_ptr_slice_t id;
 } ast_stmt_use_t;
 
 /// a statement expr, like `foo();`
-typedef struct {
+typedef struct ast_stmt_expr {
     /// sole-expr of this statement
     ast_expr_t* expr;
 } ast_stmt_expr_t;
 
-typedef struct {
+typedef struct ast_stmt_fn_decl {
     /// fn, mt, or dt
     token_t* kw;
     token_ptr_slice_t name;
@@ -177,19 +177,19 @@ typedef struct {
     bool is_mut;
 } ast_stmt_fn_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_var_decl_init {
     ast_type_t* type;
     token_t* name;
     token_t* assign_op;
     ast_expr_t* rhs;
 } ast_stmt_var_decl_init_t;
 
-typedef struct {
+typedef struct ast_stmt_var_decl {
     ast_type_t* type;
     token_t* name;
 } ast_stmt_var_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_if {
     ast_expr_t* condition;
     ast_stmt_t* body_stmt;
     /// NULLable if there's no else
@@ -201,13 +201,13 @@ typedef struct ast_stmt_else {
     ast_stmt_t* body_stmt;
 } ast_stmt_else_t;
 
-typedef struct {
+typedef struct ast_stmt_while {
     ast_expr_t* condition;
     ast_stmt_t* body_stmt;
 } ast_stmt_while_t;
 
 /// C-style for <int>; <cond>; <step> {...}
-typedef struct {
+typedef struct ast_stmt_for {
     ast_stmt_t* init;
     ast_expr_t* condition;
     ast_expr_t* step;
@@ -215,18 +215,18 @@ typedef struct {
 } ast_stmt_for_t;
 
 /// for x in thing {...}
-typedef struct {
+typedef struct ast_stmt_for_in {
     ast_param_t* each;
     ast_expr_t* iterator;
     ast_stmt_t* body_stmt;
 } ast_stmt_for_in_t;
 
-typedef struct {
+typedef struct ast_stmt_return {
     // optional
     ast_expr_t* expr;
 } ast_stmt_return_t;
 
-typedef struct {
+typedef struct ast_stmt_struct_decl {
     token_t* name;
     ast_slice_of_generic_params_t generic_params;
     /// contracts.len == 0 indicates no contracts
@@ -235,47 +235,47 @@ typedef struct {
     bool is_generic;
 } ast_stmt_struct_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_contract_decl {
     token_t* name;
     ast_slice_of_stmts_t fields;
 } ast_stmt_contract_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_empty {
     token_t* terminator;
 } ast_stmt_empty_t;
 
-typedef struct {
+typedef struct ast_stmt_vis_modifier {
     token_t* modifier;
     ast_stmt_t* stmt;
 } ast_stmt_vis_modifier_t;
 
-typedef struct {
+typedef struct ast_stmt_wrapped {
     ast_stmt_t* stmt;
 } ast_stmt_wrapped_t;
 
-typedef struct {
+typedef struct ast_stmt_union_decl {
     token_t* name;
     ast_slice_of_stmts_t fields;
 } ast_stmt_union_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_variant_decl {
     token_t* name;
     ast_slice_of_generic_params_t generic_params;
     ast_slice_of_stmts_t fields;
     bool is_generic;
 } ast_stmt_variant_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_variant_field_decl {
     token_t* name;
     ast_slice_of_params_t params;
 } ast_stmt_variant_field_decl_t;
 
-typedef struct {
+typedef struct ast_stmt_extern_block {
     token_t* extern_language;
     ast_slice_of_stmts_t decls;
 } ast_stmt_extern_block_t;
 
-typedef struct {
+typedef struct ast_stmt_deftype {
     token_t* alias_id;
     /// of type AST_EXPR_TYPE or AST_UNARY where token_t* op = typeof
     ast_expr_t* aliased_type_expr;
@@ -284,7 +284,7 @@ typedef struct {
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// union of all stmt types
-typedef union {
+typedef union ast_stmt_u {
     ast_stmt_block_t block;
     ast_stmt_file_t file;
     ast_stmt_module_t module;

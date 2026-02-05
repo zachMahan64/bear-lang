@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-typedef enum {
+typedef enum ast_type_tag {
     AST_TYPE_BASE,
     AST_TYPE_REF_PTR,
     AST_TYPE_ARR,
@@ -23,31 +23,31 @@ typedef enum {
     AST_TYPE_FN_PTR,
     AST_TYPE_VARIADIC,
     AST_TYPE_INVALID,
-} ast_type_e;
+} ast_type_tag_e;
 
-typedef struct {
+typedef struct ast_type_base {
     token_ptr_slice_t id;
     bool mut;
 } ast_type_base_t;
 
 // shared by tags AST_TYPE_REF and AST_TYPE_PTR
-typedef struct {
+typedef struct ast_type_ref {
     ast_type_t* inner;
     token_t* modifier; // & or *
     bool mut;
 } ast_type_ref_t;
 
-typedef struct {
+typedef struct ast_type_arr {
     ast_type_t* inner;
     ast_expr_t* size_expr;
 } ast_type_arr_t;
 
-typedef struct {
+typedef struct ast_type_slice {
     ast_type_t* inner;
     bool mut;
 } ast_type_slice_t;
 
-typedef struct {
+typedef struct ast_type_generic {
     ast_type_t* inner;
     ast_slice_of_generic_args_t generic_args;
 } ast_type_generic_t;
@@ -57,18 +57,18 @@ typedef struct ast_slice_of_types {
     size_t len;
 } ast_slice_of_types_t;
 
-typedef struct {
+typedef struct ast_type_fn_ptr {
     ast_slice_of_types_t param_types;
     /// optional if void
     ast_type_t* return_type;
     bool mut;
 } ast_type_fn_ptr_t;
 
-typedef struct {
+typedef struct ast_type_wrapped {
     ast_type_t* inner;
 } ast_type_wrapped_t;
 
-typedef union {
+typedef union ast_type_u {
     ast_type_base_t base;
     ast_type_ref_t ref;
     ast_type_arr_t arr;
@@ -80,13 +80,13 @@ typedef union {
 
 typedef struct ast_type {
     ast_type_u type;
-    ast_type_e tag;
+    ast_type_tag_e tag;
     ast_type_t* canonical_base;
     token_t* first;
     token_t* last;
 } ast_type_t;
 
-typedef struct {
+typedef struct ast_type_with_contracts {
     token_t* id;
     ast_slice_of_exprs_t contract_ids;
     bool valid;

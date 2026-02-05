@@ -13,7 +13,12 @@
 #include "compiler/diagnostics/error_list.h"
 #include "utils/file_io.h"
 #include "utils/vector.h"
-typedef struct {
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct br_ast {
     src_buffer_t src_buffer;
     vector_t tokens;
     arena_t arena;
@@ -24,5 +29,9 @@ typedef struct {
 
 br_ast_t ast_create_from_file(const char* file_name);
 void ast_destroy(br_ast_t* ast);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

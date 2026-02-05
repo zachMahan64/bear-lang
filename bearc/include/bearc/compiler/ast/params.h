@@ -16,7 +16,7 @@ extern "C" {
 
 typedef struct ast_type ast_type_t;
 
-typedef struct {
+typedef struct ast_param {
     ast_type_t* type;
     token_t* name;
     bool valid;
@@ -24,7 +24,7 @@ typedef struct {
     token_t* last;
 } ast_param_t;
 
-typedef struct {
+typedef struct ast_slice_of_params_t {
     ast_param_t** start;
     size_t len;
 } ast_slice_of_params_t;

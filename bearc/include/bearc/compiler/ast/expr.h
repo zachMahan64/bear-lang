@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-typedef enum {
+typedef enum ast_expr_type {
     // atoms/primary exprs
     AST_EXPR_ID,
     AST_EXPR_LITERAL,
@@ -65,14 +65,14 @@ typedef struct ast_expr ast_expr_t;
 typedef struct ast_type ast_type_t;
 
 /// slice of ast_expr_t
-typedef struct {
+typedef struct ast_slice_of_exprs {
     ast_expr_t** start;
     size_t len;
 } ast_slice_of_exprs_t;
 
 // expr types ~~~~~~~~~~~~
 
-typedef struct {
+typedef struct ast_expr_id {
     token_ptr_slice_t slice;
 } ast_expr_id_t;
 
@@ -81,57 +81,57 @@ typedef struct ast_expr_literal {
 } ast_expr_literal_t;
 
 // resolve through operator token type
-typedef struct {
+typedef struct ast_expr_binary {
     ast_expr_t* lhs;
     token_t* op;
     ast_expr_t* rhs;
 } ast_expr_binary_t;
 
-typedef struct {
+typedef struct ast_expr_subscript {
     ast_expr_t* lhs;
     ast_expr_t* subexpr;
 } ast_expr_subscript_t;
 
-typedef struct {
+typedef struct ast_expr_grouping {
     token_t* left_paren;
     ast_expr_t* expr;
     token_t* right_paren;
 } ast_expr_grouping_t;
 
 // pre/postfix must be determined by the ast_expr_type_e inside the wrapping ast_expr_t
-typedef struct {
+typedef struct ast_expr_unary {
     ast_expr_t* expr;
     token_t* op;
 } ast_expr_unary_t;
 
-typedef struct {
+typedef struct ast_expr_borrow {
     ast_expr_t* borrowed;
     bool mut;
 } ast_expr_borrow_t;
 
-typedef struct {
+typedef struct ast_expr_struct_member_init {
     token_t* id;
     token_t* assign_op;
     ast_expr_t* value;
 } ast_expr_struct_member_init_t;
 
-typedef struct {
+typedef struct ast_expr_struct_init {
     token_ptr_slice_t id;
     ast_slice_of_exprs_t member_inits;
 } ast_expr_struct_init_t;
 
 // generics ~~~~~~~~~~~~~~~~~~
-typedef struct {
+typedef union ast_generic_arg_u {
     ast_expr_t* expr;
     ast_type_t* type;
 } ast_generic_arg_u;
 
-typedef enum {
+typedef enum ast_generic_arg_e {
     AST_GENERIC_ARG_TYPE,
     AST_GENERIC_ARG_EXPR,
 } ast_generic_arg_e;
 
-typedef struct {
+typedef struct ast_generic_arg {
     ast_generic_arg_u arg;
     ast_generic_arg_e tag;
     bool valid;
@@ -144,7 +144,7 @@ typedef struct ast_slice_of_generic_args {
 } ast_slice_of_generic_args_t;
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-typedef struct {
+typedef struct ast_expr_fn_call {
     ast_expr_t* left_expr; // should resolve to a func/func ptr
     ast_slice_of_generic_args_t generic_args;
     token_t* left_paren;
@@ -153,42 +153,42 @@ typedef struct {
     bool is_generic;
 } ast_expr_fn_call_t;
 
-typedef struct {
+typedef struct ast_expr_type_expr {
     ast_type_t* type;
 } ast_expr_type_t;
 
-typedef struct {
+typedef struct ast_expr_variant_decomp {
     token_ptr_slice_t id;
     ast_slice_of_params_t vars;
 } ast_expr_variant_decomp_t;
 
-typedef struct {
+typedef struct ast_expr_block {
     ast_slice_of_stmts_t stmts;
 } ast_expr_block_t;
 
-typedef struct {
+typedef struct ast_expr_match_branch {
     ast_slice_of_exprs_t patterns;
     ast_expr_t* value;
 } ast_expr_match_branch_t;
 
-typedef struct {
+typedef struct ast_expr_match {
     ast_expr_t* matched;
     ast_slice_of_exprs_t branches;
 } ast_expr_match_t;
 
-typedef struct {
+typedef struct ast_expr_closure {
     ast_slice_of_params_t params;
     ast_expr_t* body;
     bool is_move;
 } ast_expr_closure_t;
 
-typedef struct {
+typedef struct ast_expr_list_literal {
     ast_slice_of_exprs_t slice;
 } ast_expr_list_literal_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
-typedef union {
+typedef union ast_expr_u {
     ast_expr_id_t id;
     ast_expr_literal_t literal;
     ast_expr_binary_t binary;
@@ -219,4 +219,4 @@ typedef struct ast_expr {
 #ifdef __cplusplus
 } // extern "C"
 #endif
-#endif // !AST_STATEMENTS_H
+#endif // !AST_EXPRESSIONS_H

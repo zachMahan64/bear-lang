@@ -19,7 +19,7 @@ typedef struct ast_stmt ast_stmt_t;
 /**
  * slice of statements
  */
-typedef struct {
+typedef struct ast_slice_of_stmts {
     ast_stmt_t** start;
     size_t len;
 } ast_slice_of_stmts_t;

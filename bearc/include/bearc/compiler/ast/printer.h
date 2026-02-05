@@ -10,8 +10,17 @@
 #define COMPILER_AST_PRINTER_H
 
 #include "compiler/ast/stmt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void pretty_print_stmt(ast_stmt_t* stmt);
 void pretty_print_expr(ast_expr_t* expr);
 void pretty_printer_reset(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
