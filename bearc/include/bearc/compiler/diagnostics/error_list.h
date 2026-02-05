@@ -15,10 +15,14 @@
 #include "utils/vector.h"
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * list of compiler_error_t's with a file_name
  */
-typedef struct {
+typedef struct compiler_error_list {
     const src_buffer_t src_buffer; // holds file_name and view into src code inside a buffer
     vector_t list_vec;             // hold type compiler_error_t
 } compiler_error_list_t;
@@ -49,5 +53,9 @@ bool compiler_error_list_empty(const compiler_error_list_t* list);
 
 /// check a compiler_error_list_t's size
 size_t compiler_error_list_count(const compiler_error_list_t* list);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // COMPILER_DIAGNOSTICS_ERROR_LIST_H

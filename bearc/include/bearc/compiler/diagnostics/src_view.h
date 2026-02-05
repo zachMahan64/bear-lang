@@ -13,6 +13,10 @@
 #include "utils/string.h"
 #include "utils/string_view.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * builds a string view that displays source code
  */
@@ -23,5 +27,9 @@ string_view_t get_line_string_view(const src_buffer_t* src_buffer, token_t* tkn)
  * get_line_string_view
  */
 string_t get_cursor_string(string_view_t line_view, token_t* tkn, const char* ansi_color);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !COMPILER_DIAGNOSTICS_SRC_VIEW_H

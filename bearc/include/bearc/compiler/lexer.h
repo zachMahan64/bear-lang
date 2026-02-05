@@ -14,9 +14,17 @@
 
 #define LEXER_ESTIMATED_CHARS_PER_TOKEN 6
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * create a vector_t storing token_t from a specified src_buffer_t
  */
 vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !COMPILER_LEXER

@@ -10,12 +10,14 @@
 #define COMPILER_DIAGNOSTICS_ERROR_CODES_H
 
 #include "compiler/token.h"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * predefined set of errors, these have associated diagnostics with
  * the functions in this header
  */
-typedef enum {
+typedef enum error_code {
     ERR_NONE = 0,
     ERR_EXPECTED_TOKEN,
     ERR_EXPECTED_IDENTIFER,
@@ -75,5 +77,9 @@ const char* error_message_for_code(error_code_e error_code);
  * first string /// this function gives this string
  */
 const char* error_message_context_for(compiler_error_t* error);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

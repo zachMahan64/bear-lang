@@ -14,7 +14,11 @@
 #define CLI_ARGS_MAX_FILE_NAME_LENGTH 1024
 #define CLI_ARGS_MAX_FLAG_LENGTH 16
 
-typedef enum {
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum cli_flag {
     CLI_FLAG_ERR_UNKNOWN,
     CLI_FLAG_ERR_DUPLICATE,
     CLI_FLAG_ERR_FILE_NAME_TOO_LONG,
@@ -26,7 +30,7 @@ typedef enum {
     CLI_FLAG__NUM,
 } cli_flag_e;
 
-typedef struct {
+typedef struct bearc_args {
     bool flags[CLI_FLAG__NUM];
     char input_file_name[CLI_ARGS_MAX_FILE_NAME_LENGTH];
 } bearc_args_t;
@@ -39,5 +43,9 @@ typedef struct {
 extern cli_flag_long_mapping_t cli_flag_long_map[];
 
 bearc_args_t parse_cli_args(int argc, char** argv);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !CLI_ARGS_H
