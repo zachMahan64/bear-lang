@@ -12,8 +12,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// a string buffer, created from a file
-typedef struct {
+typedef struct src_buffer {
     /// non-owning view into filename
     const char* file_name;
     /// owns, freed by destroy_char_buffer_from_file
@@ -37,5 +41,9 @@ const char* src_buffer_get(src_buffer_t* buffer);
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 bool file_exists(const char* file_name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !FILE_IO_H

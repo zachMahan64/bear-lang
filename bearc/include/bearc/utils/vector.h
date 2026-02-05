@@ -11,6 +11,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// generic vector, based on void* and tracks indices via an elem_size parameter
 /// - stores types of ONE size (logic breaks if you try to do heterogenous storage)
 /// - upon contruction, based in sizeof(some_type_t) for proper usage
@@ -18,7 +22,7 @@
 /// ```
 /// vector_t vec_int = vector_create(sizeof(int)); // ctor call
 /// ```
-typedef struct {
+typedef struct vector {
     void* data;
     size_t size;
     size_t capacity;
@@ -64,5 +68,9 @@ void vector_remove_back(vector_t* vector);
 void vector_reserve(vector_t* vector, size_t new_capacity);
 // reallocs so that size = capacity
 bool vector_shrink_to_fit(vector_t* vector);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !UTILS_VECTOR_H

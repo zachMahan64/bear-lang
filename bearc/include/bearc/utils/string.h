@@ -11,13 +11,17 @@
 #include "utils/vector.h"
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * string type that owns its own resources. string_destory(string_t) before a string goes out of
  * scope.
  * the underlying vector should not be modified manually
  */
-typedef struct {
-    vector_t vec; // do not meant to be touched
+typedef struct string {
+    vector_t vec; // not meant to be touched
 } string_t;
 
 /// ctor
@@ -60,5 +64,9 @@ void string_reserve(string_t* string, size_t new_capacity);
 
 /// removes a specified number of chars from the back of the string
 void string_shrink_by(string_t* string, size_t n);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !UTILS_STRING

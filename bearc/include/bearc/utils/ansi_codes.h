@@ -9,6 +9,10 @@
 #ifndef ANSI_CODES_H
 #define ANSI_CODES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 bool ansi_init(void);
@@ -45,5 +49,9 @@ const char* ansi_bold_yellow(void);
 const char* ansi_bold_cyan(void);
 const char* ansi_bold_blue(void);
 const char* ansi_bold_white(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ANSI_CODES_H

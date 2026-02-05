@@ -10,7 +10,10 @@
 #define UTILS_ARENA_H
 
 #include <stddef.h>
-#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct arena_chunk arena_chunk_t;
 
@@ -31,5 +34,9 @@ void* arena_alloc(arena_t* arena, size_t req_size_bytes);
 
 /// for testing purposes
 void arena_log_debug_info(arena_t* arena);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // !UTILS_ARENA_H

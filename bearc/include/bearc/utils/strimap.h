@@ -17,12 +17,16 @@
 #define STRIMAP_MINIMUM_CAPACITY 8
 #define STRIMAP_LOAD_FACTOR .75
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// an entry in the string to int map
-typedef struct strimap_entry_t {
+typedef struct strimap_entry {
     char* key;
     size_t len;
     int32_t val;
-    struct strimap_entry_t* next;
+    struct strimap_entry* next;
 } strimap_entry_t;
 
 /**
@@ -73,7 +77,7 @@ bool strimap_contains(const strimap_t* map, const char* key);
  * iterator for strimap_t
  * access current element as `curr`
  */
-typedef struct {
+typedef struct strimap_iter {
     const strimap_t* map;
     size_t bucket_idx;
     strimap_entry_t* curr;
@@ -85,4 +89,9 @@ strimap_entry_t* strimap_iter_next(strimap_iter_t* iter);
 
 uint64_t hash_str(const char* str);
 uint64_t hash_strn(const char* str, size_t len);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif // ! UTILS_STRIMAP_H
