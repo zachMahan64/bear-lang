@@ -40,7 +40,7 @@ struct ScopeLookUpResult {
  * models named blocks/namespaces, such as function bodies or ctrl flow blocks
  */
 struct Scope {
-    ScopeId opt_parent;
+    OptId<ScopeId> opt_parent;
     /// module, struct, and variant names
     hir_symbol_to_def_map_t namespaces;
     /// var foo;

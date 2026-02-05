@@ -2,8 +2,9 @@
 - [x] add typed scope table accessor/mutator functions
 - [x] add scope ctor & dtor
 - [x] write the new file tracking system into tables.h 
-- [ ] fix anonymous struct decls, make includes `__cplusplus` safe
-- [ ] C++ify HIR and later
+- [x] fix anonymous struct decls, make includes `__cplusplus` safe
+- [x] C++ify HIR
+- [ ] Make Scope fully c++ified (finish translating Cisms)
 - [ ] finish hir structural impls
     - [ ] defs
     - [ ] types

@@ -83,7 +83,7 @@ static inline ScopeLookUpResult hir_scope_look_up(HirTables* tables, ScopeId loc
         if (def.val()) {
             break; // hit, stop now since we allow shadowing
         }
-        const ScopeId parent_scope_id = curr_scope->opt_parent;
+        const ScopeId parent_scope_id = curr_scope->opt_parent.as_id();
         assert((parent_scope_id.val() != curr_scope_id.val()) && "self-referential scope\n");
         curr_scope_id = parent_scope_id;
         if (!curr_scope_id.val()) {
@@ -270,7 +270,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(HirTables* tables,
                 break; // hit, stop now since we allow shadowing
             }
 
-            const ScopeId parent_scope_named_id = curr_scope_named->opt_parent;
+            const ScopeId parent_scope_named_id = curr_scope_named->opt_parent.as_id();
             assert((parent_scope_named_id.val() != curr_scope_named_id.val())
                    && "self-referential scope\n");
             curr_scope_named_id = parent_scope_named_id;
