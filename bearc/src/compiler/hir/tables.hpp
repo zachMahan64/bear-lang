@@ -12,8 +12,10 @@
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/file.hpp"
+#include "compiler/hir/generic.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
+#include "compiler/hir/type.hpp"
 #include "utils/arena.h"
 #include "utils/mapu32u32.h"
 #include "utils/strimap.h"
@@ -55,7 +57,7 @@ class HirTables {
     std::vector<Scope> scopes;
 
     /// hir_scope_anon_id_t -> hir_scope_anon_t
-    std::vector<ScopeAnon> scopes_anons;
+    std::vector<ScopeAnon> scope_anons;
 
     /// hir_symbol_id_idx_t -> hir_symbol_id_t
     std::vector<SymbolId> symbol_id_vec;
@@ -82,17 +84,17 @@ class HirTables {
     /// hir_type_id_idx_t -> hir_type_id_t
     std::vector<TypeId> type_id_vec;
     /// hir_type_id_t -> hir_type_t
-    vector_t type_vec;
+    std::vector<Type> type_vec;
 
     /// hir_generic_param_id_idx_t -> hir_generic_param_id_t
     std::vector<GenericParamId> generic_param_id_vec;
     /// hir_generic_param_id_t -> hir_generic_param_t
-    vector_t generic_param_vec;
+    std::vector<GenericParam> generic_param_vec;
 
     /// hir_generic_arg_id_idx_t -> hir_generic_param_id_t
     std::vector<GenericArgId> generic_arg_id_vec;
     /// hir_generic_arg_id_t -> hir_generic_param_t
-    vector_t generic_arg_vec;
+    std::vector<GenericArg> generic_arg_vec;
 
     HirTables();
     Scope scope_at();

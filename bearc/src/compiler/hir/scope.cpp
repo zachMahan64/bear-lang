@@ -23,7 +23,7 @@
 
 namespace hir {
 
-static inline DefId hir_symbol_to_def_map_look_up(hir_symbol_to_def_map_t* map,
+static inline DefId hir_symbol_to_def_map_look_up(const hir_symbol_to_def_map_t* map,
                                                   SymbolId symbol_id) {
     const HirId* res = mapu32u32_cat(map, symbol_id.val());
     if (res == NULL) {
@@ -54,8 +54,8 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
         return ScopeLookUpResult{DefId{}, HIR_SCOPE_INVALID_SCOPE_SEARCHED};
     }
     // init curr scope local scope
-    Scope* local_scope = static_cast<Scope*>(vector_at(&tables.scope_vec, local_scope_id.val()));
-    Scope* curr_scope = local_scope;
+    const Scope* local_scope = &tables.scopes.at(local_scope_id.val());
+    const Scope* curr_scope = local_scope;
     ScopeId curr_scope_id = local_scope_id;
     // begin search logic
     DefId def{};
@@ -63,8 +63,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
 
     // start walking scopes from local thru parents
     while (!def.val()) {
-        curr_scope
-            = static_cast<decltype(curr_scope)>(vector_at(&tables.scope_vec, curr_scope_id.val()));
+        curr_scope = &tables.scopes.at(curr_scope_id.val());
         switch (kind) {
         case scope_kind::NAMESPACE:
             def = hir_symbol_to_def_map_look_up(&curr_scope->namespaces, symbol);
@@ -122,10 +121,9 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
         return ScopeLookUpResult{DefId{}, HIR_SCOPE_INVALID_SCOPE_SEARCHED};
     }
     // init curr scope local scope
-    ScopeAnon* local_scope_anon = static_cast<decltype(local_scope_anon)>(
-        vector_at(&tables.scope_anon_vec, local_scope_id.val()));
-    ScopeAnon* curr_scope_anon = local_scope_anon;
-    Scope* curr_scope_named = NULL;
+    const ScopeAnon* local_scope_anon = &tables.scope_anons.at(local_scope_id.val());
+    const ScopeAnon* curr_scope_anon = local_scope_anon;
+    const Scope* curr_scope_named = NULL;
     ScopeAnonId curr_scope_anon_id = local_scope_id;
     ScopeId curr_scope_named_id{};
     // begin search logic
@@ -137,16 +135,16 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
     bool collision = false;
     if (local_scope_anon->has_used_defs) {
 
-        vector_t* vec = &local_scope_anon->used_hir_def_ids;
+        const auto* vec = &local_scope_anon->used_hir_def_ids;
 
         for (HirSize i = 0; i < vec->size; i++) {
 
-            DefId def_id = *(DefId*)vector_at(vec, i);
+            const DefId def_id = *(DefId*)vector_at(vec, i);
 
             // TODO replace with encapsulated tables logic once the tables impl is written
-            Def* used_def = (Def*)vector_at(&tables.def_vec, def_id.val());
-            ScopeLookUpResult used_res = hir_scope_look_up(
-                tables, std::get<DefModule>(used_def->value).scope, symbol, kind);
+            const Def& used_def = tables.def_vec.at(def_id.val());
+            const ScopeLookUpResult used_res = hir_scope_look_up(
+                tables, std::get<DefModule>(used_def.value).scope, symbol, kind);
 
             if (used_res.status == HIR_SCOPE_LOOK_UP_OKAY) {
                 if (def_from_used_modules.val()) {
@@ -164,8 +162,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
         assert(!(curr_scope_anon_id.val() && curr_scope_named_id.val()));
 
         if (curr_scope_anon_id.val()) {
-            curr_scope_anon = static_cast<ScopeAnon*>(
-                vector_at(&tables.scope_anon_vec, curr_scope_anon_id.val()));
+            curr_scope_anon = &tables.scope_anons.at(curr_scope_anon_id.val());
             switch (kind) {
             case scope_kind::NAMESPACE:
             case scope_kind::FUNCTION:
@@ -193,8 +190,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
             curr_scope_named_id = parent_scope_named_id;
         } else {
             assert(curr_scope_named_id.val());
-            curr_scope_named
-                = static_cast<Scope*>(vector_at(&tables.scope_vec, curr_scope_named_id.val()));
+            curr_scope_named = &tables.scopes.at(curr_scope_named_id.val());
             switch (kind) {
             case scope_kind::NAMESPACE:
                 result_def = hir_symbol_to_def_map_look_up(&curr_scope_named->namespaces, symbol);
