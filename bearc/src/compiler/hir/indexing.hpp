@@ -199,6 +199,7 @@ template <hir::Id T> class IdSlice {
   public:
     IdSlice(IdIdx<T> first, HirSize len) : first_(first), len_(len) {};
     constexpr IdIdx<T> first() const noexcept { return first_; }
+    constexpr IdIdx<T> get(HirSize i) const noexcept { return IdIdx<T>{first_.val() + i}; }
     constexpr HirSize len() const noexcept { return len_; }
 };
 

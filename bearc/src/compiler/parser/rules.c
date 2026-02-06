@@ -60,8 +60,6 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_BIT_NOT] = 3,
     [TOK_BIT_XOR] = 12,
 
-    [TOK_BOOL_NOT] = 3,
-
     [TOK_GT] = 9,
     [TOK_LT] = 9,
 

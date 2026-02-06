@@ -113,7 +113,7 @@ HirExecId -> HirExec:
         | HirEmptyStmt:
             ()
         | HirBreakStmt:
-            HirExecId? -> HirExpr
+            ()
         | HirIfStmt:
             condition: HirExecId -> HirExpr
             body: HirExecId -> HirBlockStmt
@@ -169,10 +169,10 @@ HirExprKind:
     | HirExprFnCall:
         callee: HirExecId
         args: []HirExecId
-    | HirExprType:
-        type: HirTypeId
     | HirExprBorrow:
         mutable: bool
+        expr: HirExecId
+    | HirExprDeref:
         expr: HirExecId
     | HirExprStructInit:
         struct_def: HirDefId
@@ -186,6 +186,7 @@ HirExprKind:
         return_type: HirTypeId
         body: HirExecId -> HirBlockStmt
         captures: []HirDefId? (filled by capture analysis)
+        move: bool
     | HirExprVariantDecomp:
         variant_def: HirDefId
         fields: []HirParamId?
