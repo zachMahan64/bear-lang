@@ -179,7 +179,7 @@ using ExecValue = std::variant<
 /// main exec structure, corresponds to an hir::ExecId
 struct Exec {
     ExecValue exec;
-    Span span;
+    const Span span;
     const bool compt;
 };
 
