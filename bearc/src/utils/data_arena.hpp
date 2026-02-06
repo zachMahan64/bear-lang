@@ -28,8 +28,11 @@ class DataArena {
         return *this;
     };
     ~DataArena();
-    /// gets the underlying c-style arena
-    arena_t* arena();
+    /// gets a ptr to the underlying c-style arena
+    arena_t* arena_p();
+    /// gets the underlying arena handle by value, but leaves the internal storage identical (light,
+    /// no heavy copy, arena_t is trivially copyable)
+    arena_t arena();
     /// get an allocation from the arena of a specified size
     template <typename T> T* alloc() {
         return arena_alloc(&this->arena_, sizeof(T));

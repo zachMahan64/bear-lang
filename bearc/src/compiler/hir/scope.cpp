@@ -10,7 +10,7 @@
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/tables.hpp"
-#include "utils/arena.h"
+#include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
 #include "utils/vector.h"
 #include <assert.h>
@@ -32,20 +32,15 @@ static inline DefId hir_symbol_to_def_map_look_up(const hir_symbol_to_def_map_t*
     return DefId{*res};
 }
 
-Scope::Scope(ScopeId parent, arena_t arena)
-    : named_parent(parent), arena(arena),
-      functions(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      namespaces(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      variables(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      types(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)), top_level(false) {}
+Scope::Scope(ScopeId parent, DataArena& arena)
+    : named_parent(parent), arena(arena), functions(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(false) {}
 
-Scope::Scope(ScopeId parent, arena_t arena, bool is_top_level)
-    : named_parent(parent), arena(arena),
-      functions(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      namespaces(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      variables(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      types(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      top_level(is_top_level) {}
+Scope::Scope(ScopeId parent, DataArena& arena, bool is_top_level)
+    : named_parent(parent), arena(arena), functions(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(is_top_level) {}
 
 static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, ScopeId local_scope_id,
                                                   SymbolId symbol, scope_kind kind) {
@@ -66,16 +61,16 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
         curr_scope = &tables.scopes.at(curr_scope_id.val());
         switch (kind) {
         case scope_kind::NAMESPACE:
-            def = hir_symbol_to_def_map_look_up(&curr_scope->namespaces, symbol);
+            def = curr_scope->namespaces.at(symbol).as_id();
             break;
         case scope_kind::FUNCTION:
-            def = hir_symbol_to_def_map_look_up(&curr_scope->functions, symbol);
+            def = curr_scope->functions.at(symbol).as_id();
             break;
         case scope_kind::VARIABLE:
-            def = hir_symbol_to_def_map_look_up(&curr_scope->variables, symbol);
+            def = curr_scope->variables.at(symbol).as_id();
             break;
         case scope_kind::TYPE:
-            def = hir_symbol_to_def_map_look_up(&curr_scope->types, symbol);
+            def = curr_scope->types.at(symbol).as_id();
             break;
         }
         if (def.val()) {
@@ -170,10 +165,10 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
                 assert(false && "namespace/function lookup in anonymous scope");
                 break;
             case scope_kind::VARIABLE:
-                result_def = hir_symbol_to_def_map_look_up(&curr_scope_anon->variables, symbol);
+                result_def = curr_scope_anon->variables.at(symbol).as_id();
                 break;
             case scope_kind::TYPE:
-                result_def = hir_symbol_to_def_map_look_up(&curr_scope_anon->types, symbol);
+                result_def = curr_scope_anon->types.at(symbol).as_id();
                 break;
             }
             if (result_def.val()) {
@@ -193,16 +188,16 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
             curr_scope_named = &tables.scopes.at(curr_scope_named_id.val());
             switch (kind) {
             case scope_kind::NAMESPACE:
-                result_def = hir_symbol_to_def_map_look_up(&curr_scope_named->namespaces, symbol);
+                result_def = curr_scope_named->namespaces.at(symbol).as_id();
                 break;
             case scope_kind::FUNCTION:
-                result_def = hir_symbol_to_def_map_look_up(&curr_scope_named->functions, symbol);
+                result_def = curr_scope_named->functions.at(symbol).as_id();
                 break;
             case scope_kind::VARIABLE:
-                result_def = hir_symbol_to_def_map_look_up(&curr_scope_named->variables, symbol);
+                result_def = curr_scope_named->variables.at(symbol).as_id();
                 break;
             case scope_kind::TYPE:
-                result_def = hir_symbol_to_def_map_look_up(&curr_scope_named->types, symbol);
+                result_def = curr_scope_named->types.at(symbol).as_id();
                 break;
             }
             if (result_def.val()) {
@@ -263,16 +258,16 @@ ScopeLookUpResult ScopeAnon::look_up_type(const HirTables& tables, ScopeAnonId l
 void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
     switch (kind) {
     case scope_kind::NAMESPACE:
-        mapu32u32_insert(&this->namespaces, symbol.val(), def.val());
+        this->namespaces.insert(symbol, def);
         break;
     case scope_kind::FUNCTION:
-        mapu32u32_insert(&this->functions, symbol.val(), def.val());
+        this->functions.insert(symbol, def);
         break;
     case scope_kind::VARIABLE:
-        mapu32u32_insert(&this->variables, symbol.val(), def.val());
+        this->variables.insert(symbol, def);
         break;
     case scope_kind::TYPE:
-        mapu32u32_insert(&this->types, symbol.val(), def.val());
+        this->types.insert(symbol, def);
         break;
     }
 }
@@ -285,10 +280,10 @@ void ScopeAnon::insert(SymbolId symbol, DefId def, scope_kind kind) {
         assert(false && "namespace/function insertion in anonymous scope");
         break;
     case scope_kind::VARIABLE:
-        mapu32u32_insert(&this->variables, symbol.val(), def.val());
+        this->variables.insert(symbol, def);
         break;
     case scope_kind::TYPE:
-        mapu32u32_insert(&this->types, symbol.val(), def.val());
+        this->types.insert(symbol, def);
         break;
     }
 }
@@ -302,14 +297,12 @@ void ScopeAnon::add_used_module(DefId def_id) {
     }
     vector_push_back(&this->used_hir_def_ids, &def_id);
 }
-ScopeAnon::ScopeAnon(ScopeId named_parent, arena_t arena)
-    : opt_named_parent(named_parent), arena(arena),
-      variables(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      types(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)), has_used_defs(false) {}
-ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, arena_t arena)
-    : opt_anon_parent(anon_parent), arena(arena),
-      variables(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)),
-      types(mapu32u32_create_from_arena(HIR_SCOPE_MAP_DEFAULT_SIZE, arena)), has_used_defs(false) {}
+ScopeAnon::ScopeAnon(ScopeId named_parent, DataArena& arena)
+    : opt_named_parent(named_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
+ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, DataArena& arena)
+    : opt_anon_parent(anon_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
 
 ScopeAnon::~ScopeAnon() {
     if (this->has_used_defs) {

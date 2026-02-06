@@ -9,8 +9,10 @@
 #ifndef COMPILER_HIR_SCOPE_HPP
 #define COMPILER_HIR_SCOPE_HPP
 
+#include "compiler/hir/id_map.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "utils/arena.h"
+#include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
 #include "utils/vector.h"
 #include <cstdint>
@@ -18,6 +20,8 @@
 namespace hir {
 
 struct HirTables;
+
+using ScopeIdMap = IdMap<SymbolId, DefId>;
 
 typedef mapu32u32_t hir_symbol_to_def_map_t;
 
@@ -47,23 +51,21 @@ enum class scope_kind : uint8_t {
 struct Scope {
     OptId<ScopeId> named_parent;
     /// module, struct, and variant names
-    hir_symbol_to_def_map_t namespaces;
+    ScopeIdMap namespaces;
     /// var foo;
-    hir_symbol_to_def_map_t variables;
+    ScopeIdMap variables;
     /// top-level functions
-    hir_symbol_to_def_map_t functions;
+    ScopeIdMap functions;
     /// structs, variants, unions, deftypes
-    hir_symbol_to_def_map_t types;
-    /// for shared flat map storage, not owned
-    arena_t arena;
-
+    ScopeIdMap types;
+    DataArena& arena;
     const bool top_level;
     void insert(SymbolId symbol, DefId def, scope_kind kind);
 
   public:
     bool is_top_level() const { return top_level; };
-    Scope(ScopeId parent, arena_t arena);
-    Scope(ScopeId parent, arena_t arena, bool is_top_level);
+    Scope(ScopeId parent, DataArena& arena);
+    Scope(ScopeId parent, DataArena& arena, bool is_top_level);
     static ScopeLookUpResult look_up_namespace(const HirTables& tables, ScopeId local_scope,
                                                SymbolId symbol);
     static ScopeLookUpResult look_up_variable(const HirTables& tables, ScopeId local_scope,
@@ -89,22 +91,23 @@ struct ScopeAnon {
     OptId<ScopeId> opt_named_parent;
     OptId<ScopeAnonId> opt_anon_parent;
     /// structs, variants, unions, deftypes
-    hir_symbol_to_def_map_t types;
+    ScopeIdMap types;
     /// var foo;
-    hir_symbol_to_def_map_t variables;
+    ScopeIdMap variables;
     /// modules, struct, and variant defs brought in
     vector_t used_hir_def_ids;
     /// for shared flat map storage
-    arena_t arena;
-    bool has_used_defs; // so that we can lazily init the used_defs_hir_def_id vector
+    DataArena& arena;
+    // so that we can lazily init the used_defs_hir_def_id vector
+    bool has_used_defs;
 
     void insert(SymbolId symbol, DefId def, scope_kind kind);
 
     friend class Scope;
 
   public:
-    ScopeAnon(ScopeId named_parent, arena_t arena);
-    ScopeAnon(ScopeAnonId anon_parent, arena_t arena);
+    ScopeAnon(ScopeId named_parent, DataArena& arena);
+    ScopeAnon(ScopeAnonId anon_parent, DataArena& arena);
     static ScopeLookUpResult look_up_variable(const HirTables& tables, ScopeAnonId local_scope,
                                               SymbolId symbol);
     static ScopeLookUpResult look_up_type(const HirTables& tables, ScopeAnonId local_scope,

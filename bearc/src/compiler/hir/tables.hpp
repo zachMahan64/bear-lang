@@ -13,13 +13,12 @@
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/generic.hpp"
+#include "compiler/hir/id_map.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
 #include "utils/arena.h"
-#include "utils/mapu32u32.h"
 #include "utils/strimap.h"
-#include "utils/vector.h"
 #include <vector>
 
 namespace hir {
@@ -42,7 +41,7 @@ class HirTables {
     /// hir_file_id_t -> hir_file_id_t
     std::vector<File> file_vec;
     /// hir_symbol_id_t -> hir_file_id_t
-    mapu32u32_t symbol_id_to_file_id_map;
+    IdMap<SymbolId, FileId> symbol_id_to_file_id_map;
 
     /// hir_file_id_t -> {hir_file_id_idx_t, hir_size_t}
     std::vector<IdSlice<FileId>> importer_to_importees_vec;
