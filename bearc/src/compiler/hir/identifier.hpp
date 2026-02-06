@@ -15,11 +15,11 @@
 namespace hir {
 
 /// represents an atom identifer in either type mention or variable mentions
-typedef struct {
+struct Identifier {
     IdSlice<SymbolId> symbols;
     Span span;
     OptId<DefId> resolved;
-} Identifier;
+};
 
 } // namespace hir
 
