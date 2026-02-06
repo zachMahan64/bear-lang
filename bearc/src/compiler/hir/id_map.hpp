@@ -36,11 +36,11 @@ class IdMap {
     bool remove(K key) { return mapu32u32_remove(&map, key.val()); }
     /// returns an optional id by value
     OptId<V> at(K key) const {
-        uint32_t* value = mapu32u32_at(&map, key.val());
+        auto* value = mapu32u32_cat(&map, key.val());
         if (value == nullptr) {
             return OptId<V>{};
         }
-        return OptId<V>{*value};
+        return OptId<V>{V{*value}};
     }
     bool contains(K key) { return static_cast<bool>(mapu32u32_at(&map, key.val())); }
 };

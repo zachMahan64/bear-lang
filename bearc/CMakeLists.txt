@@ -53,6 +53,8 @@ set(SRC
     src/cli/bearc.c
     src/cli/args.c
 
+    src/utils/data_arena.cpp
+
     src/compiler/hir/span.cpp
     src/compiler/hir/file.cpp
     src/compiler/hir/tables.cpp

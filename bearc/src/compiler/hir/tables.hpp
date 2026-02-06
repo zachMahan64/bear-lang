@@ -18,6 +18,7 @@
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
 #include "utils/arena.h"
+#include "utils/data_arena.hpp"
 #include "utils/strimap.h"
 #include <vector>
 
@@ -42,6 +43,7 @@ class HirTables {
     std::vector<File> file_vec;
     /// hir_symbol_id_t -> hir_file_id_t
     IdMap<SymbolId, FileId> symbol_id_to_file_id_map;
+    DataArena id_map_arena;
 
     /// hir_file_id_t -> {hir_file_id_idx_t, hir_size_t}
     std::vector<IdSlice<FileId>> importer_to_importees_vec;
@@ -63,7 +65,7 @@ class HirTables {
     /// hir_symbol_id_t -> hir_symbol_t
     std::vector<Symbol> symbol_vec;
     /// stores interned strings pointed to by hir_symbol_id_t's
-    arena_t symbol_arena;
+    DataArena symbol_arena;
 
     /// hir_exec_id_idx_t -> hir_exec_id_t
     std::vector<ExecId> exec_id_vec;
