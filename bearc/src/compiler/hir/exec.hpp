@@ -9,7 +9,7 @@
 #ifndef COMPILER_HIR_EXEC_HPP
 #define COMPILER_HIR_EXEC_HPP
 
-#include "compiler/hir/exec_ops.h"
+#include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include <variant>
@@ -102,7 +102,7 @@ struct ExecExprPreUnary {
     unary_op op;
 };
 
-struct ExecExprPostUnuary {
+struct ExecExprPostUnary {
     ExecId expr;
     unary_op op;
 };
@@ -172,7 +172,7 @@ using ExecValue = std::variant<
     // expressions
     ExecExprIdentifier, ExecExprLiteral, ExecExprListLiteral, ExecExprAssignMove,
     ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
-    ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnuary, ExecExprSubscript,
+    ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
     ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprStructInit, ExecExprStructMemberInit,
     ExecExprClosure, ExecExprVariantDecomp, ExecExprBlock, ExecExprMatch, ExecExprMatchBranch>;
 

@@ -56,6 +56,7 @@ set(SRC
     src/utils/data_arena.cpp
 
     src/compiler/hir/span.cpp
+    src/compiler/hir/exec_ops.cpp
     src/compiler/hir/file.cpp
     src/compiler/hir/tables.cpp
     src/compiler/hir/scope.cpp

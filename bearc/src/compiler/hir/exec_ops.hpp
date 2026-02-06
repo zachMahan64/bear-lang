@@ -10,6 +10,8 @@
 #define COMPILER_HIR_EXEC_OPS
 #include <cstdint>
 
+typedef struct token token_t;
+
 namespace hir {
 enum class binary_op : uint8_t {
     PLUS,
@@ -34,6 +36,10 @@ enum class binary_op : uint8_t {
     BOOL_NE,
 };
 enum class unary_op : uint8_t { INC, DEC, PLUS, MINUS, BOOL_NOT };
+
+binary_op token_to_binary_op(token_t* tkn);
+unary_op token_to_unary_op(token_t* tkn);
+
 } // namespace hir
 
 #endif

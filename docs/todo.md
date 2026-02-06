@@ -8,7 +8,7 @@
 - [ ] finish hir structural impls
     - [ ] defs
     - [ ] types
-    - [ ] exec
+    - [x] exec
         - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params
 - [ ] impl HirTables for hir node allocation/access 

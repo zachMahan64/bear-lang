@@ -17,7 +17,6 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
-#include "utils/arena.h"
 #include "utils/data_arena.hpp"
 #include "utils/strimap.h"
 #include <vector>
