@@ -11,7 +11,6 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/tables.hpp"
 #include "utils/data_arena.hpp"
-#include "utils/mapu32u32.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -21,15 +20,6 @@
 /// helper for looking into symbol -> def maps
 
 namespace hir {
-
-static inline DefId hir_symbol_to_def_map_look_up(const hir_symbol_to_def_map_t* map,
-                                                  SymbolId symbol_id) {
-    const HirId* res = mapu32u32_cat(map, symbol_id.val());
-    if (res == NULL) {
-        return DefId{};
-    }
-    return DefId{*res};
-}
 
 Scope::Scope(ScopeId parent, DataArena& arena)
     : named_parent(parent), arena(arena), functions(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
@@ -45,7 +35,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
                                                   SymbolId symbol, scope_kind kind) {
 
     if (!local_scope_id.val()) {
-        return ScopeLookUpResult{DefId{}, HIR_SCOPE_INVALID_SCOPE_SEARCHED};
+        return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
     }
     // init curr scope local scope
     const Scope* local_scope = &tables.scopes.cat(local_scope_id);
@@ -53,7 +43,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
     ScopeId curr_scope_id = local_scope_id;
     // begin search logic
     DefId def{};
-    hir_scope_look_up_result_status status = HIR_SCOPE_LOOK_UP_OKAY;
+    hir_scope_look_up_result_status status = hir_scope_look_up_result_status::OKAY;
 
     // start walking scopes from local thru parents
     while (!def.val()) {
@@ -83,7 +73,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
         }
     }
     if (!def.val()) {
-        status = HIR_SCOPE_LOOK_UP_NOT_FOUND;
+        status = hir_scope_look_up_result_status::NOT_FOUND;
     }
     return ScopeLookUpResult{def, status};
 }
@@ -112,7 +102,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
                                                        ScopeAnonId local_scope_id, SymbolId symbol,
                                                        scope_kind kind) {
     if (!local_scope_id.val()) {
-        return ScopeLookUpResult{DefId{}, HIR_SCOPE_INVALID_SCOPE_SEARCHED};
+        return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
     }
     // init curr scope local scope
     const ScopeAnon* local_scope_anon = &tables.scope_anons.cat(local_scope_id);
@@ -122,7 +112,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
     ScopeId curr_scope_named_id{};
     // begin search logic
     DefId result_def{};
-    hir_scope_look_up_result_status status = HIR_SCOPE_LOOK_UP_OKAY;
+    hir_scope_look_up_result_status status = hir_scope_look_up_result_status::OKAY;
 
     // search used modules first to allow local shadowing!
     DefId def_from_used_modules{};
@@ -140,7 +130,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
             const ScopeLookUpResult used_res = hir_scope_look_up(
                 tables, std::get<DefModule>(used_def.value).scope, symbol, kind);
 
-            if (used_res.status == HIR_SCOPE_LOOK_UP_OKAY) {
+            if (used_res.status == hir_scope_look_up_result_status::OKAY) {
                 if (def_from_used_modules.val()) {
                     collision = true;
                 }
@@ -216,12 +206,12 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
     if (!result_def.val()) {
         // didn't find a local symbol -> now check the imports
         if (collision) {
-            status = HIR_SCOPE_LOOK_UP_COLLISION;
+            status = hir_scope_look_up_result_status::COLLISION;
         } else if (def_from_used_modules.val() != HIR_ID_NONE) {
             result_def = def_from_used_modules;
-            status = HIR_SCOPE_LOOK_UP_OKAY;
+            status = hir_scope_look_up_result_status::OKAY;
         } else {
-            status = HIR_SCOPE_LOOK_UP_NOT_FOUND;
+            status = hir_scope_look_up_result_status::NOT_FOUND;
         }
     }
     return ScopeLookUpResult{result_def, status};

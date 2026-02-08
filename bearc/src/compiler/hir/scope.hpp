@@ -12,7 +12,6 @@
 #include "compiler/hir/id_hash_map.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "utils/data_arena.hpp"
-#include "utils/mapu32u32.h"
 #include <cstdint>
 #include <vector>
 
@@ -22,13 +21,11 @@ struct HirTables;
 
 using ScopeIdMap = IdHashMap<SymbolId, DefId>;
 
-typedef mapu32u32_t hir_symbol_to_def_map_t;
-
-enum hir_scope_look_up_result_status : uint8_t {
-    HIR_SCOPE_LOOK_UP_OKAY = 0,
-    HIR_SCOPE_INVALID_SCOPE_SEARCHED,
-    HIR_SCOPE_LOOK_UP_COLLISION,
-    HIR_SCOPE_LOOK_UP_NOT_FOUND,
+enum class hir_scope_look_up_result_status : uint8_t {
+    OKAY = 0,
+    SEARCHED,
+    COLLISION,
+    NOT_FOUND,
 };
 
 struct ScopeLookUpResult {
