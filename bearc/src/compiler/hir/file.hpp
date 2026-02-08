@@ -30,10 +30,10 @@ struct File {
 };
 
 class FileAst {
-    using id_type = FileAstId;
     br_ast_t ast;
 
   public:
+    using id_type = FileAstId;
     const src_buffer& buffer() const noexcept;
     const compiler_error_list_t& error_list() const noexcept;
     const ast_stmt_t* root() const noexcept;

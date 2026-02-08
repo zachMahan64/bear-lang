@@ -24,6 +24,22 @@ inline constexpr HirSize HIR_ID_NONE = 0;
 /// abstract typedef id for indexing into vectors of HIR nodes
 using HirId = HirSize;
 
+/// indicates that a type is indeed a flavor of HirId
+template <typename T>
+concept Id = requires(T t) {
+    { t.val() } -> std::same_as<HirId>;
+};
+
+/// repsents an index into the storage for a certain Id, to allow for slicing
+template <hir::Id T> class IdIdx {
+    using points_to_type = T;
+    HirId value;
+
+  public:
+    explicit IdIdx(HirId value) : value(value) {};
+    constexpr HirId val() const noexcept { return value; }
+};
+
 /// primary means of tracking interned strings in the hir
 struct SymbolId {
     HirId value;
@@ -48,6 +64,7 @@ class Symbol {
     std::string_view string_view;
 
   public:
+    using id_type = SymbolId;
     constexpr explicit Symbol(std::string_view string_view) : string_view(string_view) {}
     [[nodiscard]] constexpr std::string_view sv() const noexcept { return this->string_view; }
 };
@@ -163,12 +180,6 @@ class ParamId {
     [[nodiscard]] constexpr HirId val() const noexcept { return value; }
     friend constexpr bool operator==(ParamId a, ParamId b) { return a.value == b.value; }
 };
-/// indicates that a type is indeed a flavor of HirId
-template <typename T>
-concept Id = requires(T t) {
-    { t.val() } -> std::same_as<HirId>;
-};
-
 /// holds an optional HirId or HirIdIdx type
 template <hir::Id T> class OptId {
     T underlying{};
@@ -182,15 +193,6 @@ template <hir::Id T> class OptId {
     void set(T id_value) noexcept { this->underlying = id_value; }
 };
 
-/// repsents an index into the storage for a certain Id, to allow for slicing
-template <hir::Id T> class IdIdx {
-    using points_to_type = T;
-    HirId value;
-
-  public:
-    explicit IdIdx(HirId value) : value(value) {};
-    constexpr HirId val() const noexcept { return value; }
-};
 template <hir::Id T> class IdSlice {
     using points_to_type = T;
     IdIdx<T> first_;

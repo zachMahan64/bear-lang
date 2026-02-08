@@ -20,17 +20,17 @@ template <hir::Id K, hir::Id V>
 // should be the case given the constraints of hir::Id concept, but
 // just be extra sure since this will otherwise implode
     requires(sizeof(K) == 4 && sizeof(V) == 4)
-class IdMap {
+class IdHashMap {
 
     DataArena& arena;
     mapu32u32_t map;
 
   public:
-    IdMap(const IdMap&) = delete;
-    IdMap(IdMap&&) = default;
-    IdMap& operator=(const IdMap&) = delete;
-    IdMap& operator=(IdMap&&) = default;
-    IdMap(DataArena& arena, size_t capacity)
+    IdHashMap(const IdHashMap&) = delete;
+    IdHashMap(IdHashMap&&) = default;
+    IdHashMap& operator=(const IdHashMap&) = delete;
+    IdHashMap& operator=(IdHashMap&&) = default;
+    IdHashMap(DataArena& arena, size_t capacity)
         : arena(arena), map(mapu32u32_create_from_arena(capacity, arena.arena())) {}
     void insert(K key, V value) { mapu32u32_insert(&map, key.val(), value.val()); }
     bool remove(K key) { return mapu32u32_remove(&map, key.val()); }

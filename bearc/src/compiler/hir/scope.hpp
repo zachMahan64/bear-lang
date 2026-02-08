@@ -9,7 +9,7 @@
 #ifndef COMPILER_HIR_SCOPE_HPP
 #define COMPILER_HIR_SCOPE_HPP
 
-#include "compiler/hir/id_map.hpp"
+#include "compiler/hir/id_hash_map.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
@@ -20,7 +20,7 @@ namespace hir {
 
 struct HirTables;
 
-using ScopeIdMap = IdMap<SymbolId, DefId>;
+using ScopeIdMap = IdHashMap<SymbolId, DefId>;
 
 typedef mapu32u32_t hir_symbol_to_def_map_t;
 

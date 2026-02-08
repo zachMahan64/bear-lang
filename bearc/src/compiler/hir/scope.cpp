@@ -12,7 +12,6 @@
 #include "compiler/hir/tables.hpp"
 #include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
-#include "utils/vector.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -49,7 +48,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
         return ScopeLookUpResult{DefId{}, HIR_SCOPE_INVALID_SCOPE_SEARCHED};
     }
     // init curr scope local scope
-    const Scope* local_scope = &tables.scopes.at(local_scope_id.val());
+    const Scope* local_scope = &tables.scopes.cat(local_scope_id);
     const Scope* curr_scope = local_scope;
     ScopeId curr_scope_id = local_scope_id;
     // begin search logic
@@ -58,7 +57,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
 
     // start walking scopes from local thru parents
     while (!def.val()) {
-        curr_scope = &tables.scopes.at(curr_scope_id.val());
+        curr_scope = &tables.scopes.cat(curr_scope_id);
         switch (kind) {
         case scope_kind::NAMESPACE:
             def = curr_scope->namespaces.at(symbol).as_id();
@@ -116,7 +115,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
         return ScopeLookUpResult{DefId{}, HIR_SCOPE_INVALID_SCOPE_SEARCHED};
     }
     // init curr scope local scope
-    const ScopeAnon* local_scope_anon = &tables.scope_anons.at(local_scope_id.val());
+    const ScopeAnon* local_scope_anon = &tables.scope_anons.cat(local_scope_id);
     const ScopeAnon* curr_scope_anon = local_scope_anon;
     const Scope* curr_scope_named = NULL;
     ScopeAnonId curr_scope_anon_id = local_scope_id;
@@ -137,7 +136,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
             const DefId def_id = vec.at(i);
 
             // TODO replace with encapsulated tables logic once the tables impl is written
-            const Def& used_def = tables.def_vec.at(def_id.val());
+            const Def& used_def = tables.defs.cat(def_id);
             const ScopeLookUpResult used_res = hir_scope_look_up(
                 tables, std::get<DefModule>(used_def.value).scope, symbol, kind);
 
@@ -157,7 +156,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
         assert(!(curr_scope_anon_id.val() && curr_scope_named_id.val()));
 
         if (curr_scope_anon_id.val()) {
-            curr_scope_anon = &tables.scope_anons.at(curr_scope_anon_id.val());
+            curr_scope_anon = &tables.scope_anons.cat(curr_scope_anon_id);
             switch (kind) {
             case scope_kind::NAMESPACE:
             case scope_kind::FUNCTION:
@@ -185,7 +184,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
             curr_scope_named_id = parent_scope_named_id;
         } else {
             assert(curr_scope_named_id.val());
-            curr_scope_named = &tables.scopes.at(curr_scope_named_id.val());
+            curr_scope_named = &tables.scopes.cat(curr_scope_named_id);
             switch (kind) {
             case scope_kind::NAMESPACE:
                 result_def = curr_scope_named->namespaces.at(symbol).as_id();

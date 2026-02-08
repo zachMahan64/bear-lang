@@ -13,13 +13,13 @@
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/generic.hpp"
-#include "compiler/hir/id_map.hpp"
+#include "compiler/hir/id_hash_map.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/node_vector.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
 #include "utils/data_arena.hpp"
 #include "utils/strimap.h"
-#include <vector>
 
 namespace hir {
 
@@ -36,44 +36,44 @@ class HirTables {
     /// const char* -> hir::SymbolId
     strimap_t str_to_symbol_id_map;
 
-    std::vector<FileId> file_id_vec;
-    std::vector<File> file_vec;
-    IdMap<SymbolId, FileId> symbol_id_to_file_id_map;
+    IdVector<FileId> file_ids;
+    NodeVector<File> files;
+    IdHashMap<SymbolId, FileId> symbol_id_to_file_id_map;
     DataArena id_map_arena;
 
-    std::vector<IdSlice<FileId>> importer_to_importees_vec;
+    IdVecMap<FileId, IdSlice<FileId>> importer_to_importees_vec;
 
-    std::vector<IdSlice<FileId>> importee_to_importers_vec;
+    IdVecMap<FileId, IdSlice<FileId>> importee_to_importers_vec;
 
-    std::vector<FileAst> ast_vec;
+    NodeVector<FileAst> file_asts;
 
-    std::vector<Scope> scopes;
+    NodeVector<Scope> scopes;
 
-    std::vector<ScopeAnon> scope_anons;
+    NodeVector<ScopeAnon> scope_anons;
 
-    std::vector<SymbolId> symbol_id_vec;
-    std::vector<Symbol> symbol_vec;
+    IdVector<SymbolId> symbol_id_vec;
+    NodeVector<Symbol> symbols;
     DataArena symbol_arena;
 
-    std::vector<ExecId> exec_id_vec;
-    std::vector<Exec> exec_vec;
+    IdVector<ExecId> exec_id_vec;
+    NodeVector<Exec> execs;
 
-    std::vector<DefId> def_id_vec;
-    std::vector<Def> def_vec;
+    IdVector<DefId> def_id_vec;
+    NodeVector<Def> defs;
 
     /// indicated whether this node has been visited during top-level traversal/resolution; this
     /// flag helps prevent illegal circular dependencies
-    std::vector<uint8_t> def_resolved;          // index with DefId
-    std::vector<uint8_t> def_top_level_visited; // index with DefId
+    IdVecMap<DefId, uint8_t> def_resolved;          // index with DefId
+    IdVecMap<DefId, uint8_t> def_top_level_visited; // index with DefId
 
-    std::vector<TypeId> type_id_vec;
-    std::vector<Type> type_vec;
+    IdVector<TypeId> type_id_vec;
+    NodeVector<Type> type_vec;
 
-    std::vector<GenericParamId> generic_param_id_vec;
-    std::vector<GenericParam> generic_param_vec;
+    IdVector<GenericParamId> generic_param_id_vec;
+    NodeVector<GenericParam> generic_param_vec;
 
-    std::vector<GenericArgId> generic_arg_id_vec;
-    std::vector<GenericArg> generic_arg_vec;
+    IdVector<GenericArgId> generic_arg_id_vec;
+    NodeVector<GenericArg> generic_arg_vec;
 
     HirTables();
 };
