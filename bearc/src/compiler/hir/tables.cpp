@@ -34,13 +34,12 @@ HirTables::HirTables()
       file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
       symbols{DEFAULT_SYMBOL_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_VEC_CAP},
       file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees_vec{DEFAULT_FILE_VEC_CAP},
-      importee_to_importers_vec{DEFAULT_FILE_VEC_CAP}, symbol_id_vec{DEFAULT_SYMBOL_VEC_CAP},
-      exec_id_vec{DEFAULT_EXEC_VEC_CAP}, def_id_vec{DEFAULT_DEF_VEC_CAP},
+      importee_to_importers_vec{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
+      exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_VEC_CAP},
       def_resolved{DEFAULT_DEF_VEC_CAP}, def_top_level_visited{DEFAULT_DEF_VEC_CAP},
-      type_vec{DEFAULT_TYPE_VEC_CAP}, type_id_vec{DEFAULT_DEF_VEC_CAP},
-      generic_param_id_vec{DEFAULT_GENERIC_PARAM_VEC_CAP},
-      generic_param_vec{DEFAULT_GENERIC_PARAM_VEC_CAP},
-      generic_arg_id_vec{DEFAULT_GENERIC_ARG_VEC_CAP},
-      generic_arg_vec{DEFAULT_GENERIC_ARG_VEC_CAP} {}
+      type_vec{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_VEC_CAP},
+      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
+      generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
+      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP} {}
 
 } // namespace hir

@@ -17,6 +17,9 @@ namespace hir {
 template <typename T>
 concept Node = hir::Id<typename T::id_type>;
 
+/// Maps an hir::Id to any type
+/// - this should be used for linear indexing where each contiguous Id that exists will correspond
+/// to exactly one value..
 template <hir::Id I, typename V> class IdVecMap {
     std::vector<V> vec;
     static constexpr HirId OFFSET = 1;
@@ -25,14 +28,16 @@ template <hir::Id I, typename V> class IdVecMap {
     explicit IdVecMap(HirSize capacity) : vec{} { vec.reserve(capacity + OFFSET); }
     void reserve(HirSize size) { vec.reserve(size); }
     [[nodiscard]] V& at(I id) {
-        assert(id.val() != HIR_ID_NONE);
+        assert(id.val() != HIR_ID_NONE && "[hir::IdVecMap::at] asked for an id of HIR_ID_NONE\n");
         return vec.at(id.val() - OFFSET);
     }
     [[nodiscard]] const V& cat(I id) const {
-        assert(id.val() != HIR_ID_NONE);
+        assert(id.val() != HIR_ID_NONE && "[hir::IdVecMap::cat] asked for an id of HIR_ID_NONE\n");
         return vec.at(id.val() - OFFSET);
     }
-    template <typename... Args> I emplace_and_get_id(Args&&... args) {
+    template <typename... Args>
+    [[nodiscard("Id must be fetched or emplaced node is dead.")]] I
+    emplace_and_get_id(Args&&... args) {
         vec.emplace_back(std::forward<Args>(args)...);
         return I{vec.size() - 1 + OFFSET}; // so just the size, but this is crucial
     }
