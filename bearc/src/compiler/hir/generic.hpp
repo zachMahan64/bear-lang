@@ -14,11 +14,13 @@ namespace hir {
 
 using GenericArgValue = std::variant<ExecId, TypeId>;
 struct GenericArg {
+    using id_type = GenericArgId;
     GenericArgValue value;
 };
 
 using GenericParamValue = std::variant<IdentifierId, ParamId>;
 struct GenericParam {
+    using id_type = GenericArgId;
     GenericParamValue value;
 };
 

@@ -48,6 +48,7 @@ enum class scope_kind : uint8_t {
  * models named blocks/namespaces, such as function bodies or ctrl flow blocks
  */
 struct Scope {
+    using id_type = ScopeId;
     OptId<ScopeId> named_parent;
     /// module, struct, and variant names
     ScopeIdMap namespaces;
@@ -87,6 +88,7 @@ struct Scope {
  * models anonymous blocks, such as function bodies or ctrl flow blocks
  */
 struct ScopeAnon {
+    using id_type = ScopeAnonId;
     OptId<ScopeId> opt_named_parent;
     OptId<ScopeAnonId> opt_anon_parent;
     /// structs, variants, unions, deftypes

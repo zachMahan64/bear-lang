@@ -64,14 +64,14 @@ class FileId {
 };
 
 /// for addressing asts
-class AstId {
+class FileAstId {
     HirId value;
 
   public:
-    constexpr explicit AstId(HirId v) : value(v) {}
-    constexpr AstId() : value(HIR_ID_NONE) {}
+    constexpr explicit FileAstId(HirId v) : value(v) {}
+    constexpr FileAstId() : value(HIR_ID_NONE) {}
     [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(AstId a, AstId b) { return a.value == b.value; }
+    friend constexpr bool operator==(FileAstId a, FileAstId b) { return a.value == b.value; }
 };
 
 /// for addressing named scopes

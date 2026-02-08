@@ -29,6 +29,7 @@ using DefValue = std::variant<DefModule>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
+    using id_type = DefId;
     /// underlying structure
     DefValue value;
     /// span in src

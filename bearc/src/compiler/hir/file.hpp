@@ -23,12 +23,14 @@ enum file_load_state : uint8_t {
 };
 
 struct File {
+    using id_type = FileId;
     SymbolId path;
+    FileAstId ast_id;
     file_load_state load_state;
-    AstId ast_id;
 };
 
 class FileAst {
+    using id_type = FileAstId;
     br_ast_t ast;
 
   public:

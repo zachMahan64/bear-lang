@@ -40,6 +40,7 @@ using TypeValue = std::variant<BuiltinType>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Type {
+    using id_type = TypeId;
     TypeValue value;
     Span span;
 };
