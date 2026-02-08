@@ -11,11 +11,10 @@
 
 #include "compiler/hir/id_map.hpp"
 #include "compiler/hir/indexing.hpp"
-#include "utils/arena.h"
 #include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
-#include "utils/vector.h"
 #include <cstdint>
+#include <vector>
 
 namespace hir {
 
@@ -95,7 +94,7 @@ struct ScopeAnon {
     /// var foo;
     ScopeIdMap variables;
     /// modules, struct, and variant defs brought in
-    vector_t used_hir_def_ids;
+    std::vector<DefId> used_defs;
     /// for shared flat map storage
     DataArena& arena;
     // so that we can lazily init the used_defs_hir_def_id vector
@@ -115,7 +114,6 @@ struct ScopeAnon {
 
     /// adds a used module to non-top-level anonymous scope
     void add_used_module(DefId def_id);
-    ~ScopeAnon();
     void insert_variable(SymbolId symbol, DefId def);
     void insert_type(SymbolId symbol, DefId def);
 };

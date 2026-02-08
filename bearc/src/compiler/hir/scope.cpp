@@ -130,11 +130,11 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
     bool collision = false;
     if (local_scope_anon->has_used_defs) {
 
-        const auto* vec = &local_scope_anon->used_hir_def_ids;
+        const auto& vec = local_scope_anon->used_defs;
 
-        for (HirSize i = 0; i < vec->size; i++) {
+        for (HirSize i = 0; i < vec.size(); i++) {
 
-            const DefId def_id = *(DefId*)vector_at(vec, i);
+            const DefId def_id = vec.at(i);
 
             // TODO replace with encapsulated tables logic once the tables impl is written
             const Def& used_def = tables.def_vec.at(def_id.val());
@@ -291,11 +291,11 @@ void ScopeAnon::insert(SymbolId symbol, DefId def, scope_kind kind) {
 void ScopeAnon::add_used_module(DefId def_id) {
     // lazy init
     if (!this->has_used_defs) {
-        const size_t hir_use_def_cap = 0x100;
-        this->used_hir_def_ids = vector_create_and_reserve(sizeof(DefId), hir_use_def_cap);
+        const size_t hir_use_def_cap = 0x10;
+        this->used_defs.reserve(hir_use_def_cap);
         this->has_used_defs = true;
     }
-    vector_push_back(&this->used_hir_def_ids, &def_id);
+    this->used_defs.push_back(def_id);
 }
 ScopeAnon::ScopeAnon(ScopeId named_parent, DataArena& arena)
     : opt_named_parent(named_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
@@ -303,12 +303,6 @@ ScopeAnon::ScopeAnon(ScopeId named_parent, DataArena& arena)
 ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, DataArena& arena)
     : opt_anon_parent(anon_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
-
-ScopeAnon::~ScopeAnon() {
-    if (this->has_used_defs) {
-        vector_destroy(&this->used_hir_def_ids);
-    }
-}
 
 // ------------------------- named scope inserters -------------------------------
 void Scope::insert_namespace(SymbolId symbol, DefId def) {
