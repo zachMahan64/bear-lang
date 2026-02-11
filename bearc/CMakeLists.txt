@@ -112,14 +112,17 @@ option(NO_LLVM "Build without LLVM backend" OFF)
 
 if (NOT NO_LLVM)
     # LLVM setup
-    set(LLVM_DIR "${CMAKE_SOURCE_DIR}/bearc/llvm/lib/cmake/llvm")
+    set(LLVM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llvm/lib/cmake/llvm")
 
     find_package(LLVM REQUIRED CONFIG)
     message(STATUS "[INFO] found LLVM ${LLVM_PACKAGE_VERSION}")
     message(STATUS "[INFO] using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-    target_include_directories(${EXECUTABLE} PRIVATE ${LLVM_INCLUDE_DIRS})
+    message(STATUS "[INFO] including LLVM headers: ${LLVM_INCLUDE_DIRS}")
+    include_directories(${LLVM_INCLUDE_DIRS})
+
     add_definitions(${LLVM_DEFINITIONS})
+
 
     llvm_map_components_to_libnames(LLVM_LIBS
         Core
