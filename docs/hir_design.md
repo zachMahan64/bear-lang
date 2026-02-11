@@ -222,28 +222,26 @@ HirTypeId->
             inner: HirTypeId
 
 HirDefId ->
-    span: Span
-    name: SymbolId
-    parent: HirDefId?
-    resolved: bool
-    top_leveL_visited: bool // prevent and detect circular dependencies
-    pub: bool
     HirDef:
+        span: Span
+        name: SymbolId
+        parent: HirDefId?
+        resolved: bool
+        top_leveL_visited: bool // prevent and detect circular dependencies
+        pub: bool
         | HirFunctionDef:
             []HirDefId -> HirParam
             return_type: HirTypeId
             compt: bool
             HirExecId? -> HirBody
             orig: HirDefId? -> HirGenericFunctionDef (if was originally generic and then was generated)
-        | HirParam:
-            def: HirDefId? -> HirVarDef (non-optional after resolution)
         | HirGenericFunctionDef:
             []HirGenericParam 
             HirFunctionDef
-        | HirDestructorDef:
-            HirFunctionDef
-        | HirExternCFunctionDef:
-            HirFunctionDef
+        | HirDefFunctionPrototype:
+            params: DefId?
+            return_type: TypeId?
+            language: hir::extern_lang
         | HirVarDef:
             type: HirTypeId
             name: SymbolId
@@ -271,6 +269,7 @@ HirDefId ->
         | HirGenericVariantDef
             HirVariantDef
             []HirGenericParam
+        | HirVariantDefField
         | HirUnionDef
             scope: HirScopeId 
             name: SymbolId 

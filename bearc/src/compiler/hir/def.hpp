@@ -20,12 +20,106 @@ namespace hir {
 
 struct DefModule {
     ScopeId scope;
+    SymbolId name;
+};
+
+struct DefFunction {
+    SymbolId name;
+    IdSlice<DefId> params;
+    OptId<TypeId> return_type;
+    ExecId body;
+    /// if this function was derived from an original generic function
+    OptId<DefId> original;
+    bool compt;
+    // indicates if this is extern C compatible
+};
+
+struct DefGenericFunction {
+    IdSlice<GenericParamId> generic_params;
+    SymbolId name;
+    // potentially problematic
+    DefId underlying_def;
+};
+
+enum class extern_lang : uint8_t {
+    native = 0,
+    c,
+};
+
+struct DefFunctionPrototype {
+    IdSlice<DefId> params;
+    OptId<TypeId> return_type;
+    hir::extern_lang lang = extern_lang::native;
+};
+
+struct DefVariable {
+    TypeId type;
+    SymbolId name;
+    OptId<ExecId> compt_value;
+    bool is_static;
+    bool moved;
+    bool compt;
+};
+
+struct DefStruct {
+    ScopeId scope;
+    SymbolId name;
+    /// data members/fields, not functions
+    IdSlice<DefId> ordered_members;
+    IdSlice<DefId> contracts;
+    /// if this struct was derived from an original generic struct
+    OptId<DefId> orginal;
+};
+
+struct DefGenericStruct {
+    IdSlice<GenericParamId> generic_params;
+    SymbolId name;
+    // potentially problematic
+    DefId underlying_def;
+};
+
+struct DefVariant {
+    ScopeId scope;
+    SymbolId name;
+    /// if this variant was derived from an original generic variant
+    OptId<DefId> orginal;
+};
+
+struct DefGenericVariant {
+    IdSlice<GenericParamId> generic_params;
+    SymbolId name;
+    // potentially problematic
+    DefId underlying_def;
+};
+
+struct DefVariantField {
+    SymbolId name;
+    /// pointing to DefVariables which containg type and name info
+    IdSlice<DefId> members;
+};
+
+struct DefUnion {
+    ScopeId scope;
+    SymbolId name;
+};
+
+struct DefContract {
+    ScopeId scope;
+    SymbolId name;
+};
+
+struct DefDefType {
+    SymbolId name;
+    TypeId type;
 };
 
 // ^^^^^^ struct impls ^^^^^^^^
 
 /// main exec variant
-using DefValue = std::variant<DefModule>;
+using DefValue
+    = std::variant<DefModule, DefFunction, DefGenericFunction, DefFunctionPrototype, DefVariable,
+                   DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
+                   DefUnion, DefContract, DefDefType>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
