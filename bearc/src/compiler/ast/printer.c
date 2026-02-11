@@ -337,7 +337,7 @@ static void print_generic_params(ast_slice_of_generic_params_t params) {
     print_closing_green_brace_newline();
 }
 
-void pretty_print_expr(ast_expr_t* expression) {
+void pretty_print_expr(const ast_expr_t* expression) {
     printer_try_init();
     printer_do_indent();
     print_indent();
@@ -555,7 +555,7 @@ void pretty_print_expr(ast_expr_t* expression) {
     printer_deindent();
 }
 
-void pretty_print_stmt(ast_stmt_t* stmt) {
+void pretty_print_stmt(const ast_stmt_t* stmt) {
     printer_try_init();
     print_indent();
     switch (stmt->type) {

@@ -11,8 +11,7 @@
 #include "stdio.h"
 #include "utils/file_io.h"
 
-// private debug helper
-void print_out_tkn_table(vector_t* tkn_vec) {
+void print_out_tkn_table(const vector_t* tkn_vec) {
     const char* const* tkn_map = token_to_string_map();
     size_t tkn_map_size = tkn_vec->size;
     puts("                    Lexed tokens");
@@ -27,8 +26,7 @@ void print_out_tkn_table(vector_t* tkn_vec) {
     puts("==================================================");
 }
 
-// private debug helper
-void print_out_src_buffer(src_buffer_t* src_buffer) {
+void print_out_src_buffer(const src_buffer_t* src_buffer) {
     printf("\n"
            " Contents of [%s]\n"
            "==================================================\n"

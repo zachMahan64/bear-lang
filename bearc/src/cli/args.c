@@ -57,7 +57,7 @@ bearc_args_t parse_cli_args(int argc, char** argv) {
                 args.flags[CLI_FLAG_ERR_UNKNOWN] = true; // invalid flag
             } else {
                 // try to interpret as filename, deal with faulty filenames later
-                if (strlen(argv[i]) < CLI_ARGS_MAX_FILE_NAME_LENGTH) {
+                if (strlen(argv[i]) < CLI_ARGS_MAX_FILE_NAME_LENGTH - 1) {
                     strcpy(args.input_file_name, argv[i]);
                 } else {
                     args.flags[CLI_FLAG_ERR_FILE_NAME_TOO_LONG] = true;

@@ -37,6 +37,10 @@ class FileAst {
     const src_buffer& buffer() const noexcept;
     const compiler_error_list_t& error_list() const noexcept;
     const ast_stmt_t* root() const noexcept;
+    void pretty_print() const;
+    void print_all_errors() const;
+    void print_token_table() const;
+    size_t error_count() const;
     FileAst(const char* file_name);
     ~FileAst();
 };

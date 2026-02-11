@@ -15,8 +15,8 @@
 extern "C" {
 #endif
 
-void pretty_print_stmt(ast_stmt_t* stmt);
-void pretty_print_expr(ast_expr_t* expr);
+void pretty_print_stmt(const ast_stmt_t* stmt);
+void pretty_print_expr(const ast_expr_t* expr);
 void pretty_printer_reset(void);
 
 #ifdef __cplusplus

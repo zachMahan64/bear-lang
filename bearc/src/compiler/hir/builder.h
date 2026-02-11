@@ -6,20 +6,11 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_DEBUG_H
-#define COMPILER_DEBUG_H
+#ifndef COMPILER_HIR_BUILER_H
+#define COMPILER_HIR_FILE_H
 
-#include "utils/file_io.h"
-#include "utils/vector.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void print_out_src_buffer(const src_buffer_t* src_buffer);
-void print_out_tkn_table(const vector_t* vec);
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
+#include "cli/args.h"
+#include <stddef.h>
+size_t hir_build(const bearc_args_t* args);
 
 #endif
