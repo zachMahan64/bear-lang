@@ -19,14 +19,11 @@ class DataArena {
 
   public:
     /// arena ctor (init) from a specified standard chunk size.
-    DataArena(size_t chunk_size);
+    explicit DataArena(size_t chunk_size);
     DataArena(const DataArena&) = delete;
-    DataArena(const DataArena&& other) noexcept { this->arena_ = other.arena_; };
+    DataArena(DataArena&& other) = delete;
     DataArena& operator=(const DataArena&) = delete;
-    DataArena& operator=(const DataArena&& other) noexcept {
-        this->arena_ = other.arena_;
-        return *this;
-    };
+    DataArena& operator=(DataArena&&) = delete;
     ~DataArena();
     /// gets a ptr to the underlying c-style arena
     arena_t* arena_p();

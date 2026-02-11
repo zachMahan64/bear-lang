@@ -9,7 +9,7 @@
 #include "utils/data_arena.hpp"
 #include "utils/arena.h"
 #include <stddef.h>
-DataArena::DataArena(size_t chunk_size) : arena_(arena_create(chunk_size)) {}
+DataArena::DataArena(size_t chunk_size) : arena_{arena_create(chunk_size)} {}
 
 DataArena::~DataArena() { arena_destroy(&this->arena_); }
 

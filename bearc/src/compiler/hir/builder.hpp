@@ -9,12 +9,13 @@
 #ifndef COMPILER_HIR_BUILDER_H
 #define COMPILER_HIR_BUILDER_H
 
+#include "cli/args.h"
 #include "compiler/hir/tables.hpp"
 namespace hir {
 namespace builder {
 
 /// creates an HIR database from a file_name
-HirTables build_from_file(const char* file_name);
+HirTables from_file(const char* file_name, const bearc_args_t* args);
 
 } // namespace builder
 } // namespace hir

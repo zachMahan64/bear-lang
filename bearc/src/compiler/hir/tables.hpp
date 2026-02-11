@@ -20,6 +20,7 @@
 #include "compiler/hir/type.hpp"
 #include "utils/data_arena.hpp"
 #include "utils/strimap.h"
+#include <atomic>
 
 namespace hir {
 
@@ -35,8 +36,8 @@ class HirTables {
     // ~~~~~~~~~~~~~~~~~ file stuff ~~~~~~~~~~~~~~~~~~~
     IdVector<FileId> file_ids;
     NodeVector<File> files;
-    IdHashMap<SymbolId, FileId> symbol_id_to_file_id_map;
     DataArena id_map_arena;
+    IdHashMap<SymbolId, FileId> symbol_id_to_file_id_map;
     NodeVector<FileAst> file_asts;
 
     IdVecMap<FileId, IdSlice<FileId>> importer_to_importees_vec;
@@ -49,10 +50,10 @@ class HirTables {
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     /// const char* -> hir::SymbolId
+    DataArena symbol_arena;
     strimap_t str_to_symbol_id_map; // TODO write a c++-style strimap (arena-backed string hash map)
     IdVector<SymbolId> symbol_ids;
     NodeVector<Symbol> symbols;
-    DataArena symbol_arena;
 
     IdVector<ExecId> exec_ids;
     NodeVector<Exec> execs;
@@ -77,10 +78,15 @@ class HirTables {
     IdVector<GenericArgId> generic_arg_ids;
     NodeVector<GenericArg> generic_args;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // error tracking
+    std::atomic<uint32_t> parse_error_count;
+    std::atomic<uint32_t> semantic_error_count;
     // TODO impl init logic
-    HirTables(HirTables&&) noexcept = default;
+    HirTables(HirTables&&) noexcept;
     HirTables& operator=(HirTables&&) noexcept = default;
     HirTables();
+    void bump_parser_error_count(uint32_t cnt) noexcept;
+    uint32_t error_count() const noexcept;
 };
 
 } // namespace hir

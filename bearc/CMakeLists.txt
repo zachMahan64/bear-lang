@@ -60,6 +60,7 @@ set(SRC
     src/compiler/hir/file.cpp
     src/compiler/hir/tables.cpp
     src/compiler/hir/scope.cpp
+    src/compiler/hir/builder.cpp
 
 )
 

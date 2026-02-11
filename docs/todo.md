@@ -7,7 +7,7 @@
 - [x] Make Scope fully c++ified (finish translating Cisms)
 - [x] Change scope to used std::vector since it's lazy
 - [ ] finish hir structural impls
-    - [ ] defs
+    - [x] defs
     - [ ] types
     - [x] exec
         - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
