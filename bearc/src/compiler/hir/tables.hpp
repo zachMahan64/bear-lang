@@ -49,7 +49,7 @@ class HirTables {
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     /// const char* -> hir::SymbolId
-    strimap_t str_to_symbol_id_map; // todo write a c++-style strimap (arena-backed string hash map)
+    strimap_t str_to_symbol_id_map; // TODO write a c++-style strimap (arena-backed string hash map)
     IdVector<SymbolId> symbol_ids;
     NodeVector<Symbol> symbols;
     DataArena symbol_arena;
@@ -77,6 +77,9 @@ class HirTables {
     IdVector<GenericArgId> generic_arg_ids;
     NodeVector<GenericArg> generic_args;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // TODO impl init logic
+    HirTables(HirTables&&) noexcept = default;
+    HirTables& operator=(HirTables&&) noexcept = default;
     HirTables();
 };
 
