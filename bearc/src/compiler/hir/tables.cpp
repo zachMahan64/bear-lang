@@ -28,7 +28,7 @@ static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 // TODO: make a non default-ctor that actually calculates estimate capacities necessary (find these
 // number empirically then apply here)
-HirTables::HirTables()
+Tables::Tables()
     : symbol_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
@@ -44,7 +44,7 @@ HirTables::HirTables()
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP} {}
 
 // TODO obviously wrong temporary logic
-HirTables::HirTables(HirTables&& other) noexcept
+Tables::Tables(Tables&& other) noexcept
     : symbol_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
@@ -62,11 +62,11 @@ HirTables::HirTables(HirTables&& other) noexcept
     this->semantic_error_count.store(other.semantic_error_count.load(std::memory_order_relaxed));
 }
 
-void HirTables::bump_parser_error_count(uint32_t cnt) noexcept {
+void Tables::bump_parser_error_count(uint32_t cnt) noexcept {
     parse_error_count.fetch_add(cnt, std::memory_order_relaxed);
 }
 
-uint32_t HirTables::error_count() const noexcept {
+uint32_t Tables::error_count() const noexcept {
     return this->parse_error_count + this->semantic_error_count;
 }
 

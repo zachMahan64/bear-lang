@@ -15,7 +15,7 @@
 extern "C" {
 
 size_t hir_build(const bearc_args_t* args) {
-    hir::HirTables db = hir::builder::from_file(args->input_file_name, args);
+    hir::Tables db = hir::builder::from_file(args->input_file_name, args);
     return db.error_count(); // todo return # errors
 }
 
@@ -24,7 +24,7 @@ namespace hir {
 namespace builder {
 
 /// creates an HIR database from a file_name
-HirTables from_file(const char* file_name, const bearc_args_t* args) {
+Tables from_file(const char* file_name, const bearc_args_t* args) {
     FileAst root_ast{file_name};
     // --token-table
     if (args->flags[CLI_FLAG_TOKEN_TABLE]) {
@@ -49,7 +49,7 @@ HirTables from_file(const char* file_name, const bearc_args_t* args) {
                    ansi_reset());
         }
     }
-    HirTables tables{};
+    Tables tables{};
     tables.bump_parser_error_count(root_ast.error_count());
     return tables; // TODO
 }

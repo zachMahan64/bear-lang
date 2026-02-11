@@ -30,7 +30,7 @@ namespace hir {
  * primary data container for hir structures
  * - this model allows for IDs and ID slices with no pointers
  */
-class HirTables {
+class Tables {
   public:
     // containers:
     // ~~~~~~~~~~~~~~~~~ file stuff ~~~~~~~~~~~~~~~~~~~
@@ -82,9 +82,9 @@ class HirTables {
     std::atomic<uint32_t> parse_error_count;
     std::atomic<uint32_t> semantic_error_count;
     // TODO impl init logic
-    HirTables(HirTables&&) noexcept;
-    HirTables& operator=(HirTables&&) noexcept = default;
-    HirTables();
+    Tables(Tables&&) noexcept;
+    Tables& operator=(Tables&&) noexcept = default;
+    Tables();
     void bump_parser_error_count(uint32_t cnt) noexcept;
     uint32_t error_count() const noexcept;
 };

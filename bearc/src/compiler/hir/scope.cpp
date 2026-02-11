@@ -31,7 +31,7 @@ Scope::Scope(ScopeId parent, DataArena& arena, bool is_top_level)
       namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(is_top_level) {}
 
-static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, ScopeId local_scope_id,
+static inline ScopeLookUpResult hir_scope_look_up(const Tables& tables, ScopeId local_scope_id,
                                                   SymbolId symbol, scope_kind kind) {
 
     if (!local_scope_id.val()) {
@@ -78,27 +78,26 @@ static inline ScopeLookUpResult hir_scope_look_up(const HirTables& tables, Scope
     return ScopeLookUpResult{def, status};
 }
 
-ScopeLookUpResult Scope::look_up_namespace(const HirTables& tables, ScopeId local_scope,
+ScopeLookUpResult Scope::look_up_namespace(const Tables& tables, ScopeId local_scope,
                                            SymbolId symbol) {
     return hir_scope_look_up(tables, local_scope, symbol, scope_kind::NAMESPACE);
 }
-ScopeLookUpResult Scope::look_up_variable(const HirTables& tables, ScopeId local_scope,
+ScopeLookUpResult Scope::look_up_variable(const Tables& tables, ScopeId local_scope,
                                           SymbolId symbol) {
     return hir_scope_look_up(tables, local_scope, symbol, scope_kind::VARIABLE);
 }
-ScopeLookUpResult Scope::look_up_function(const HirTables& tables, ScopeId local_scope,
+ScopeLookUpResult Scope::look_up_function(const Tables& tables, ScopeId local_scope,
                                           SymbolId symbol) {
 
     return hir_scope_look_up(tables, local_scope, symbol, scope_kind::FUNCTION);
 }
-ScopeLookUpResult Scope::look_up_type(const HirTables& tables, ScopeId local_scope,
-                                      SymbolId symbol) {
+ScopeLookUpResult Scope::look_up_type(const Tables& tables, ScopeId local_scope, SymbolId symbol) {
     return hir_scope_look_up(tables, local_scope, symbol, scope_kind::TYPE);
 }
 
 // ------------------ ANON SCOPE IMPL ----------------------
 
-static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
+static inline ScopeLookUpResult hir_scope_anon_look_up(const Tables& tables,
                                                        ScopeAnonId local_scope_id, SymbolId symbol,
                                                        scope_kind kind) {
     if (!local_scope_id.val()) {
@@ -217,25 +216,25 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const HirTables& tables,
     return ScopeLookUpResult{result_def, status};
 }
 
-ScopeLookUpResult hir_scope_anon_look_up_variable(HirTables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult hir_scope_anon_look_up_variable(Tables& tables, ScopeAnonId local_scope,
                                                   SymbolId symbol) {
 
     return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::VARIABLE);
 }
 
-ScopeLookUpResult hir_scope_anon_look_up_type(HirTables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult hir_scope_anon_look_up_type(Tables& tables, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
     return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::TYPE);
 }
 
-ScopeLookUpResult ScopeAnon::look_up_variable(const HirTables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult ScopeAnon::look_up_variable(const Tables& tables, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
     return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::VARIABLE);
 }
 
-ScopeLookUpResult ScopeAnon::look_up_type(const HirTables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult ScopeAnon::look_up_type(const Tables& tables, ScopeAnonId local_scope,
                                           SymbolId symbol) {
 
     return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::TYPE);
