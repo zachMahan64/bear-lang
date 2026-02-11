@@ -66,6 +66,7 @@ class Tables {
     /// flag helps prevent illegal circular dependencies
     IdVecMap<DefId, uint8_t> def_resolved;          // index with DefId
     IdVecMap<DefId, uint8_t> def_top_level_visited; // index with DefId
+    IdVecMap<DefId, uint8_t> def_used;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
