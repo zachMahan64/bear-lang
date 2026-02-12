@@ -16,7 +16,6 @@
 namespace hir {
 
 // ------ struct impls -------
-// TODO: finish impl structures
 
 struct DefModule {
     ScopeId scope;

@@ -25,8 +25,6 @@
 
 namespace hir {
 
-// !! TODO: impl accessor logic
-
 /**
  * primary data container for hir structures
  * - this model allows for IDs and ID slices with no pointers
@@ -95,6 +93,7 @@ class Tables {
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
+    // TODO build this into a ctor
     FileId provide_root_file(const char* file_name);
     const char* symbol_id_to_cstr(SymbolId id);
     void explore_imports(FileId file_id);
