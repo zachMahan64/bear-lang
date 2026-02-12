@@ -11,9 +11,13 @@
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/token.h"
+#include "utils/log.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <atomic>
 #include <cstring>
+#include <iostream>
 #include <stddef.h>
+#include <string_view>
 namespace hir {
 
 static constexpr size_t DEFAULT_SYMBOL_ARENA_CAP = 0x10000;
@@ -81,6 +85,10 @@ FileId Tables::get_file_from_path_tkn(token_t* tkn) {
     return get_file(get_symbol_id_for_str_lit_token(tkn));
 }
 
+SymbolId Tables::get_symbol_id(std::string_view str) {
+    return get_symbol_id(str.data(), str.length());
+}
+
 SymbolId Tables::get_symbol_id(const char* start, size_t len) {
     OptId<SymbolId> maybe_symbol = str_to_symbol_id_map.atn(start, len);
     if (maybe_symbol.has_value()) {
@@ -106,49 +114,61 @@ SymbolId Tables::get_symbol_id_for_str_lit_token(token_t* tkn) {
     return get_symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes
 }
 
-FileId Tables::emplace_root_file(const char* file_name) {
+FileId Tables::provide_root_file(const char* file_name) {
     SymbolId path_symbol = get_symbol_id(file_name, strlen(file_name));
-    FileAstId ast_id = this->file_asts.emplace_and_get_id(file_name);
-    return this->files.emplace_and_get_id(path_symbol, ast_id);
+    FileId file_id = get_file(path_symbol);
+    files.at(file_id).load_state = file_import_state::done;
+    return file_id;
 }
 
 FileId Tables::get_file(SymbolId path_symbol) {
+    // check if file has already been requested
     OptId<FileId> maybe_file_id = symbol_id_to_file_id_map.at(path_symbol);
     if (maybe_file_id.has_value()) {
         return maybe_file_id.as_id();
     }
-    FileAstId ast_id = this->file_asts.emplace_and_get_id(symbol_id_to_raw_str(path_symbol));
-    return this->files.emplace_and_get_id(path_symbol, ast_id);
+    FileAstId ast_id = this->file_asts.emplace_and_get_id(symbol_id_to_cstr(path_symbol));
+    FileId file_id = this->files.emplace_and_get_id(path_symbol, ast_id);
+    /// store this mapping for future detection
+    this->symbol_id_to_file_id_map.insert(path_symbol, file_id);
+    /// bump necessary things that are track id-wise for files
+    importee_to_importers_vec.bump();
+    importer_to_importees_vec.bump();
+    return file_id;
 }
 
 FileAstId Tables::emplace_ast(const char* file_name) {
     return this->file_asts.emplace_and_get_id(file_name);
 }
 
-const char* Tables::symbol_id_to_raw_str(SymbolId id) { return this->symbols.cat(id).sv().data(); }
+const char* Tables::symbol_id_to_cstr(SymbolId id) { return this->symbols.cat(id).sv().data(); }
 
-// TODO parallelize and guard against infinite includes, track file dependencies (forward and
-// reverse), track erroors, also probably move all this logic into hir::Tables itself besides the
-// try_print_info and terminal messages n stuff
-void Tables::explore_imports(FileId file_id) {
-    const FileAst& root_ast = this->file_asts.at(this->files.at(file_id).ast_id);
+// TODO parallelize; track file dependencies (forward and reverse)
+void Tables::explore_imports(FileId importer_file_id) {
+    const FileAst& root_ast = this->file_asts.at(this->files.at(importer_file_id).ast_id);
     const ast_stmt* root = root_ast.root();
     if (!root) {
         return;
     }
+    static constexpr HirSize EXPECTED_MAX_NUM_IMPORTS = 128;
+    llvm::SmallVector<FileId, EXPECTED_MAX_NUM_IMPORTS> importees;
+
     for (size_t i = 0; i < root->stmt.file.stmts.len; i++) {
         ast_stmt* curr = root->stmt.file.stmts.start[i];
         if (curr->type == AST_STMT_IMPORT) {
-            FileId file = this->get_file_from_path_tkn(curr->stmt.import.file_path);
+            FileId importee_file_id = this->get_file_from_path_tkn(curr->stmt.import.file_path);
             // guard circularity
-            if (files.at(file).load_state != file_load_state::unvisited) {
+            if (files.at(importee_file_id).load_state != file_import_state::unvisited) {
                 continue;
             }
-            files.at(file).load_state = file_load_state::in_progress;
-            this->explore_imports(file);
-            files.at(file).load_state = file_load_state::done;
+            // add importee to vec
+            importees.emplace_back(importee_file_id);
+            files.at(importee_file_id).load_state = file_import_state::in_progress;
+            this->explore_imports(importee_file_id);
+            files.at(importee_file_id).load_state = file_import_state::done;
         }
     }
+    importer_to_importees_vec.at(importer_file_id) = file_ids.freeze_small_vec(importees);
 }
 
 } // namespace hir

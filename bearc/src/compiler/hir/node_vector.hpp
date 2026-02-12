@@ -10,6 +10,7 @@
 #define COMPILER_HIR_NODE_VECTOR_HPP
 
 #include "compiler/hir/indexing.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <utility>
 #include <vector>
@@ -21,7 +22,10 @@ concept Node = hir::Id<typename T::id_type>;
 /// - this should be used for linear indexing where each contiguous Id that exists will correspond
 /// to exactly one value..
 template <hir::Id I, typename V> class IdVecMap {
+  protected:
     std::vector<V> vec;
+
+  private:
     static constexpr HirId OFFSET = 1;
 
   public:
@@ -38,6 +42,11 @@ template <hir::Id I, typename V> class IdVecMap {
     template <typename... Args>
     [[nodiscard("Id must be fetched or emplaced node is dead.")]] I
     emplace_and_get_id(Args&&... args) {
+        vec.emplace_back(std::forward<Args>(args)...);
+        return I{static_cast<HirId>(vec.size()) - 1
+                 + OFFSET}; // so just the size, but this is crucial
+    }
+    template <typename... Args> I bump(Args&&... args) {
         vec.emplace_back(std::forward<Args>(args)...);
         return I{static_cast<HirId>(vec.size()) - 1
                  + OFFSET}; // so just the size, but this is crucial
@@ -81,6 +90,14 @@ template <Node T> class NodeVector : public IdVecMap<typename T::id_type, T> {
 template <hir::Id I> class IdVector : public IdVecMap<typename hir::IdIdx<I>, I> {
   public:
     explicit IdVector(HirSize capacity) : IdVecMap<typename hir::IdIdx<I>, I>(capacity) {}
+    template <HirSize N> IdSlice<I> freeze_small_vec(llvm::SmallVector<I, N>& svec) {
+        // basically we're just allocating a contiguous chunk inside the vector so that we can copy
+        // in the small vector into internal, permanent storage
+        IdIdx<I> first{static_cast<HirId>(this->vec.size() - 1)};
+        this->vec.append_range(svec);
+        HirSize len = svec.size();
+        return IdSlice<I>{first, len};
+    }
 };
 
 } // namespace hir

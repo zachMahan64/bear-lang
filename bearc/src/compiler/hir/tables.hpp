@@ -92,18 +92,21 @@ class Tables {
     uint32_t error_count() const noexcept;
 
     // ----- accessors --------
-    [[nodiscard]] FileId get_file_from_path_tkn(token_t* tkn);
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
-    [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
-    /// emplace a symbol, trimming the "" quotes on the outside when interning
-    [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
+    SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
-    FileId emplace_root_file(const char* file_name);
-    const char* symbol_id_to_raw_str(SymbolId id);
+    FileId provide_root_file(const char* file_name);
+    const char* symbol_id_to_cstr(SymbolId id);
     void explore_imports(FileId file_id);
 
   private:
+    /// forceably emplaces ast, not checking if it has already been processed. This function is
+    /// wrapped by file handling logic and should thus not be used directly anywhere else
     FileAstId emplace_ast(const char* file_name);
+    [[nodiscard]] FileId get_file_from_path_tkn(token_t* tkn);
+    [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
+    /// get a symbol, trimming the "" quotes on the outside when interning
+    [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
 };
 
 } // namespace hir

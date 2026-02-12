@@ -13,7 +13,7 @@
 namespace hir {
 
 File::File(SymbolId path, FileAstId ast_id)
-    : path{path}, ast_id{ast_id}, load_state(file_load_state::unvisited) {}
+    : path{path}, ast_id{ast_id}, load_state(file_import_state::unvisited) {}
 
 FileAst::FileAst(const char* file_name) : ast(ast_create_from_file(file_name)) {}
 FileAst::~FileAst() { ast_destroy(&this->ast); }

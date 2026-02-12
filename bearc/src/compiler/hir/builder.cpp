@@ -49,7 +49,7 @@ void try_print_info(const FileAst& file_ast, const bearc_args_t* args) {
 /// creates an HIR database from a file_name
 Tables from_root_file(const char* root_file_path, const bearc_args_t* args) {
     Tables tables{};
-    FileId root_id = tables.emplace_root_file(root_file_path);
+    FileId root_id = tables.provide_root_file(root_file_path);
     tables.explore_imports(root_id);
 
     for (const auto f : tables.files) {

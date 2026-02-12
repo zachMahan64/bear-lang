@@ -36,6 +36,7 @@ template <hir::Id T> class IdIdx {
     HirId value;
 
   public:
+    IdIdx() : value(HIR_ID_NONE) {}
     explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
 };
@@ -199,7 +200,8 @@ template <hir::Id T> class IdSlice {
     HirSize len_;
 
   public:
-    IdSlice(IdIdx<T> first, HirSize len) : first_(first), len_(len) {};
+    IdSlice() : first_(IdIdx<T>{}), len_{0} {}
+    IdSlice(IdIdx<T> first, HirSize len) : first_(first), len_(len) {}
     constexpr IdIdx<T> first() const noexcept { return first_; }
     constexpr IdIdx<T> get(HirSize i) const noexcept { return IdIdx<T>{first_.val() + i}; }
     constexpr HirSize len() const noexcept { return len_; }
