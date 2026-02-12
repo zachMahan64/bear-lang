@@ -11,6 +11,7 @@
 
 #include "utils/arena.h"
 #include <stddef.h>
+#include <type_traits>
 
 /// holds pure data in an internal arena, which each chunk of the specified chunk size, can hold any
 /// values do that do not rely on non-trivial destructors
@@ -31,8 +32,14 @@ class DataArena {
     /// no heavy copy, arena_t is trivially copyable)
     arena_t arena();
     /// get an allocation from the arena of a specified size
-    template <typename T> T* alloc() {
+    template <typename T> T* alloc_type() {
         return arena_alloc(&this->arena_, sizeof(T));
+    } /// returns the chunk size (in bytes)
+    template <typename T>
+    T alloc_as(size_t size)
+        requires std::is_pointer_v<T>
+    {
+        return static_cast<T>(arena_alloc(&this->arena_, size));
     } /// returns the chunk size (in bytes)
     size_t chunk_size() const noexcept;
     /// for testing purposes

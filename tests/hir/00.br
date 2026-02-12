@@ -1,0 +1,5 @@
+import "tests/hir/01.br";
+
+fn main() -> i32 {
+    return foo..BAR;
+}

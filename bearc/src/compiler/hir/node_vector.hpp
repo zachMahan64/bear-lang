@@ -39,8 +39,36 @@ template <hir::Id I, typename V> class IdVecMap {
     [[nodiscard("Id must be fetched or emplaced node is dead.")]] I
     emplace_and_get_id(Args&&... args) {
         vec.emplace_back(std::forward<Args>(args)...);
-        return I{vec.size() - 1 + OFFSET}; // so just the size, but this is crucial
+        return I{static_cast<HirId>(vec.size()) - 1
+                 + OFFSET}; // so just the size, but this is crucial
     }
+    using value_type = V;
+    using reference = V&;
+    using const_reference = const V&;
+    using iterator = typename std::vector<V>::iterator;
+    using const_iterator = typename std::vector<V>::const_iterator;
+    using reverse_iterator = typename std::vector<V>::reverse_iterator;
+    using const_reverse_iterator = typename std::vector<V>::const_reverse_iterator;
+    using size_type = typename std::vector<V>::size_type;
+
+    [[nodiscard]] iterator begin() noexcept { return vec.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept { return vec.begin(); }
+    [[nodiscard]] const_iterator cbegin() const noexcept { return vec.cbegin(); }
+
+    [[nodiscard]] iterator end() noexcept { return vec.end(); }
+    [[nodiscard]] const_iterator end() const noexcept { return vec.end(); }
+    [[nodiscard]] const_iterator cend() const noexcept { return vec.cend(); }
+
+    [[nodiscard]] reverse_iterator rbegin() noexcept { return vec.rbegin(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return vec.rbegin(); }
+    [[nodiscard]] const_reverse_iterator crbegin() const noexcept { return vec.crbegin(); }
+
+    [[nodiscard]] reverse_iterator rend() noexcept { return vec.rend(); }
+    [[nodiscard]] const_reverse_iterator rend() const noexcept { return vec.rend(); }
+    [[nodiscard]] const_reverse_iterator crend() const noexcept { return vec.crend(); }
+
+    [[nodiscard]] bool empty() const noexcept { return vec.empty(); }
+    [[nodiscard]] size_type size() const noexcept { return vec.size(); }
 };
 
 /// Models a vector of an hir::Node

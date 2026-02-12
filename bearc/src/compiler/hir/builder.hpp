@@ -15,7 +15,7 @@ namespace hir {
 namespace builder {
 
 /// creates an HIR database from a file_name
-Tables from_file(const char* file_name, const bearc_args_t* args);
+Tables from_root_file(const char* root_file_path, const bearc_args_t* args);
 
 } // namespace builder
 } // namespace hir

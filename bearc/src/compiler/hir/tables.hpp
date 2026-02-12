@@ -18,6 +18,7 @@
 #include "compiler/hir/node_vector.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
+#include "compiler/token.h"
 #include "utils/data_arena.hpp"
 #include "utils/strimap.h"
 #include <atomic>
@@ -88,6 +89,19 @@ class Tables {
     Tables();
     void bump_parser_error_count(uint32_t cnt) noexcept;
     uint32_t error_count() const noexcept;
+
+    // ----- accessors --------
+    [[nodiscard]] FileId emplace_file_from_path_tkn(token_t* tkn);
+    [[nodiscard]] SymbolId emplace_symbol(const char* start, size_t len);
+    [[nodiscard]] SymbolId emplace_symbol_from_token(token_t* tkn);
+    /// emplace a symbol, trimming the "" quotes on the outside when interning
+    [[nodiscard]] SymbolId emplace_str_literal_symbol(token_t* tkn);
+    [[nodiscard]] FileId emplace_file(SymbolId path);
+    FileId emplace_root_file(const char* file_name);
+    const char* symbol_id_to_raw_str(SymbolId id);
+
+  private:
+    FileAstId emplace_ast(const char* file_name);
 };
 
 } // namespace hir

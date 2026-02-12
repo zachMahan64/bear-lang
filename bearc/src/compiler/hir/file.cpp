@@ -11,6 +11,10 @@
 #include "compiler/ast/printer.h"
 #include "compiler/debug.h"
 namespace hir {
+
+File::File(SymbolId path, FileAstId ast_id)
+    : path{path}, ast_id{ast_id}, load_state(file_load_state::unvisited) {}
+
 FileAst::FileAst(const char* file_name) : ast(ast_create_from_file(file_name)) {}
 FileAst::~FileAst() { ast_destroy(&this->ast); }
 const src_buffer& FileAst::buffer() const noexcept { return this->ast.src_buffer; }

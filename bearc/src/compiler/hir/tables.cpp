@@ -7,7 +7,10 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/tables.hpp"
+#include "compiler/hir/indexing.hpp"
+#include "compiler/token.h"
 #include <atomic>
+#include <cstring>
 #include <stddef.h>
 namespace hir {
 
@@ -70,4 +73,43 @@ uint32_t Tables::error_count() const noexcept {
     return this->parse_error_count + this->semantic_error_count;
 }
 
+FileId Tables::emplace_file_from_path_tkn(token_t* tkn) {
+    return emplace_file(emplace_str_literal_symbol(tkn));
+}
+
+SymbolId Tables::emplace_symbol(const char* start, size_t len) {
+    /// this->str_to_symbol_id_map ...; TODO ADD TO A HASHMAP ONCE IMPLEMENTED, THIS WILL ALSO GUARD
+    /// AGAINST DUPLICATES
+    char* sym_data = this->symbol_arena.alloc_as<char*>(len + 1); // +1 for null-term
+    memcpy(sym_data, start, len);
+    sym_data[len] = '\0'; // null-term
+    return this->symbols.emplace_and_get_id(std::string_view{sym_data, len});
+}
+SymbolId Tables::emplace_symbol_from_token(token_t* tkn) {
+    assert(tkn->type == TOK_IDENTIFIER);
+    return emplace_symbol(tkn->start, tkn->len);
+}
+SymbolId Tables::emplace_str_literal_symbol(token_t* tkn) {
+    assert(tkn->type == TOK_STR_LIT);
+    return emplace_symbol(tkn->start + 1, tkn->len - 2); // trims outer quotes
+}
+
+FileId Tables::emplace_root_file(const char* file_name) {
+    SymbolId path_symbol = emplace_symbol(file_name, strlen(file_name));
+    FileAstId ast_id = this->file_asts.emplace_and_get_id(file_name);
+    return this->files.emplace_and_get_id(path_symbol, ast_id);
+}
+
+FileId Tables::emplace_file(SymbolId path_symbol) {
+    FileAstId ast_id = this->file_asts.emplace_and_get_id(symbol_id_to_raw_str(path_symbol));
+    return this->files.emplace_and_get_id(path_symbol, ast_id);
+}
+
+FileAstId Tables::emplace_ast(const char* file_name) {
+    return this->file_asts.emplace_and_get_id(file_name);
+}
+
+const char* Tables::symbol_id_to_raw_str(SymbolId id) { return this->symbols.cat(id).sv().data(); }
+
 } // namespace hir
+// namespace hir

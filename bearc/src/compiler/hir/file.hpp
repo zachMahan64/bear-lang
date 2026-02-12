@@ -16,17 +16,14 @@
 
 namespace hir {
 
-enum file_load_state : uint8_t {
-    FILE_LOAD_STATE_UNVISITING = 0,
-    FILE_LOAD_STATE_IN_PROGRESS,
-    FILE_LOAD_STATE_DONE
-};
+enum class file_load_state : uint8_t { unvisited = 0, in_progress, done };
 
 struct File {
     using id_type = FileId;
     SymbolId path;
     FileAstId ast_id;
     file_load_state load_state;
+    File(SymbolId path, FileAstId ast_id);
 };
 
 class FileAst {
