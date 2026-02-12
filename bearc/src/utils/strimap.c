@@ -46,7 +46,7 @@ void strimap_destroy(strimap_t* map) {
 }
 
 // inserts integer value index at specified key
-void strimap_insert(strimap_t* map, const char* key, int32_t val) {
+void strimap_emplace(strimap_t* map, const char* key, int32_t val) {
     if ((double)map->size / (double)map->capacity >= STRIMAP_LOAD_FACTOR) {
         strimap_rehash(map, 2 * map->capacity);
     }

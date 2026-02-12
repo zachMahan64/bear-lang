@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_TABLES_HPP
 #define COMPILER_HIR_TABLES_HPP
 
+#include "compiler/hir/arena_str_hash_map.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/file.hpp"
@@ -20,7 +21,6 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "utils/data_arena.hpp"
-#include "utils/strimap.h"
 #include <atomic>
 
 namespace hir {
@@ -51,8 +51,9 @@ class Tables {
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     /// const char* -> hir::SymbolId
-    DataArena symbol_arena;
-    strimap_t str_to_symbol_id_map; // TODO write a c++-style strimap (arena-backed string hash map)
+    DataArena symbol_storage_arena;
+    DataArena symbol_map_arena;
+    StrIdHashMap<SymbolId> str_to_symbol_id_map;
     IdVector<SymbolId> symbol_ids;
     NodeVector<Symbol> symbols;
 
@@ -85,17 +86,17 @@ class Tables {
     std::atomic<uint32_t> semantic_error_count;
     // TODO impl init logic
     Tables(Tables&&) noexcept;
-    Tables& operator=(Tables&&) noexcept = default;
+    Tables& operator=(Tables&&) noexcept = delete;
     Tables();
     void bump_parser_error_count(uint32_t cnt) noexcept;
     uint32_t error_count() const noexcept;
 
     // ----- accessors --------
     [[nodiscard]] FileId emplace_file_from_path_tkn(token_t* tkn);
-    [[nodiscard]] SymbolId emplace_symbol(const char* start, size_t len);
-    [[nodiscard]] SymbolId emplace_symbol_from_token(token_t* tkn);
+    [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
+    [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
     /// emplace a symbol, trimming the "" quotes on the outside when interning
-    [[nodiscard]] SymbolId emplace_str_literal_symbol(token_t* tkn);
+    [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
     [[nodiscard]] FileId emplace_file(SymbolId path);
     FileId emplace_root_file(const char* file_name);
     const char* symbol_id_to_raw_str(SymbolId id);

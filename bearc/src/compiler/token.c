@@ -68,117 +68,117 @@ static void string_to_token_map_init(void) {
         = strimap_create(TOKEN_STRING_TO_TOKEN_MAP_SIZE); // make large to reduce hash conflicts
 
     // bool literals
-    strimap_insert(&string_to_token_map, "true", TOK_BOOL_LIT_TRUE);
-    strimap_insert(&string_to_token_map, "false", TOK_BOOL_LIT_FALSE);
-    strimap_insert(&string_to_token_map, "null", TOK_NULL_LIT);
+    strimap_emplace(&string_to_token_map, "true", TOK_BOOL_LIT_TRUE);
+    strimap_emplace(&string_to_token_map, "false", TOK_BOOL_LIT_FALSE);
+    strimap_emplace(&string_to_token_map, "null", TOK_NULL_LIT);
 
     // file
-    strimap_insert(&string_to_token_map, "import", TOK_IMPORT);
+    strimap_emplace(&string_to_token_map, "import", TOK_IMPORT);
 
     // keywords
-    strimap_insert(&string_to_token_map, "mod", TOK_MODULE);
-    strimap_insert(&string_to_token_map, "use", TOK_USE);
-    strimap_insert(&string_to_token_map, "fn", TOK_FN);
-    strimap_insert(&string_to_token_map, "mt", TOK_MT);
-    strimap_insert(&string_to_token_map, "dt", TOK_DT);
+    strimap_emplace(&string_to_token_map, "mod", TOK_MODULE);
+    strimap_emplace(&string_to_token_map, "use", TOK_USE);
+    strimap_emplace(&string_to_token_map, "fn", TOK_FN);
+    strimap_emplace(&string_to_token_map, "mt", TOK_MT);
+    strimap_emplace(&string_to_token_map, "dt", TOK_DT);
 
-    strimap_insert(&string_to_token_map, "mut", TOK_MUT);
-    strimap_insert(&string_to_token_map, "mark", TOK_MARK);
-    strimap_insert(&string_to_token_map, "contract", TOK_CONTRACT);
-    strimap_insert(&string_to_token_map, "requires", TOK_REQUIRES);
+    strimap_emplace(&string_to_token_map, "mut", TOK_MUT);
+    strimap_emplace(&string_to_token_map, "mark", TOK_MARK);
+    strimap_emplace(&string_to_token_map, "contract", TOK_CONTRACT);
+    strimap_emplace(&string_to_token_map, "requires", TOK_REQUIRES);
 
-    strimap_insert(&string_to_token_map, "i8", TOK_I8);
-    strimap_insert(&string_to_token_map, "u8", TOK_U8);
+    strimap_emplace(&string_to_token_map, "i8", TOK_I8);
+    strimap_emplace(&string_to_token_map, "u8", TOK_U8);
 
-    strimap_insert(&string_to_token_map, "i16", TOK_I16);
-    strimap_insert(&string_to_token_map, "u16", TOK_U16);
+    strimap_emplace(&string_to_token_map, "i16", TOK_I16);
+    strimap_emplace(&string_to_token_map, "u16", TOK_U16);
 
-    strimap_insert(&string_to_token_map, "i32", TOK_I32);
-    strimap_insert(&string_to_token_map, "u32", TOK_U32);
+    strimap_emplace(&string_to_token_map, "i32", TOK_I32);
+    strimap_emplace(&string_to_token_map, "u32", TOK_U32);
 
-    strimap_insert(&string_to_token_map, "i64", TOK_I64);
-    strimap_insert(&string_to_token_map, "u64", TOK_U64);
+    strimap_emplace(&string_to_token_map, "i64", TOK_I64);
+    strimap_emplace(&string_to_token_map, "u64", TOK_U64);
 
-    strimap_insert(&string_to_token_map, "usize", TOK_USIZE);
+    strimap_emplace(&string_to_token_map, "usize", TOK_USIZE);
 
-    strimap_insert(&string_to_token_map, "char", TOK_CHAR);
-    strimap_insert(&string_to_token_map, "f32", TOK_F32);
-    strimap_insert(&string_to_token_map, "f64", TOK_F64);
-    strimap_insert(&string_to_token_map, "str", TOK_STR);
-    strimap_insert(&string_to_token_map, "bool", TOK_BOOL);
-    strimap_insert(&string_to_token_map, "void", TOK_VOID);
-    strimap_insert(&string_to_token_map, "var", TOK_VAR);
-    strimap_insert(&string_to_token_map, "static", TOK_STATIC);
-    strimap_insert(&string_to_token_map, "extern", TOK_EXTERN);
-    strimap_insert(&string_to_token_map, "compt", TOK_COMPT);
-    strimap_insert(&string_to_token_map, "hid", TOK_HID);
-    strimap_insert(&string_to_token_map, "pub", TOK_PUB);
-    strimap_insert(&string_to_token_map, "has", TOK_HAS);
-    strimap_insert(&string_to_token_map, "is", TOK_IS);
-    strimap_insert(&string_to_token_map, "variant", TOK_VARIANT);
+    strimap_emplace(&string_to_token_map, "char", TOK_CHAR);
+    strimap_emplace(&string_to_token_map, "f32", TOK_F32);
+    strimap_emplace(&string_to_token_map, "f64", TOK_F64);
+    strimap_emplace(&string_to_token_map, "str", TOK_STR);
+    strimap_emplace(&string_to_token_map, "bool", TOK_BOOL);
+    strimap_emplace(&string_to_token_map, "void", TOK_VOID);
+    strimap_emplace(&string_to_token_map, "var", TOK_VAR);
+    strimap_emplace(&string_to_token_map, "static", TOK_STATIC);
+    strimap_emplace(&string_to_token_map, "extern", TOK_EXTERN);
+    strimap_emplace(&string_to_token_map, "compt", TOK_COMPT);
+    strimap_emplace(&string_to_token_map, "hid", TOK_HID);
+    strimap_emplace(&string_to_token_map, "pub", TOK_PUB);
+    strimap_emplace(&string_to_token_map, "has", TOK_HAS);
+    strimap_emplace(&string_to_token_map, "is", TOK_IS);
+    strimap_emplace(&string_to_token_map, "variant", TOK_VARIANT);
 
-    strimap_insert(&string_to_token_map, "deftype", TOK_DEFTYPE);
+    strimap_emplace(&string_to_token_map, "deftype", TOK_DEFTYPE);
 
     // control flow
-    strimap_insert(&string_to_token_map, "if", TOK_IF);
-    strimap_insert(&string_to_token_map, "else", TOK_ELSE);
-    strimap_insert(&string_to_token_map, "while", TOK_WHILE);
-    strimap_insert(&string_to_token_map, "for", TOK_FOR);
-    strimap_insert(&string_to_token_map, "return", TOK_RETURN);
-    strimap_insert(&string_to_token_map, "yield", TOK_YIELD);
-    strimap_insert(&string_to_token_map, "break", TOK_BREAK);
-    strimap_insert(&string_to_token_map, "match", TOK_MATCH);
+    strimap_emplace(&string_to_token_map, "if", TOK_IF);
+    strimap_emplace(&string_to_token_map, "else", TOK_ELSE);
+    strimap_emplace(&string_to_token_map, "while", TOK_WHILE);
+    strimap_emplace(&string_to_token_map, "for", TOK_FOR);
+    strimap_emplace(&string_to_token_map, "return", TOK_RETURN);
+    strimap_emplace(&string_to_token_map, "yield", TOK_YIELD);
+    strimap_emplace(&string_to_token_map, "break", TOK_BREAK);
+    strimap_emplace(&string_to_token_map, "match", TOK_MATCH);
 
     // more operators
-    strimap_insert(&string_to_token_map, "sizeof", TOK_SIZEOF);
-    strimap_insert(&string_to_token_map, "alignof", TOK_ALIGNOF);
-    strimap_insert(&string_to_token_map, "typeof", TOK_TYPEOF);
-    strimap_insert(&string_to_token_map, "move", TOK_MOVE);
-    strimap_insert(&string_to_token_map, "as", TOK_AS);
+    strimap_emplace(&string_to_token_map, "sizeof", TOK_SIZEOF);
+    strimap_emplace(&string_to_token_map, "alignof", TOK_ALIGNOF);
+    strimap_emplace(&string_to_token_map, "typeof", TOK_TYPEOF);
+    strimap_emplace(&string_to_token_map, "move", TOK_MOVE);
+    strimap_emplace(&string_to_token_map, "as", TOK_AS);
 
     // structures
-    strimap_insert(&string_to_token_map, "self", TOK_SELF_ID);
-    strimap_insert(&string_to_token_map, "Self", TOK_SELF_TYPE);
-    strimap_insert(&string_to_token_map, "struct", TOK_STRUCT);
+    strimap_emplace(&string_to_token_map, "self", TOK_SELF_ID);
+    strimap_emplace(&string_to_token_map, "Self", TOK_SELF_TYPE);
+    strimap_emplace(&string_to_token_map, "struct", TOK_STRUCT);
 
-    strimap_insert(&string_to_token_map, "union", TOK_UNION);
+    strimap_emplace(&string_to_token_map, "union", TOK_UNION);
 
     // operators / symbols (multi-char tokens)
-    strimap_insert(&string_to_token_map, "->", TOK_RARROW);
-    strimap_insert(&string_to_token_map, "=>", TOK_EQ_ARROW);
-    strimap_insert(&string_to_token_map, "..", TOK_SCOPE_RES);
-    strimap_insert(&string_to_token_map, "::", TOK_GENERIC_SEP);
-    strimap_insert(&string_to_token_map, "<-", TOK_ASSIGN_MOVE);
-    strimap_insert(&string_to_token_map, "<<-", TOK_STREAM);
-    strimap_insert(&string_to_token_map, "++", TOK_INC);
-    strimap_insert(&string_to_token_map, "--", TOK_DEC);
-    strimap_insert(&string_to_token_map, "<<", TOK_LSH);
-    strimap_insert(&string_to_token_map, ">>", TOK_RSHL);
-    strimap_insert(&string_to_token_map, ">>>", TOK_RSHA);
-    strimap_insert(&string_to_token_map, "||", TOK_BOOL_OR);
-    strimap_insert(&string_to_token_map, "&&", TOK_BOOL_AND);
-    strimap_insert(&string_to_token_map, ">=", TOK_GE);
-    strimap_insert(&string_to_token_map, "<=", TOK_LE);
-    strimap_insert(&string_to_token_map, "==", TOK_BOOL_EQ);
-    strimap_insert(&string_to_token_map, "!=", TOK_NE);
+    strimap_emplace(&string_to_token_map, "->", TOK_RARROW);
+    strimap_emplace(&string_to_token_map, "=>", TOK_EQ_ARROW);
+    strimap_emplace(&string_to_token_map, "..", TOK_SCOPE_RES);
+    strimap_emplace(&string_to_token_map, "::", TOK_GENERIC_SEP);
+    strimap_emplace(&string_to_token_map, "<-", TOK_ASSIGN_MOVE);
+    strimap_emplace(&string_to_token_map, "<<-", TOK_STREAM);
+    strimap_emplace(&string_to_token_map, "++", TOK_INC);
+    strimap_emplace(&string_to_token_map, "--", TOK_DEC);
+    strimap_emplace(&string_to_token_map, "<<", TOK_LSH);
+    strimap_emplace(&string_to_token_map, ">>", TOK_RSHL);
+    strimap_emplace(&string_to_token_map, ">>>", TOK_RSHA);
+    strimap_emplace(&string_to_token_map, "||", TOK_BOOL_OR);
+    strimap_emplace(&string_to_token_map, "&&", TOK_BOOL_AND);
+    strimap_emplace(&string_to_token_map, ">=", TOK_GE);
+    strimap_emplace(&string_to_token_map, "<=", TOK_LE);
+    strimap_emplace(&string_to_token_map, "==", TOK_BOOL_EQ);
+    strimap_emplace(&string_to_token_map, "!=", TOK_NE);
 
     // range stuff
-    strimap_insert(&string_to_token_map, "...", TOK_ELLIPSE);
-    strimap_insert(&string_to_token_map, "...=", TOK_ELLIPSE_EQ);
-    strimap_insert(&string_to_token_map, "in", TOK_IN);
+    strimap_emplace(&string_to_token_map, "...", TOK_ELLIPSE);
+    strimap_emplace(&string_to_token_map, "...=", TOK_ELLIPSE_EQ);
+    strimap_emplace(&string_to_token_map, "in", TOK_IN);
 
     // compound assignment operators
-    strimap_insert(&string_to_token_map, "+=", TOK_ASSIGN_PLUS_EQ);
-    strimap_insert(&string_to_token_map, "-=", TOK_ASSIGN_MINUS_EQ);
-    strimap_insert(&string_to_token_map, "*=", TOK_ASSIGN_MULT_EQ);
-    strimap_insert(&string_to_token_map, "/=", TOK_ASSIGN_DIV_EQ);
-    strimap_insert(&string_to_token_map, "%=", TOK_ASSIGN_MOD_EQ);
-    strimap_insert(&string_to_token_map, "&=", TOK_ASSIGN_AND_EQ);
-    strimap_insert(&string_to_token_map, "|=", TOK_ASSIGN_OR_EQ);
-    strimap_insert(&string_to_token_map, "^=", TOK_ASSIGN_XOR_EQ);
-    strimap_insert(&string_to_token_map, "<<=", TOK_ASSIGN_LSH_EQ);
-    strimap_insert(&string_to_token_map, ">>=", TOK_ASSIGN_RSHL_EQ);
-    strimap_insert(&string_to_token_map, ">>>=", TOK_ASSIGN_RSHA_EQ);
+    strimap_emplace(&string_to_token_map, "+=", TOK_ASSIGN_PLUS_EQ);
+    strimap_emplace(&string_to_token_map, "-=", TOK_ASSIGN_MINUS_EQ);
+    strimap_emplace(&string_to_token_map, "*=", TOK_ASSIGN_MULT_EQ);
+    strimap_emplace(&string_to_token_map, "/=", TOK_ASSIGN_DIV_EQ);
+    strimap_emplace(&string_to_token_map, "%=", TOK_ASSIGN_MOD_EQ);
+    strimap_emplace(&string_to_token_map, "&=", TOK_ASSIGN_AND_EQ);
+    strimap_emplace(&string_to_token_map, "|=", TOK_ASSIGN_OR_EQ);
+    strimap_emplace(&string_to_token_map, "^=", TOK_ASSIGN_XOR_EQ);
+    strimap_emplace(&string_to_token_map, "<<=", TOK_ASSIGN_LSH_EQ);
+    strimap_emplace(&string_to_token_map, ">>=", TOK_ASSIGN_RSHL_EQ);
+    strimap_emplace(&string_to_token_map, ">>>=", TOK_ASSIGN_RSHA_EQ);
 }
 
 const strimap_t* get_string_to_token_strimap(void) {

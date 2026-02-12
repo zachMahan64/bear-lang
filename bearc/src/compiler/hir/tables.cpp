@@ -32,7 +32,7 @@ static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 // TODO: make a non default-ctor that actually calculates estimate capacities necessary (find these
 // number empirically then apply here)
 Tables::Tables()
-    : symbol_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
+    : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
       file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
@@ -44,11 +44,12 @@ Tables::Tables()
       def_used{DEFAULT_DEF_VEC_CAP}, type_vec{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_VEC_CAP},
       generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
-      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP} {}
+      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
+      str_to_symbol_id_map{symbol_map_arena} {}
 
 // TODO obviously wrong temporary logic
 Tables::Tables(Tables&& other) noexcept
-    : symbol_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
+    : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
       file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
@@ -60,7 +61,8 @@ Tables::Tables(Tables&& other) noexcept
       def_used{DEFAULT_DEF_VEC_CAP}, type_vec{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_VEC_CAP},
       generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
-      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP} {
+      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
+      str_to_symbol_id_map{symbol_map_arena} {
     this->parse_error_count.store(other.parse_error_count.load(std::memory_order_relaxed));
     this->semantic_error_count.store(other.semantic_error_count.load(std::memory_order_relaxed));
 }
@@ -74,28 +76,36 @@ uint32_t Tables::error_count() const noexcept {
 }
 
 FileId Tables::emplace_file_from_path_tkn(token_t* tkn) {
-    return emplace_file(emplace_str_literal_symbol(tkn));
+    return emplace_file(get_symbol_id_for_str_lit_token(tkn));
 }
 
-SymbolId Tables::emplace_symbol(const char* start, size_t len) {
-    /// this->str_to_symbol_id_map ...; TODO ADD TO A HASHMAP ONCE IMPLEMENTED, THIS WILL ALSO GUARD
-    /// AGAINST DUPLICATES
-    char* sym_data = this->symbol_arena.alloc_as<char*>(len + 1); // +1 for null-term
+SymbolId Tables::get_symbol_id(const char* start, size_t len) {
+    OptId<SymbolId> maybe_symbol = str_to_symbol_id_map.atn(start, len);
+    if (maybe_symbol.has_value()) {
+        return maybe_symbol.as_id();
+    }
+    char* sym_data = this->symbol_storage_arena.alloc_as<char*>(len + 1); // +1 for null-term
     memcpy(sym_data, start, len);
     sym_data[len] = '\0'; // null-term
-    return this->symbols.emplace_and_get_id(std::string_view{sym_data, len});
+
+    // make sym
+    SymbolId sym_id = this->symbols.emplace_and_get_id(std::string_view{sym_data, len});
+    // register sym into map for future fast and cosistent access
+    str_to_symbol_id_map.emplace(sym_data, sym_id);
+    // give sym_id now that it's fully interned
+    return sym_id;
 }
-SymbolId Tables::emplace_symbol_from_token(token_t* tkn) {
+SymbolId Tables::get_symbol_id_for_tkn(token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER);
-    return emplace_symbol(tkn->start, tkn->len);
+    return get_symbol_id(tkn->start, tkn->len);
 }
-SymbolId Tables::emplace_str_literal_symbol(token_t* tkn) {
+SymbolId Tables::get_symbol_id_for_str_lit_token(token_t* tkn) {
     assert(tkn->type == TOK_STR_LIT);
-    return emplace_symbol(tkn->start + 1, tkn->len - 2); // trims outer quotes
+    return get_symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes
 }
 
 FileId Tables::emplace_root_file(const char* file_name) {
-    SymbolId path_symbol = emplace_symbol(file_name, strlen(file_name));
+    SymbolId path_symbol = get_symbol_id(file_name, strlen(file_name));
     FileAstId ast_id = this->file_asts.emplace_and_get_id(file_name);
     return this->files.emplace_and_get_id(path_symbol, ast_id);
 }

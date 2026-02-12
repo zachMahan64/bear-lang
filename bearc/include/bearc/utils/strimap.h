@@ -54,7 +54,8 @@ strimap_t strimap_create_from_arena(size_t capacity, arena_t arena);
 void strimap_destroy(strimap_t* map);
 
 /// insert an elem {keu, value} destructively/will override anything at the location
-void strimap_insert(strimap_t* map, const char* key, int32_t val);
+void strimap_emplace(strimap_t* map, const char* key, int32_t val);
+
 /// remove an elem at the provided key
 void strimap_remove(strimap_t* map, const char* key);
 /// rehash the map with a different capacity, does nothing if the capacity is lower than the current
