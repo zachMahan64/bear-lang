@@ -13,7 +13,6 @@
 #include "compiler/hir/tables.hpp"
 #include "utils/ansi_codes.h"
 #include <cstddef>
-#include <iostream>
 #include <stdio.h>
 
 extern "C" {
@@ -28,6 +27,9 @@ namespace hir {
 namespace builder {
 
 void try_print_info(const FileAst& file_ast, const bearc_args_t* args) {
+    if (!file_ast.root()) {
+        return;
+    }
     // --token-table
     if (args->flags[CLI_FLAG_TOKEN_TABLE]) {
         file_ast.print_token_table();
@@ -48,8 +50,12 @@ void try_print_info(const FileAst& file_ast, const bearc_args_t* args) {
 // TODO parallelize and guard against infinite includes
 void explore_imports(Tables& tables, FileId file_id) {
     const FileAst& root_ast = tables.file_asts.at(tables.files.at(file_id).ast_id);
-    for (size_t i = 0; i < root_ast.root()->stmt.file.stmts.len; i++) {
-        ast_stmt* curr = root_ast.root()->stmt.file.stmts.start[i];
+    const ast_stmt* root = root_ast.root();
+    if (!root) {
+        return;
+    }
+    for (size_t i = 0; i < root->stmt.file.stmts.len; i++) {
+        ast_stmt* curr = root->stmt.file.stmts.start[i];
         if (curr->type == AST_STMT_IMPORT) {
             FileId file = tables.emplace_file_from_path_tkn(curr->stmt.import.file_path);
             explore_imports(tables, file);
