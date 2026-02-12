@@ -47,7 +47,9 @@ void try_print_info(const FileAst& file_ast, const bearc_args_t* args) {
     }
 }
 
-// TODO parallelize and guard against infinite includes
+// TODO parallelize and guard against infinite includes, track file dependencies (forward and
+// reverse), track erroors, also probably move all this logic into hir::Tables itself besides the
+// try_print_info and terminal messages n stuff
 void explore_imports(Tables& tables, FileId file_id) {
     const FileAst& root_ast = tables.file_asts.at(tables.files.at(file_id).ast_id);
     const ast_stmt* root = root_ast.root();

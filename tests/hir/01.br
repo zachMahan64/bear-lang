@@ -1,3 +1,4 @@
+import "tests/hir/02.br";
 
 mod foo {
     compt i32 BAR = 5;

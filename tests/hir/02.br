@@ -1,0 +1,5 @@
+compt i32 TRIVIAL = 42;
+
+fn thingie_mabob() -> i32 {
+    return TRIVIAL;
+}
