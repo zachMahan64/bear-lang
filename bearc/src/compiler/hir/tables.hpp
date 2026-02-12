@@ -63,9 +63,10 @@ class Tables {
     NodeVector<Def> defs;
 
     /// indicated whether this node has been visited during top-level traversal/resolution; this
-    /// flag helps prevent illegal circular dependencies
+    /// flag helps prevent illegal circular dependencies, TODO turn this into a single enum map
     IdVecMap<DefId, uint8_t> def_resolved;          // index with DefId
     IdVecMap<DefId, uint8_t> def_top_level_visited; // index with DefId
+    /// tracks whether a defintion is used/unused (for tracking dead definitions)
     IdVecMap<DefId, uint8_t> def_used;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
