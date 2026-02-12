@@ -92,14 +92,15 @@ class Tables {
     uint32_t error_count() const noexcept;
 
     // ----- accessors --------
-    [[nodiscard]] FileId emplace_file_from_path_tkn(token_t* tkn);
+    [[nodiscard]] FileId get_file_from_path_tkn(token_t* tkn);
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
     /// emplace a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
-    [[nodiscard]] FileId emplace_file(SymbolId path);
+    [[nodiscard]] FileId get_file(SymbolId path);
     FileId emplace_root_file(const char* file_name);
     const char* symbol_id_to_raw_str(SymbolId id);
+    void explore_imports(FileId file_id);
 
   private:
     FileAstId emplace_ast(const char* file_name);

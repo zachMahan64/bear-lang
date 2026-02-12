@@ -22,7 +22,7 @@ struct File {
     using id_type = FileId;
     SymbolId path;
     FileAstId ast_id;
-    file_load_state load_state;
+    file_load_state load_state = file_load_state::unvisited;
     File(SymbolId path, FileAstId ast_id);
 };
 

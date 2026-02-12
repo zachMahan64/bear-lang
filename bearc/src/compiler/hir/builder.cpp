@@ -8,7 +8,6 @@
 
 #include "compiler/hir/builder.hpp"
 #include "cli/args.h"
-#include "compiler/ast/stmt.h"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/tables.hpp"
 #include "utils/ansi_codes.h"
@@ -47,30 +46,11 @@ void try_print_info(const FileAst& file_ast, const bearc_args_t* args) {
     }
 }
 
-// TODO parallelize and guard against infinite includes, track file dependencies (forward and
-// reverse), track erroors, also probably move all this logic into hir::Tables itself besides the
-// try_print_info and terminal messages n stuff
-void explore_imports(Tables& tables, FileId file_id) {
-    const FileAst& root_ast = tables.file_asts.at(tables.files.at(file_id).ast_id);
-    const ast_stmt* root = root_ast.root();
-    if (!root) {
-        return;
-    }
-    for (size_t i = 0; i < root->stmt.file.stmts.len; i++) {
-        ast_stmt* curr = root->stmt.file.stmts.start[i];
-        if (curr->type == AST_STMT_IMPORT) {
-            FileId file = tables.emplace_file_from_path_tkn(curr->stmt.import.file_path);
-            explore_imports(tables, file);
-        }
-    }
-}
-
 /// creates an HIR database from a file_name
 Tables from_root_file(const char* root_file_path, const bearc_args_t* args) {
     Tables tables{};
     FileId root_id = tables.emplace_root_file(root_file_path);
-
-    explore_imports(tables, root_id);
+    tables.explore_imports(root_id);
 
     for (const auto f : tables.files) {
         FileAst& ast = tables.file_asts.at(f.ast_id);

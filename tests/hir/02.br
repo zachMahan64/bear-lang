@@ -1,3 +1,5 @@
+import "tests/hir/00.br"; // circular import
+
 compt i32 TRIVIAL = 42;
 
 fn thingie_mabob() -> i32 {

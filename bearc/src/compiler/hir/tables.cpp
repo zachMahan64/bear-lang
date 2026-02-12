@@ -7,6 +7,8 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/tables.hpp"
+#include "compiler/ast/stmt.h"
+#include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/token.h"
 #include <atomic>
@@ -75,8 +77,8 @@ uint32_t Tables::error_count() const noexcept {
     return this->parse_error_count + this->semantic_error_count;
 }
 
-FileId Tables::emplace_file_from_path_tkn(token_t* tkn) {
-    return emplace_file(get_symbol_id_for_str_lit_token(tkn));
+FileId Tables::get_file_from_path_tkn(token_t* tkn) {
+    return get_file(get_symbol_id_for_str_lit_token(tkn));
 }
 
 SymbolId Tables::get_symbol_id(const char* start, size_t len) {
@@ -110,7 +112,11 @@ FileId Tables::emplace_root_file(const char* file_name) {
     return this->files.emplace_and_get_id(path_symbol, ast_id);
 }
 
-FileId Tables::emplace_file(SymbolId path_symbol) {
+FileId Tables::get_file(SymbolId path_symbol) {
+    OptId<FileId> maybe_file_id = symbol_id_to_file_id_map.at(path_symbol);
+    if (maybe_file_id.has_value()) {
+        return maybe_file_id.as_id();
+    }
     FileAstId ast_id = this->file_asts.emplace_and_get_id(symbol_id_to_raw_str(path_symbol));
     return this->files.emplace_and_get_id(path_symbol, ast_id);
 }
@@ -121,5 +127,28 @@ FileAstId Tables::emplace_ast(const char* file_name) {
 
 const char* Tables::symbol_id_to_raw_str(SymbolId id) { return this->symbols.cat(id).sv().data(); }
 
+// TODO parallelize and guard against infinite includes, track file dependencies (forward and
+// reverse), track erroors, also probably move all this logic into hir::Tables itself besides the
+// try_print_info and terminal messages n stuff
+void Tables::explore_imports(FileId file_id) {
+    const FileAst& root_ast = this->file_asts.at(this->files.at(file_id).ast_id);
+    const ast_stmt* root = root_ast.root();
+    if (!root) {
+        return;
+    }
+    for (size_t i = 0; i < root->stmt.file.stmts.len; i++) {
+        ast_stmt* curr = root->stmt.file.stmts.start[i];
+        if (curr->type == AST_STMT_IMPORT) {
+            FileId file = this->get_file_from_path_tkn(curr->stmt.import.file_path);
+            // guard circularity
+            if (files.at(file).load_state != file_load_state::unvisited) {
+                continue;
+            }
+            files.at(file).load_state = file_load_state::in_progress;
+            this->explore_imports(file);
+            files.at(file).load_state = file_load_state::done;
+        }
+    }
+}
+
 } // namespace hir
-// namespace hir
