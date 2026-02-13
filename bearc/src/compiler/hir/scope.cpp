@@ -7,9 +7,9 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/scope.hpp"
+#include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/indexing.hpp"
-#include "compiler/hir/tables.hpp"
 #include "utils/data_arena.hpp"
 #include <assert.h>
 #include <stddef.h>
@@ -31,14 +31,14 @@ Scope::Scope(ScopeId parent, DataArena& arena, bool is_top_level)
       namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(is_top_level) {}
 
-static inline ScopeLookUpResult hir_scope_look_up(const Tables& tables, ScopeId local_scope_id,
+static inline ScopeLookUpResult hir_scope_look_up(const Context& context, ScopeId local_scope_id,
                                                   SymbolId symbol, scope_kind kind) {
 
     if (!local_scope_id.val()) {
         return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
     }
     // init curr scope local scope
-    const Scope* local_scope = &tables.scopes.cat(local_scope_id);
+    const Scope* local_scope = &context.scopes.cat(local_scope_id);
     const Scope* curr_scope = local_scope;
     ScopeId curr_scope_id = local_scope_id;
     // begin search logic
@@ -47,7 +47,7 @@ static inline ScopeLookUpResult hir_scope_look_up(const Tables& tables, ScopeId 
 
     // start walking scopes from local thru parents
     while (!def.val()) {
-        curr_scope = &tables.scopes.cat(curr_scope_id);
+        curr_scope = &context.scopes.cat(curr_scope_id);
         switch (kind) {
         case scope_kind::NAMESPACE:
             def = curr_scope->namespaces.at(symbol).as_id();
@@ -78,33 +78,34 @@ static inline ScopeLookUpResult hir_scope_look_up(const Tables& tables, ScopeId 
     return ScopeLookUpResult{def, status};
 }
 
-ScopeLookUpResult Scope::look_up_namespace(const Tables& tables, ScopeId local_scope,
+ScopeLookUpResult Scope::look_up_namespace(const Context& context, ScopeId local_scope,
                                            SymbolId symbol) {
-    return hir_scope_look_up(tables, local_scope, symbol, scope_kind::NAMESPACE);
+    return hir_scope_look_up(context, local_scope, symbol, scope_kind::NAMESPACE);
 }
-ScopeLookUpResult Scope::look_up_variable(const Tables& tables, ScopeId local_scope,
+ScopeLookUpResult Scope::look_up_variable(const Context& context, ScopeId local_scope,
                                           SymbolId symbol) {
-    return hir_scope_look_up(tables, local_scope, symbol, scope_kind::VARIABLE);
+    return hir_scope_look_up(context, local_scope, symbol, scope_kind::VARIABLE);
 }
-ScopeLookUpResult Scope::look_up_function(const Tables& tables, ScopeId local_scope,
+ScopeLookUpResult Scope::look_up_function(const Context& context, ScopeId local_scope,
                                           SymbolId symbol) {
 
-    return hir_scope_look_up(tables, local_scope, symbol, scope_kind::FUNCTION);
+    return hir_scope_look_up(context, local_scope, symbol, scope_kind::FUNCTION);
 }
-ScopeLookUpResult Scope::look_up_type(const Tables& tables, ScopeId local_scope, SymbolId symbol) {
-    return hir_scope_look_up(tables, local_scope, symbol, scope_kind::TYPE);
+ScopeLookUpResult Scope::look_up_type(const Context& context, ScopeId local_scope,
+                                      SymbolId symbol) {
+    return hir_scope_look_up(context, local_scope, symbol, scope_kind::TYPE);
 }
 
 // ------------------ ANON SCOPE IMPL ----------------------
 
-static inline ScopeLookUpResult hir_scope_anon_look_up(const Tables& tables,
+static inline ScopeLookUpResult hir_scope_anon_look_up(const Context& context,
                                                        ScopeAnonId local_scope_id, SymbolId symbol,
                                                        scope_kind kind) {
     if (!local_scope_id.val()) {
         return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
     }
     // init curr scope local scope
-    const ScopeAnon* local_scope_anon = &tables.scope_anons.cat(local_scope_id);
+    const ScopeAnon* local_scope_anon = &context.scope_anons.cat(local_scope_id);
     const ScopeAnon* curr_scope_anon = local_scope_anon;
     const Scope* curr_scope_named = NULL;
     ScopeAnonId curr_scope_anon_id = local_scope_id;
@@ -124,10 +125,10 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const Tables& tables,
 
             const DefId def_id = vec.at(i);
 
-            // TODO replace with encapsulated tables logic once the tables impl is written
-            const Def& used_def = tables.defs.cat(def_id);
+            // TODO replace with encapsulated context logic once the tables impl is written
+            const Def& used_def = context.defs.cat(def_id);
             const ScopeLookUpResult used_res = hir_scope_look_up(
-                tables, std::get<DefModule>(used_def.value).scope, symbol, kind);
+                context, std::get<DefModule>(used_def.value).scope, symbol, kind);
 
             if (used_res.status == hir_scope_look_up_result_status::OKAY) {
                 if (def_from_used_modules.val()) {
@@ -145,7 +146,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const Tables& tables,
         assert(!(curr_scope_anon_id.val() && curr_scope_named_id.val()));
 
         if (curr_scope_anon_id.val()) {
-            curr_scope_anon = &tables.scope_anons.cat(curr_scope_anon_id);
+            curr_scope_anon = &context.scope_anons.cat(curr_scope_anon_id);
             switch (kind) {
             case scope_kind::NAMESPACE:
             case scope_kind::FUNCTION:
@@ -173,7 +174,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const Tables& tables,
             curr_scope_named_id = parent_scope_named_id;
         } else {
             assert(curr_scope_named_id.val());
-            curr_scope_named = &tables.scopes.cat(curr_scope_named_id);
+            curr_scope_named = &context.scopes.cat(curr_scope_named_id);
             switch (kind) {
             case scope_kind::NAMESPACE:
                 result_def = curr_scope_named->namespaces.at(symbol).as_id();
@@ -216,28 +217,28 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const Tables& tables,
     return ScopeLookUpResult{result_def, status};
 }
 
-ScopeLookUpResult hir_scope_anon_look_up_variable(Tables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult hir_scope_anon_look_up_variable(Context& context, ScopeAnonId local_scope,
                                                   SymbolId symbol) {
 
-    return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::VARIABLE);
+    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::VARIABLE);
 }
 
-ScopeLookUpResult hir_scope_anon_look_up_type(Tables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult hir_scope_anon_look_up_type(Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
-    return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::TYPE);
+    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::TYPE);
 }
 
-ScopeLookUpResult ScopeAnon::look_up_variable(const Tables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult ScopeAnon::look_up_variable(const Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
-    return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::VARIABLE);
+    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::VARIABLE);
 }
 
-ScopeLookUpResult ScopeAnon::look_up_type(const Tables& tables, ScopeAnonId local_scope,
+ScopeLookUpResult ScopeAnon::look_up_type(const Context& context, ScopeAnonId local_scope,
                                           SymbolId symbol) {
 
-    return hir_scope_anon_look_up(tables, local_scope, symbol, scope_kind::TYPE);
+    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::TYPE);
 }
 
 // ------------------ insert helpers ----------------------

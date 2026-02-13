@@ -17,7 +17,7 @@
 
 namespace hir {
 
-struct Tables;
+struct Context;
 
 using ScopeIdMap = IdHashMap<SymbolId, DefId>;
 
@@ -63,13 +63,13 @@ struct Scope {
     bool is_top_level() const { return top_level; };
     Scope(ScopeId parent, DataArena& arena);
     Scope(ScopeId parent, DataArena& arena, bool is_top_level);
-    static ScopeLookUpResult look_up_namespace(const Tables& tables, ScopeId local_scope,
+    static ScopeLookUpResult look_up_namespace(const Context& context, ScopeId local_scope,
                                                SymbolId symbol);
-    static ScopeLookUpResult look_up_variable(const Tables& tables, ScopeId local_scope,
+    static ScopeLookUpResult look_up_variable(const Context& context, ScopeId local_scope,
                                               SymbolId symbol);
-    static ScopeLookUpResult look_up_function(const Tables& tables, ScopeId local_scope,
+    static ScopeLookUpResult look_up_function(const Context& context, ScopeId local_scope,
                                               SymbolId symbol);
-    static ScopeLookUpResult look_up_type(const Tables& tables, ScopeId local_scope,
+    static ScopeLookUpResult look_up_type(const Context& context, ScopeId local_scope,
                                           SymbolId symbol);
 
     void insert_namespace(SymbolId symbol, DefId def);
@@ -106,9 +106,9 @@ struct ScopeAnon {
   public:
     ScopeAnon(ScopeId named_parent, DataArena& arena);
     ScopeAnon(ScopeAnonId anon_parent, DataArena& arena);
-    static ScopeLookUpResult look_up_variable(const Tables& tables, ScopeAnonId local_scope,
+    static ScopeLookUpResult look_up_variable(const Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol);
-    static ScopeLookUpResult look_up_type(const Tables& tables, ScopeAnonId local_scope,
+    static ScopeLookUpResult look_up_type(const Context& context, ScopeAnonId local_scope,
                                           SymbolId symbol);
 
     /// adds a used module to non-top-level anonymous scope

@@ -6,16 +6,16 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#include "compiler/hir/tables.hpp"
+#include "compiler/hir/context.hpp"
+#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/token.h"
-#include "utils/log.hpp"
+#include "utils/ansi_codes.h"
 #include "llvm/ADT/SmallVector.h"
 #include <atomic>
 #include <cstring>
-#include <iostream>
 #include <stddef.h>
 #include <string_view>
 namespace hir {
@@ -37,7 +37,7 @@ static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 // TODO: make a non default-ctor that actually calculates estimate capacities necessary (find these
 // number empirically then apply here)
-Tables::Tables()
+Context::Context(const bearc_args_t* args)
     : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
@@ -51,45 +51,35 @@ Tables::Tables()
       generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
-      str_to_symbol_id_map{symbol_map_arena} {}
+      str_to_symbol_id_map{symbol_map_arena}, args{args} {
+    FileId root_id = provide_root_file(args->input_file_name);
 
-// TODO obviously wrong temporary logic
-Tables::Tables(Tables&& other) noexcept
-    : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
-      symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
-      scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
-      file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
-      symbols{DEFAULT_SYMBOL_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_VEC_CAP},
-      file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees_vec{DEFAULT_FILE_VEC_CAP},
-      importee_to_importers_vec{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
-      exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_VEC_CAP},
-      def_resolved{DEFAULT_DEF_VEC_CAP}, def_top_level_visited{DEFAULT_DEF_VEC_CAP},
-      def_used{DEFAULT_DEF_VEC_CAP}, type_vec{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_VEC_CAP},
-      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
-      generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
-      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
-      str_to_symbol_id_map{symbol_map_arena} {
-    this->parse_error_count.store(other.parse_error_count.load(std::memory_order_relaxed));
-    this->semantic_error_count.store(other.semantic_error_count.load(std::memory_order_relaxed));
+    // search imports to build all asts
+    this->explore_imports(root_id);
+    // tally parser errors
+    for (const auto f : files) {
+        const FileAst& ast = file_asts.cat(f.ast_id);
+        this->bump_parser_error_count(ast.error_count());
+    }
 }
 
-void Tables::bump_parser_error_count(uint32_t cnt) noexcept {
+void Context::bump_parser_error_count(uint32_t cnt) noexcept {
     parse_error_count.fetch_add(cnt, std::memory_order_relaxed);
 }
 
-uint32_t Tables::error_count() const noexcept {
-    return this->parse_error_count + this->semantic_error_count;
+int Context::error_count() const noexcept {
+    return static_cast<int>(this->parse_error_count + this->semantic_error_count);
 }
 
-FileId Tables::get_file_from_path_tkn(token_t* tkn) {
+FileId Context::get_file_from_path_tkn(token_t* tkn) {
     return get_file(get_symbol_id_for_str_lit_token(tkn));
 }
 
-SymbolId Tables::get_symbol_id(std::string_view str) {
+SymbolId Context::get_symbol_id(std::string_view str) {
     return get_symbol_id(str.data(), str.length());
 }
 
-SymbolId Tables::get_symbol_id(const char* start, size_t len) {
+SymbolId Context::get_symbol_id(const char* start, size_t len) {
     OptId<SymbolId> maybe_symbol = str_to_symbol_id_map.atn(start, len);
     if (maybe_symbol.has_value()) {
         return maybe_symbol.as_id();
@@ -105,23 +95,23 @@ SymbolId Tables::get_symbol_id(const char* start, size_t len) {
     // give sym_id now that it's fully interned
     return sym_id;
 }
-SymbolId Tables::get_symbol_id_for_tkn(token_t* tkn) {
+SymbolId Context::get_symbol_id_for_tkn(token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER);
     return get_symbol_id(tkn->start, tkn->len);
 }
-SymbolId Tables::get_symbol_id_for_str_lit_token(token_t* tkn) {
+SymbolId Context::get_symbol_id_for_str_lit_token(token_t* tkn) {
     assert(tkn->type == TOK_STR_LIT);
     return get_symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes
 }
 
-FileId Tables::provide_root_file(const char* file_name) {
+FileId Context::provide_root_file(const char* file_name) {
     SymbolId path_symbol = get_symbol_id(file_name, strlen(file_name));
     FileId file_id = get_file(path_symbol);
     files.at(file_id).load_state = file_import_state::done;
     return file_id;
 }
 
-FileId Tables::get_file(SymbolId path_symbol) {
+FileId Context::get_file(SymbolId path_symbol) {
     // check if file has already been requested
     OptId<FileId> maybe_file_id = symbol_id_to_file_id_map.at(path_symbol);
     if (maybe_file_id.has_value()) {
@@ -137,14 +127,16 @@ FileId Tables::get_file(SymbolId path_symbol) {
     return file_id;
 }
 
-FileAstId Tables::emplace_ast(const char* file_name) {
+FileAstId Context::emplace_ast(const char* file_name) {
     return this->file_asts.emplace_and_get_id(file_name);
 }
 
-const char* Tables::symbol_id_to_cstr(SymbolId id) { return this->symbols.cat(id).sv().data(); }
+const char* Context::symbol_id_to_cstr(SymbolId id) const {
+    return this->symbols.cat(id).sv().data();
+}
 
 // TODO parallelize; track file dependencies (forward and reverse)
-void Tables::explore_imports(FileId importer_file_id) {
+void Context::explore_imports(FileId importer_file_id) {
     const FileAst& root_ast = this->file_asts.at(this->files.at(importer_file_id).ast_id);
     const ast_stmt* root = root_ast.root();
     if (!root) {
@@ -169,6 +161,23 @@ void Tables::explore_imports(FileId importer_file_id) {
         }
     }
     importer_to_importees_vec.at(importer_file_id) = file_ids.freeze_small_vec(importees);
+}
+
+void Context::try_print_info() const {
+    // go thru each file ast to print info
+    for (const auto f : files) {
+        const FileAst& ast = file_asts.cat(f.ast_id);
+        ast.try_print_info(args);
+    }
+    // std::cout << tables.files.size() << '\n';
+    if (this->error_count() != 0) {
+        if (!args->flags[CLI_FLAG_SILENT]) {
+            printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(),
+                   symbol_id_to_cstr(files.cat(FileId{1}).path), ansi_reset());
+        }
+    }
+    // release printer's internal state
+    pretty_printer_reset();
 }
 
 } // namespace hir

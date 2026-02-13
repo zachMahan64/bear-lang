@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_TABLES_HPP
 #define COMPILER_HIR_TABLES_HPP
 
+#include "cli/args.h"
 #include "compiler/hir/arena_str_hash_map.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/exec.hpp"
@@ -29,7 +30,7 @@ namespace hir {
  * primary data container for hir structures
  * - this model allows for IDs and ID slices with no pointers
  */
-class Tables {
+class Context {
   public:
     // containers:
     // ~~~~~~~~~~~~~~~~~ file stuff ~~~~~~~~~~~~~~~~~~~
@@ -83,23 +84,27 @@ class Tables {
     // error tracking
     std::atomic<uint32_t> parse_error_count;
     std::atomic<uint32_t> semantic_error_count;
-    // TODO impl init logic
-    Tables(Tables&&) noexcept;
-    Tables& operator=(Tables&&) noexcept = delete;
-    Tables();
+    // args
+    const bearc_args_t* const args;
+    Context(const bearc_args_t* args);
     void bump_parser_error_count(uint32_t cnt) noexcept;
-    uint32_t error_count() const noexcept;
+    int error_count() const noexcept;
 
     // ----- accessors --------
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
-    // TODO build this into a ctor
-    FileId provide_root_file(const char* file_name);
-    const char* symbol_id_to_cstr(SymbolId id);
+
+    // ----- info viewing ------
+    const char* symbol_id_to_cstr(SymbolId id) const;
+
+    // ------ transformers -----
     void explore_imports(FileId file_id);
+    /// prints info based on cli-flags
+    void try_print_info() const;
 
   private:
+    FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is
     /// wrapped by file handling logic and should thus not be used directly anywhere else
     FileAstId emplace_ast(const char* file_name);

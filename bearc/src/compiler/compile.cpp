@@ -6,18 +6,17 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_HIR_BUILDER_H
-#define COMPILER_HIR_BUILDER_H
-
+#include "compiler/compile.h"
 #include "cli/args.h"
-#include "compiler/hir/tables.hpp"
-namespace hir {
-namespace builder {
+#include "compiler/hir/context.hpp"
+#include <stddef.h>
 
-/// creates an HIR database from a file_name
-Tables from_root_file(const char* root_file_path, const bearc_args_t* args);
+extern "C" {
 
-} // namespace builder
-} // namespace hir
-
-#endif // COMPILER_HIR_BUILDER_H
+int compile_file(const bearc_args_t* args) {
+    int code = 0; // return error code if hit error
+    hir::Context context{args};
+    context.try_print_info();
+    return context.error_count();
+}
+} // extern "C"

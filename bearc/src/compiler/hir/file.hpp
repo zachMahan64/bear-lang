@@ -8,6 +8,7 @@
 
 #ifndef COMPILER_HIR_FILE_HPP
 #define COMPILER_HIR_FILE_HPP
+#include "cli/args.h"
 #include "compiler/ast/ast.h"
 #include "compiler/ast/stmt_slice.h"
 #include "compiler/hir/indexing.hpp"
@@ -40,6 +41,7 @@ class FileAst {
     size_t error_count() const;
     FileAst(const char* file_name);
     ~FileAst();
+    void try_print_info(const bearc_args_t* args) const;
 };
 
 } // namespace hir

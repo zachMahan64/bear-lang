@@ -24,8 +24,10 @@ static void printer_try_init(void) {
 }
 
 void pretty_printer_reset(void) {
-    initialized = false;
-    string_destroy(&indent_str);
+    if (initialized) {
+        initialized = false;
+        string_destroy(&indent_str);
+    }
 }
 
 static void printer_do_indent(void) { string_push_cstr(&indent_str, indent); }

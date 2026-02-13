@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/file.hpp"
+#include "cli/args.h"
 #include "compiler/ast/ast.h"
 #include "compiler/ast/printer.h"
 #include "compiler/debug.h"
@@ -26,5 +27,25 @@ size_t FileAst::error_count() const { return compiler_error_list_count(&this->as
 void FileAst::print_token_table() const {
     print_out_src_buffer(&ast.src_buffer);
     print_out_tkn_table(&ast.tokens);
+}
+void FileAst::try_print_info(const bearc_args_t* args) const {
+    if (!this->root()) {
+        return;
+    }
+    // --token-table
+    if (args->flags[CLI_FLAG_TOKEN_TABLE]) {
+        this->print_token_table();
+    }
+
+    // --pretty-print
+    if (args->flags[CLI_FLAG_PRETTY_PRINT]) {
+        this->pretty_print();
+    }
+
+    // display all comptime errors
+    bool silent = args->flags[CLI_FLAG_SILENT];
+    if (!silent) {
+        this->print_all_errors();
+    }
 }
 } // namespace hir

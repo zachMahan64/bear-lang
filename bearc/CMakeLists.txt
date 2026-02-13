@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # file(GLOB_RECURSE SRC CONFIGURE_DEPENDS src/*.c)
 
 set(SRC
-    src/compiler/compile.c
+    src/compiler/compile.cpp
     src/compiler/lexer.c
     src/compiler/token.c
 
@@ -58,9 +58,8 @@ set(SRC
     src/compiler/hir/span.cpp
     src/compiler/hir/exec_ops.cpp
     src/compiler/hir/file.cpp
-    src/compiler/hir/tables.cpp
+    src/compiler/hir/context.cpp
     src/compiler/hir/scope.cpp
-    src/compiler/hir/builder.cpp
 
 )
 
