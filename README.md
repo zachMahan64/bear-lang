@@ -1,26 +1,34 @@
 # bear-lang (Work in Progress)
 - A modern, C-like language inspired by C++ and Rust.
 - Bear is statically-typed and compiled aiming for simplicity and clarity.
-- Right now, I'm working on the frontend but plan on using LLVM for the backend.
+- Uses LLVM for the backend.
 
 ## Documentation
-- [Formal Grammar](docs/syntax.md)
+- [Grammar](docs/syntax.md)
 - [HIR Design](docs/hir_design.md)
 - [References](docs/references.md)
 
 ## Set up
 #### Build
 - See the [build docs](docs/build.md).
-- With git, gcc or clang, CMake, and Ninja installed, you can use these scripts: 
+- You will need git, gcc or clang, CMake, and Ninja installed.
+- The build also works using MinGW on Windows.
+- Run these commands:
 ```
-./scripts/llvm-install.sh              # for installing the LLVM distribution
-./scripts/clean-all.sh [Release|Debug] # builds bearc; defaults to Debug with no args
+# for installing the LLVM distribution, do this first (which will take a while):
+./scripts/llvm-install.sh              
+
+# convient scripts:
+./scripts/clean-all.sh [Release|Debug] # builds bearc and libbearc
+./scripts/clean.sh     [Release|Debug] # builds bearc
 ./scripts/build-tests.sh               # build and run tests
-                                       # additionally, there are non-LLVM-dependent options available,
-./scripts/clean-no-llvm.sh             # which are recommended until the compiler is truly no longer 
-./scripts/build-tests-no-llvm.sh       # in a front-end only state
+
+# manual cmake build
+cmake -B build -S .
+cmake --build build
 ```
-#### Run 
+- Also, you will probably want to put `path/to/bearc/build/bearc/` on your path.
+#### Run
 ```
 bearc --help          # to see CLI usage
 ```
