@@ -12,6 +12,8 @@
 #include "compiler/hir/indexing.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
+#include <iostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 namespace hir {
@@ -51,6 +53,10 @@ template <hir::Id I, typename V> class IdVecMap {
         return I{static_cast<HirId>(vec.size()) - 1
                  + OFFSET}; // so just the size, but this is crucial
     }
+
+    [[nodiscard]] I first_id() const { return I{1}; }
+    [[nodiscard]] I last_id() const { return I{static_cast<HirId>(vec.size() + OFFSET)}; }
+
     using value_type = V;
     using reference = V&;
     using const_reference = const V&;
@@ -88,13 +94,17 @@ template <Node T> class NodeVector : public IdVecMap<typename T::id_type, T> {
 
 /// Models a vector of an hir::IdIdx pointing to hir::Id
 template <hir::Id I> class IdVector : public IdVecMap<typename hir::IdIdx<I>, I> {
+    static constexpr HirSize OFFSET = 1;
+
   public:
     explicit IdVector(HirSize capacity) : IdVecMap<typename hir::IdIdx<I>, I>(capacity) {}
     template <HirSize N> IdSlice<I> freeze_small_vec(llvm::SmallVector<I, N>& svec) {
         // basically we're just allocating a contiguous chunk inside the vector so that we can copy
         // in the small vector into internal, permanent storage
-        IdIdx<I> first{static_cast<HirId>(this->vec.size() - 1)};
-        this->vec.append_range(svec);
+        IdIdx<I> first{static_cast<HirId>(this->vec.size() + OFFSET)};
+        for (const auto id : svec) {
+            this->vec.emplace_back(id);
+        }
         HirSize len = svec.size();
         return IdSlice<I>{first, len};
     }

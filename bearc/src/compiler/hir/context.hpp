@@ -40,8 +40,10 @@ class Context {
     IdHashMap<SymbolId, FileId> symbol_id_to_file_id_map;
     NodeVector<FileAst> file_asts;
 
-    IdVecMap<FileId, IdSlice<FileId>> importer_to_importees_vec;
-    IdVecMap<FileId, IdSlice<FileId>> importee_to_importers_vec;
+    /// FileId -> IdSlice<FileId> since all importees are always known when lowering a given file
+    IdVecMap<FileId, IdSlice<FileId>> importer_to_importees;
+    /// FileId -> llvm::SmallVector<FileId> since this will be updated less predictably
+    IdVecMap<FileId, llvm::SmallVector<FileId>> importee_to_importers;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,6 +114,8 @@ class Context {
     [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
     /// get a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
+    void register_importer(FileId importee, FileId importer);
+    void report_cycle(FileId cyclical_file_id);
 };
 
 } // namespace hir

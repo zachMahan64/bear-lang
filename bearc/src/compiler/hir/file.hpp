@@ -33,6 +33,7 @@ class FileAst {
   public:
     using id_type = FileAstId;
     const src_buffer& buffer() const noexcept;
+    const char* file_name() const noexcept;
     const compiler_error_list_t& error_list() const noexcept;
     const ast_stmt_t* root() const noexcept;
     void pretty_print() const;

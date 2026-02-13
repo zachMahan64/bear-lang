@@ -39,6 +39,7 @@ template <hir::Id T> class IdIdx {
     IdIdx() : value(HIR_ID_NONE) {}
     explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
+    constexpr HirId operator++() noexcept { return ++value; }
 };
 
 /// primary means of tracking interned strings in the hir
@@ -79,6 +80,7 @@ class FileId {
     constexpr FileId() : value(HIR_ID_NONE) {}
     [[nodiscard]] constexpr HirId val() const noexcept { return value; }
     friend constexpr bool operator==(FileId a, FileId b) { return a.value == b.value; }
+    constexpr FileId operator++() { return FileId{++value}; }
 };
 
 /// for addressing asts
@@ -205,6 +207,10 @@ template <hir::Id T> class IdSlice {
     constexpr IdIdx<T> first() const noexcept { return first_; }
     constexpr IdIdx<T> get(HirSize i) const noexcept { return IdIdx<T>{first_.val() + i}; }
     constexpr HirSize len() const noexcept { return len_; }
+
+    constexpr IdIdx<T> begin() const noexcept { return first; }
+
+    constexpr IdIdx<T> end() const noexcept { return IdIdx<T>{first_.val() + len_}; }
 };
 
 } // namespace hir

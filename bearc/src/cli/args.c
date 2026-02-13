@@ -23,7 +23,8 @@ cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
                                                {"version", CLI_FLAG_VERSION},
                                                {"pretty-print", CLI_FLAG_PRETTY_PRINT},
                                                {"token-table", CLI_FLAG_TOKEN_TABLE},
-                                               {"silent", CLI_FLAG_SILENT}};
+                                               {"silent", CLI_FLAG_SILENT},
+                                               {"list-files", CLI_FLAG_LIST_FILES}};
 
 static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
     if (args->flags[flag]) {

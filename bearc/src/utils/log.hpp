@@ -11,6 +11,8 @@
 
 #include <iostream>
 
-#define ERR(x) std::cout << x << '\n'
+#ifdef DEBUG_BUILD
+#define ERR(x) std::cerr << ansi_bold_red() << "debug error" << ": " << x << ansi_reset() << '\n'
+#endif
 
 #endif

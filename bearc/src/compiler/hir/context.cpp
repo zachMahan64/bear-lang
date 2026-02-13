@@ -7,15 +7,18 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/context.hpp"
+#include "cli/args.h"
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
+#include "utils/log.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <atomic>
 #include <cstring>
+#include <iostream>
 #include <stddef.h>
 #include <string_view>
 namespace hir {
@@ -35,6 +38,8 @@ static constexpr size_t DEFAULT_DEF_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_TYPE_VEC_CAP = 0x400;
 static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
+static constexpr HirSize EXPECTED_HIGH_NUM_IMPORTS = 128;
+
 // TODO: make a non default-ctor that actually calculates estimate capacities necessary (find these
 // number empirically then apply here)
 Context::Context(const bearc_args_t* args)
@@ -43,8 +48,8 @@ Context::Context(const bearc_args_t* args)
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
       file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
       symbols{DEFAULT_SYMBOL_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_VEC_CAP},
-      file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees_vec{DEFAULT_FILE_VEC_CAP},
-      importee_to_importers_vec{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
+      file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees{DEFAULT_FILE_VEC_CAP},
+      importee_to_importers{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
       exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_VEC_CAP},
       def_resolved{DEFAULT_DEF_VEC_CAP}, def_top_level_visited{DEFAULT_DEF_VEC_CAP},
       def_used{DEFAULT_DEF_VEC_CAP}, type_vec{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_VEC_CAP},
@@ -107,7 +112,6 @@ SymbolId Context::get_symbol_id_for_str_lit_token(token_t* tkn) {
 FileId Context::provide_root_file(const char* file_name) {
     SymbolId path_symbol = get_symbol_id(file_name, strlen(file_name));
     FileId file_id = get_file(path_symbol);
-    files.at(file_id).load_state = file_import_state::done;
     return file_id;
 }
 
@@ -122,8 +126,8 @@ FileId Context::get_file(SymbolId path_symbol) {
     /// store this mapping for future detection
     this->symbol_id_to_file_id_map.insert(path_symbol, file_id);
     /// bump necessary things that are track id-wise for files
-    importee_to_importers_vec.bump();
-    importer_to_importees_vec.bump();
+    importee_to_importers.bump();
+    importer_to_importees.bump();
     return file_id;
 }
 
@@ -134,33 +138,68 @@ FileAstId Context::emplace_ast(const char* file_name) {
 const char* Context::symbol_id_to_cstr(SymbolId id) const {
     return this->symbols.cat(id).sv().data();
 }
+/**
+ * updates the slice storing the importers for an importee
+ */
+void Context::register_importer(FileId importee, FileId importer) {
+    importee_to_importers.at(importee).emplace_back(importer);
+}
 
-// TODO parallelize; track file dependencies (forward and reverse)
+// TODO make this a tracked internal file error system (DNE, and circularity tracking)
+void Context::report_cycle(FileId cyclical_file_id) {
+    std::cerr << ansi_bold_red() << "error" << ansi_bold_white()
+              << ": circular file import: " << symbol_id_to_cstr(files.at(cyclical_file_id).path)
+              << ansi_reset() << '\n';
+}
+
 void Context::explore_imports(FileId importer_file_id) {
+    auto& file = files.at(importer_file_id);
+
+    // angry base case, guard circularity
+    if (file.load_state == file_import_state::in_progress) {
+        report_cycle(importer_file_id);
+        return;
+    }
+    // happy base case
+    if (file.load_state == file_import_state::done) {
+        return;
+    }
+
     const FileAst& root_ast = this->file_asts.at(this->files.at(importer_file_id).ast_id);
     const ast_stmt* root = root_ast.root();
     if (!root) {
+        ERR("ast.root() == nullptr");
         return;
     }
-    static constexpr HirSize EXPECTED_MAX_NUM_IMPORTS = 128;
-    llvm::SmallVector<FileId, EXPECTED_MAX_NUM_IMPORTS> importees;
+
+    // register this file as in progress to track potential circularity
+    file.load_state = file_import_state::in_progress;
+
+    // for tracking importees
+    llvm::SmallVector<FileId, EXPECTED_HIGH_NUM_IMPORTS> importees;
 
     for (size_t i = 0; i < root->stmt.file.stmts.len; i++) {
         ast_stmt* curr = root->stmt.file.stmts.start[i];
         if (curr->type == AST_STMT_IMPORT) {
             FileId importee_file_id = this->get_file_from_path_tkn(curr->stmt.import.file_path);
-            // guard circularity
-            if (files.at(importee_file_id).load_state != file_import_state::unvisited) {
-                continue;
-            }
+
             // add importee to vec
             importees.emplace_back(importee_file_id);
-            files.at(importee_file_id).load_state = file_import_state::in_progress;
+
+            // add to reverse dependency list
+            this->register_importer(importee_file_id, importer_file_id);
+
+            // recursively traverse
             this->explore_imports(importee_file_id);
-            files.at(importee_file_id).load_state = file_import_state::done;
         }
     }
-    importer_to_importees_vec.at(importer_file_id) = file_ids.freeze_small_vec(importees);
+
+    // set forward dependency list
+    auto importer_to_importees_slice = file_ids.freeze_small_vec(importees);
+
+    importer_to_importees.at(importer_file_id) = importer_to_importees_slice;
+
+    file.load_state = file_import_state::done;
 }
 
 void Context::try_print_info() const {
@@ -169,6 +208,32 @@ void Context::try_print_info() const {
         const FileAst& ast = file_asts.cat(f.ast_id);
         ast.try_print_info(args);
     }
+    if (args->flags[CLI_FLAG_LIST_FILES]) {
+        std::cout << ansi_bold_white() << "all files" << '(' << files.size() << ')' << ":"
+                  << ansi_reset() << '\n';
+        for (FileId curr = files.first_id(); curr != files.last_id(); ++curr) {
+
+            const FileAst& ast = file_asts.cat(files.cat(curr).ast_id);
+
+            std::cout << ansi_bold_white() << '[' << curr.val() << "] " << ast.file_name();
+            const auto list = importer_to_importees.cat(
+                symbol_id_to_file_id_map.at(files.cat(curr).path).as_id());
+
+            if (list.len() != 0) {
+                std::cout << ": ";
+            }
+            for (auto imp = list.first(); imp.val() != list.end().val(); ++imp) {
+                if (imp.val() == 0) {
+                    continue;
+                }
+                FileId importee = file_ids.cat(imp); // file_ids.cat(imp);
+                std::cout << '[' << importee.val() << "] "
+                          << symbol_id_to_cstr(files.cat(importee).path) << ", ";
+            }
+            std::cout << ansi_reset() << "\n";
+        }
+    }
+
     // std::cout << tables.files.size() << '\n';
     if (this->error_count() != 0) {
         if (!args->flags[CLI_FLAG_SILENT]) {
