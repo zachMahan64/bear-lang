@@ -22,6 +22,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "utils/data_arena.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <atomic>
 
 namespace hir {
@@ -96,12 +97,14 @@ class Context {
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
+    const char* file_name(FileId id) const;
 
     // ----- info viewing ------
     const char* symbol_id_to_cstr(SymbolId id) const;
 
     // ------ transformers -----
-    void explore_imports(FileId file_id);
+    void explore_imports(FileId root_id);
+    void explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack);
     /// prints info based on cli-flags
     void try_print_info() const;
 
@@ -115,7 +118,7 @@ class Context {
     /// get a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
     void register_importer(FileId importee, FileId importer);
-    void report_cycle(FileId cyclical_file_id);
+    void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack) const;
 };
 
 } // namespace hir

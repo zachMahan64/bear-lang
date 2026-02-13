@@ -40,6 +40,7 @@ template <hir::Id T> class IdIdx {
     explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
     constexpr HirId operator++() noexcept { return ++value; }
+    friend constexpr bool operator==(IdIdx<T> a, IdIdx<T> b) { return a.value == b.value; }
 };
 
 /// primary means of tracking interned strings in the hir

@@ -146,18 +146,37 @@ void Context::register_importer(FileId importee, FileId importer) {
 }
 
 // TODO make this a tracked internal file error system (DNE, and circularity tracking)
-void Context::report_cycle(FileId cyclical_file_id) {
-    std::cerr << ansi_bold_red() << "error" << ansi_bold_white()
-              << ": circular file import: " << symbol_id_to_cstr(files.at(cyclical_file_id).path)
+void Context::report_cycle(FileId cyclical_file_id,
+                           llvm::SmallVectorImpl<FileId>& import_stack) const {
+    std::cerr << ansi_bold_red() << "error" << ansi_reset()
+              << ": circular file import: " << ansi_bold_white() << file_name(cyclical_file_id)
               << ansi_reset() << '\n';
+    auto print_trace = [&](FileId id) {
+        std::cout << "|    imported in: " << ansi_bold_white() << file_name(id) << ansi_reset();
+    };
+    for (auto it = import_stack.rbegin(); it != import_stack.rend(); ++it) {
+        print_trace(*it);
+        if (*it == cyclical_file_id) {
+            std::cout << ansi_bold_white() << " <-- cycle origin\n";
+            break;
+        }
+        std::cout << '\n';
+    }
+}
+void Context::explore_imports(FileId root_id) {
+    llvm::SmallVector<FileId> import_stack{};
+    import_stack.push_back(root_id);
+    explore_imports(root_id, import_stack);
 }
 
-void Context::explore_imports(FileId importer_file_id) {
+void Context::explore_imports(FileId importer_file_id,
+                              llvm::SmallVectorImpl<FileId>& import_stack) {
     auto& file = files.at(importer_file_id);
 
     // angry base case, guard circularity
     if (file.load_state == file_import_state::in_progress) {
-        report_cycle(importer_file_id);
+        // safe to take id because a circularity is only possible if a prev id exists
+        report_cycle(importer_file_id, import_stack);
         return;
     }
     // happy base case
@@ -190,7 +209,9 @@ void Context::explore_imports(FileId importer_file_id) {
             this->register_importer(importee_file_id, importer_file_id);
 
             // recursively traverse
-            this->explore_imports(importee_file_id);
+            import_stack.push_back(importer_file_id);
+            this->explore_imports(importee_file_id, import_stack);
+            import_stack.pop_back();
         }
     }
 
@@ -222,13 +243,17 @@ void Context::try_print_info() const {
             if (list.len() != 0) {
                 std::cout << ": ";
             }
-            for (auto imp = list.first(); imp.val() != list.end().val(); ++imp) {
+            for (auto imp = list.first(); imp != list.end(); ++imp) {
                 if (imp.val() == 0) {
                     continue;
                 }
                 FileId importee = file_ids.cat(imp); // file_ids.cat(imp);
                 std::cout << '[' << importee.val() << "] "
-                          << symbol_id_to_cstr(files.cat(importee).path) << ", ";
+                          << symbol_id_to_cstr(files.cat(importee).path);
+                // do this check to avoid trailing comma
+                if (imp.val() != list.end().val() - 1) {
+                    std::cout << ", ";
+                }
             }
             std::cout << ansi_reset() << "\n";
         }
@@ -244,5 +269,7 @@ void Context::try_print_info() const {
     // release printer's internal state
     pretty_printer_reset();
 }
+
+const char* Context::file_name(FileId id) const { return symbol_id_to_cstr(files.cat(id).path); }
 
 } // namespace hir
