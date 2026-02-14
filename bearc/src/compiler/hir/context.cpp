@@ -138,6 +138,10 @@ FileId Context::get_file(SymbolId path_symbol) {
     return file_id;
 }
 
+FileId Context::get_file(std::filesystem::path& path) {
+    SymbolId symbol_id = get_symbol_id(path.c_str());
+    return get_file(symbol_id);
+}
 FileAstId Context::emplace_ast(const char* file_name) {
     return this->file_asts.emplace_and_get_id(file_name);
 }
@@ -287,7 +291,6 @@ void Context::register_tokenwise_error(FileId file_id, token_t* tkn, error_code_
     file_asts.at(files.at(file_id).ast_id).emplace_tokenwise_error(tkn, error_code);
 }
 
-// TODO impl import path traversal
 OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
                                                       const ast_stmt_t* import_statement) {
     assert(import_statement->type == AST_STMT_IMPORT);
@@ -295,12 +298,13 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     SymbolId path_symbol_id = get_symbol_id_for_str_lit_token(path_tkn);
     const char* path = symbol_id_to_cstr(path_symbol_id);
     // DNE guard
-    if (!std::filesystem::exists(path)) {
+    auto maybe_path = resolve_on_import_path(path, ".", this->args);
+    if (!maybe_path.has_value()) {
         register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
         ++this->fatal_error_count;
         return OptId<FileId>{};
     }
-    return get_file(path_symbol_id);
+    return get_file(maybe_path.value());
 }
 
 } // namespace hir

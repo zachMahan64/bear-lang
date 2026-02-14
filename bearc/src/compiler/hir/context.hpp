@@ -25,6 +25,7 @@
 #include "utils/data_arena.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <atomic>
+#include <filesystem>
 
 namespace hir {
 
@@ -40,6 +41,7 @@ class Context {
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
+    FileId get_file(std::filesystem::path& path);
     const char* file_name(FileId id) const;
 
     // ----- info viewing ------
