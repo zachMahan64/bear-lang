@@ -10,6 +10,7 @@
 #define COMPILER_HIR_TABLES_HPP
 
 #include "cli/args.h"
+#include "compiler/ast/stmt.h"
 #include "compiler/hir/arena_str_hash_map.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/exec.hpp"
@@ -113,12 +114,14 @@ class Context {
     /// forceably emplaces ast, not checking if it has already been processed. This function is
     /// wrapped by file handling logic and should thus not be used directly anywhere else
     FileAstId emplace_ast(const char* file_name);
-    [[nodiscard]] FileId get_file_from_path_tkn(token_t* tkn);
     [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
     /// get a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
     void register_importer(FileId importee, FileId importer);
     void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack) const;
+    void register_tokenwise_error(FileId file_id, token_t* tkn, error_code_e error_code);
+    [[nodiscard]] OptId<FileId> try_file_from_import_statement(FileId importer_id,
+                                                               const ast_stmt_t* import_statement);
 };
 
 } // namespace hir

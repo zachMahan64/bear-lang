@@ -18,6 +18,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include <atomic>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <stddef.h>
 #include <string_view>
@@ -74,10 +75,6 @@ void Context::bump_parser_error_count(uint32_t cnt) noexcept {
 
 int Context::error_count() const noexcept {
     return static_cast<int>(this->parse_error_count + this->semantic_error_count);
-}
-
-FileId Context::get_file_from_path_tkn(token_t* tkn) {
-    return get_file(get_symbol_id_for_str_lit_token(tkn));
 }
 
 SymbolId Context::get_symbol_id(std::string_view str) {
@@ -200,8 +197,12 @@ void Context::explore_imports(FileId importer_file_id,
     for (size_t i = 0; i < root->stmt.file.stmts.len; i++) {
         ast_stmt* curr = root->stmt.file.stmts.start[i];
         if (curr->type == AST_STMT_IMPORT) {
-            FileId importee_file_id = this->get_file_from_path_tkn(curr->stmt.import.file_path);
-
+            OptId<FileId> maybe_importee_file_id
+                = this->try_file_from_import_statement(importer_file_id, curr);
+            if (!maybe_importee_file_id.has_value()) {
+                continue;
+            }
+            FileId importee_file_id = maybe_importee_file_id.as_id();
             // add importee to vec
             importees.emplace_back(importee_file_id);
 
@@ -271,5 +272,23 @@ void Context::try_print_info() const {
 }
 
 const char* Context::file_name(FileId id) const { return symbol_id_to_cstr(files.cat(id).path); }
+
+void Context::register_tokenwise_error(FileId file_id, token_t* tkn, error_code_e error_code) {
+    file_asts.at(files.at(file_id).ast_id).emplace_tokenwise_error(tkn, error_code);
+}
+
+// TODO impl import path traversal
+OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
+                                                      const ast_stmt_t* import_statement) {
+    assert(import_statement->type == AST_STMT_IMPORT);
+    token_t* path_tkn = import_statement->stmt.import.file_path;
+    SymbolId path_symbol_id = get_symbol_id_for_str_lit_token(path_tkn);
+    const char* path = symbol_id_to_cstr(path_symbol_id);
+    if (!std::filesystem::exists(path)) {
+        register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
+        return OptId<FileId>{};
+    }
+    return get_file(path_symbol_id);
+}
 
 } // namespace hir

@@ -11,8 +11,7 @@
 #include "compiler/ast/ast.h"
 #include "compiler/ast/printer.h"
 #include "compiler/debug.h"
-#include "utils/ansi_codes.h"
-#include <iostream>
+#include "compiler/diagnostics/error_codes.h"
 namespace hir {
 
 File::File(SymbolId path, FileAstId ast_id)
@@ -52,4 +51,9 @@ void FileAst::try_print_info(const bearc_args_t* args) const {
         this->print_all_errors();
     }
 }
+
+void FileAst::emplace_tokenwise_error(token_t* tkn, error_code_e error_code) {
+    compiler_error_list_emplace(&this->ast.error_list, tkn, error_code);
+}
+
 } // namespace hir
