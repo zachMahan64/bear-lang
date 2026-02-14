@@ -15,8 +15,9 @@ docs-build/
 _*/
 __*
 
-# perf
+# tools
 perf.data*
+.gdbinit
 
 # llvm
 llvm/
