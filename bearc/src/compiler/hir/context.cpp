@@ -59,6 +59,8 @@ Context::Context(const bearc_args_t* args)
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
       str_to_symbol_id_map{symbol_map_arena}, args{args} {
+
+    // get try to get root file, and allow checking cwd for it
     std::optional<std::filesystem::path> maybe_root_file
         = resolve_on_import_path(args->input_file_name, ".", args);
 
@@ -297,8 +299,11 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     token_t* path_tkn = import_statement->stmt.import.file_path;
     SymbolId path_symbol_id = get_symbol_id_for_str_lit_token(path_tkn);
     const char* path = symbol_id_to_cstr(path_symbol_id);
+
+    const std::filesystem::path parent = std::filesystem::path(path).parent_path();
+
     // DNE guard
-    auto maybe_path = resolve_on_import_path(path, ".", this->args);
+    auto maybe_path = resolve_on_import_path(path, parent, this->args);
     if (!maybe_path.has_value()) {
         register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
         ++this->fatal_error_count;
