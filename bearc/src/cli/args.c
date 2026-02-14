@@ -24,8 +24,11 @@ cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
                                                {"pretty-print", CLI_FLAG_PRETTY_PRINT},
                                                {"token-table", CLI_FLAG_TOKEN_TABLE},
                                                {"silent", CLI_FLAG_SILENT},
-                                               {"list-files", CLI_FLAG_LIST_FILES}};
-
+                                               {"list-files", CLI_FLAG_LIST_FILES},
+                                               {"import-path", CLI_FLAG_IMPORT_PATH}};
+static bool is_valid_cli_flag_short(const char* arg) {
+    return strlen(arg) == 2 && arg[0] == '-' && short_flag_map[(unsigned char)arg[1]];
+}
 static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
     if (args->flags[flag]) {
         args->flags[CLI_FLAG_ERR_DUPLICATE] = true;
@@ -34,37 +37,58 @@ static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
     return false;
 }
 
+static bool is_flag(const char* arg) {
+    return is_valid_cli_flag_long(arg) || is_valid_cli_flag_short(arg);
+}
+
 bearc_args_t parse_cli_args(int argc, char** argv) {
-    bearc_args_t args = {.flags = {0}, .input_file_name = ""}; // WIP
-    for (int i = 1; i < argc; ++i) {
+    bearc_args_t args
+        = {.flags = {0}, .input_file_name = NULL, .import_paths = {0}, .import_path_cnt = 0};
+    int count = 1;
+    while (count < argc) {
         // attempt to extract the char from a -<something> flag
-        if (strlen(argv[i]) == 2 && argv[i][0] == '-'
-            && short_flag_map[(unsigned char)argv[i][1]]) {
-            cli_flag_e flag = short_flag_map[(unsigned char)argv[i][1]];
+        if (is_valid_cli_flag_short(argv[count])) {
+            cli_flag_e flag = short_flag_map[(unsigned char)argv[count][1]];
             if (check_duplicate(&args, flag)) {
                 return args;
             }
             args.flags[flag] = true;
         }
         // extract from a --<something> flag
-        else if (is_valid_cli_flag_long(argv[i])) {
-            cli_flag_e flag = search_cli_long_flags_for_valid_flag(argv[i]);
+        else if (is_valid_cli_flag_long(argv[count])) {
+            cli_flag_e flag = search_cli_long_flags_for_valid_flag(argv[count]);
             if (check_duplicate(&args, flag)) {
                 return args;
             }
+            if (flag == CLI_FLAG_IMPORT_PATH) {
+                int imp_cnt = 0;
+                count++;
+                while (imp_cnt < CLI_ARGS_MAX_IMPORT_PATH_COUNT && count < argc
+                       && !is_flag(argv[count])) {
+                    args.import_paths[imp_cnt] = argv[count];
+                    imp_cnt++;
+                    count++;
+                }
+                // backtrack overshoot (since count will be incremented again at the end of the
+                // loop)
+                count--;
+            }
             args.flags[flag] = true;
         } else {
-            if (strlen(argv[i]) >= 2 && argv[i][0] == '-') {
+            if (strlen(argv[count]) >= 2 && argv[count][0] == '-') {
                 args.flags[CLI_FLAG_ERR_UNKNOWN] = true; // invalid flag
-            } else {
+            } else if (!args.input_file_name) {
                 // try to interpret as filename, deal with faulty filenames later
-                if (strlen(argv[i]) < CLI_ARGS_MAX_FILE_NAME_LENGTH - 1) {
-                    strcpy(args.input_file_name, argv[i]);
+                if (strlen(argv[count]) < CLI_ARGS_MAX_FILE_NAME_LENGTH - 1) {
+                    args.input_file_name = argv[count];
                 } else {
                     args.flags[CLI_FLAG_ERR_FILE_NAME_TOO_LONG] = true;
                 }
+            } else {
+                args.flags[CLI_FLAG_ERR_TOO_MANY_INPUT_FILES] = true;
             }
         }
+        ++count;
     }
     return args;
 }

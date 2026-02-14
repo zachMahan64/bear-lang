@@ -10,9 +10,11 @@
 #define CLI_ARGS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define CLI_ARGS_MAX_FILE_NAME_LENGTH 1024
 #define CLI_ARGS_MAX_FLAG_LENGTH 16
+#define CLI_ARGS_MAX_IMPORT_PATH_COUNT 32
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,20 +22,24 @@ extern "C" {
 
 typedef enum cli_flag {
     CLI_FLAG_ERR_UNKNOWN,
-    CLI_FLAG_ERR_DUPLICATE,
-    CLI_FLAG_ERR_FILE_NAME_TOO_LONG,
     CLI_FLAG_HELP,
     CLI_FLAG_VERSION,
     CLI_FLAG_TOKEN_TABLE,
     CLI_FLAG_PRETTY_PRINT,
     CLI_FLAG_SILENT,
     CLI_FLAG_LIST_FILES,
+    CLI_FLAG_IMPORT_PATH,
+    CLI_FLAG_ERR_DUPLICATE,
+    CLI_FLAG_ERR_FILE_NAME_TOO_LONG,
+    CLI_FLAG_ERR_TOO_MANY_INPUT_FILES,
     CLI_FLAG__NUM,
 } cli_flag_e;
 
 typedef struct bearc_args {
+    char* import_paths[CLI_ARGS_MAX_IMPORT_PATH_COUNT];
     bool flags[CLI_FLAG__NUM];
-    char input_file_name[CLI_ARGS_MAX_FILE_NAME_LENGTH];
+    char* input_file_name;
+    uint8_t import_path_cnt;
 } bearc_args_t;
 
 typedef struct {

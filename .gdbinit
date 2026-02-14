@@ -1,5 +1,5 @@
 set debuginfod enabled on
-b Context::try_print_info
-run tests/hir/00.br --list-files
+b parse_cli_args
+run tests/hir/00.br --import-path tests/hir 
 lay src
 focus cmd
