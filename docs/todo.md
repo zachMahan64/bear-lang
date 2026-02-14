@@ -8,15 +8,15 @@
 - [x] Change scope to used std::vector since it's lazy
 - [x] add an ArenaStringHashMap implementation for sybmbols (or consider an LLVM datastructure), see TODO comment in hir/builder.cpp
 - [x] flesh out query system a bit more, make a better ctor
-- [ ] improve CLI to accept import paths
-- [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from parser diagnostics)
+- [x] improve CLI to accept import paths
 - [ ] finish hir structural impls
     - [x] defs
     - [ ] types
     - [x] exec
         - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params
-- [ ] impl HirTables for hir node allocation/access 
+- [ ] impl limited external query system for hir::Context 
+- [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics)
 - [ ] hir phase 1: begin handling top level decl lowering
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### Medium term
