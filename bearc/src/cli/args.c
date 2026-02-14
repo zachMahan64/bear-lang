@@ -69,6 +69,7 @@ bearc_args_t parse_cli_args(int argc, char** argv) {
                     imp_cnt++;
                     count++;
                 }
+                args.import_path_cnt = imp_cnt;
                 // backtrack overshoot (since count will be incremented again at the end of the
                 // loop)
                 count--;

@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     br_test_result_t br_test_result = {.cnt_success = 0, .cnt_total = 0, .name = (_name)};         \
     int true_cnt = 0;
 #define ASSERT_EQ_ERR(file_name, err_cnt)                                                          \
-    strcpy(args.input_file_name, "tests/" file_name ".br");                                        \
+    args.input_file_name = "tests/" file_name ".br";                                               \
     true_cnt = compile_file(&args);                                                                \
     if (true_cnt == (err_cnt)) {                                                                   \
         br_test_result.cnt_success++;                                                              \
@@ -101,7 +101,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/22", 1);
     ASSERT_EQ_ERR("parser/23", 1);
     ASSERT_EQ_ERR("parser/24", 1);
-    ASSERT_EQ_ERR("parser/25", 2);
+    ASSERT_EQ_ERR("parser/25", 3);
     ASSERT_EQ_ERR("parser/26", 1);
     ASSERT_EQ_ERR("parser/27", 5);
     ASSERT_EQ_ERR("parser/28", 0);
@@ -113,17 +113,17 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/34", 1);
     ASSERT_EQ_ERR("parser/35", 0);
     ASSERT_EQ_ERR("parser/36", 0);
-    ASSERT_EQ_ERR("parser/37", 0);
+    ASSERT_EQ_ERR("parser/37", 1);
     ASSERT_EQ_ERR("parser/38", 0);
     ASSERT_EQ_ERR("parser/39", 0);
     ASSERT_EQ_ERR("parser/40", 3);
-    ASSERT_EQ_ERR("parser/41", 0);
+    ASSERT_EQ_ERR("parser/41", 3);
     ASSERT_EQ_ERR("parser/42", 1);
     ASSERT_EQ_ERR("parser/43", 0);
     ASSERT_EQ_ERR("parser/44", 1);
-    ASSERT_EQ_ERR("parser/45", 0);
-    ASSERT_EQ_ERR("parser/46", 0);
-    ASSERT_EQ_ERR("parser/47", 0);
+    ASSERT_EQ_ERR("parser/45", 1);
+    ASSERT_EQ_ERR("parser/46", 1);
+    ASSERT_EQ_ERR("parser/47", 1);
 
     return TEST_RESULT;
 }

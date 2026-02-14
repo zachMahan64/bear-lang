@@ -52,6 +52,7 @@ set(SRC
 
     src/cli/bearc.c
     src/cli/args.c
+    src/cli/import_path.cpp
 
     src/utils/data_arena.cpp
 

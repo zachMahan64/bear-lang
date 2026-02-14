@@ -8,6 +8,7 @@
 
 #include "compiler/hir/context.hpp"
 #include "cli/args.h"
+#include "cli/import_path.h"
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/file.hpp"
@@ -58,7 +59,16 @@ Context::Context(const bearc_args_t* args)
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
       str_to_symbol_id_map{symbol_map_arena}, args{args} {
-    FileId root_id = provide_root_file(args->input_file_name);
+    std::optional<std::filesystem::path> maybe_root_file
+        = resolve_on_import_path(args->input_file_name, ".", args);
+
+    if (!maybe_root_file) {
+        return;
+    }
+
+    const auto& root_file = maybe_root_file.value();
+
+    FileId root_id = provide_root_file(root_file.c_str());
 
     // search imports to build all asts
     this->explore_imports(root_id);

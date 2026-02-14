@@ -8,6 +8,7 @@
 
 #include "bearc.h"
 #include "cli/args.h"
+#include "cli/import_path.h"
 #include "compiler/compile.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
@@ -55,7 +56,8 @@ int br_launch_cli(int argc, char** argv) {
         warn_too_many_input_files();
         return -1;
     }
-    if (strlen(args.input_file_name) != 0 && !file_exists(args.input_file_name)) {
+    if (strlen(args.input_file_name) != 0
+        && !file_exists_on_import_path(args.input_file_name, ".", &args)) {
         printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
                ansi_bold(), args.input_file_name, ansi_reset());
         return -1;
