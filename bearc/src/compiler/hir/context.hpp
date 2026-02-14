@@ -34,6 +34,24 @@ namespace hir {
  */
 class Context {
   public:
+    Context(const bearc_args_t* args);
+    int error_count() const noexcept;
+    // ----- accessors --------
+    [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
+    SymbolId get_symbol_id(std::string_view str);
+    [[nodiscard]] FileId get_file(SymbolId path);
+    const char* file_name(FileId id) const;
+
+    // ----- info viewing ------
+    const char* symbol_id_to_cstr(SymbolId id) const;
+
+    // ------ transformers -----
+    void explore_imports(FileId root_id);
+    void explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack);
+    /// prints info based on cli-flags
+    void try_print_info() const;
+
+  private:
     // containers:
     // ~~~~~~~~~~~~~~~~~ file stuff ~~~~~~~~~~~~~~~~~~~
     IdVector<FileId> file_ids;
@@ -48,11 +66,12 @@ class Context {
     IdVecMap<FileId, llvm::SmallVector<FileId>> importee_to_importers;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+  public:
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
     NodeVector<Scope> scopes;
     NodeVector<ScopeAnon> scope_anons;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+  private:
     /// const char* -> hir::SymbolId
     DataArena symbol_storage_arena;
     DataArena symbol_map_arena;
@@ -64,9 +83,11 @@ class Context {
     NodeVector<Exec> execs;
 
     // ~~~~ defs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  public:
     IdVector<DefId> def_ids;
     NodeVector<Def> defs;
 
+  private:
     /// indicated whether this node has been visited during top-level traversal/resolution; this
     /// flag helps prevent illegal circular dependencies, TODO turn this into a single enum map
     IdVecMap<DefId, uint8_t> def_resolved;          // index with DefId
@@ -88,28 +109,12 @@ class Context {
     // error tracking
     std::atomic<uint32_t> parse_error_count;
     std::atomic<uint32_t> semantic_error_count;
+    std::atomic<uint32_t> fatal_error_count;
+
     // args
     const bearc_args_t* const args;
-    Context(const bearc_args_t* args);
     void bump_parser_error_count(uint32_t cnt) noexcept;
-    int error_count() const noexcept;
 
-    // ----- accessors --------
-    [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
-    SymbolId get_symbol_id(std::string_view str);
-    [[nodiscard]] FileId get_file(SymbolId path);
-    const char* file_name(FileId id) const;
-
-    // ----- info viewing ------
-    const char* symbol_id_to_cstr(SymbolId id) const;
-
-    // ------ transformers -----
-    void explore_imports(FileId root_id);
-    void explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack);
-    /// prints info based on cli-flags
-    void try_print_info() const;
-
-  private:
     FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is
     /// wrapped by file handling logic and should thus not be used directly anywhere else

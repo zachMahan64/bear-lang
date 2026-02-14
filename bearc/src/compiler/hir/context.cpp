@@ -145,7 +145,7 @@ void Context::register_importer(FileId importee, FileId importer) {
 // TODO make this a tracked internal file error system (DNE, and circularity tracking)
 void Context::report_cycle(FileId cyclical_file_id,
                            llvm::SmallVectorImpl<FileId>& import_stack) const {
-    std::cerr << ansi_bold_red() << "error" << ansi_reset()
+    std::cout << ansi_bold_red() << "error" << ansi_reset()
               << ": circular file import: " << ansi_bold_white() << file_name(cyclical_file_id)
               << ansi_reset() << '\n';
     auto print_trace = [&](FileId id) {
@@ -284,8 +284,10 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     token_t* path_tkn = import_statement->stmt.import.file_path;
     SymbolId path_symbol_id = get_symbol_id_for_str_lit_token(path_tkn);
     const char* path = symbol_id_to_cstr(path_symbol_id);
+    // DNE guard
     if (!std::filesystem::exists(path)) {
         register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
+        ++this->fatal_error_count;
         return OptId<FileId>{};
     }
     return get_file(path_symbol_id);

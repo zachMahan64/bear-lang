@@ -1,4 +1,5 @@
 import "tests/hir/02.br";
+import "oopsie";
 
 mod foo {
     compt i32 BAR = 5;
