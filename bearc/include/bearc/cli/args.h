@@ -32,6 +32,7 @@ typedef enum cli_flag {
     CLI_FLAG_ERR_DUPLICATE,
     CLI_FLAG_ERR_FILE_NAME_TOO_LONG,
     CLI_FLAG_ERR_TOO_MANY_INPUT_FILES,
+    CLI_FLAG_COMPILE,
     CLI_FLAG__NUM,
 } cli_flag_e;
 

@@ -16,7 +16,12 @@
 bool is_valid_cli_flag_long(const char* flag);
 cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag);
 
-const cli_flag_e short_flag_map[256] = {['h'] = CLI_FLAG_HELP, ['v'] = CLI_FLAG_VERSION};
+const cli_flag_e short_flag_map[UCHAR_MAX] = {
+    ['h'] = CLI_FLAG_HELP,
+    ['v'] = CLI_FLAG_VERSION,
+    ['c'] = CLI_FLAG_COMPILE,
+    ['i'] = CLI_FLAG_IMPORT_PATH,
+};
 
 // LONG FLAG NAME MAP
 cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
@@ -29,7 +34,11 @@ cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
 static bool is_valid_cli_flag_short(const char* arg) {
     return strlen(arg) == 2 && arg[0] == '-' && short_flag_map[(unsigned char)arg[1]];
 }
-static bool check_duplicate(bearc_args_t* args, cli_flag_e flag) {
+static bool check_illegal_duplicate(bearc_args_t* args, cli_flag_e flag) {
+    // duplicate of these are fine, since meaning is understood and multiple chains could be useful
+    if (flag == CLI_FLAG_IMPORT_PATH) {
+        return false;
+    }
     if (args->flags[flag]) {
         args->flags[CLI_FLAG_ERR_DUPLICATE] = true;
         return true;
@@ -41,6 +50,19 @@ static bool is_flag(const char* arg) {
     return is_valid_cli_flag_long(arg) || is_valid_cli_flag_short(arg);
 }
 
+static void do_import_path(int argc, char** argv, bearc_args_t* args, int* count) {
+    (*count)++;
+    while (args->import_path_cnt < CLI_ARGS_MAX_IMPORT_PATH_COUNT && *count < argc
+           && !is_flag(argv[*count])) {
+        args->import_paths[args->import_path_cnt] = argv[*count];
+        args->import_path_cnt++;
+        (*count)++;
+    }
+    // backtrack overshoot (since count will be incremented again at the end of the
+    // loop)
+    (*count)--;
+}
+
 bearc_args_t parse_cli_args(int argc, char** argv) {
     bearc_args_t args
         = {.flags = {0}, .input_file_name = NULL, .import_paths = {0}, .import_path_cnt = 0};
@@ -49,30 +71,22 @@ bearc_args_t parse_cli_args(int argc, char** argv) {
         // attempt to extract the char from a -<something> flag
         if (is_valid_cli_flag_short(argv[count])) {
             cli_flag_e flag = short_flag_map[(unsigned char)argv[count][1]];
-            if (check_duplicate(&args, flag)) {
+            if (check_illegal_duplicate(&args, flag)) {
                 return args;
+            }
+            if (flag == CLI_FLAG_IMPORT_PATH) {
+                do_import_path(argc, argv, &args, &count);
             }
             args.flags[flag] = true;
         }
         // extract from a --<something> flag
         else if (is_valid_cli_flag_long(argv[count])) {
             cli_flag_e flag = search_cli_long_flags_for_valid_flag(argv[count]);
-            if (check_duplicate(&args, flag)) {
+            if (check_illegal_duplicate(&args, flag)) {
                 return args;
             }
             if (flag == CLI_FLAG_IMPORT_PATH) {
-                int imp_cnt = 0;
-                count++;
-                while (imp_cnt < CLI_ARGS_MAX_IMPORT_PATH_COUNT && count < argc
-                       && !is_flag(argv[count])) {
-                    args.import_paths[imp_cnt] = argv[count];
-                    imp_cnt++;
-                    count++;
-                }
-                args.import_path_cnt = imp_cnt;
-                // backtrack overshoot (since count will be incremented again at the end of the
-                // loop)
-                count--;
+                do_import_path(argc, argv, &args, &count);
             }
             args.flags[flag] = true;
         } else {
