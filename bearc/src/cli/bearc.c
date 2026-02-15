@@ -125,6 +125,7 @@ void cli_help(void) {
           "        [--silent]        suppress all compiler messages\n"
           "        [--token-table]   print a list of lexed tokens\n"
           "        [--pretty-print]  print a syntax tree diagram\n"
+          "        [--list-files]    list all compile files with their dependencies\n"
           "flags with arguments:\n"
           "        [--import-path | -i] <import_dirs...>  supply import paths\n"
           "        [--compile | -c]     <root_file>       compile from a root_file\n"
