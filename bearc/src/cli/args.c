@@ -51,6 +51,7 @@ static bool is_flag(const char* arg) {
 }
 
 static void do_import_path(int argc, char** argv, bearc_args_t* args, int* count) {
+    int start = *count;
     (*count)++;
     while (args->import_path_cnt < CLI_ARGS_MAX_IMPORT_PATH_COUNT && *count < argc
            && !is_flag(argv[*count])) {
@@ -61,6 +62,9 @@ static void do_import_path(int argc, char** argv, bearc_args_t* args, int* count
     // backtrack overshoot (since count will be incremented again at the end of the
     // loop)
     (*count)--;
+    if (*count == start) {
+        args->flags[CLI_FLAG_ERR_NO_ARGUMENT_PROVIDED_TO_IMPORT_PATH] = true;
+    }
 }
 
 bearc_args_t parse_cli_args(int argc, char** argv) {

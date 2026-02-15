@@ -12,7 +12,6 @@
 #include "compiler/compile.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
-#include "utils/file_io.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -32,6 +31,7 @@ void cli_no_args(void);
 void cli_announce_unknown_flag(void);
 void warn_duplicate_flag(void);
 void warn_too_many_input_files(void);
+void warn_no_arg_for_import_path(void);
 // checks if the args are otherwise empty besides the specified flag
 bool cli_args_otherwise_empty(bearc_args_t* args, cli_flag_e flag);
 
@@ -56,6 +56,12 @@ int br_launch_cli(int argc, char** argv) {
         warn_too_many_input_files();
         return -1;
     }
+
+    if (args.flags[CLI_FLAG_ERR_NO_ARGUMENT_PROVIDED_TO_IMPORT_PATH]) {
+        warn_no_arg_for_import_path();
+        return -1;
+    }
+
     if (strlen(args.input_file_name) != 0
         && !file_exists_on_import_path(args.input_file_name, ".", &args)) {
         printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
@@ -153,4 +159,8 @@ bool cli_args_otherwise_empty(bearc_args_t* args, cli_flag_e flag) {
         }
     }
     return true;
+}
+
+void warn_no_arg_for_import_path(void) {
+    printf("%s(bearc)%s no arguments given for import-path\n", ansi_bold(), ansi_reset());
 }
