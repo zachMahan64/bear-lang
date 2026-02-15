@@ -15,7 +15,8 @@
     - [x] exec
         - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params
-- [ ] impl limited external query system for hir::Context 
+- [ ] impl limited external query system for hir::Context
+- [ ] impl an ast visitor that adds to the hir::Context, simultaneously impl an hir visitor to analyze Context during resolution
 - [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics)
 - [ ] hir phase 1: begin handling top level decl lowering
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
