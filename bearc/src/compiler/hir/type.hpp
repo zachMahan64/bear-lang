@@ -9,13 +9,13 @@
 #ifndef COMPILER_HIR_TYPE_HPP
 #define COMPILER_HIR_TYPE_HPP
 
+#include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include <cstdint>
 #include <variant>
 namespace hir {
 
 // ------ struct impls -------
-// TODO: finish impl structures
 
 enum class builtin_type : uint8_t {
     u8,
@@ -35,20 +35,58 @@ enum class builtin_type : uint8_t {
 
 };
 
-struct BuiltinType {
+struct TypeBuiltin {
     builtin_type type;
+};
+
+struct TypeStructure {
+    SymbolId name;
+};
+
+struct TypeGenericStructure {
+    SymbolId name;
+    IdSlice<GenericArgId> slice;
+};
+
+struct TypeArr {
+    TypeId inner;
+    ExecId compt_size_expr;
+    size_t canonical_size;
+};
+
+struct TypeSlice {
+    TypeId inner;
+};
+
+struct TypeRef {
+    TypeId inner;
+};
+
+struct TypePtr {
+    TypeId inner;
+};
+
+struct TypeFnPtr {
+    IdSlice<TypeId> param_types;
+    TypeId return_type;
+};
+
+struct TypeVariadic {
+    TypeId inner;
 };
 
 // ^^^^^^ struct impls ^^^^^^^^
 
 /// main exec union
-using TypeValue = std::variant<BuiltinType>;
+using TypeValue = std::variant<TypeBuiltin, TypeStructure, TypeGenericStructure, TypeArr, TypeSlice,
+                               TypeRef, TypePtr, TypeFnPtr, TypeVariadic>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Type {
     using id_type = TypeId;
     TypeValue value;
     Span span;
+    bool mut;
 };
 
 } // namespace hir

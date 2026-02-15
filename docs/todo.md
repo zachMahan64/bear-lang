@@ -11,7 +11,7 @@
 - [x] improve CLI to accept import paths
 - [ ] finish hir structural impls
     - [x] defs
-    - [ ] types
+    - [x] types
     - [x] exec
         - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params

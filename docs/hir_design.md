@@ -213,7 +213,11 @@ HirTypeId->
         | HirTypeArr:
             size: size_t? (non-optional after resolution)
             inner: HirTypeId
+        | HirTypeSlice:
+            inner: HirTypeId 
         | HirTypeRef:
+            inner: HirTypeId
+        | HirTypePtr:
             inner: HirTypeId
         | HirTypeFnPtr:
             []HirTypeId
