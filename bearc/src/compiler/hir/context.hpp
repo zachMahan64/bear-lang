@@ -25,6 +25,7 @@
 #include "utils/data_arena.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <atomic>
+#include <cstdint>
 #include <filesystem>
 
 namespace hir {
@@ -90,12 +91,10 @@ class Context {
     NodeVector<Def> defs;
 
   private:
-    /// indicated whether this node has been visited during top-level traversal/resolution; this
-    /// flag helps prevent illegal circular dependencies, TODO turn this into a single enum map
-    IdVecMap<DefId, uint8_t> def_resolved;          // index with DefId
-    IdVecMap<DefId, uint8_t> def_top_level_visited; // index with DefId
-    /// tracks whether a defintion is used/unused (for tracking dead definitions)
-    IdVecMap<DefId, uint8_t> def_used;
+    /// indicated whether this node is unvisited, visited during top-level resolution, or resolved
+    IdVecMap<DefId, Def::resol_state> def_resolved; // index with DefId
+    /// tracks whether a defintion is used/unused/modified (for tracking dead definitions)
+    IdVecMap<DefId, Def::mention_state> def_used;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

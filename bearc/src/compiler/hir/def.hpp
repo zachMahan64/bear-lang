@@ -122,6 +122,21 @@ using DefValue
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
+    /// represents the resolution state corresponding to an hir::DefId
+    enum class resol_state : uint8_t {
+        unvisited = 0,
+        top_level_visited,
+        // can help catch circular defintions
+        in_progress,
+        resolved,
+    };
+
+    /// represents the mention state corresponding to an hir::DefId
+    enum class mention_state : uint8_t {
+        unmentioned,
+        mentioned,
+        modified,
+    };
     using id_type = DefId;
     /// underlying structure
     DefValue value;
