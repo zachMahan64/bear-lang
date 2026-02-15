@@ -92,9 +92,9 @@ class Context {
 
   private:
     /// indicated whether this node is unvisited, visited during top-level resolution, or resolved
-    IdVecMap<DefId, Def::resol_state> def_resolved; // index with DefId
+    IdVecMap<DefId, Def::resol_state> def_resol_states; // index with DefId
     /// tracks whether a defintion is used/unused/modified (for tracking dead definitions)
-    IdVecMap<DefId, Def::mention_state> def_used;
+    IdVecMap<DefId, Def::mention_state> def_mention_states;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
