@@ -62,13 +62,6 @@ int br_launch_cli(int argc, char** argv) {
         return -1;
     }
 
-    if (strlen(args.input_file_name) != 0
-        && !file_exists_on_import_path(args.input_file_name, ".", &args)) {
-        printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
-               ansi_bold(), args.input_file_name, ansi_reset());
-        return -1;
-    }
-
     // no compilation options
     if (args.flags[CLI_FLAG_HELP]) {
         if (!cli_args_otherwise_empty(&args, CLI_FLAG_HELP)) {
@@ -76,6 +69,7 @@ int br_launch_cli(int argc, char** argv) {
             return -1;
         }
         cli_help();
+        return 0;
     }
     if (args.flags[CLI_FLAG_VERSION]) {
         if (!cli_args_otherwise_empty(&args, CLI_FLAG_VERSION)) {
@@ -83,11 +77,26 @@ int br_launch_cli(int argc, char** argv) {
             return -1;
         }
         cli_version();
+        return 0;
     }
 
     if (args.flags[CLI_FLAG_ERR_FILE_NAME_TOO_LONG]) {
 
         printf("%s(bearc)%s file name exessively long\n", ansi_bold(), ansi_reset());
+    }
+
+    // basic input file validation
+    if (!args.input_file_name) {
+        printf("%s(bearc)%s no root file provided\n", ansi_bold_white(), ansi_reset());
+
+        return -1;
+    }
+
+    if (strlen(args.input_file_name) != 0
+        && !file_exists_on_import_path(args.input_file_name, ".", &args)) {
+        printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
+               ansi_bold(), args.input_file_name, ansi_reset());
+        return -1;
     }
 
     // compilation
@@ -150,7 +159,7 @@ void do_cli_announce_incompatible_flags(void) {
 }
 
 bool cli_args_otherwise_empty(bearc_args_t* args, cli_flag_e flag) {
-    if (strlen(args->input_file_name) != 0) {
+    if (args->input_file_name != NULL) {
         return false;
     }
     for (size_t i = 0; i < CLI_FLAG__NUM; i++) {
