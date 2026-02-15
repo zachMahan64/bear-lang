@@ -113,16 +113,21 @@ int br_launch_cli(int argc, char** argv) {
 }
 
 void cli_help(void) {
-    const char* help_message = "usage:\n"
-                               "        bearc <file_name> [flags]\n"
-                               "        bearc [options]\n"
-                               "options:\n"
-                               "        [--version | -v]  display current bearc version\n"
-                               "        [--help | -h]     display this help message\n"
-                               "flags:\n"
-                               "        [--silent]        suppress all compiler messages\n"
-                               "        [--token-table]   print a list of lexed tokens\n"
-                               "        [--pretty-print]  print a syntax tree diagram\n"
+    const char* help_message
+        = "usage:\n"
+          "        bearc <file_name> [flags]\n"
+          "        bearc [flags]\n"
+          "        bearc [options]\n"
+          "options:\n"
+          "        [--version | -v]  display current bearc version\n"
+          "        [--help | -h]     display this help message\n"
+          "flags:\n"
+          "        [--silent]        suppress all compiler messages\n"
+          "        [--token-table]   print a list of lexed tokens\n"
+          "        [--pretty-print]  print a syntax tree diagram\n"
+          "flags with arguments:\n"
+          "        [--import-path | -i] <import_dirs...>  supply import paths\n"
+          "        [--compile | -c]     <root_file>       compile from a root_file\n"
 
         ;
 

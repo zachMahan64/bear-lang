@@ -119,7 +119,6 @@ typedef enum token_type {
     TOK_IS, // for variant decomp
 
     // constructs
-    TOK_MARK,
     TOK_REQUIRES,
     TOK_CONTRACT,
     TOK_UNION,

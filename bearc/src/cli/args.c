@@ -30,7 +30,8 @@ cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
                                                {"token-table", CLI_FLAG_TOKEN_TABLE},
                                                {"silent", CLI_FLAG_SILENT},
                                                {"list-files", CLI_FLAG_LIST_FILES},
-                                               {"import-path", CLI_FLAG_IMPORT_PATH}};
+                                               {"import-path", CLI_FLAG_IMPORT_PATH},
+                                               {"compile", CLI_FLAG_COMPILE}};
 static bool is_valid_cli_flag_short(const char* arg) {
     return strlen(arg) == 2 && arg[0] == '-' && short_flag_map[(unsigned char)arg[1]];
 }
