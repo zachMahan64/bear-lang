@@ -6,7 +6,7 @@
 - [x] C++ify HIR
 - [x] Make Scope fully c++ified (finish translating Cisms)
 - [x] Change scope to used std::vector since it's lazy
-- [x] add an ArenaStringHashMap implementation for sybmbols (or consider an LLVM datastructure), see TODO comment in hir/builder.cpp
+- [x] add an ArenaStringHashMap implementation for sybmbols (or consider an LLVM datastructure), see comment in hir/builder.cpp
 - [x] flesh out query system a bit more, make a better ctor
 - [x] improve CLI to accept import paths
 - [ ] finish hir structural impls

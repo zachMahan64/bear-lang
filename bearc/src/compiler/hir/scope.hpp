@@ -58,6 +58,8 @@ struct Scope {
     DataArena& arena;
     const bool top_level;
     void insert(SymbolId symbol, DefId def, scope_kind kind);
+    static ScopeLookUpResult look_up_impl(const Context& context, ScopeId local_scope_id,
+                                          SymbolId symbol, scope_kind kind);
 
   public:
     bool is_top_level() const { return top_level; };
@@ -100,7 +102,8 @@ struct ScopeAnon {
     bool has_used_defs;
 
     void insert(SymbolId symbol, DefId def, scope_kind kind);
-
+    static ScopeLookUpResult look_up_impl(const Context& context, ScopeAnonId local_scope_id,
+                                          SymbolId symbol, scope_kind kind);
     friend class Scope;
 
   public:

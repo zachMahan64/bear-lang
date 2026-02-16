@@ -54,6 +54,9 @@ class Context {
     /// prints info based on cli-flags
     void try_print_info() const;
 
+    friend class Scope;
+    friend class ScopeAnon;
+
   private:
     // containers:
     // ~~~~~~~~~~~~~~~~~ file stuff ~~~~~~~~~~~~~~~~~~~
@@ -69,12 +72,10 @@ class Context {
     IdVecMap<FileId, llvm::SmallVector<FileId>> importee_to_importers;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  public:
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
     NodeVector<Scope> scopes;
     NodeVector<ScopeAnon> scope_anons;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  private:
     /// const char* -> hir::SymbolId
     DataArena symbol_storage_arena;
     DataArena symbol_map_arena;
@@ -86,11 +87,9 @@ class Context {
     NodeVector<Exec> execs;
 
     // ~~~~ defs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  public:
     IdVector<DefId> def_ids;
     NodeVector<Def> defs;
 
-  private:
     /// indicated whether this node is unvisited, visited during top-level resolution, or resolved
     IdVecMap<DefId, Def::resol_state> def_resol_states; // index with DefId
     /// tracks whether a defintion is used/unused/modified (for tracking dead definitions)

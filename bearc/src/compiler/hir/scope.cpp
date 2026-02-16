@@ -31,8 +31,8 @@ Scope::Scope(ScopeId parent, DataArena& arena, bool is_top_level)
       namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(is_top_level) {}
 
-static inline ScopeLookUpResult hir_scope_look_up(const Context& context, ScopeId local_scope_id,
-                                                  SymbolId symbol, scope_kind kind) {
+ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scope_id,
+                                      SymbolId symbol, scope_kind kind) {
 
     if (!local_scope_id.val()) {
         return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
@@ -80,27 +80,26 @@ static inline ScopeLookUpResult hir_scope_look_up(const Context& context, ScopeI
 
 ScopeLookUpResult Scope::look_up_namespace(const Context& context, ScopeId local_scope,
                                            SymbolId symbol) {
-    return hir_scope_look_up(context, local_scope, symbol, scope_kind::NAMESPACE);
+    return look_up_impl(context, local_scope, symbol, scope_kind::NAMESPACE);
 }
 ScopeLookUpResult Scope::look_up_variable(const Context& context, ScopeId local_scope,
                                           SymbolId symbol) {
-    return hir_scope_look_up(context, local_scope, symbol, scope_kind::VARIABLE);
+    return look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
 }
 ScopeLookUpResult Scope::look_up_function(const Context& context, ScopeId local_scope,
                                           SymbolId symbol) {
 
-    return hir_scope_look_up(context, local_scope, symbol, scope_kind::FUNCTION);
+    return look_up_impl(context, local_scope, symbol, scope_kind::FUNCTION);
 }
 ScopeLookUpResult Scope::look_up_type(const Context& context, ScopeId local_scope,
                                       SymbolId symbol) {
-    return hir_scope_look_up(context, local_scope, symbol, scope_kind::TYPE);
+    return look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
 }
 
 // ------------------ ANON SCOPE IMPL ----------------------
 
-static inline ScopeLookUpResult hir_scope_anon_look_up(const Context& context,
-                                                       ScopeAnonId local_scope_id, SymbolId symbol,
-                                                       scope_kind kind) {
+ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId local_scope_id,
+                                          SymbolId symbol, scope_kind kind) {
     if (!local_scope_id.val()) {
         return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
     }
@@ -127,7 +126,7 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const Context& context,
 
             // TODO replace with encapsulated context logic once the tables impl is written
             const Def& used_def = context.defs.cat(def_id);
-            const ScopeLookUpResult used_res = hir_scope_look_up(
+            const ScopeLookUpResult used_res = Scope::look_up_impl(
                 context, std::get<DefModule>(used_def.value).scope, symbol, kind);
 
             if (used_res.status == hir_scope_look_up_result_status::OKAY) {
@@ -220,25 +219,25 @@ static inline ScopeLookUpResult hir_scope_anon_look_up(const Context& context,
 ScopeLookUpResult hir_scope_anon_look_up_variable(Context& context, ScopeAnonId local_scope,
                                                   SymbolId symbol) {
 
-    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::VARIABLE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
 }
 
 ScopeLookUpResult hir_scope_anon_look_up_type(Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
-    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::TYPE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
 }
 
 ScopeLookUpResult ScopeAnon::look_up_variable(const Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
-    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::VARIABLE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
 }
 
 ScopeLookUpResult ScopeAnon::look_up_type(const Context& context, ScopeAnonId local_scope,
                                           SymbolId symbol) {
 
-    return hir_scope_anon_look_up(context, local_scope, symbol, scope_kind::TYPE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
 }
 
 // ------------------ insert helpers ----------------------
