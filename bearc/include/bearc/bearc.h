@@ -13,8 +13,6 @@
 extern "C" {
 #endif
 
-// FUNCTIONS
-// MAIN CLI FUNCTION
 int br_launch_cli(int argc, char** argv);
 
 #ifdef __cplusplus

@@ -6,8 +6,8 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_HIR_EXEC_OPS
-#define COMPILER_HIR_EXEC_OPS
+#ifndef COMPILER_HIR_EXEC_OPS_HPP
+#define COMPILER_HIR_EXEC_OPS_HPP
 #include <cstdint>
 
 typedef struct token token_t;
@@ -18,7 +18,7 @@ enum class binary_op : uint8_t {
     MINUS,
     MULTIPLY,
     DIVIDE,
-    MODULUS,
+    MODULO,
     BIT_OR,
     BIT_AND,
     BIT_NOT,

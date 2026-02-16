@@ -13,7 +13,7 @@
     - [x] defs
     - [x] types
     - [x] exec
-        - [ ] mapping from token operator token_type_e's -> hir-specific operator types 
+        - [x] mapping from token operator token_type_e's -> hir-specific operator types 
     - [ ] generics args/params
 - [ ] impl limited external query system for hir::Context
 - [ ] impl an ast visitor that adds to the hir::Context, simultaneously impl an hir visitor to analyze Context during resolution
