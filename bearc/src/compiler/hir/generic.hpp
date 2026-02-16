@@ -18,7 +18,7 @@ struct GenericArg {
     GenericArgValue value;
 };
 
-using GenericParamValue = std::variant<IdentifierId, ParamId>;
+using GenericParamValue = std::variant<IdentifierId, DefId>;
 struct GenericParam {
     using id_type = GenericArgId;
     GenericParamValue value;

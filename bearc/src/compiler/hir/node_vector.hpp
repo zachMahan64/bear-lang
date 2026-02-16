@@ -12,8 +12,6 @@
 #include "compiler/hir/indexing.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
-#include <iostream>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 namespace hir {

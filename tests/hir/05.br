@@ -1,0 +1,4 @@
+
+struct Bar {
+    str& thingie;
+}

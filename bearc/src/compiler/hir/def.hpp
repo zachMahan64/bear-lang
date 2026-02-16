@@ -148,6 +148,10 @@ struct Def {
     OptId<DefId> parent;
     /// indicates pub (true) or hid (false) visibility
     const bool pub;
+    Def(DefValue& value, SymbolId name, bool pub, Span span, DefId parent)
+        : value{value}, span{span}, name{name}, pub{pub}, parent{parent} {}
+    Def(DefValue& value, SymbolId name, bool pub, Span span)
+        : value{value}, span{span}, name{name}, pub{pub} {}
 };
 
 } // namespace hir

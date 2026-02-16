@@ -174,16 +174,6 @@ class GenericArgId {
     friend constexpr bool operator==(GenericArgId a, GenericArgId b) { return a.value == b.value; }
 };
 
-/// for addressing parameter nodes
-class ParamId {
-    HirId value;
-
-  public:
-    constexpr explicit ParamId(HirId v) : value(v) {}
-    constexpr ParamId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(ParamId a, ParamId b) { return a.value == b.value; }
-};
 /// holds an optional HirId or HirIdIdx type
 template <hir::Id T> class OptId {
     T underlying{};

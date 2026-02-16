@@ -137,19 +137,15 @@ struct ExecExprStructMemberInit {
 };
 
 struct ExecExprClosure {
-    IdSlice<ParamId> params;
+    IdSlice<DefId> params;
     IdSlice<DefId> captures;
     TypeId return_type;
     bool move;
 };
 
 struct ExecExprVariantDecomp {
-    IdSlice<ParamId> fields;
+    IdSlice<DefId> fields;
     DefId def;
-};
-
-struct ExecExprBlock {
-    ExecId block;
 };
 
 struct ExecExprMatch {
@@ -174,7 +170,7 @@ using ExecValue = std::variant<
     ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
     ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
     ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprStructInit, ExecExprStructMemberInit,
-    ExecExprClosure, ExecExprVariantDecomp, ExecExprBlock, ExecExprMatch, ExecExprMatchBranch>;
+    ExecExprClosure, ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch>;
 
 /// main exec structure, corresponds to an hir::ExecId
 struct Exec {
@@ -182,6 +178,7 @@ struct Exec {
     ExecValue value;
     const Span span;
     const bool compt;
+    Exec(ExecValue value, Span span, bool compt) : value{value}, span{span}, compt{compt} {}
 };
 
 } // namespace hir
