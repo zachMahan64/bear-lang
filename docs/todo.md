@@ -9,12 +9,12 @@
 - [x] add an ArenaStringHashMap implementation for sybmbols (or consider an LLVM datastructure), see comment in hir/builder.cpp
 - [x] flesh out query system a bit more, make a better ctor
 - [x] improve CLI to accept import paths
-- [ ] finish hir structural impls
+- [x] finish hir structural impls
     - [x] defs
     - [x] types
     - [x] exec
         - [x] mapping from token operator token_type_e's -> hir-specific operator types 
-    - [ ] generics args/params
+    - [x] generics args/params
 - [ ] impl limited external query system for hir::Context
 - [ ] impl an ast visitor that adds to the hir::Context, simultaneously impl an hir visitor to analyze Context during resolution
 - [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics)
