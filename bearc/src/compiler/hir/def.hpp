@@ -113,13 +113,15 @@ struct DefDefType {
     TypeId type;
 };
 
+struct DefUnevaluated {};
+
 // ^^^^^^ struct impls ^^^^^^^^
 
 /// main exec variant
 using DefValue
     = std::variant<DefModule, DefFunction, DefGenericFunction, DefFunctionPrototype, DefVariable,
                    DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
-                   DefUnion, DefContract, DefDefType>;
+                   DefUnion, DefContract, DefDefType, DefUnevaluated>;
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
@@ -153,7 +155,8 @@ struct Def {
         : value{value}, span{span}, name{name}, pub{pub}, parent{parent} {}
     Def(DefValue& value, SymbolId name, bool pub, Span span)
         : value{value}, span{span}, name{name}, pub{pub} {}
-    Def(SymbolId name, bool pub, Span span) : span{span}, name{name}, pub{pub} {}
+    Def(SymbolId name, bool pub, Span span)
+        : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
     void set_value(DefValue value) { this->value = value; }
 };
 

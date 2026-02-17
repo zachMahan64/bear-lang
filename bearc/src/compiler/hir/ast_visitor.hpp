@@ -14,11 +14,18 @@
 #include "compiler/hir/indexing.hpp"
 namespace hir {
 
+struct TopLevelInfo {
+    scope_kind kind;
+    token_t* name_tkn = nullptr;
+    std::optional<ast_slice_of_stmts_t> stmts;
+};
+
 class AstVisitor {
     Context& context;
     FileId file;
     void register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt);
     void register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts);
+    static TopLevelInfo top_level_info_for(ast_stmt_t* stmt);
 
   public:
     AstVisitor(Context& context, FileId file) : context(context), file(file) {}

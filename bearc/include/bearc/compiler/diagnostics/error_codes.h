@@ -50,6 +50,7 @@ typedef enum error_code {
     ERR_MUT_QUALIFIER_ON_NON_MT,
     ERR_IMPORTED_FILE_DOES_NOT_EXIST,
     ERR_REDEFINITON,
+    ERR_INVALID_FUNCTION_PREFIX,
     ERR__COUNT
 } error_code_e;
 

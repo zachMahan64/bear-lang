@@ -24,7 +24,6 @@ void AstVisitor::register_top_level_declarations() {
                              context.ast(file).root()->stmt.file.stmts);
 }
 
-/// TODO, handle namespace insertion and also handle redefintions
 void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
     // handle visibility modifier
     bool pub = false;
@@ -73,89 +72,10 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls);
         return;
     }
-
-    scope_kind kind;
-    token_t* name_tkn = nullptr;
-    std::optional<ast_slice_of_stmts_t> stmts{};
-    switch (stmt->type) {
-    case AST_STMT_EXTERN_BLOCK: {
-        // todo
-        break;
-    }
-
-    // TODO HANDLE INTERNAL SCOPES FOR THESE -----------------------------------
-    case AST_STMT_STRUCT_DEF: {
-        name_tkn = stmt->stmt.struct_decl.name;
-        stmts = stmt->stmt.struct_decl.fields;
-        kind = scope_kind::TYPE;
-        break;
-    }
-    case AST_STMT_CONTRACT_DEF: {
-        name_tkn = stmt->stmt.contract_decl.name;
-        stmts = stmt->stmt.contract_decl.fields;
-        kind = scope_kind::TYPE;
-        break;
-    }
-    case AST_STMT_UNION_DEF: {
-        name_tkn = stmt->stmt.union_decl.name;
-        stmts = stmt->stmt.union_decl.fields;
-        kind = scope_kind::TYPE;
-        break;
-    }
-    case AST_STMT_VARIANT_DEF: {
-        name_tkn = stmt->stmt.variant_decl.name;
-        stmts = stmt->stmt.variant_decl.fields;
-        kind = scope_kind::TYPE;
-        break;
-    }
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    case AST_STMT_VARIANT_FIELD_DECL: {
-        name_tkn = stmt->stmt.variant_field_decl.name;
-        kind = scope_kind::VARIABLE;
-        break;
-    }
-    case AST_STMT_VAR_DECL: {
-        name_tkn = stmt->stmt.var_decl.name;
-        kind = scope_kind::VARIABLE;
-        break;
-    }
-    case AST_STMT_VAR_INIT_DECL: {
-        name_tkn = stmt->stmt.var_init_decl.name;
-        kind = scope_kind::VARIABLE;
-        break;
-    }
-    case AST_STMT_FN_DECL: {
-        token_ptr_slice_t name_slice = stmt->stmt.fn_decl.name;
-        // TODO make this much more robust and properly detect that the parent is a struct with a
-        // compiler error instead of an assert
-        if (name_slice.len == 2) {
-            DefId parent_struct_id
-                = Scope::look_up_type(context, scope,
-                                      context.get_symbol_id_for_tkn(name_slice.start[0]))
-                      .def_id;
-            DefValue value = context.defs.cat(parent_struct_id).value;
-            assert(std::holds_alternative<DefStruct>(value));
-            scope = std::get<DefStruct>(value).scope;
-            name_tkn = name_slice.start[1];
-        } else if (name_slice.len == 1) {
-            name_tkn = name_slice.start[0];
-        }
-        kind = scope_kind::VARIABLE;
-        break;
-    }
-    case AST_STMT_FN_PROTOTYPE: {
-        // guranteed to be just one long
-        name_tkn = stmt->stmt.fn_prototype.name.start[0];
-        kind = scope_kind::VARIABLE;
-        break;
-    }
-    case AST_STMT_DEFTYPE:
-        name_tkn = stmt->stmt.deftype.alias_id;
-        kind = scope_kind::TYPE;
-        break;
-    default:
-        return;
-    }
+    TopLevelInfo info = top_level_info_for(stmt);
+    scope_kind kind = info.kind;
+    token_t* name_tkn = info.name_tkn;
+    std::optional<ast_slice_of_stmts_t> stmts = info.stmts;
     // if this wasn't named definition
     if (name_tkn == nullptr) {
         return;
@@ -203,6 +123,84 @@ void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t st
     for (size_t i = 0; i < stmts.len; i++) {
         register_top_level_stmt(scope, stmts.start[i]);
     }
+}
+
+TopLevelInfo AstVisitor::top_level_info_for(ast_stmt_t* stmt) {
+    scope_kind kind;
+    token_t* name_tkn = nullptr;
+    std::optional<ast_slice_of_stmts_t> stmts{};
+    switch (stmt->type) {
+    case AST_STMT_EXTERN_BLOCK: {
+        // TODO
+        break;
+    }
+
+    // internal scopes are deffered -----------------------------------
+    case AST_STMT_STRUCT_DEF: {
+        name_tkn = stmt->stmt.struct_decl.name;
+        stmts = stmt->stmt.struct_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_CONTRACT_DEF: {
+        name_tkn = stmt->stmt.contract_decl.name;
+        stmts = stmt->stmt.contract_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_UNION_DEF: {
+        name_tkn = stmt->stmt.union_decl.name;
+        stmts = stmt->stmt.union_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_VARIANT_DEF: {
+        name_tkn = stmt->stmt.variant_decl.name;
+        stmts = stmt->stmt.variant_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    case AST_STMT_VARIANT_FIELD_DECL: {
+        name_tkn = stmt->stmt.variant_field_decl.name;
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_VAR_DECL: {
+        name_tkn = stmt->stmt.var_decl.name;
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_VAR_INIT_DECL: {
+        name_tkn = stmt->stmt.var_init_decl.name;
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_FN_DECL: {
+        token_ptr_slice_t name_slice = stmt->stmt.fn_decl.name;
+        // struct prefix name resolution deffered to later stages
+        if (name_slice.len == 2) {
+            name_tkn = name_slice.start[1];
+        } else if (name_slice.len == 1) {
+            name_tkn = name_slice.start[0];
+        }
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_FN_PROTOTYPE: {
+        // guranteed to be just one long
+        name_tkn = stmt->stmt.fn_prototype.name.start[0];
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_DEFTYPE:
+        name_tkn = stmt->stmt.deftype.alias_id;
+        kind = scope_kind::TYPE;
+        break;
+    default:
+        break;
+    }
+    return TopLevelInfo{.kind = kind, .name_tkn = name_tkn, .stmts = stmts};
 }
 
 } // namespace hir

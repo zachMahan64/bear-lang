@@ -45,7 +45,9 @@ const char* error_message_for_code(error_code_e error_code) {
            [ERR_IMPORTED_FILE_DOES_NOT_EXIST] = "imported file does not exist",
            [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION]
            = "too many qualifications on function declaration",
-           [ERR_REDEFINITON] = "redefined symbol"};
+           [ERR_REDEFINITON] = "redefined symbol",
+           [ERR_INVALID_FUNCTION_PREFIX]
+           = "function prefix cannot be resolved to a valid struct declaration"};
     return error_messages[error_code];
 }
 
