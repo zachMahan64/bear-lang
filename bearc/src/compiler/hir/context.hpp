@@ -40,10 +40,16 @@ class Context {
     int error_count() const noexcept;
     // ----- accessors --------
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
-    SymbolId get_symbol_id(std::string_view str);
+    [[nodiscard]] SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
-    FileId get_file(std::filesystem::path& path);
-    const char* file_name(FileId id) const;
+    [[nodiscard]] FileId get_file(std::filesystem::path& path);
+    [[nodiscard]] const char* file_name(FileId id) const;
+    [[nodiscard]] const FileAst& ast(FileId file_id) const;
+    [[nodiscard]] ScopeId get_top_level_scope();
+    [[nodiscard]] ScopeId make_named_scope();
+
+    /// for registering definitions at the top level before resolution
+    DefId register_top_level_def(SymbolId name, bool pub, Span span, ast_stmt_t* stmt);
 
     // ----- info viewing ------
     const char* symbol_id_to_cstr(SymbolId id) const;
@@ -56,6 +62,7 @@ class Context {
 
     friend class Scope;
     friend class ScopeAnon;
+    friend class AstVisitor;
 
   private:
     // containers:
@@ -73,6 +80,7 @@ class Context {
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
+    DataArena scope_arena;
     NodeVector<Scope> scopes;
     NodeVector<ScopeAnon> scope_anons;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,6 +100,9 @@ class Context {
 
     /// indicated whether this node is unvisited, visited during top-level resolution, or resolved
     IdVecMap<DefId, Def::resol_state> def_resol_states; // index with DefId
+    /// cached dense mapping of DefIds to AST nodes for fast resolution, this mapping should never
+    /// be serialized
+    IdVecMap<DefId, ast_stmt_t*> def_ast_nodes;
     /// tracks whether a defintion is used/unused/modified (for tracking dead definitions)
     IdVecMap<DefId, Def::mention_state> def_mention_states;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -107,7 +118,7 @@ class Context {
     NodeVector<GenericArg> generic_args;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     // error tracking
-    std::atomic<uint32_t> parse_error_count;
+    std::atomic<uint32_t> hard_error_count;
     std::atomic<uint32_t> semantic_error_count;
     std::atomic<uint32_t> fatal_error_count;
 

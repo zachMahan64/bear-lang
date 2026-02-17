@@ -61,6 +61,7 @@ set(SRC
     src/compiler/hir/file.cpp
     src/compiler/hir/context.cpp
     src/compiler/hir/scope.cpp
+    src/compiler/hir/ast_visitor.cpp
 
 )
 

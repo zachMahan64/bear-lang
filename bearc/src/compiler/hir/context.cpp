@@ -13,6 +13,7 @@
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/scope.hpp"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/log.hpp"
@@ -26,6 +27,7 @@
 namespace hir {
 
 static constexpr size_t DEFAULT_SYMBOL_ARENA_CAP = 0x10000;
+static constexpr size_t DEFAULT_SCOPE_ARENA_CAP = 0x10000;
 static constexpr size_t DEFAULT_ID_MAP_ARENA_CAP
     = 0x1000; // increase if any other top level maps need to be made
 static constexpr size_t DEFAULT_SYM_TO_FILE_ID_MAP_CAP = 0x80;
@@ -56,7 +58,8 @@ Context::Context(const bearc_args_t* args)
       generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
-      str_to_symbol_id_map{symbol_map_arena}, args{args} {
+      str_to_symbol_id_map{symbol_map_arena}, args{args}, scope_arena{DEFAULT_SCOPE_ARENA_CAP},
+      def_ast_nodes(DEFAULT_DEF_VEC_CAP) {
 
     // get try to get root file, and allow checking cwd for it
     std::optional<std::filesystem::path> maybe_root_file
@@ -80,11 +83,11 @@ Context::Context(const bearc_args_t* args)
 }
 
 void Context::bump_parser_error_count(uint32_t cnt) noexcept {
-    parse_error_count.fetch_add(cnt, std::memory_order_relaxed);
+    hard_error_count.fetch_add(cnt, std::memory_order_relaxed);
 }
 
 int Context::error_count() const noexcept {
-    return static_cast<int>(this->parse_error_count + this->semantic_error_count);
+    return static_cast<int>(this->hard_error_count + this->semantic_error_count);
 }
 
 SymbolId Context::get_symbol_id(std::string_view str) {
@@ -309,5 +312,27 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     }
     return get_file(maybe_path.value());
 }
+
+DefId Context::register_top_level_def(SymbolId name, bool pub, Span span, ast_stmt_t* stmt) {
+    DefId def = defs.emplace_and_get_id(name, pub, span);
+    def_resol_states.bump(Def::resol_state::top_level_visited);
+    def_ast_nodes.bump(stmt);
+    def_mention_states.bump(Def::mention_state::unmentioned);
+    return def;
+}
+
+const FileAst& Context::ast(FileId file_id) const {
+    return file_asts.cat(files.cat(file_id).ast_id);
+}
+
+ScopeId Context::get_top_level_scope() {
+    if (scopes.size() == 0) {
+        return scopes.emplace_and_get_id(scope_arena);
+    }
+    // the top-level scope will have to be the first scope!
+    return ScopeId{1};
+}
+
+ScopeId Context::make_named_scope() { return scopes.emplace_and_get_id(scope_arena); }
 
 } // namespace hir

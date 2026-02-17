@@ -22,6 +22,11 @@ struct DefModule {
     SymbolId name;
 };
 
+enum class extern_lang : uint8_t {
+    native = 0,
+    c,
+};
+
 struct DefFunction {
     SymbolId name;
     IdSlice<DefId> params;
@@ -31,6 +36,7 @@ struct DefFunction {
     OptId<DefId> original;
     bool compt;
     // indicates if this is extern C compatible
+    hir::extern_lang lang = extern_lang::native;
 };
 
 struct DefGenericFunction {
@@ -38,11 +44,6 @@ struct DefGenericFunction {
     SymbolId name;
     // potentially problematic
     DefId underlying_def;
-};
-
-enum class extern_lang : uint8_t {
-    native = 0,
-    c,
 };
 
 struct DefFunctionPrototype {
@@ -152,6 +153,8 @@ struct Def {
         : value{value}, span{span}, name{name}, pub{pub}, parent{parent} {}
     Def(DefValue& value, SymbolId name, bool pub, Span span)
         : value{value}, span{span}, name{name}, pub{pub} {}
+    Def(SymbolId name, bool pub, Span span) : span{span}, name{name}, pub{pub} {}
+    void set_value(DefValue value) { this->value = value; }
 };
 
 } // namespace hir

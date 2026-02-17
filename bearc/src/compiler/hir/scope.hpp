@@ -12,8 +12,8 @@
 #include "compiler/hir/id_hash_map.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "utils/data_arena.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <cstdint>
-#include <vector>
 
 namespace hir {
 
@@ -36,7 +36,6 @@ struct ScopeLookUpResult {
 };
 enum class scope_kind : uint8_t {
     NAMESPACE,
-    FUNCTION,
     VARIABLE,
     TYPE,
 };
@@ -51,8 +50,6 @@ struct Scope {
     ScopeIdMap namespaces;
     /// var foo;
     ScopeIdMap variables;
-    /// top-level functions
-    ScopeIdMap functions;
     /// structs, variants, unions, deftypes
     ScopeIdMap types;
     DataArena& arena;
@@ -63,19 +60,18 @@ struct Scope {
 
   public:
     bool is_top_level() const { return top_level; };
+    // constructs a non-top-level scope with a parent
     Scope(ScopeId parent, DataArena& arena);
-    Scope(ScopeId parent, DataArena& arena, bool is_top_level);
+    // constructs a top level scope
+    Scope(DataArena& arena);
     static ScopeLookUpResult look_up_namespace(const Context& context, ScopeId local_scope,
                                                SymbolId symbol);
     static ScopeLookUpResult look_up_variable(const Context& context, ScopeId local_scope,
-                                              SymbolId symbol);
-    static ScopeLookUpResult look_up_function(const Context& context, ScopeId local_scope,
                                               SymbolId symbol);
     static ScopeLookUpResult look_up_type(const Context& context, ScopeId local_scope,
                                           SymbolId symbol);
 
     void insert_namespace(SymbolId symbol, DefId def);
-    void insert_function(SymbolId symbol, DefId def);
     void insert_variable(SymbolId symbol, DefId def);
     void insert_type(SymbolId symbol, DefId def);
 
@@ -94,8 +90,9 @@ struct ScopeAnon {
     ScopeIdMap types;
     /// var foo;
     ScopeIdMap variables;
+    static constexpr size_t NUM_HIGH_USED_DEFS = 16;
     /// modules, struct, and variant defs brought in
-    std::vector<DefId> used_defs;
+    llvm::SmallVector<DefId, NUM_HIGH_USED_DEFS> used_defs;
     /// for shared flat map storage
     DataArena& arena;
     // so that we can lazily init the used_defs_hir_def_id vector

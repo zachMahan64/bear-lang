@@ -22,14 +22,14 @@
 namespace hir {
 
 Scope::Scope(ScopeId parent, DataArena& arena)
-    : named_parent(parent), arena(arena), functions(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(false) {}
+    : named_parent(parent), arena(arena), namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      top_level(false) {}
 
-Scope::Scope(ScopeId parent, DataArena& arena, bool is_top_level)
-    : named_parent(parent), arena(arena), functions(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), top_level(is_top_level) {}
+Scope::Scope(DataArena& arena)
+    : arena(arena), namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      top_level(true) {}
 
 ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scope_id,
                                       SymbolId symbol, scope_kind kind) {
@@ -51,9 +51,6 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
         switch (kind) {
         case scope_kind::NAMESPACE:
             def = curr_scope->namespaces.at(symbol).as_id();
-            break;
-        case scope_kind::FUNCTION:
-            def = curr_scope->functions.at(symbol).as_id();
             break;
         case scope_kind::VARIABLE:
             def = curr_scope->variables.at(symbol).as_id();
@@ -86,11 +83,6 @@ ScopeLookUpResult Scope::look_up_variable(const Context& context, ScopeId local_
                                           SymbolId symbol) {
     return look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
 }
-ScopeLookUpResult Scope::look_up_function(const Context& context, ScopeId local_scope,
-                                          SymbolId symbol) {
-
-    return look_up_impl(context, local_scope, symbol, scope_kind::FUNCTION);
-}
 ScopeLookUpResult Scope::look_up_type(const Context& context, ScopeId local_scope,
                                       SymbolId symbol) {
     return look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
@@ -122,7 +114,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
 
         for (HirSize i = 0; i < vec.size(); i++) {
 
-            const DefId def_id = vec.at(i);
+            const DefId def_id = vec[i];
 
             // TODO replace with encapsulated context logic once the tables impl is written
             const Def& used_def = context.defs.cat(def_id);
@@ -148,9 +140,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
             curr_scope_anon = &context.scope_anons.cat(curr_scope_anon_id);
             switch (kind) {
             case scope_kind::NAMESPACE:
-            case scope_kind::FUNCTION:
-                // functions decls only allowed at top-level/named
-                assert(false && "namespace/function lookup in anonymous scope");
+                assert(false && "namespace lookup in anonymous scope");
                 break;
             case scope_kind::VARIABLE:
                 result_def = curr_scope_anon->variables.at(symbol).as_id();
@@ -177,9 +167,6 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
             switch (kind) {
             case scope_kind::NAMESPACE:
                 result_def = curr_scope_named->namespaces.at(symbol).as_id();
-                break;
-            case scope_kind::FUNCTION:
-                result_def = curr_scope_named->functions.at(symbol).as_id();
                 break;
             case scope_kind::VARIABLE:
                 result_def = curr_scope_named->variables.at(symbol).as_id();
@@ -248,9 +235,6 @@ void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
     case scope_kind::NAMESPACE:
         this->namespaces.insert(symbol, def);
         break;
-    case scope_kind::FUNCTION:
-        this->functions.insert(symbol, def);
-        break;
     case scope_kind::VARIABLE:
         this->variables.insert(symbol, def);
         break;
@@ -264,8 +248,7 @@ void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
 void ScopeAnon::insert(SymbolId symbol, DefId def, scope_kind kind) {
     switch (kind) {
     case scope_kind::NAMESPACE:
-    case scope_kind::FUNCTION:
-        assert(false && "namespace/function insertion in anonymous scope");
+        assert(false && "namespace insertion in anonymous scope");
         break;
     case scope_kind::VARIABLE:
         this->variables.insert(symbol, def);
@@ -295,10 +278,6 @@ ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, DataArena& arena)
 // ------------------------- named scope inserters -------------------------------
 void Scope::insert_namespace(SymbolId symbol, DefId def) {
     insert(symbol, def, scope_kind::NAMESPACE);
-}
-void Scope::insert_function(SymbolId symbol, DefId def) {
-
-    insert(symbol, def, scope_kind::FUNCTION);
 }
 void Scope::insert_variable(SymbolId symbol, DefId def) {
     insert(symbol, def, scope_kind::VARIABLE);

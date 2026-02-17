@@ -328,7 +328,6 @@ allocate HirDefIds for:
         HirBuilder thread (which eats the HirBuilder queue) ceases when no FileAst's are NotStarted or Loading
 
 insert SymbolId -> HirDefId into current ScopeTable
-cache SymbolId into the AST decl node for faster walking the 2nd time around
 create child HirScopes where needed
 postpone building bodies, no identifiers resolved yet
 
