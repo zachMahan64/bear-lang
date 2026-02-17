@@ -10,6 +10,7 @@
 #define COMPILER_DIAGNOSTICS_ERROR_CODES_H
 
 #include "compiler/token.h"
+#include "stdbool.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,6 +51,7 @@ typedef enum error_code {
     ERR_MUT_QUALIFIER_ON_NON_MT,
     ERR_IMPORTED_FILE_DOES_NOT_EXIST,
     ERR_REDEFINITON,
+    NOTE_ORIGINAL_DEF_HERE,
     ERR_INVALID_FUNCTION_PREFIX,
     ERR__COUNT
 } error_code_e;
@@ -71,6 +73,9 @@ typedef struct {
 
 // getting the error message for a given error_code_e
 const char* error_message_for_code(error_code_e error_code);
+
+// getting if the error is really a note for a given error_code_e
+bool is_really_note(error_code_e error_code);
 
 /**
  * gives addition context for appropriate compiler_error_t's

@@ -77,7 +77,7 @@ Context::Context(const bearc_args_t* args)
     // search imports to build all asts
     this->explore_imports(root_id);
     // tally parser errors
-    for (FileId id = files.first_id(); id != files.last_id(); ++id) {
+    for (FileId id = files.rfirst_id(); id != files.rlast_id(); --id) {
         File& f = files.at(id);
         const FileAst& ast = file_asts.cat(f.ast_id);
         AstVisitor visitor{*this, id};
@@ -280,7 +280,16 @@ void Context::try_print_info() const {
             std::cout << ansi_reset() << "\n";
         }
     }
-
+    /*
+    if (!args->flags[CLI_FLAG_SILENT]) {
+        auto len = this->error_count();
+        if (len == 1) {
+            puts("1 error generated.");
+        } else if (len != 0) {
+            printf("%d errors generated.\n", len);
+        }
+    }
+    */
     // std::cout << tables.files.size() << '\n';
     if (this->error_count() != 0) {
         if (!args->flags[CLI_FLAG_SILENT]) {

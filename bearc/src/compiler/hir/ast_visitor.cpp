@@ -100,6 +100,10 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
     // redefintion guard
     if (already_defined.has_value()) {
         context.ast(this->file).emplace_tokenwise_error(name_tkn, ERR_REDEFINITON);
+        FileAst& orig_ast = context.ast(context.defs.cat(already_defined.as_id()).span.file_id);
+        orig_ast.emplace_tokenwise_error(
+            top_level_info_for(context.def_ast_nodes.at(already_defined.as_id())).name_tkn,
+            NOTE_ORIGINAL_DEF_HERE);
         return;
     }
 
@@ -125,7 +129,7 @@ void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t st
     }
 }
 
-TopLevelInfo AstVisitor::top_level_info_for(ast_stmt_t* stmt) {
+TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     scope_kind kind;
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
@@ -176,6 +180,9 @@ TopLevelInfo AstVisitor::top_level_info_for(ast_stmt_t* stmt) {
         kind = scope_kind::VARIABLE;
         break;
     }
+    // TODO, needs to injected into the (struct,union,variant)'s scope
+    // probably implement this outside of this method by adding a field to TopLevelInfo with
+    // `parent_name_tkn`
     case AST_STMT_FN_DECL: {
         token_ptr_slice_t name_slice = stmt->stmt.fn_decl.name;
         // struct prefix name resolution deffered to later stages

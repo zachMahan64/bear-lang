@@ -82,6 +82,7 @@ class FileId {
     [[nodiscard]] constexpr HirId val() const noexcept { return value; }
     friend constexpr bool operator==(FileId a, FileId b) { return a.value == b.value; }
     constexpr FileId operator++() { return FileId{++value}; }
+    constexpr FileId operator--() { return FileId{--value}; }
 };
 
 /// for addressing asts

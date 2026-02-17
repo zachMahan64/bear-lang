@@ -81,9 +81,13 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstr(&line_num_str, COMP_ERR_SIDE_BAR);
     string_push_cstr(&line_under_num_str, COMP_ERR_SIDE_BAR);
 
+    const char* accent_color
+        = is_really_note(err->error_code) ? ansi_bold_yellow() : ansi_bold_red();
+    const char* err_word = is_really_note(err->error_code) ? "note" : "error";
+
     // do printing now that we have all strings setup
-    printf("%s\'%s\': at (line %zu,%zu): %serror: %s%s%s%s\n", ansi_bold_white(),
-           list->src_buffer.file_name, line, col, ansi_bold_red(), ansi_bold_white(),
+    printf("%s\'%s\': at (line %zu,%zu): %s%s: %s%s%s%s\n", ansi_bold_white(),
+           list->src_buffer.file_name, line, col, accent_color, err_word, ansi_bold_white(),
            error_message_for_code(err->error_code), error_message_context_for(err), ansi_reset());
 
     string_view_t line_preview = get_line_string_view(&list->src_buffer, err->start_tkn);
@@ -104,7 +108,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
 
     printf("%s %.*s\n", string_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
-    string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, ansi_bold_red());
+    string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, accent_color);
 
     printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
     // print an extra "   |   "
@@ -122,14 +126,6 @@ void compiler_error_list_print_all(const compiler_error_list_t* list) {
     for (size_t i = 0; i < len; i++) {
         compiler_error_print_err(list, i);
     }
-    if (len == 0) {
-        return; // no errors
-    }
-    if (len == 1) {
-        puts("1 error generated.");
-        return;
-    }
-    printf("%zu errors generated.\n", len);
 }
 
 bool compiler_error_list_empty(const compiler_error_list_t* list) {

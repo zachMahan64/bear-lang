@@ -569,20 +569,14 @@ ast_stmt_t* parse_module(parser_t* p) {
     if (semicolon) {
         ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_EOF);
         mod->stmt.module.decls = decls;
-        mod->first = mod_tkn;
-        if (decls.len > 0) {
-            mod->last = decls.start[decls.len - 1]->last;
-        } else {
-            mod->last = semicolon;
-        }
     } else {
         parser_expect_token(p, TOK_LBRACE);
         ast_slice_of_stmts_t decls = parse_slice_of_decls(p, TOK_RBRACE);
-        token_t* rbrace = parser_expect_token(p, TOK_RBRACE);
+        parser_expect_token(p, TOK_RBRACE);
         mod->stmt.module.decls = decls;
-        mod->first = mod_tkn;
-        mod->last = rbrace;
     }
+    mod->first = mod_tkn;
+    mod->last = parser_prev(p);
     return mod;
 }
 

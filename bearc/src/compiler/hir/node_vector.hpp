@@ -54,6 +54,8 @@ template <hir::Id I, typename V> class IdVecMap {
 
     [[nodiscard]] I first_id() const { return I{1}; }
     [[nodiscard]] I last_id() const { return I{static_cast<HirId>(vec.size() + OFFSET)}; }
+    [[nodiscard]] I rfirst_id() const { return I{static_cast<HirId>(vec.size() + OFFSET - 1)}; }
+    [[nodiscard]] I rlast_id() const { return I{0}; }
 
     using value_type = V;
     using reference = V&;

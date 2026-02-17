@@ -1,4 +1,4 @@
-// simple test
+// 04.br
 
 import "tests/hir/05.br";
 
@@ -32,5 +32,15 @@ mod animal {
     i32 cat;
     mod animal {
         i32 dog;
+    }
+}
+
+struct Bar {
+    i32 some_val;
+}
+
+mod foo {
+    struct Bar {
+        i32 this_is_fine;
     }
 }
