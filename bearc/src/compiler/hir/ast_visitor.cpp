@@ -8,6 +8,7 @@
 
 #include "compiler/hir/ast_visitor.hpp"
 #include "compiler/ast/stmt.h"
+#include "compiler/diagnostics/error_codes.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/indexing.hpp"
@@ -68,7 +69,7 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
                                 : context.make_named_scope();
 
         context.defs.at(def).set_value(DefModule{.scope = mod_scope, .name = name});
-        context.scopes.at(scope).insert_namespace(name, def);
+        context.scope(scope).insert_namespace(name, def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls);
         return;
     }
@@ -81,6 +82,8 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
         // todo
         break;
     }
+
+    // TODO HANDLE INTERNAL SCOPES FOR THESE -----------------------------------
     case AST_STMT_STRUCT_DEF: {
         name_tkn = stmt->stmt.struct_decl.name;
         stmts = stmt->stmt.struct_decl.fields;
@@ -105,6 +108,7 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
         kind = scope_kind::TYPE;
         break;
     }
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     case AST_STMT_VARIANT_FIELD_DECL: {
         name_tkn = stmt->stmt.variant_field_decl.name;
         kind = scope_kind::VARIABLE;
@@ -157,20 +161,42 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
         return;
     }
 
+    // get symbol from token
     SymbolId name = context.get_symbol_id_for_tkn(name_tkn);
 
+    // check for redefintion
     OptId<DefId> already_defined{};
     switch (kind) {
     case scope_kind::VARIABLE:
         already_defined = context.scope(scope).already_defines_variable(name);
+        break;
     case scope_kind::TYPE:
         already_defined = context.scope(scope).already_defines_type(name);
         break;
     default:
         break;
     }
+
+    // redefintion guard
+    if (already_defined.has_value()) {
+        context.ast(this->file).emplace_tokenwise_error(name_tkn, ERR_REDEFINITON);
+        return;
+    }
+
+    // no issues, so register definition
     DefId def = context.register_top_level_def(
         name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt);
+
+    switch (kind) {
+    case scope_kind::VARIABLE:
+        context.scope(scope).insert_variable(name, def);
+        break;
+    case scope_kind::TYPE:
+        context.scope(scope).insert_type(name, def);
+        break;
+    default:
+        break;
+    }
 }
 
 void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts) {

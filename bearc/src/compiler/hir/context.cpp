@@ -11,6 +11,7 @@
 #include "cli/import_path.h"
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
+#include "compiler/hir/ast_visitor.hpp"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
@@ -76,13 +77,16 @@ Context::Context(const bearc_args_t* args)
     // search imports to build all asts
     this->explore_imports(root_id);
     // tally parser errors
-    for (const auto f : files) {
+    for (FileId id = files.first_id(); id != files.last_id(); ++id) {
+        File& f = files.at(id);
         const FileAst& ast = file_asts.cat(f.ast_id);
-        this->bump_parser_error_count(ast.error_count());
+        AstVisitor visitor{*this, id};
+        visitor.register_top_level_declarations();
+        this->bump_hard_error_count(ast.error_count());
     }
 }
 
-void Context::bump_parser_error_count(uint32_t cnt) noexcept {
+void Context::bump_hard_error_count(uint32_t cnt) noexcept {
     hard_error_count.fetch_add(cnt, std::memory_order_relaxed);
 }
 
@@ -321,9 +325,7 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, Span span, ast_st
     return def;
 }
 
-const FileAst& Context::ast(FileId file_id) const {
-    return file_asts.cat(files.cat(file_id).ast_id);
-}
+FileAst& Context::ast(FileId file_id) { return file_asts.at(files.at(file_id).ast_id); }
 
 ScopeId Context::get_top_level_scope() {
     if (scopes.size() == 0) {

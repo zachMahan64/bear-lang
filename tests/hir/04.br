@@ -14,4 +14,23 @@ struct Foo {
     i32 barry;
 }
 
+struct Foo {
+    i32 oops;
+}
 
+fn main() -> i32 {
+
+}
+
+mod animal {
+    i32 dog;
+    i32 cat;
+    i32 dog;
+}
+
+mod animal {
+    i32 cat;
+    mod animal {
+        i32 dog;
+    }
+}

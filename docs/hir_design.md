@@ -310,22 +310,6 @@ allocate HirDefIds for:
 - functions / externs functions
 - global vars
 - import: coalesce imports, build forward & reverse file dependency tree
-    - use a multi-threaded AST building system where each import queues the parsing of a file (use a not_started, loading, and done enum to track/ensure completion)
-    - once parsing is done, the FileAst will then be queued into the HirBuilder:
-        
-        for each root file:
-        enqueue file if NotStarted
-
-        worker thread:
-            while queue not empty:
-                file = dequeue
-                if state == NotStarted:
-                    set state = Loading
-                    parse AST
-                    set state = Done
-                    push AST to HirBuilder queue
-
-        HirBuilder thread (which eats the HirBuilder queue) ceases when no FileAst's are NotStarted or Loading
 
 insert SymbolId -> HirDefId into current ScopeTable
 create child HirScopes where needed
@@ -340,7 +324,7 @@ PHASE 2: RESOLVE SIGNATURES -> BODIES
 -------------------------------------
 a)
 walk AST again
-build HIR for:
+build HIR with DFS (with circularity checks) for:
 - function signatures
 - struct / variant / union fields
 - type syntax trees inside fields/params/return types

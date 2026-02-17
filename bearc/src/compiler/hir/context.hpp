@@ -44,7 +44,7 @@ class Context {
     [[nodiscard]] FileId get_file(SymbolId path);
     [[nodiscard]] FileId get_file(std::filesystem::path& path);
     [[nodiscard]] const char* file_name(FileId id) const;
-    [[nodiscard]] const FileAst& ast(FileId file_id) const;
+    [[nodiscard]] FileAst& ast(FileId file_id);
     [[nodiscard]] ScopeId get_top_level_scope();
     [[nodiscard]] ScopeId make_named_scope();
     [[nodiscard]] Scope& scope(ScopeId scope);
@@ -125,7 +125,7 @@ class Context {
 
     // args
     const bearc_args_t* const args;
-    void bump_parser_error_count(uint32_t cnt) noexcept;
+    void bump_hard_error_count(uint32_t cnt) noexcept;
 
     FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is
