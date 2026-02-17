@@ -290,4 +290,12 @@ void ScopeAnon::insert_variable(SymbolId symbol, DefId def) {
 }
 void ScopeAnon::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::TYPE); }
 
+OptId<DefId> Scope::already_defines_variable(SymbolId symbol) const { return variables.at(symbol); }
+OptId<DefId> Scope::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
+
+OptId<DefId> ScopeAnon::already_defines_variable(SymbolId symbol) const {
+    return variables.at(symbol);
+}
+OptId<DefId> ScopeAnon::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
+
 } // namespace hir

@@ -335,4 +335,5 @@ ScopeId Context::get_top_level_scope() {
 
 ScopeId Context::make_named_scope() { return scopes.emplace_and_get_id(scope_arena); }
 
+Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }
 } // namespace hir

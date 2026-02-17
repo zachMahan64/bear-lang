@@ -272,6 +272,7 @@ ast_stmt_t* parse_var_decl_from_id_or_mut(parser_t* p, token_ptr_slice_t* opt_id
 }
 
 ast_stmt_t* parse_fn_decl(parser_t* p) {
+    bool cooked = false;
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_DECL;
 
@@ -290,6 +291,11 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     parser_shed_visibility_qualis_with_error(p);
 
     decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
+    if (decl->stmt.fn_decl.name.len > 2) {
+        compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.name.start[0],
+                                    ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION);
+        cooked = true;
+    }
     decl->stmt.fn_decl.is_generic = false;
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine
     if (parser_match_token(p, TOK_LT)) {
@@ -320,6 +326,11 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
 
     decl->first = decl->stmt.fn_decl.kw;
     decl->last = decl->stmt.fn_decl.block->last;
+
+    if (cooked) {
+        return parser_sync_stmt(p);
+    }
+
     return decl;
 }
 
@@ -902,6 +913,7 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
 }
 
 ast_stmt_t* parse_fn_prototype(parser_t* p) {
+    bool cooked = false;
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_PROTOTYPE;
 
@@ -921,7 +933,11 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
     parser_shed_visibility_qualis_with_error(p);
 
     decl->stmt.fn_prototype.name = parse_id_token_slice(p, TOK_SCOPE_RES);
-
+    if (decl->stmt.fn_decl.name.len > 1) {
+        compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.name.start[0],
+                                    ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION);
+        cooked = true;
+    }
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine
 
     decl->stmt.fn_prototype.is_generic = false;
@@ -952,6 +968,9 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
     parser_expect_token(p, TOK_SEMICOLON);
     decl->first = decl->stmt.fn_prototype.kw;
     decl->last = parser_prev(p);
+    if (cooked) {
+        return parser_sync_stmt(p);
+    }
     return decl;
 }
 

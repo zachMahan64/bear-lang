@@ -11,7 +11,9 @@
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/scope.hpp"
 #include "compiler/token.h"
+#include <variant>
 
 namespace hir {
 
@@ -31,39 +33,142 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
         stmt = stmt->stmt.vis_modifier.stmt;
     }
 
-    // handle module, TODO fix this logic to first search for an existing module to insert into
+    bool compt = false;
+    if (stmt->type == AST_STMT_COMPT_MODIFIER) {
+        compt = true;
+        // take inner
+        stmt = stmt->stmt.compt_modifier.stmt;
+    }
+
+    bool statik = false;
+    if (stmt->type == AST_STMT_STATIC_MODIFIER) {
+        statik = true;
+        // take inner
+        stmt = stmt->stmt.static_modifier.stmt;
+    }
+
+    // handle module, first search for an existing module to insert into
     if (stmt->type == AST_STMT_MODULE) {
         SymbolId name = context.get_symbol_id_for_tkn(stmt->stmt.module.id);
-        DefId def = context.register_top_level_def(
-            name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt);
-        ScopeId mod_scope = context.make_named_scope();
+
+        OptId<DefId> existing = Scope::look_up_namespace(context, scope, name).def_id;
+
+        bool existing_module
+            = existing.has_value()
+              && std::holds_alternative<DefModule>(context.defs.cat(existing.as_id()).value);
+
+        DefId def
+            = existing_module
+                  ? existing.as_id()
+                  : context.register_top_level_def(
+                        name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
+                        stmt);
+        ScopeId mod_scope = existing_module
+                                ? get<DefModule>(context.defs.cat(existing.as_id()).value).scope
+                                : context.make_named_scope();
+
         context.defs.at(def).set_value(DefModule{.scope = mod_scope, .name = name});
         context.scopes.at(scope).insert_namespace(name, def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls);
         return;
     }
 
-    token_t* tkn;
+    scope_kind kind;
+    token_t* name_tkn = nullptr;
+    std::optional<ast_slice_of_stmts_t> stmts{};
     switch (stmt->type) {
-    case AST_STMT_EXTERN_BLOCK:
-    case AST_STMT_VAR_DECL:
-    case AST_STMT_VAR_INIT_DECL:
-    case AST_STMT_VISIBILITY_MODIFIER:
-    case AST_STMT_COMPT_MODIFIER:
-    case AST_STMT_STATIC_MODIFIER:
-    case AST_STMT_STRUCT_DEF:
-    case AST_STMT_CONTRACT_DEF:
-    case AST_STMT_UNION_DEF:
-    case AST_STMT_VARIANT_DEF:
-    case AST_STMT_VARIANT_FIELD_DECL:
-    case AST_STMT_FN_DECL:
-    case AST_STMT_FN_PROTOTYPE:
+    case AST_STMT_EXTERN_BLOCK: {
+        // todo
+        break;
+    }
+    case AST_STMT_STRUCT_DEF: {
+        name_tkn = stmt->stmt.struct_decl.name;
+        stmts = stmt->stmt.struct_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_CONTRACT_DEF: {
+        name_tkn = stmt->stmt.contract_decl.name;
+        stmts = stmt->stmt.contract_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_UNION_DEF: {
+        name_tkn = stmt->stmt.union_decl.name;
+        stmts = stmt->stmt.union_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_VARIANT_DEF: {
+        name_tkn = stmt->stmt.variant_decl.name;
+        stmts = stmt->stmt.variant_decl.fields;
+        kind = scope_kind::TYPE;
+        break;
+    }
+    case AST_STMT_VARIANT_FIELD_DECL: {
+        name_tkn = stmt->stmt.variant_field_decl.name;
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_VAR_DECL: {
+        name_tkn = stmt->stmt.var_decl.name;
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_VAR_INIT_DECL: {
+        name_tkn = stmt->stmt.var_init_decl.name;
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_FN_DECL: {
+        token_ptr_slice_t name_slice = stmt->stmt.fn_decl.name;
+        // TODO make this much more robust and properly detect that the parent is a struct with a
+        // compiler error instead of an assert
+        if (name_slice.len == 2) {
+            DefId parent_struct_id
+                = Scope::look_up_type(context, scope,
+                                      context.get_symbol_id_for_tkn(name_slice.start[0]))
+                      .def_id;
+            DefValue value = context.defs.cat(parent_struct_id).value;
+            assert(std::holds_alternative<DefStruct>(value));
+            scope = std::get<DefStruct>(value).scope;
+            name_tkn = name_slice.start[1];
+        } else if (name_slice.len == 1) {
+            name_tkn = name_slice.start[0];
+        }
+        kind = scope_kind::VARIABLE;
+        break;
+    }
+    case AST_STMT_FN_PROTOTYPE: {
+        // guranteed to be just one long
+        name_tkn = stmt->stmt.fn_prototype.name.start[0];
+        kind = scope_kind::VARIABLE;
+        break;
+    }
     case AST_STMT_DEFTYPE:
+        name_tkn = stmt->stmt.deftype.alias_id;
+        kind = scope_kind::TYPE;
         break;
     default:
         return;
     }
-    SymbolId name = context.get_symbol_id_for_tkn(tkn);
+    // if this wasn't named definition
+    if (name_tkn == nullptr) {
+        return;
+    }
+
+    SymbolId name = context.get_symbol_id_for_tkn(name_tkn);
+
+    OptId<DefId> already_defined{};
+    switch (kind) {
+    case scope_kind::VARIABLE:
+        already_defined = context.scope(scope).already_defines_variable(name);
+    case scope_kind::TYPE:
+        already_defined = context.scope(scope).already_defines_type(name);
+        break;
+    default:
+        break;
+    }
     DefId def = context.register_top_level_def(
         name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt);
 }

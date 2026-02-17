@@ -47,6 +47,7 @@ class Context {
     [[nodiscard]] const FileAst& ast(FileId file_id) const;
     [[nodiscard]] ScopeId get_top_level_scope();
     [[nodiscard]] ScopeId make_named_scope();
+    [[nodiscard]] Scope& scope(ScopeId scope);
 
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, Span span, ast_stmt_t* stmt);

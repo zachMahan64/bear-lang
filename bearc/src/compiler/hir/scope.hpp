@@ -75,6 +75,9 @@ struct Scope {
     void insert_variable(SymbolId symbol, DefId def);
     void insert_type(SymbolId symbol, DefId def);
 
+    OptId<DefId> already_defines_variable(SymbolId symbol) const;
+    OptId<DefId> already_defines_type(SymbolId symbol) const;
+
     friend class ScopeAnon;
 };
 
@@ -115,6 +118,9 @@ struct ScopeAnon {
     void add_used_module(DefId def_id);
     void insert_variable(SymbolId symbol, DefId def);
     void insert_type(SymbolId symbol, DefId def);
+
+    OptId<DefId> already_defines_variable(SymbolId symbol) const;
+    OptId<DefId> already_defines_type(SymbolId symbol) const;
 };
 
 } // namespace hir

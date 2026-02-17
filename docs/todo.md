@@ -15,7 +15,10 @@
     - [x] exec
         - [x] mapping from token operator token_type_e's -> hir-specific operator types 
     - [x] generics args/params
-- [ ] impl limited external query system for hir::Context
+- [x] impl limited external query system for hir::Context
+- [ ] revamp to compiler_error_list_t to include diagnostics messages ("note")
+- [ ] finish impl top-level traversal for filling named scopes
+    - [ ] debug logger to display scope contents 
 - [ ] impl an ast visitor that adds to the hir::Context, simultaneously impl an hir visitor to analyze Context during resolution
 - [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics)
 - [ ] hir phase 1: begin handling top level decl lowering

@@ -57,8 +57,8 @@ struct DefVariable {
     SymbolId name;
     OptId<ExecId> compt_value;
     bool is_static;
-    bool moved;
     bool compt;
+    bool moved;
 };
 
 struct DefStruct {

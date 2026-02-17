@@ -42,7 +42,9 @@ const char* error_message_for_code(error_code_e error_code) {
            [ERR_INVALID_PATTERN]
            = "invalid patern; expected identifier, literal, or variant decomposition",
            [ERR_MUT_QUALIFIER_ON_NON_MT] = "'mut' qualifier can only be used on 'mt' methods",
-           [ERR_IMPORTED_FILE_DOES_NOT_EXIST] = "imported file does not exist"};
+           [ERR_IMPORTED_FILE_DOES_NOT_EXIST] = "imported file does not exist",
+           [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION]
+           = "too many qualifications on function declaration"};
     return error_messages[error_code];
 }
 
