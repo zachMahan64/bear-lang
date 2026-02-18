@@ -280,16 +280,14 @@ void Context::try_print_info() const {
             std::cout << ansi_reset() << "\n";
         }
     }
-    /*
     if (!args->flags[CLI_FLAG_SILENT]) {
         auto len = this->error_count();
         if (len == 1) {
-            puts("1 error generated.");
+            puts("1 diagnostic generated.");
         } else if (len != 0) {
-            printf("%d errors generated.\n", len);
+            printf("%d diagnostics generated.\n", len);
         }
     }
-    */
     // std::cout << tables.files.size() << '\n';
     if (this->error_count() != 0) {
         if (!args->flags[CLI_FLAG_SILENT]) {
