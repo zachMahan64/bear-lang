@@ -37,14 +37,11 @@ typedef struct {
     mapu32u32_entry_t** buckets;
     uint32_t capacity;
     uint32_t size;
-    arena_t arena;
+    arena_t* arena;
 } mapu32u32_t;
 
-/// ctor for mapu32u32_t
-mapu32u32_t mapu32u32_create(size_t capacity);
-
 /// create a mapu32u32 from an arena
-mapu32u32_t mapu32u32_create_from_arena(size_t capacity, arena_t arena);
+mapu32u32_t mapu32u32_create_from_arena(size_t capacity, arena_t* arena);
 
 /// dtor for mapu32u32_t, only use when this map owns its internal arena; otherwise, will leak if
 /// not called (frees the internal arena)

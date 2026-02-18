@@ -18,15 +18,17 @@
 // expects either a capacity or NULL for default capacity
 strimap_t strimap_create(size_t capacity) {
     capacity = (capacity > STRIMAP_MINIMUM_CAPACITY) ? capacity : STRIMAP_MINIMUM_CAPACITY;
-    return strimap_create_from_arena(capacity, arena_create(STRIMAP_ARENA_CHUNK_SIZE));
+    arena_t* arena = malloc(sizeof(arena_t));
+    *arena = arena_create(STRIMAP_ARENA_CHUNK_SIZE);
+    return strimap_create_from_arena(capacity, arena);
 }
 
-strimap_t strimap_create_from_arena(size_t capacity, arena_t arena) {
+strimap_t strimap_create_from_arena(size_t capacity, arena_t* arena) {
     capacity = (capacity > STRIMAP_MINIMUM_CAPACITY) ? capacity : STRIMAP_MINIMUM_CAPACITY;
     strimap_t map;
     map.capacity = capacity;
     map.arena = arena;
-    map.buckets = (strimap_entry_t**)arena_alloc(&map.arena, capacity * sizeof(strimap_entry_t*));
+    map.buckets = (strimap_entry_t**)arena_alloc(map.arena, capacity * sizeof(strimap_entry_t*));
     // init to NULL
     for (size_t i = 0; i < capacity; i++) {
         map.buckets[i] = NULL;
@@ -36,10 +38,11 @@ strimap_t strimap_create_from_arena(size_t capacity, arena_t arena) {
 }
 
 void strimap_destroy(strimap_t* map) {
-    if (!map || !map->buckets || !map->arena.head) {
+    if (!map || !map->buckets || !map->arena->head) {
         return;
     }
-    arena_destroy(&map->arena);
+    arena_destroy(map->arena);
+    free(map->arena);
     map->buckets = NULL;
     map->size = 0;
     map->capacity = 0;
@@ -63,9 +66,9 @@ void strimap_emplace(strimap_t* map, const char* key, int32_t val) {
         curr = curr->next;
     }
     // if we skipped traverse loop because curr bucket is null, just insert straight into the bucket
-    strimap_entry_t* entry = arena_alloc(&map->arena, sizeof(strimap_entry_t));
+    strimap_entry_t* entry = arena_alloc(map->arena, sizeof(strimap_entry_t));
     size_t key_size = strlen(key) + 1;
-    char* fresh_key = arena_alloc(&map->arena, key_size);
+    char* fresh_key = arena_alloc(map->arena, key_size);
     memcpy(fresh_key, key, key_size);
     entry->key = fresh_key;
     entry->val = val;
@@ -171,7 +174,7 @@ void strimap_rehash(strimap_t* map, size_t new_capacity) {
         return; // guard
     }
     strimap_entry_t** new_buckets
-        = (strimap_entry_t**)arena_alloc(&map->arena, new_capacity * sizeof(strimap_entry_t*));
+        = (strimap_entry_t**)arena_alloc(map->arena, new_capacity * sizeof(strimap_entry_t*));
     // init to NULL
     for (size_t i = 0; i < new_capacity; i++) {
         new_buckets[i] = NULL;

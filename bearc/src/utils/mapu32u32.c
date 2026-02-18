@@ -11,19 +11,13 @@
 #include <stdint.h>
 #define MAPU32U32_ARENA_CHUNK_SIZE 32768
 
-// expects either a capacity or NULL for default capacity
-mapu32u32_t mapu32u32_create(size_t capacity) {
-    capacity = (capacity > MAPU32U32_MINIMUM_CAPACITY) ? capacity : MAPU32U32_MINIMUM_CAPACITY;
-    return mapu32u32_create_from_arena(capacity, arena_create(MAPU32U32_ARENA_CHUNK_SIZE));
-}
-
-mapu32u32_t mapu32u32_create_from_arena(size_t capacity, arena_t arena) {
+mapu32u32_t mapu32u32_create_from_arena(size_t capacity, arena_t* arena) {
     capacity = (capacity > MAPU32U32_MINIMUM_CAPACITY) ? capacity : MAPU32U32_MINIMUM_CAPACITY;
     mapu32u32_t map;
     map.capacity = capacity;
     map.arena = arena;
     map.buckets
-        = (mapu32u32_entry_t**)arena_alloc(&map.arena, capacity * sizeof(mapu32u32_entry_t*));
+        = (mapu32u32_entry_t**)arena_alloc(map.arena, capacity * sizeof(mapu32u32_entry_t*));
     // init to NULL
     for (size_t i = 0; i < capacity; i++) {
         map.buckets[i] = NULL;
@@ -33,10 +27,10 @@ mapu32u32_t mapu32u32_create_from_arena(size_t capacity, arena_t arena) {
 }
 
 void mapu32u32_destroy(mapu32u32_t* map) {
-    if (!map || !map->buckets || !map->arena.head) {
+    if (!map || !map->buckets || !map->arena->head) {
         return;
     }
-    arena_destroy(&map->arena);
+    arena_destroy(map->arena);
     map->buckets = NULL;
     map->size = 0;
     map->capacity = 0;
@@ -59,7 +53,7 @@ void mapu32u32_insert(mapu32u32_t* map, uint32_t key, uint32_t val) {
         curr = curr->next;
     }
     // if we skipped traverse loop because curr bucket is null, just insert straight into the bucket
-    mapu32u32_entry_t* entry = arena_alloc(&map->arena, sizeof(mapu32u32_entry_t));
+    mapu32u32_entry_t* entry = arena_alloc(map->arena, sizeof(mapu32u32_entry_t));
     entry->key = key;
     entry->val = val;
     entry->next = map->buckets[bucket_idx];
@@ -96,7 +90,7 @@ void mapu32u32_rehash(mapu32u32_t* map, uint32_t new_capacity) {
         return; // guard
     }
     mapu32u32_entry_t** new_buckets
-        = (mapu32u32_entry_t**)arena_alloc(&map->arena, new_capacity * sizeof(mapu32u32_entry_t*));
+        = (mapu32u32_entry_t**)arena_alloc(map->arena, new_capacity * sizeof(mapu32u32_entry_t*));
     // init to NULL
     for (size_t i = 0; i < new_capacity; i++) {
         new_buckets[i] = NULL;

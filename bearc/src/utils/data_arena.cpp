@@ -17,6 +17,4 @@ size_t DataArena::chunk_size() const noexcept { return this->arena_.chunk_size; 
 
 void DataArena::log_debug_info() { arena_log_debug_info(&this->arena_); }
 
-arena_t* DataArena::arena_p() { return &this->arena_; }
-
-arena_t DataArena::arena() { return this->arena_; }
+arena_t* DataArena::arena() { return &this->arena_; }

@@ -41,14 +41,14 @@ typedef struct {
     strimap_entry_t** buckets;
     size_t capacity;
     size_t size;
-    arena_t arena;
+    arena_t* arena;
 } strimap_t;
 
 /// ctor for strimap_t
 strimap_t strimap_create(size_t capacity);
 
 /// create a strimap from an arena
-strimap_t strimap_create_from_arena(size_t capacity, arena_t arena);
+strimap_t strimap_create_from_arena(size_t capacity, arena_t* arena);
 
 /// dtor for strimap_t, will leak if not called (frees the internal arena)
 void strimap_destroy(strimap_t* map);
