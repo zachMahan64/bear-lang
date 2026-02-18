@@ -341,6 +341,10 @@ on identifier (type or variable reference):
 - create HirIdentifier with resolved pointing a to a DefId by searching available scopes
 - insert locals into local scope as defined and resolve naturally linearly
 
+- types must be hashed and interned for canonical identification (especially helpful for generics)
+    - recursive hashing thru SymbolId's for basetypes and then specific value for ref, ptr, arr, etc, should be sufficient
+    - make sure to consider namespaces when canonicalizing 
+
 compile-time constructs:
     on generic(type structure or function):
         - attempt a concrete instantiation

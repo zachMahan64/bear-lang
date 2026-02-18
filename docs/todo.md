@@ -16,8 +16,10 @@
         - [x] mapping from token operator token_type_e's -> hir-specific operator types 
     - [x] generics args/params
 - [x] impl limited external query system for hir::Context
-- [ ] revamp to compiler_error_list_t to include diagnostics messages ("note")
+- [x] revamp to compiler_error_list_t to include diagnostics messages ("note")
 - [ ] finish impl top-level traversal for filling named scopes
+    - [ ] handle Foo..bar() function declaration (see TD comment in ast_visitor.cpp)
+    - [ ] make sure to set the parent field in defs (current the `OptId<DefId> parent` field is always none), this will later be important for canonicalizing definitons (especially types)
     - [ ] debug logger to display scope contents 
 - [ ] impl an ast visitor that adds to the hir::Context, simultaneously impl an hir visitor to analyze Context during resolution
 - [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics)
