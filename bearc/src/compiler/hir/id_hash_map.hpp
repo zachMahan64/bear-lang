@@ -16,7 +16,7 @@
 namespace hir {
 
 // a hashmap optimized for Id storage, based on an internal arena that is not owned
-template <hir::Id K, hir::Id V>
+template <hir::IsId K, hir::IsId V>
 // should be the case given the constraints of hir::Id concept, but
 // just be extra sure since this will otherwise implode
     requires(sizeof(K) == 4 && sizeof(V) == 4)

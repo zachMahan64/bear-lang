@@ -16,12 +16,12 @@
 #include <vector>
 namespace hir {
 template <typename T>
-concept Node = hir::Id<typename T::id_type>;
+concept Node = hir::IsId<typename T::id_type>;
 
 /// Maps an hir::Id to any type
 /// - this should be used for linear indexing where each contiguous Id that exists will correspond
 /// to exactly one value..
-template <hir::Id I, typename V> class IdVecMap {
+template <hir::IsId I, typename V> class IdVecMap {
   protected:
     std::vector<V> vec;
 
@@ -93,7 +93,7 @@ template <Node T> class NodeVector : public IdVecMap<typename T::id_type, T> {
 };
 
 /// Models a vector of an hir::IdIdx pointing to hir::Id
-template <hir::Id I> class IdVector : public IdVecMap<typename hir::IdIdx<I>, I> {
+template <hir::IsId I> class IdVector : public IdVecMap<typename hir::IdIdx<I>, I> {
     static constexpr HirSize OFFSET = 1;
 
   public:

@@ -26,40 +26,68 @@ using HirId = HirSize;
 
 /// indicates that a type is indeed a flavor of HirId
 template <typename T>
-concept Id = requires(T t) {
+concept IsId = requires(T t) {
     { t.val() } -> std::same_as<HirId>;
 };
 
-/// repsents an index into the storage for a certain Id, to allow for slicing
-template <hir::Id T> class IdIdx {
-    using points_to_type = T;
+template <typename T> class Id {
     HirId value;
 
   public:
-    IdIdx() : value(HIR_ID_NONE) {}
-    explicit IdIdx(HirId value) : value(value) {};
-    constexpr HirId val() const noexcept { return value; }
-    constexpr HirId operator++() noexcept { return ++value; }
-    friend constexpr bool operator==(IdIdx<T> a, IdIdx<T> b) { return a.value == b.value; }
+    constexpr explicit Id(HirId v) : value(v) {}
+    constexpr Id() : value(HIR_ID_NONE) {}
+    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
+    friend constexpr bool operator==(Id<T> a, Id<T> b) { return a.value == b.value; }
+    constexpr Id operator++() { return Id{++value}; }
+    constexpr Id operator--() { return Id{--value}; }
+    constexpr Id operator++(int) { return Id{value++}; }
+    constexpr Id operator--(int) { return Id{value--}; }
 };
 
-/// primary means of tracking interned strings in the hir
-struct SymbolId {
-    HirId value;
-    constexpr explicit SymbolId(HirId v) : value(v) {}
-    constexpr SymbolId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(SymbolId a, SymbolId b) { return a.value == b.value; }
-};
+struct Symbol;
+struct Identifier;
+struct File;
+struct FileAst;
+struct Scope;
+struct ScopeAnon;
+struct Exec;
+struct Def;
+struct Type;
+struct GenericParam;
+struct GenericArg;
 
 /// primary means of tracking interned strings in the hir
-struct IdentifierId {
-    HirId value;
-    constexpr explicit IdentifierId(HirId v) : value(v) {}
-    constexpr IdentifierId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(IdentifierId a, IdentifierId b) { return a.value == b.value; }
-};
+using SymbolId = Id<Symbol>;
+
+/// primary means of tracking scoped identifers like foo..bar..thing in the hir
+using IdentifierId = Id<Identifier>;
+
+/// for addressing interned file names
+using FileId = Id<File>;
+
+/// for addressing asts
+using FileAstId = Id<FileAst>;
+
+/// for addressing named scopes
+using ScopeId = Id<Scope>;
+
+/// for addressing anonymous scopes
+using ScopeAnonId = Id<ScopeAnon>;
+
+/// for addressing exec nodes
+using ExecId = Id<Exec>;
+
+/// for addressing definition nodes
+using DefId = Id<Def>;
+
+/// for addressing type nodes
+using TypeId = Id<Type>;
+
+/// for addressing generic parameter nodes
+using GenericParamId = Id<GenericParam>;
+
+/// for addressing generic argument nodes
+using GenericArgId = Id<GenericArg>;
 
 /// to be stored in a HirSymbolId -> HirSymbol table
 class Symbol {
@@ -72,111 +100,21 @@ class Symbol {
     [[nodiscard]] constexpr std::string_view sv() const noexcept { return this->string_view; }
 };
 
-/// for addressing interned file names
-class FileId {
+/// repsents an index into the storage for a certain Id, to allow for slicing
+template <hir::IsId T> class IdIdx {
+    using points_to_type = T;
     HirId value;
 
   public:
-    constexpr explicit FileId(HirId v) : value(v) {}
-    constexpr FileId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(FileId a, FileId b) { return a.value == b.value; }
-    constexpr FileId operator++() { return FileId{++value}; }
-    constexpr FileId operator--() { return FileId{--value}; }
-};
-
-/// for addressing asts
-class FileAstId {
-    HirId value;
-
-  public:
-    constexpr explicit FileAstId(HirId v) : value(v) {}
-    constexpr FileAstId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(FileAstId a, FileAstId b) { return a.value == b.value; }
-};
-
-/// for addressing named scopes
-class ScopeId {
-    HirId value;
-
-  public:
-    constexpr explicit ScopeId(HirId v) : value(v) {}
-    constexpr ScopeId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(ScopeId a, ScopeId b) { return a.value == b.value; }
-};
-
-/// for addressing anonymous scopes
-class ScopeAnonId {
-    HirId value;
-
-  public:
-    constexpr explicit ScopeAnonId(HirId v) : value(v) {}
-    constexpr ScopeAnonId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(ScopeAnonId a, ScopeAnonId b) { return a.value == b.value; }
-};
-
-/// for addressing exec nodes
-class ExecId {
-    HirId value;
-
-  public:
-    constexpr explicit ExecId(HirId v) : value(v) {}
-    constexpr ExecId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(ExecId a, ExecId b) { return a.value == b.value; }
-};
-
-/// for addressing definition nodes
-class DefId {
-    HirId value;
-
-  public:
-    constexpr explicit DefId(HirId v) : value(v) {}
-    constexpr DefId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(DefId a, DefId b) { return a.value == b.value; }
-};
-
-/// for addressing type nodes
-class TypeId {
-    HirId value;
-
-  public:
-    constexpr explicit TypeId(HirId v) : value(v) {}
-    constexpr TypeId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(TypeId a, TypeId b) { return a.value == b.value; }
-};
-
-/// for addressing generic parameter nodes
-class GenericParamId {
-    HirId value;
-
-  public:
-    constexpr explicit GenericParamId(HirId v) : value(v) {}
-    constexpr GenericParamId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(GenericParamId a, GenericParamId b) {
-        return a.value == b.value;
-    }
-};
-
-/// for addressing generic argument nodes
-class GenericArgId {
-    HirId value;
-
-  public:
-    constexpr explicit GenericArgId(HirId v) : value(v) {}
-    constexpr GenericArgId() : value(HIR_ID_NONE) {}
-    [[nodiscard]] constexpr HirId val() const noexcept { return value; }
-    friend constexpr bool operator==(GenericArgId a, GenericArgId b) { return a.value == b.value; }
+    IdIdx() : value(HIR_ID_NONE) {}
+    explicit IdIdx(HirId value) : value(value) {};
+    constexpr HirId val() const noexcept { return value; }
+    constexpr HirId operator++() noexcept { return ++value; }
+    friend constexpr bool operator==(IdIdx<T> a, IdIdx<T> b) { return a.value == b.value; }
 };
 
 /// holds an optional HirId or HirIdIdx type
-template <hir::Id T> class OptId {
+template <hir::IsId T> class OptId {
     T underlying{};
 
   public:
@@ -188,7 +126,7 @@ template <hir::Id T> class OptId {
     void set(T id_value) noexcept { this->underlying = id_value; }
 };
 
-template <hir::Id T> class IdSlice {
+template <hir::IsId T> class IdSlice {
     using points_to_type = T;
     IdIdx<T> first_;
     HirSize len_;

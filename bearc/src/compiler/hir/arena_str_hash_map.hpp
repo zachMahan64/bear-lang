@@ -16,7 +16,7 @@
 
 namespace hir {
 
-template <hir::Id I> class StrIdHashMap {
+template <hir::IsId I> class StrIdHashMap {
     static constexpr size_t DEFAULT_ARENA_STR_HASH_MAP_SIZE = 0x800;
 
   public:
