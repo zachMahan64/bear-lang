@@ -6,10 +6,9 @@
 // Copyright (C) 2025 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
-#ifndef COMPILER_HIR_INDEXING_H
-#define COMPILER_HIR_INDEXING_H
+#ifndef COMPILER_HIR_INDEXING_HPP
+#define COMPILER_HIR_INDEXING_HPP
 
-#include <concepts>
 #include <stdint.h>
 #include <string_view>
 
@@ -26,14 +25,13 @@ using HirId = HirSize;
 
 /// indicates that a type is indeed a flavor of HirId
 template <typename T>
-concept IsId = requires(T t) {
-    { t.val() } -> std::same_as<HirId>;
-};
+concept IsId = requires { typename T::id_tag; };
 
 template <typename T> class Id {
     HirId value;
 
   public:
+    using id_tag = T;
     constexpr explicit Id(HirId v) : value(v) {}
     constexpr Id() : value(HIR_ID_NONE) {}
     [[nodiscard]] constexpr HirId val() const noexcept { return value; }
@@ -106,6 +104,7 @@ template <hir::IsId T> class IdIdx {
     HirId value;
 
   public:
+    using id_tag = Id<T>;
     IdIdx() : value(HIR_ID_NONE) {}
     explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
@@ -118,6 +117,7 @@ template <hir::IsId T> class OptId {
     T underlying{};
 
   public:
+    using id_tag = T;
     OptId() = default;
     OptId(T id_value) : underlying(id_value) {}
     HirId val() const { return underlying.val(); }
@@ -138,7 +138,7 @@ template <hir::IsId T> class IdSlice {
     constexpr IdIdx<T> get(HirSize i) const noexcept { return IdIdx<T>{first_.val() + i}; }
     constexpr HirSize len() const noexcept { return len_; }
 
-    constexpr IdIdx<T> begin() const noexcept { return first; }
+    constexpr IdIdx<T> begin() const noexcept { return first_; }
 
     constexpr IdIdx<T> end() const noexcept { return IdIdx<T>{first_.val() + len_}; }
 };
