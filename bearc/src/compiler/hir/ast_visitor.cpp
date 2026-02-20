@@ -160,7 +160,7 @@ void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t st
 }
 
 TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
-    scope_kind kind;
+    scope_kind kind = scope_kind::VARIABLE;
     token_t* scope_prefix_tkn = nullptr;
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
