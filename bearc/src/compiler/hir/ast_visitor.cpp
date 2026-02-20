@@ -24,7 +24,7 @@ void AstVisitor::register_top_level_declarations() {
                              context.ast(file).root()->stmt.file.stmts);
 }
 
-void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
+void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent) {
     // handle visibility modifier
     bool pub = false;
     if (stmt->type == AST_STMT_VISIBILITY_MODIFIER) {
@@ -57,19 +57,20 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
             = existing.has_value()
               && std::holds_alternative<DefModule>(context.defs.cat(existing.as_id()).value);
 
-        DefId def
+        DefId mod_def
             = existing_module
                   ? existing.as_id()
                   : context.register_top_level_def(
                         name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
-                        stmt);
+                        stmt, parent);
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.defs.cat(existing.as_id()).value).scope
                                 : context.make_named_scope();
 
-        context.defs.at(def).set_value(DefModule{.scope = mod_scope, .name = name});
-        context.scope(scope).insert_namespace(name, def);
-        register_top_level_stmts(mod_scope, stmt->stmt.module.decls);
+        context.defs.at(mod_def).set_value(DefModule{.scope = mod_scope, .name = name});
+        context.scope(scope).insert_namespace(name, mod_def);
+        register_top_level_stmts(mod_scope, stmt->stmt.module.decls,
+                                 mod_def); // pass in this module def as parent
         return;
     }
     TopLevelInfo info = top_level_info_for(stmt);
@@ -109,7 +110,7 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
 
     // no issues, so register definition
     DefId def = context.register_top_level_def(
-        name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt);
+        name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt, parent);
 
     switch (kind) {
     case scope_kind::VARIABLE:
@@ -123,9 +124,10 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt) {
     }
 }
 
-void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts) {
+void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts,
+                                          OptId<DefId> parent) {
     for (size_t i = 0; i < stmts.len; i++) {
-        register_top_level_stmt(scope, stmts.start[i]);
+        register_top_level_stmt(scope, stmts.start[i], parent);
     }
 }
 

@@ -157,6 +157,8 @@ struct Def {
         : value{value}, span{span}, name{name}, pub{pub} {}
     Def(SymbolId name, bool pub, Span span)
         : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
+    Def(SymbolId name, bool pub, Span span, OptId<DefId> parent)
+        : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}}, parent{parent} {}
     void set_value(DefValue value) { this->value = value; }
 };
 

@@ -324,8 +324,9 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     return get_file(maybe_path.value());
 }
 
-DefId Context::register_top_level_def(SymbolId name, bool pub, Span span, ast_stmt_t* stmt) {
-    DefId def = defs.emplace_and_get_id(name, pub, span);
+DefId Context::register_top_level_def(SymbolId name, bool pub, Span span, ast_stmt_t* stmt,
+                                      OptId<DefId> parent) {
+    DefId def = defs.emplace_and_get_id(name, pub, span, parent);
     def_resol_states.bump(Def::resol_state::top_level_visited);
     def_ast_nodes.bump(stmt);
     def_mention_states.bump(Def::mention_state::unmentioned);

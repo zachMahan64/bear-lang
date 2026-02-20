@@ -19,7 +19,7 @@
 - [x] revamp to compiler_error_list_t to include diagnostics messages ("note")
 - [ ] finish impl top-level traversal for filling named scopes
     - [ ] handle Foo..bar() function declaration (see TD comment in ast_visitor.cpp)
-    - [ ] make sure to set the parent field in defs (current the `OptId<DefId> parent` field is always none), this will later be important for canonicalizing definitons (especially types)
+    - [x] make sure to set the parent field in defs (current the `OptId<DefId> parent` field is always none), this will later be important for canonicalizing definitons (especially types)
 - [ ] add better diagnostics (interned in HIR), which is file-wise, but track a `next_diag` chain and then store a `bool reported` to ensure no duplicate reporting
     - [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics). This will probably require dedicated DiagnosticId -> Diagnostic: Error | Warning | Note 
 - [ ] debug logger to display context and scope contents 
