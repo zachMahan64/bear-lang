@@ -53,6 +53,7 @@ struct Def;
 struct Type;
 struct GenericParam;
 struct GenericArg;
+struct Diagnostic;
 
 /// primary means of tracking interned strings in the hir
 using SymbolId = Id<Symbol>;
@@ -86,6 +87,8 @@ using GenericParamId = Id<GenericParam>;
 
 /// for addressing generic argument nodes
 using GenericArgId = Id<GenericArg>;
+
+using DiagnosticId = Id<Diagnostic>;
 
 /// to be stored in a HirSymbolId -> HirSymbol table
 class Symbol {

@@ -12,15 +12,13 @@
 #include <string_view>
 
 namespace hir {
-Span::Span(HirSize start, HirSize len, FileId file_id, HirSize line) noexcept
-    : start(start), len(len), file_id(file_id), line(line) {}
-
 Span::Span(FileId file_id, const char* src, token_t* tkn)
-    : start(tkn->start - src), len(tkn->len), file_id(file_id), line(tkn->loc.line) {}
+    : start(tkn->start - src), len(tkn->len), file_id(file_id), line(tkn->loc.line),
+      col(tkn->loc.col) {}
 
 Span::Span(FileId file_id, const char* src, token_t* first, token_t* last)
     : start(first->start - src), file_id(file_id), len(last->start - src + last->len),
-      line(first->loc.line) {}
+      line(first->loc.line), col(first->loc.col) {}
 
 std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
     return std::string_view(data + span.start, span.len);

@@ -60,9 +60,9 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
     vector_push_back(&list->list_vec, &err);
 }
 
-void print_error(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
-                 size_t col, const char* accent_color, const char* error_word,
-                 const char* error_message, const char* context) {
+void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
+                      size_t col, const char* accent_color, const char* error_word,
+                      const char* error_message, const char* context) {
     // line is zero-indexed inside of token_t, so adjust
     size_t adusted_line = line + 1;
     size_t adjusted_col = col + 1;
@@ -128,8 +128,8 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     const char* error_word = is_really_note(error->error_code) ? "note" : "error";
     const char* error_message = error_message_for_code(error->error_code);
     const char* context = error_message_context_for(error);
-    print_error(src_buffer, start, len, line, col, accent_color, error_word, error_message,
-                context);
+    print_diagnostic(src_buffer, start, len, line, col, accent_color, error_word, error_message,
+                     context);
 }
 
 void compiler_error_list_print_all(const compiler_error_list_t* list) {

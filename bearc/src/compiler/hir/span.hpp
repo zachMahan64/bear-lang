@@ -18,7 +18,6 @@
 
 namespace hir {
 
-/// trivially copyable src span, always pass by value
 class Span {
     Span(HirSize start, HirSize len, FileId file_id, HirSize line) noexcept;
 
@@ -26,8 +25,8 @@ class Span {
     HirSize start;
     HirSize len;
     FileId file_id;
-    // col can be found be backtracking to sof or last \n
     HirSize line;
+    HirSize col;
     /// constructs an hir::Span from an existing FileId and none-owned ptrs to a src buffer and a
     /// token_t
     Span(FileId file_id, const char* src, token_t* tkn);

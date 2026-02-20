@@ -54,6 +54,11 @@ bool compiler_error_list_empty(const compiler_error_list_t* list);
 /// check a compiler_error_list_t's size
 size_t compiler_error_list_count(const compiler_error_list_t* list);
 
+/// base impl for diagnostic printing
+void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
+                      size_t col, const char* accent_color, const char* error_word,
+                      const char* error_message, const char* context);
+
 #ifdef __cplusplus
 }
 #endif

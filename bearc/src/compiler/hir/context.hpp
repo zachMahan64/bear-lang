@@ -13,6 +13,7 @@
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/arena_str_hash_map.hpp"
 #include "compiler/hir/def.hpp"
+#include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/generic.hpp"
@@ -45,9 +46,14 @@ class Context {
     [[nodiscard]] FileId get_file(std::filesystem::path& path);
     [[nodiscard]] const char* file_name(FileId id) const;
     [[nodiscard]] FileAst& ast(FileId file_id);
+    [[nodiscard]] const FileAst& c_ast(FileId file_id) const;
     [[nodiscard]] ScopeId get_top_level_scope();
     [[nodiscard]] ScopeId make_named_scope();
     [[nodiscard]] Scope& scope(ScopeId scope);
+    DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                    OptId<DiagnosticId> next = OptId<DiagnosticId>{});
+    void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
+    void print_diagnostic(DiagnosticId diag);
 
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,
@@ -60,7 +66,7 @@ class Context {
     void explore_imports(FileId root_id);
     void explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack);
     /// prints info based on cli-flags
-    void try_print_info() const;
+    void try_print_info();
 
     friend class Scope;
     friend class ScopeAnon;
@@ -79,6 +85,7 @@ class Context {
     IdVecMap<FileId, IdSlice<FileId>> importer_to_importees;
     /// FileId -> llvm::SmallVector<FileId> since this will be updated less predictably
     IdVecMap<FileId, llvm::SmallVector<FileId>> importee_to_importers;
+    IdVecMap<FileId, llvm::SmallVector<DiagnosticId>> file_to_diagnostics;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,6 +127,10 @@ class Context {
     NodeVector<GenericArg> generic_args;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     // error tracking
+
+    NodeVector<Diagnostic> diagnostics;
+    IdVecMap<DiagnosticId, uint8_t> diagnostics_used;
+
     std::atomic<uint32_t> hard_error_count;
     std::atomic<uint32_t> semantic_error_count;
     std::atomic<uint32_t> fatal_error_count;

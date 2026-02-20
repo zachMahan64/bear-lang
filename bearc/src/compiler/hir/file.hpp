@@ -32,7 +32,7 @@ class FileAst {
 
   public:
     using id_type = FileAstId;
-    const src_buffer& src() const noexcept;
+    const src_buffer* src() const noexcept;
     const char* buffer() const noexcept;
     const char* file_name() const noexcept;
     const compiler_error_list_t& error_list() const noexcept;

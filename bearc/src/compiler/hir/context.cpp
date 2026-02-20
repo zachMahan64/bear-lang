@@ -45,6 +45,7 @@ static constexpr size_t DEFAULT_TYPE_VEC_CAP = 0x400;
 static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 static constexpr HirSize EXPECTED_HIGH_NUM_IMPORTS = 128;
+static constexpr size_t DEFAULT_DIAG_NUM = 0x100;
 
 Context::Context(const bearc_args_t* args)
     : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
@@ -61,7 +62,8 @@ Context::Context(const bearc_args_t* args)
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
       str_to_symbol_id_map{symbol_map_arena}, args{args}, scope_arena{DEFAULT_SCOPE_ARENA_CAP},
-      def_ast_nodes(DEFAULT_DEF_VEC_CAP) {
+      def_ast_nodes(DEFAULT_DEF_VEC_CAP), diagnostics{DEFAULT_DIAG_NUM},
+      diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS} {
 
     // get try to get root file, and allow checking cwd for it
     std::optional<std::filesystem::path> maybe_root_file
@@ -143,6 +145,7 @@ FileId Context::get_file(SymbolId path_symbol) {
     /// bump necessary things that are track id-wise for files
     importee_to_importers.bump();
     importer_to_importees.bump();
+    file_to_diagnostics.bump();
     return file_id;
 }
 
@@ -246,10 +249,13 @@ void Context::explore_imports(FileId importer_file_id,
     file.load_state = file_import_state::done;
 }
 
-void Context::try_print_info() const {
+void Context::try_print_info() {
     // go thru each file ast to print info
-    for (const auto f : files) {
-        const FileAst& ast = file_asts.cat(f.ast_id);
+    for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
+        const FileAst& ast = c_ast(fid);
+        for (const auto d : file_to_diagnostics.cat(fid)) {
+            print_diagnostic(d);
+        }
         ast.try_print_info(args);
     }
     if (args->flags[CLI_FLAG_LIST_FILES]) {
@@ -282,11 +288,11 @@ void Context::try_print_info() const {
         }
     }
     if (!args->flags[CLI_FLAG_SILENT]) {
-        auto len = this->error_count();
+        auto len = this->error_count() + diagnostics.size();
         if (len == 1) {
             puts("1 diagnostic generated.");
         } else if (len != 0) {
-            printf("%d diagnostics generated.\n", len);
+            printf("%zu diagnostics generated.\n", len);
         }
     }
     // std::cout << tables.files.size() << '\n';
@@ -336,6 +342,10 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
 
 FileAst& Context::ast(FileId file_id) { return file_asts.at(files.at(file_id).ast_id); }
 
+const FileAst& Context::c_ast(FileId file_id) const {
+    return file_asts.cat(files.cat(file_id).ast_id);
+}
+
 ScopeId Context::get_top_level_scope() {
     if (scopes.size() == 0) {
         return scopes.emplace_and_get_id(scope_arena);
@@ -347,4 +357,31 @@ ScopeId Context::get_top_level_scope() {
 ScopeId Context::make_named_scope() { return scopes.emplace_and_get_id(scope_arena); }
 
 Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }
+
+DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                         OptId<DiagnosticId> next) {
+    DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, next);
+    diagnostics_used.bump();
+    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    return id;
+}
+
+void Context::print_diagnostic(DiagnosticId diag_id) {
+    // as to not re-report
+    if (diagnostics_used.cat(diag_id)) {
+        return;
+    }
+    const Diagnostic& diag = diagnostics.cat(diag_id);
+    diag.print(*this);
+    // mark used
+    diagnostics_used.at(diag_id) = true;
+    // try print next
+    if (diag.next.has_value() && !diagnostics_used.cat(diag.next.as_id())) {
+        print_diagnostic(diag.next.as_id());
+    }
+}
+
+void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {
+    diagnostics.at(diag).set_next(next);
+}
 } // namespace hir

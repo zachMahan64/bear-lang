@@ -11,9 +11,11 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
+#include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/token.h"
+#include <iostream>
 #include <variant>
 
 namespace hir {
@@ -125,13 +127,14 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
 
     // redefintion guard
     if (already_defined.has_value()) {
-        context.ast(this->file).emplace_tokenwise_error(name_tkn, ERR_REDEFINITON);
-
-        // TODO use updated errors for this
-        FileAst& orig_ast = context.ast(context.defs.cat(already_defined.as_id()).span.file_id);
-        orig_ast.emplace_tokenwise_error(
-            top_level_info_for(context.def_ast_nodes.at(already_defined.as_id())).name_tkn,
-            NOTE_ORIGINAL_DEF_HERE);
+        // do diagnostics for the redefinition
+        auto d1 = context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
+                                             diag_code::redefinition, diag_type::error);
+        auto orig_file = context.defs.cat(already_defined.as_id()).span.file_id;
+        auto* t = top_level_info_for(context.def_ast_nodes.at(already_defined.as_id())).name_tkn;
+        auto d2 = context.emplace_diagnostic(Span(orig_file, context.ast(orig_file).buffer(), t),
+                                             diag_code::original_def_here, diag_type::note);
+        context.set_next_diagnostic(d1, d2);
         return;
     }
 
