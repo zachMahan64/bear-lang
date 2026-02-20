@@ -60,19 +60,18 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
     vector_push_back(&list->list_vec, &err);
 }
 
-// private helper
-void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
-    compiler_error_t* err = vector_at(&list->list_vec, i);
-
+void print_error(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
+                 size_t col, const char* accent_color, const char* error_word,
+                 const char* error_message, const char* context) {
     // line is zero-indexed inside of token_t, so adjust
-    size_t line = err->start_tkn->loc.line + 1;
-    size_t col = err->start_tkn->loc.col + 1;
+    size_t adusted_line = line + 1;
+    size_t adjusted_col = col + 1;
 
 // setup " | <line num> strings"
 // max buf of size 21 since size_t max is 18'446'744'073'709'551'615
 #define LINE_NUM_BUF_SIZE 21
     char line_num_buf[LINE_NUM_BUF_SIZE] = {0};
-    snprintf(line_num_buf, LINE_NUM_BUF_SIZE, "%zu", line);
+    snprintf(line_num_buf, LINE_NUM_BUF_SIZE, "%zu", adusted_line);
     string_t line_num_str = string_create_and_reserve(LINE_NUM_BUF_SIZE + 4); // for spaces
     string_push_cstr(&line_num_str, "  ");
     string_push_cstr(&line_num_str, line_num_buf);
@@ -81,34 +80,29 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_push_cstr(&line_num_str, COMP_ERR_SIDE_BAR);
     string_push_cstr(&line_under_num_str, COMP_ERR_SIDE_BAR);
 
-    const char* accent_color
-        = is_really_note(err->error_code) ? ansi_bold_yellow() : ansi_bold_red();
-    const char* err_word = is_really_note(err->error_code) ? "note" : "error";
-
     // do printing now that we have all strings setup
     printf("%s\'%s\': at (line %zu,%zu): %s%s: %s%s%s%s\n", ansi_bold_white(),
-           list->src_buffer.file_name, line, col, accent_color, err_word, ansi_bold_white(),
-           error_message_for_code(err->error_code), error_message_context_for(err), ansi_reset());
+           src_buffer->file_name, adusted_line, adjusted_col, accent_color, error_word,
+           ansi_bold_white(), error_message, context, ansi_reset());
 
-    string_view_t line_preview = get_line_string_view(&list->src_buffer, err->start_tkn);
+    string_view_t line_preview = get_line_string_view(src_buffer, start);
 
-// ADJUST for beauty's sake
-#define LINE_LEN_CRIT_VAL 32 // this is pretty long
+    // ADJUST for beauty's sake
+    static const size_t LINE_LEN_CRIT_VAL = 32; // this is pretty long
 
-    token_t revised_tkn = *err->start_tkn;
+    size_t revised_col = col;
 
     // shenanigans, but it's worth it ~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // this shifts the view down by appropriate factors of LINE_LEN_CRIT_VAL
-    size_t len_factor = revised_tkn.loc.col / LINE_LEN_CRIT_VAL;
+    size_t len_factor = revised_col / LINE_LEN_CRIT_VAL;
     line_preview.start += LINE_LEN_CRIT_VAL * len_factor;
     line_preview.len -= LINE_LEN_CRIT_VAL * len_factor;
-    revised_tkn.start += LINE_LEN_CRIT_VAL * len_factor;
-    revised_tkn.loc.col -= LINE_LEN_CRIT_VAL * len_factor;
+    revised_col -= LINE_LEN_CRIT_VAL * len_factor;
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     printf("%s %.*s\n", string_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
-    string_t cursor_string = get_cursor_string(line_preview, &revised_tkn, accent_color);
+    string_t cursor_string = get_cursor_string(line_preview, len, revised_col, accent_color);
 
     printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
     // print an extra "   |   "
@@ -118,6 +112,24 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     string_destroy(&cursor_string);
     string_destroy(&line_num_str);
     string_destroy(&line_under_num_str);
+}
+
+// private helper
+void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
+    compiler_error_t* error = vector_at(&list->list_vec, i);
+
+    const src_buffer_t* src_buffer = &list->src_buffer;
+    const char* start = error->start_tkn->start;
+    size_t len = error->start_tkn->len;
+    size_t line = error->start_tkn->loc.line;
+    size_t col = error->start_tkn->loc.col;
+    const char* accent_color
+        = is_really_note(error->error_code) ? ansi_bold_yellow() : ansi_bold_red();
+    const char* error_word = is_really_note(error->error_code) ? "note" : "error";
+    const char* error_message = error_message_for_code(error->error_code);
+    const char* context = error_message_context_for(error);
+    print_error(src_buffer, start, len, line, col, accent_color, error_word, error_message,
+                context);
 }
 
 void compiler_error_list_print_all(const compiler_error_list_t* list) {
