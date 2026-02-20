@@ -22,11 +22,6 @@ struct DefModule {
     SymbolId name;
 };
 
-enum class abi : uint8_t {
-    native = 0,
-    c,
-};
-
 struct DefFunction {
     SymbolId name;
     IdSlice<DefId> params;
@@ -34,8 +29,6 @@ struct DefFunction {
     ExecId body;
     /// if this function was derived from an original generic function
     OptId<DefId> original;
-    // indicates if this is extern C compatible
-    hir::abi lang = abi::native;
 };
 
 struct DefGenericFunction {
@@ -48,7 +41,6 @@ struct DefGenericFunction {
 struct DefFunctionPrototype {
     IdSlice<DefId> params;
     OptId<TypeId> return_type;
-    hir::abi lang = abi::native;
 };
 
 struct DefVariable {
@@ -120,7 +112,10 @@ using DefValue
                    DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
                    DefUnion, DefContract, DefDefType, DefUnevaluated>;
 
-enum class storage : uint8_t { normal, statik, compt };
+enum class abi_lang : uint8_t {
+    native = 0,
+    c,
+};
 
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
@@ -139,6 +134,7 @@ struct Def {
         mentioned,
         modified,
     };
+
     using id_type = DefId;
     /// underlying structure
     DefValue value;
@@ -154,15 +150,15 @@ struct Def {
     const bool compt = false;
     /// indicates static (storage duration)
     const bool statik = false;
-    Def(DefValue& value, SymbolId name, bool pub, bool compt, bool statik, Span span, DefId parent)
+    /// indicates ABI
+    const abi_lang abi = abi_lang::native;
+    Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, Span span,
+        OptId<DefId> parent, enum abi_lang abi = abi_lang::native)
         : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
-          statik{statik} {}
-    Def(DefValue& value, SymbolId name, bool pub, Span span)
-        : value{value}, span{span}, name{name}, pub{pub} {}
+          statik{statik}, abi{abi} {}
+
     Def(SymbolId name, bool pub, Span span)
         : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
-    Def(SymbolId name, bool pub, Span span, OptId<DefId> parent)
-        : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}}, parent{parent} {}
     void set_value(DefValue value) { this->value = value; }
 };
 

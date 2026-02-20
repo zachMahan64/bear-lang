@@ -12,6 +12,7 @@
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/ast_visitor.hpp"
+#include "compiler/hir/def.hpp"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
@@ -326,7 +327,7 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
 
 DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,
                                       ast_stmt_t* stmt, OptId<DefId> parent) {
-    DefId def = defs.emplace_and_get_id(name, pub, span, parent);
+    DefId def = defs.emplace_and_get_id(DefUnevaluated{}, name, pub, compt, statik, span, parent);
     def_resol_states.bump(Def::resol_state::top_level_visited);
     def_ast_nodes.bump(stmt);
     def_mention_states.bump(Def::mention_state::unmentioned);

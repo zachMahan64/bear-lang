@@ -35,7 +35,7 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
                                       SymbolId symbol, scope_kind kind) {
 
     if (!local_scope_id.val()) {
-        return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
+        return ScopeLookUpResult{DefId{}, scope_look_up_status::searched};
     }
     // init curr scope local scope
     const Scope* local_scope = &context.scopes.cat(local_scope_id);
@@ -43,7 +43,7 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
     ScopeId curr_scope_id = local_scope_id;
     // begin search logic
     DefId def{};
-    hir_scope_look_up_result_status status = hir_scope_look_up_result_status::OKAY;
+    scope_look_up_status status = scope_look_up_status::okay;
 
     // start walking scopes from local thru parents
     while (!def.val()) {
@@ -70,7 +70,7 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
         }
     }
     if (!def.val()) {
-        status = hir_scope_look_up_result_status::NOT_FOUND;
+        status = scope_look_up_status::not_found;
     }
     return ScopeLookUpResult{def, status};
 }
@@ -93,7 +93,7 @@ ScopeLookUpResult Scope::look_up_type(const Context& context, ScopeId local_scop
 ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId local_scope_id,
                                           SymbolId symbol, scope_kind kind) {
     if (!local_scope_id.val()) {
-        return ScopeLookUpResult{DefId{}, hir_scope_look_up_result_status::SEARCHED};
+        return ScopeLookUpResult{DefId{}, scope_look_up_status::searched};
     }
     // init curr scope local scope
     const ScopeAnon* local_scope_anon = &context.scope_anons.cat(local_scope_id);
@@ -103,7 +103,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
     ScopeId curr_scope_named_id{};
     // begin search logic
     DefId result_def{};
-    hir_scope_look_up_result_status status = hir_scope_look_up_result_status::OKAY;
+    scope_look_up_status status = scope_look_up_status::okay;
 
     // search used modules first to allow local shadowing!
     DefId def_from_used_modules{};
@@ -121,7 +121,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
             const ScopeLookUpResult used_res = Scope::look_up_impl(
                 context, std::get<DefModule>(used_def.value).scope, symbol, kind);
 
-            if (used_res.status == hir_scope_look_up_result_status::OKAY) {
+            if (used_res.status == scope_look_up_status::okay) {
                 if (def_from_used_modules.val()) {
                     collision = true;
                 }
@@ -192,12 +192,12 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
     if (!result_def.val()) {
         // didn't find a local symbol -> now check the imports
         if (collision) {
-            status = hir_scope_look_up_result_status::COLLISION;
+            status = scope_look_up_status::collision;
         } else if (def_from_used_modules.val() != HIR_ID_NONE) {
             result_def = def_from_used_modules;
-            status = hir_scope_look_up_result_status::OKAY;
+            status = scope_look_up_status::okay;
         } else {
-            status = hir_scope_look_up_result_status::NOT_FOUND;
+            status = scope_look_up_status::not_found;
         }
     }
     return ScopeLookUpResult{result_def, status};

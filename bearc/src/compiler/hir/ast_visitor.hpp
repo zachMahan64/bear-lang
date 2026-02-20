@@ -24,10 +24,10 @@ struct TopLevelInfo {
 class AstVisitor {
     Context& context;
     FileId file;
-    void register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt,
-                                 OptId<DefId> parent = OptId<DefId>{});
-    void register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts,
-                                  OptId<DefId> parent = OptId<DefId>{});
+    void register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
+                                 abi_lang abi);
+    void register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts, OptId<DefId> parent,
+                                  abi_lang abi);
     static TopLevelInfo top_level_info_for(const ast_stmt_t* stmt);
 
   public:

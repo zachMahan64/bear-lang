@@ -21,17 +21,17 @@ struct Context;
 
 using ScopeIdMap = IdHashMap<SymbolId, DefId>;
 
-enum class hir_scope_look_up_result_status : uint8_t {
-    OKAY = 0,
-    SEARCHED,
-    COLLISION,
-    NOT_FOUND,
+enum class scope_look_up_status : uint8_t {
+    okay = 0,
+    searched,
+    collision,
+    not_found,
 };
 
 struct ScopeLookUpResult {
     DefId def_id;
-    hir_scope_look_up_result_status status;
-    constexpr ScopeLookUpResult(DefId def_id, hir_scope_look_up_result_status status)
+    scope_look_up_status status;
+    constexpr ScopeLookUpResult(DefId def_id, scope_look_up_status status) noexcept
         : def_id(def_id), status(status) {}
 };
 enum class scope_kind : uint8_t {

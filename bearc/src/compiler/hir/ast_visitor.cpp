@@ -21,10 +21,12 @@ namespace hir {
 void AstVisitor::register_top_level_declarations() {
     // registers all the top level stmts of the file using the top level scope
     register_top_level_stmts(context.get_top_level_scope(),
-                             context.ast(file).root()->stmt.file.stmts);
+                             context.ast(file).root()->stmt.file.stmts, OptId<DefId>{},
+                             abi_lang::native);
 }
 
-void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent) {
+void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
+                                         abi_lang abi) {
     // handle prefix wrappers --------
     bool pub = false;
     if (stmt->type == AST_STMT_VISIBILITY_MODIFIER) {
@@ -48,6 +50,7 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
     }
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+    // special cases (modules and extern blocks)
     // handle module, first search for an existing module to insert into
     if (stmt->type == AST_STMT_MODULE) {
         SymbolId name = context.get_symbol_id_for_tkn(stmt->stmt.module.id);
@@ -70,17 +73,38 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
 
         context.defs.at(mod_def).set_value(DefModule{.scope = mod_scope, .name = name});
         context.scope(scope).insert_namespace(name, mod_def);
-        register_top_level_stmts(mod_scope, stmt->stmt.module.decls,
-                                 mod_def); // pass in this module def as parent
+        register_top_level_stmts(mod_scope, stmt->stmt.module.decls, mod_def,
+                                 abi); // pass in this module def as parent
         return;
     }
+    // handle extern block
+    if (stmt->type == AST_STMT_EXTERN_BLOCK) {
+        // TODO, extract into helper and output proper error messages if it's not 'C'
+        enum abi_lang abi = (stmt->stmt.extern_block.extern_language->len != 0
+                             && stmt->stmt.extern_block.extern_language->start[0] == 'C')
+                                ? abi_lang::c
+                                : abi_lang::native;
+        register_top_level_stmts(scope, stmt->stmt.extern_block.decls, parent, abi);
+        return;
+    }
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
     TopLevelInfo info = top_level_info_for(stmt);
     scope_kind kind = info.kind;
     token_t* name_tkn = info.name_tkn;
     std::optional<ast_slice_of_stmts_t> stmts = info.stmts;
-    // if this wasn't named definition
+
+    // if this wasn't named definition, then RETURN so we don't try to make a new hir::Def
     if (name_tkn == nullptr) {
         return;
+    }
+
+    // hanlde scope prefix for Foo..bar() functions
+    token_t* prefix = info.scope_prefix_tkn;
+    if (prefix
+        && Scope::look_up_type(context, scope, context.get_symbol_id_for_tkn(info.scope_prefix_tkn))
+                   .status
+               == scope_look_up_status::okay) {
     }
 
     // get symbol from token
@@ -102,6 +126,8 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
     // redefintion guard
     if (already_defined.has_value()) {
         context.ast(this->file).emplace_tokenwise_error(name_tkn, ERR_REDEFINITON);
+
+        // TODO use updated errors for this
         FileAst& orig_ast = context.ast(context.defs.cat(already_defined.as_id()).span.file_id);
         orig_ast.emplace_tokenwise_error(
             top_level_info_for(context.def_ast_nodes.at(already_defined.as_id())).name_tkn,
@@ -127,9 +153,9 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
 }
 
 void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts,
-                                          OptId<DefId> parent) {
+                                          OptId<DefId> parent, abi_lang abi) {
     for (size_t i = 0; i < stmts.len; i++) {
-        register_top_level_stmt(scope, stmts.start[i], parent);
+        register_top_level_stmt(scope, stmts.start[i], parent, abi);
     }
 }
 
@@ -139,11 +165,6 @@ TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
     switch (stmt->type) {
-    case AST_STMT_EXTERN_BLOCK: {
-        // TODO
-        break;
-    }
-
     // internal scopes are deffered -----------------------------------
     case AST_STMT_STRUCT_DEF: {
         name_tkn = stmt->stmt.struct_decl.name;
@@ -211,7 +232,11 @@ TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         break;
     }
     return TopLevelInfo{
-        .scope_prefix_tkn = scope_prefix_tkn, .name_tkn = name_tkn, .stmts = stmts, .kind = kind};
+        .scope_prefix_tkn = scope_prefix_tkn,
+        .name_tkn = name_tkn,
+        .stmts = stmts,
+        .kind = kind,
+    };
 }
 
 } // namespace hir
