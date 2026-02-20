@@ -9,7 +9,7 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
 
-static const bool really_note[ERR__COUNT] = {[NOTE_ORIGINAL_DEF_HERE] = true};
+static const bool really_note[ERR__COUNT] = {0};
 bool is_really_note(error_code_e error_code) { return really_note[error_code]; }
 static const char* error_messages[ERR__COUNT] = {
     [ERR_EXPECTED_IDENTIFER] = "expected identifier",
@@ -44,11 +44,7 @@ static const char* error_messages[ERR__COUNT] = {
     = "invalid patern; expected identifier, literal, or variant decomposition",
     [ERR_MUT_QUALIFIER_ON_NON_MT] = "'mut' qualifier can only be used on 'mt' methods",
     [ERR_IMPORTED_FILE_DOES_NOT_EXIST] = "imported file does not exist",
-    [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION] = "too many qualifications on function declaration",
-    [ERR_REDEFINITON] = "redefined symbol",
-    [ERR_INVALID_FUNCTION_PREFIX]
-    = "function prefix cannot be resolved to a valid struct declaration",
-    [NOTE_ORIGINAL_DEF_HERE] = "redefined symbol originally defined here"};
+    [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION] = "too many qualifications on function declaration"};
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
 
 const char* error_message_context_for(compiler_error_t* error) {

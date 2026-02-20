@@ -20,8 +20,8 @@
 - [x] finish impl top-level traversal for filling named scopes
     - [x] handle Foo..bar() function declaration (see TD comment in ast_visitor.cpp)
     - [x] make sure to set the parent field in defs (current the `OptId<DefId> parent` field is always none), this will later be important for canonicalizing definitons (especially types)
-- [ ] add better diagnostics (interned in HIR), which is file-wise, but track a `next_diag` chain and then store a `bool reported` to ensure no duplicate reporting
-    - [ ] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics). This will probably require dedicated DiagnosticId -> Diagnostic: Error | Warning | Note 
+- [x] add better diagnostics (interned in HIR), which is file-wise, but track a `next_diag` chain and then store a `bool reported` to ensure no duplicate reporting
+    - [x] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics). This will probably require dedicated DiagnosticId -> Diagnostic: Error | Warning | Note 
 - [ ] Try different arena growth factors (1.5x and 2x)
 - [ ] debug logger to display context and scope contents 
 
