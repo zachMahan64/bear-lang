@@ -15,9 +15,10 @@
 namespace hir {
 
 struct TopLevelInfo {
-    scope_kind kind;
+    token_t* scope_prefix_tkn = nullptr;
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts;
+    scope_kind kind;
 };
 
 class AstVisitor {

@@ -25,7 +25,7 @@ void AstVisitor::register_top_level_declarations() {
 }
 
 void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent) {
-    // handle visibility modifier
+    // handle prefix wrappers --------
     bool pub = false;
     if (stmt->type == AST_STMT_VISIBILITY_MODIFIER) {
         pub = stmt->stmt.vis_modifier.modifier->type == TOK_PUB;
@@ -46,6 +46,7 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
         // take inner
         stmt = stmt->stmt.static_modifier.stmt;
     }
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // handle module, first search for an existing module to insert into
     if (stmt->type == AST_STMT_MODULE) {
@@ -57,12 +58,12 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
             = existing.has_value()
               && std::holds_alternative<DefModule>(context.defs.cat(existing.as_id()).value);
 
-        DefId mod_def
-            = existing_module
-                  ? existing.as_id()
-                  : context.register_top_level_def(
-                        name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
-                        stmt, parent);
+        DefId mod_def = existing_module
+                            ? existing.as_id()
+                            : context.register_top_level_def(
+                                  name, pub, compt, statik,
+                                  Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
+                                  stmt, parent);
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.defs.cat(existing.as_id()).value).scope
                                 : context.make_named_scope();
@@ -110,7 +111,8 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
 
     // no issues, so register definition
     DefId def = context.register_top_level_def(
-        name, pub, Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt, parent);
+        name, pub, compt, statik, Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
+        stmt, parent);
 
     switch (kind) {
     case scope_kind::VARIABLE:
@@ -133,6 +135,7 @@ void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t st
 
 TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     scope_kind kind;
+    token_t* scope_prefix_tkn = nullptr;
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
     switch (stmt->type) {
@@ -182,13 +185,11 @@ TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         kind = scope_kind::VARIABLE;
         break;
     }
-    // TODO, needs to injected into the (struct,union,variant)'s scope
-    // probably implement this outside of this method by adding a field to TopLevelInfo with
-    // `parent_name_tkn`
     case AST_STMT_FN_DECL: {
         token_ptr_slice_t name_slice = stmt->stmt.fn_decl.name;
         // struct prefix name resolution deffered to later stages
         if (name_slice.len == 2) {
+            scope_prefix_tkn = name_slice.start[0];
             name_tkn = name_slice.start[1];
         } else if (name_slice.len == 1) {
             name_tkn = name_slice.start[0];
@@ -209,7 +210,8 @@ TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     default:
         break;
     }
-    return TopLevelInfo{.kind = kind, .name_tkn = name_tkn, .stmts = stmts};
+    return TopLevelInfo{
+        .scope_prefix_tkn = scope_prefix_tkn, .name_tkn = name_tkn, .stmts = stmts, .kind = kind};
 }
 
 } // namespace hir

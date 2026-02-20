@@ -50,8 +50,8 @@ class Context {
     [[nodiscard]] Scope& scope(ScopeId scope);
 
     /// for registering definitions at the top level before resolution
-    DefId register_top_level_def(SymbolId name, bool pub, Span span, ast_stmt_t* stmt,
-                                 OptId<DefId> parent = OptId<DefId>{});
+    DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,
+                                 ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
 
     // ----- info viewing ------
     const char* symbol_id_to_cstr(SymbolId id) const;

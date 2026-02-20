@@ -22,7 +22,7 @@ struct DefModule {
     SymbolId name;
 };
 
-enum class extern_lang : uint8_t {
+enum class abi : uint8_t {
     native = 0,
     c,
 };
@@ -34,9 +34,8 @@ struct DefFunction {
     ExecId body;
     /// if this function was derived from an original generic function
     OptId<DefId> original;
-    bool compt;
     // indicates if this is extern C compatible
-    hir::extern_lang lang = extern_lang::native;
+    hir::abi lang = abi::native;
 };
 
 struct DefGenericFunction {
@@ -49,15 +48,13 @@ struct DefGenericFunction {
 struct DefFunctionPrototype {
     IdSlice<DefId> params;
     OptId<TypeId> return_type;
-    hir::extern_lang lang = extern_lang::native;
+    hir::abi lang = abi::native;
 };
 
 struct DefVariable {
     TypeId type;
     SymbolId name;
     OptId<ExecId> compt_value;
-    bool is_static;
-    bool compt;
     bool moved;
 };
 
@@ -123,6 +120,8 @@ using DefValue
                    DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
                    DefUnion, DefContract, DefDefType, DefUnevaluated>;
 
+enum class storage : uint8_t { normal, statik, compt };
+
 /// main exec structure, corresponds to an hir_exec_id_t
 struct Def {
     /// represents the resolution state corresponding to an hir::DefId
@@ -150,9 +149,14 @@ struct Def {
     /// parent's definition, if any
     OptId<DefId> parent;
     /// indicates pub (true) or hid (false) visibility
-    const bool pub;
-    Def(DefValue& value, SymbolId name, bool pub, Span span, DefId parent)
-        : value{value}, span{span}, name{name}, pub{pub}, parent{parent} {}
+    const bool pub = false;
+    /// indicates compt (compile-time)
+    const bool compt = false;
+    /// indicates static (storage duration)
+    const bool statik = false;
+    Def(DefValue& value, SymbolId name, bool pub, bool compt, bool statik, Span span, DefId parent)
+        : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
+          statik{statik} {}
     Def(DefValue& value, SymbolId name, bool pub, Span span)
         : value{value}, span{span}, name{name}, pub{pub} {}
     Def(SymbolId name, bool pub, Span span)
