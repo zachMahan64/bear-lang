@@ -8,14 +8,12 @@
 
 #include "compiler/hir/ast_visitor.hpp"
 #include "compiler/ast/stmt.h"
-#include "compiler/diagnostics/error_codes.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/token.h"
-#include <iostream>
 #include <variant>
 
 namespace hir {
@@ -103,10 +101,25 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
 
     // hanlde scope prefix for Foo..bar() functions
     token_t* prefix = info.scope_prefix_tkn;
-    if (prefix
-        && Scope::look_up_type(context, scope, context.get_symbol_id_for_tkn(info.scope_prefix_tkn))
-                   .status
-               == scope_look_up_status::okay) {
+    if (prefix) {
+        auto r = Scope::look_up_type(context, scope,
+                                     context.get_symbol_id_for_tkn(info.scope_prefix_tkn));
+        bool no_struct = false;
+        if (r.status == scope_look_up_status::okay) {
+            if (auto s = context.def(r.def_id); s.holds<DefStruct>()) {
+                scope = s.as<DefStruct>().scope;
+                // TODO fix becuz this isnt being set yet
+            } else {
+                no_struct = true;
+            }
+        } else {
+            no_struct = true;
+        }
+
+        if (no_struct) {
+            context.emplace_diagnostic(Span(file, context.ast(file).buffer(), prefix),
+                                       diag_code::no_matching_struct_for_method, diag_type::error);
+        }
     }
 
     // get symbol from token

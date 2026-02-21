@@ -384,4 +384,7 @@ void Context::print_diagnostic(DiagnosticId diag_id) {
 void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {
     diagnostics.at(diag).set_next(next);
 }
+
+Def& Context::def(DefId def_id) { return defs.at(def_id); }
+
 } // namespace hir

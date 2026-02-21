@@ -54,6 +54,7 @@ class Context {
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag);
+    Def& def(DefId def_id);
 
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,

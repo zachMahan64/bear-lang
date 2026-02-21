@@ -160,6 +160,8 @@ struct Def {
     Def(SymbolId name, bool pub, Span span)
         : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
     void set_value(DefValue value) { this->value = value; }
+    template <typename V> bool holds() noexcept { return std::holds_alternative<V>(value); }
+    template <typename V> V& as() noexcept { return std::get<V>(value); }
 };
 
 } // namespace hir

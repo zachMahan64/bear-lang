@@ -27,6 +27,9 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "redefined symbol";
     case diag_code::original_def_here:
         return "redefined symbol originally defined here";
+    case diag_code::no_matching_struct_for_method:
+        return "no matching struct for method declaration";
+        break;
     }
     return "";
 }

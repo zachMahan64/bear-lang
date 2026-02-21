@@ -1,2 +1,10 @@
 i32 test;
 i32 test;
+
+struct Foo {
+    // ...
+}
+
+mt Foo..bar() -> i32 {
+    return 42;
+}

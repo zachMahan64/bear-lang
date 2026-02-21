@@ -15,7 +15,7 @@
 namespace hir {
 
 class Context;
-enum class diag_code : uint8_t { redefinition, original_def_here };
+enum class diag_code : uint8_t { redefinition, original_def_here, no_matching_struct_for_method };
 enum class diag_type : uint8_t { error, warning, note };
 struct Diagnostic {
 
