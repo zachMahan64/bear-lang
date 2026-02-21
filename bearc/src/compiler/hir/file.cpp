@@ -46,14 +46,6 @@ void FileAst::try_print_info(const bearc_args_t* args) const {
     }
 }
 
-void FileAst::try_print_errors(const bearc_args_t* args) const {
-    // display all comptime errors
-    bool silent = args->flags[CLI_FLAG_SILENT];
-    if (!silent) {
-        this->print_all_errors();
-    }
-}
-
 void FileAst::emplace_tokenwise_error(token_t* tkn, error_code_e error_code) {
     compiler_error_list_emplace(&this->ast.error_list, tkn, error_code);
 }

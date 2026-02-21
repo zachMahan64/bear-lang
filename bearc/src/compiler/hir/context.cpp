@@ -250,14 +250,16 @@ void Context::explore_imports(FileId importer_file_id,
 }
 
 void Context::try_print_info() {
-    // go thru each file ast to print info
-    for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
-        const FileAst& ast = c_ast(fid);
-        // 1. print parse-time errors (ast-wise errors)
-        ast.try_print_errors(args);
-        // 2. print diagnostics (semantic/non-grammatical errors)
-        for (const auto d : file_to_diagnostics.cat(fid)) {
-            print_diagnostic(d);
+    if (!args->flags[CLI_FLAG_SILENT]) {
+        // go thru each file ast to print info
+        for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
+            const FileAst& ast = c_ast(fid);
+            // 1. print parse-time errors (ast-wise errors)
+            ast.print_all_errors();
+            // 2. print diagnostics (semantic/non-grammatical errors)
+            for (const auto d : file_to_diagnostics.cat(fid)) {
+                print_diagnostic(d);
+            }
         }
     }
     // 3. try print out ast-wise information (token tables, pretty-printing)
