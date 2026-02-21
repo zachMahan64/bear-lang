@@ -40,7 +40,7 @@ static constexpr size_t DEFAULT_FILE_ID_VEC_CAP = 0x200;
 static constexpr size_t DEFAULT_SCOPE_ANON_VEC_CAP = 0x100;
 static constexpr size_t DEFAULT_SYMBOL_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_EXEC_VEC_CAP = 0x800;
-static constexpr size_t DEFAULT_DEF_VEC_CAP = 0x800;
+static constexpr size_t DEFAULT_DEF_CAP = 0x800;
 static constexpr size_t DEFAULT_TYPE_VEC_CAP = 0x400;
 static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
@@ -52,18 +52,18 @@ Context::Context(const bearc_args_t* args)
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
       file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
-      symbols{DEFAULT_SYMBOL_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_VEC_CAP},
+      symbols{DEFAULT_SYMBOL_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_CAP},
       file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees{DEFAULT_FILE_VEC_CAP},
       importee_to_importers{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
-      exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_VEC_CAP},
-      def_resol_states{DEFAULT_DEF_VEC_CAP}, def_mention_states{DEFAULT_DEF_VEC_CAP},
-      type_vec{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_VEC_CAP},
-      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
+      exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_CAP}, def_resol_states{DEFAULT_DEF_CAP},
+      def_mention_states{DEFAULT_DEF_CAP}, type_vec{DEFAULT_TYPE_VEC_CAP},
+      type_ids{DEFAULT_DEF_CAP}, generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
       str_to_symbol_id_map{symbol_map_arena}, args{args}, scope_arena{DEFAULT_SCOPE_ARENA_CAP},
-      def_ast_nodes(DEFAULT_DEF_VEC_CAP), diagnostics{DEFAULT_DIAG_NUM},
-      diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS} {
+      def_ast_nodes(DEFAULT_DEF_CAP), diagnostics{DEFAULT_DIAG_NUM},
+      diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
+      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP} {
 
     // get try to get root file, and allow checking cwd for it
     std::optional<std::filesystem::path> maybe_root_file
@@ -253,11 +253,18 @@ void Context::try_print_info() {
     // go thru each file ast to print info
     for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
         const FileAst& ast = c_ast(fid);
+        // 1. print parse-time errors (ast-wise errors)
+        ast.try_print_errors(args);
+        // 2. print diagnostics (semantic/non-grammatical errors)
         for (const auto d : file_to_diagnostics.cat(fid)) {
             print_diagnostic(d);
         }
-        ast.try_print_info(args);
     }
+    // 3. try print out ast-wise information (token tables, pretty-printing)
+    for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
+        c_ast(fid).try_print_info(args);
+    }
+    // print more info:
     if (args->flags[CLI_FLAG_LIST_FILES]) {
         std::cout << ansi_bold_white() << "all files" << '(' << files.size() << ')' << ":"
                   << ansi_reset() << '\n';

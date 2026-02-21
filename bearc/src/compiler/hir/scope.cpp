@@ -15,7 +15,7 @@
 #include <stddef.h>
 #include <stdint.h>
 // this may need to be tuned for a balance between cache locality and limited rehashing
-#define HIR_SCOPE_MAP_DEFAULT_SIZE 0x800
+#define HIR_SCOPE_MAP_DEFAULT_SIZE 0x100
 #define HirScopeOP_LEVEL_SCALE_FACTOR 4
 /// helper for looking into symbol -> def maps
 

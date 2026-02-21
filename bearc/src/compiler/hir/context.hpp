@@ -115,6 +115,9 @@ class Context {
     IdVecMap<DefId, ast_stmt_t*> def_ast_nodes;
     /// tracks whether a defintion is used/unused/modified (for tracking dead definitions)
     IdVecMap<DefId, Def::mention_state> def_mention_states;
+
+    /// for tracking DefId -> ScopeId for structs during the top level resolution
+    IdHashMap<DefId, ScopeId> def_to_scope_for_types;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

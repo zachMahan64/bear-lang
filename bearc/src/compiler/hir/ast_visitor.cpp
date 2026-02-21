@@ -18,6 +18,10 @@
 
 namespace hir {
 
+bool is_lower(const token_t* s);
+bool is_capital(const token_t* s);
+std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt);
+
 void AstVisitor::register_top_level_declarations() {
     // registers all the top level stmts of the file using the top level scope
     register_top_level_stmts(context.get_top_level_scope(),
@@ -53,7 +57,8 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
     // special cases (modules and extern blocks)
     // handle module, first search for an existing module to insert into
     if (stmt->type == AST_STMT_MODULE) {
-        SymbolId name = context.get_symbol_id_for_tkn(stmt->stmt.module.id);
+        token_t* name_tkn = stmt->stmt.module.id;
+        SymbolId name = context.get_symbol_id_for_tkn(name_tkn);
 
         OptId<DefId> existing = Scope::look_up_namespace(context, scope, name).def_id;
 
@@ -70,7 +75,11 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.defs.cat(existing.as_id()).value).scope
                                 : context.make_named_scope();
-
+        // warn capitalized_mod if the mod is new and capitalized
+        if (!existing_module && is_capital(name_tkn)) {
+            context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
+                                       diag_code::capitalized_mod, diag_type::warning);
+        }
         context.defs.at(mod_def).set_value(DefModule{.scope = mod_scope, .name = name});
         context.scope(scope).insert_namespace(name, mod_def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls, mod_def,
@@ -79,12 +88,17 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
     }
     // handle extern block
     if (stmt->type == AST_STMT_EXTERN_BLOCK) {
-        // TODO, extract into helper and output proper error messages if it's not 'C'
-        enum abi_lang abi = (stmt->stmt.extern_block.extern_language->len != 0
-                             && stmt->stmt.extern_block.extern_language->start[0] == 'C')
-                                ? abi_lang::c
-                                : abi_lang::native;
-        register_top_level_stmts(scope, stmt->stmt.extern_block.decls, parent, abi);
+        auto maybe_abi = abi_for_extern_stmt(stmt);
+        // ensure valid specified abi
+        if (!maybe_abi.has_value()) {
+            context.emplace_diagnostic(
+                Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
+                diag_code::invalid_extern_lang, diag_type::error);
+
+        } else {
+            enum abi_lang abi = maybe_abi.value();
+            register_top_level_stmts(scope, stmt->stmt.extern_block.decls, parent, abi);
+        }
         return;
     }
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -106,9 +120,8 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
                                      context.get_symbol_id_for_tkn(info.scope_prefix_tkn));
         bool no_struct = false;
         if (r.status == scope_look_up_status::okay) {
-            if (auto s = context.def(r.def_id); s.holds<DefStruct>()) {
-                scope = s.as<DefStruct>().scope;
-                // TODO fix becuz this isnt being set yet
+            if (auto s = context.def_to_scope_for_types.at(r.def_id); s.has_value()) {
+                scope = s.as_id();
             } else {
                 no_struct = true;
             }
@@ -162,6 +175,12 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
         break;
     case scope_kind::TYPE:
         context.scope(scope).insert_type(name, def);
+        context.def_to_scope_for_types.insert(
+            def, context.make_named_scope()); // warn on lowercase structure definition
+        if (is_lower(name_tkn)) {
+            context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
+                                       diag_code::lowercase_structure, diag_type::warning);
+        }
         break;
     default:
         break;
@@ -253,6 +272,15 @@ TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         .stmts = stmts,
         .kind = kind,
     };
+}
+
+bool is_lower(const token_t* s) { return !is_capital(s); }
+bool is_capital(const token_t* s) { return s->start[0] >= 'A' && s->start[0] <= 'Z'; }
+std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt) {
+    return (stmt->stmt.extern_block.extern_language->len != 0
+            && stmt->stmt.extern_block.extern_language->start[0] == 'C')
+               ? abi_lang::c
+               : std::optional<abi_lang>{};
 }
 
 } // namespace hir

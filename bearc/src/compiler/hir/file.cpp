@@ -44,7 +44,9 @@ void FileAst::try_print_info(const bearc_args_t* args) const {
     if (args->flags[CLI_FLAG_PRETTY_PRINT]) {
         this->pretty_print();
     }
+}
 
+void FileAst::try_print_errors(const bearc_args_t* args) const {
     // display all comptime errors
     bool silent = args->flags[CLI_FLAG_SILENT];
     if (!silent) {

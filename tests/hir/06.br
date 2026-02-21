@@ -8,3 +8,31 @@ struct Foo {
 mt Foo..bar() -> i32 {
     return 42;
 }
+
+mt Bar..foo() -> i32 {
+    return 24;
+}
+
+struct Bar {
+    // ...
+}
+
+mod Oops {
+
+}
+
+struct bar {
+
+}
+
+extern C {
+    // fine 
+}
+
+extern oopsie {
+    // oops
+}
+
+extern {
+    // oops
+}

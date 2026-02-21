@@ -30,6 +30,15 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::no_matching_struct_for_method:
         return "no matching struct for method declaration";
         break;
+    case diag_code::capitalized_mod:
+        return "capitalized module name";
+        break;
+    case diag_code::lowercase_structure:
+        return "lowercase structure name";
+        break;
+    case diag_code::invalid_extern_lang:
+        return "invalid language target specified for external linkage";
+        break;
     }
     return "";
 }
