@@ -37,7 +37,7 @@ bool cli_args_otherwise_empty(bearc_args_t* args, cli_flag_e flag);
 
 void do_cli_announce_incompatible_flags(void);
 
-int br_launch_cli(int argc, char** argv) {
+int bearc_compile_from_args(int argc, char** argv) {
     ansi_init();
     // parse and do preliminary validatation on args, convert to max 1 flag, 1 filename
     bearc_args_t args = parse_cli_args(argc, argv);

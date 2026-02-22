@@ -1,0 +1,9 @@
+// 07.br
+import "08.br";
+
+mt Foo..do_work(i32 a) -> i32 {
+    if a <= 0 {
+        return self.a + self.b;
+    }
+    return self.(a - 1);
+}

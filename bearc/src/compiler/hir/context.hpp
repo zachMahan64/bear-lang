@@ -136,7 +136,6 @@ class Context {
     IdVecMap<DiagnosticId, uint8_t> diagnostics_used;
 
     std::atomic<uint32_t> hard_error_count;
-    std::atomic<uint32_t> semantic_error_count;
     std::atomic<uint32_t> fatal_error_count;
 
     // args

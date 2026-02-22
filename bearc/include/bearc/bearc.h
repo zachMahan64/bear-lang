@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-int br_launch_cli(int argc, char** argv);
+int bearc_compile_from_args(int argc, char** argv);
 
 #ifdef __cplusplus
 }

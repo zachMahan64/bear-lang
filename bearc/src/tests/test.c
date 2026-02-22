@@ -27,7 +27,12 @@ int main(int argc, char** argv) {
 
     br_test_result_t total = test_total_init();
     vector_t results = vector_create_and_reserve(sizeof(br_test_result_t), 8);
+
+    // add all tests here ----------
     *((br_test_result_t*)vector_emplace_back(&results)) = test_parser();
+    *((br_test_result_t*)vector_emplace_back(&results)) = test_hir();
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
     printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
     printf(" |%s        test results       %s|\n", ansi_bold_blue(), ansi_bold_white());
     printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
@@ -62,16 +67,21 @@ int main(int argc, char** argv) {
                ansi_reset());                                                                      \
     }                                                                                              \
     br_test_result.cnt_total++;
-#define ASSERT_GTE_ERR(file_name, err_cnt)                                                         \
-    if (compile_file({"tests/" file_name ".br", {0}) >= (err_cnt)) {                                     \
-        br_test_result.cnt_success++;                                                              \
-    };                                                                                             \
-    br_test_result.cnt_total++;
-#define ASSERT_ERR(file_name)                                                                      \
-    if (compile_file("tests/" file_name ".br") > 0) {                                              \
-        br_test_result.cnt_success++;                                                              \
-    };                                                                                             \
-    br_test_result.cnt_total++;
+#define ASSERT_EQ_ERR_FROM_ARGS(args_, err_cnt)                                                    \
+    do {                                                                                           \
+        bearc_args_t arrggss = parse_cli_args(sizeof(args_) / sizeof((args_)[0]), args_);          \
+        true_cnt = compile_file(&arrggss);                                                         \
+        if (true_cnt == (err_cnt)) {                                                               \
+            br_test_result.cnt_success++;                                                          \
+        } else {                                                                                   \
+            printf("%s [!] %sTEST FAILED %s('"                                                     \
+                   "%s"                                                                            \
+                   "'): expected %d errors, got %d %s\n\n",                                        \
+                   ansi_bold_white(), ansi_bold_red(), ansi_bold_white(), (args_)[1], err_cnt,     \
+                   true_cnt, ansi_reset());                                                        \
+        }                                                                                          \
+        br_test_result.cnt_total++;                                                                \
+    } while (0);
 #define TEST_RESULT br_test_result
 
 br_test_result_t test_parser(void) {
@@ -125,6 +135,19 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/46", 1);
     ASSERT_EQ_ERR("parser/47", 1);
 
+    return TEST_RESULT;
+}
+
+br_test_result_t test_hir(void) {
+    TEST_INIT("hir");
+    char* args1[] = {"bearc", "07.br", "-i", "tests/hir"};
+    ASSERT_EQ_ERR_FROM_ARGS(args1, 0);
+    char* args2[] = {"bearc", "tests/hir/07.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args2, 2);
+    char* args3[] = {"bearc", "tests/hir/04.br", "--compile", "--import-path", "."};
+    ASSERT_EQ_ERR_FROM_ARGS(args3, 10);
+    char* args4[] = {"bearc", "tests/hir/00.br", "--compile", "--import-path", "."};
+    ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
     return TEST_RESULT;
 }
 

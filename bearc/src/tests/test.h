@@ -21,7 +21,7 @@ typedef struct {
 } br_test_result_t;
 
 br_test_result_t test_parser(void);
-
+br_test_result_t test_hir(void);
 br_test_result_t test_total_init(void);
 
 void test_tally(br_test_result_t* total, br_test_result_t* new_test);

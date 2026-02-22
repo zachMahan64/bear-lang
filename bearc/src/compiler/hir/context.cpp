@@ -65,7 +65,11 @@ Context::Context(const bearc_args_t* args)
       diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
       def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP} {
 
+    // this may only fail in horribly malfored arguments in test cases
+    assert(args->input_file_name);
+
     // get try to get root file, and allow checking cwd for it
+
     std::optional<std::filesystem::path> maybe_root_file
         = resolve_on_import_path(args->input_file_name, ".", args);
 
@@ -94,7 +98,7 @@ void Context::bump_hard_error_count(uint32_t cnt) noexcept {
 }
 
 int Context::error_count() const noexcept {
-    return static_cast<int>(this->hard_error_count + this->semantic_error_count);
+    return static_cast<int>(this->hard_error_count + this->diagnostics.size());
 }
 
 SymbolId Context::get_symbol_id(std::string_view str) {
@@ -297,11 +301,11 @@ void Context::try_print_info() {
         }
     }
     if (!args->flags[CLI_FLAG_SILENT]) {
-        auto len = this->error_count() + diagnostics.size();
+        auto len = this->error_count();
         if (len == 1) {
             puts("1 diagnostic generated.");
         } else if (len != 0) {
-            printf("%zu diagnostics generated.\n", len);
+            printf("%d diagnostics generated.\n", len);
         }
     }
     // std::cout << tables.files.size() << '\n';
