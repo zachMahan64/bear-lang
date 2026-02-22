@@ -11,6 +11,8 @@
 #include "compiler/hir/context.hpp"
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"
+#include <iomanip>
+#include <iostream>
 
 namespace hir {
 
@@ -19,6 +21,7 @@ void Diagnostic::print(const Context& context) const {
     auto s = Span::retrieve_from_buffer(buf->data, span);
     print_diagnostic(buf, (char*)s.data(), span.len, span.line, span.col,
                      accent_color_for_type(type), name_for_type(type), message_for_code(code), "");
+    // TODO handle DiagnosticValue
 }
 
 const char* Diagnostic::message_for_code(enum diag_code c) {

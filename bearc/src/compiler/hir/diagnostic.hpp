@@ -12,6 +12,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include <cstdint>
+#include <variant>
 namespace hir {
 
 class Context;
@@ -24,9 +25,18 @@ enum class diag_code : uint8_t {
     invalid_extern_lang,
 };
 enum class diag_type : uint8_t { error, warning, note };
+
+struct DiagnosticNoOtherInfo {};
+struct DiagnosticImportStack {
+    IdSlice<FileId> files;
+};
+
+using DiagnosticValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack>;
+
 struct Diagnostic {
 
     using id_type = DiagnosticId;
+    DiagnosticValue value;
     Span span;
     OptId<DiagnosticId> next;
     diag_code code;

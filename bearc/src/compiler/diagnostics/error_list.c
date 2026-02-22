@@ -106,7 +106,7 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
 
     printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
     // print an extra "   |   "
-    printf("%s\n", string_data(&line_under_num_str));
+    // printf("%s\n", string_data(&line_under_num_str));
 
     // free resources
     string_destroy(&cursor_string);
