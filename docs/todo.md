@@ -22,7 +22,8 @@
     - [x] make sure to set the parent field in defs (current the `OptId<DefId> parent` field is always none), this will later be important for canonicalizing definitons (especially types)
 - [x] add better diagnostics (interned in HIR), which is file-wise, but track a `next_diag` chain and then store a `bool reported` to ensure no duplicate reporting
     - [x] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics). This will probably require dedicated DiagnosticId -> Diagnostic: Error | Warning | Noteo 
-- [ ] hir test cases
+- [x] hir test cases
+- [ ] add a diagnostic type to handle circular imports (DiagnosticValue containing a slice of FileId should work)
 - [ ] debug logger to display context and scope contents 
 
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
