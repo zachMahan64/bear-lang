@@ -358,7 +358,10 @@ ScopeId Context::get_top_level_scope() {
     return ScopeId{1};
 }
 
-ScopeId Context::make_named_scope() { return scopes.emplace_and_get_id(scope_arena); }
+ScopeId Context::make_named_scope(OptId<ScopeId> parent_scope) {
+    return (parent_scope.has_value()) ? scopes.emplace_and_get_id(parent_scope.as_id(), scope_arena)
+                                      : scopes.emplace_and_get_id(scope_arena);
+}
 
 Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }
 

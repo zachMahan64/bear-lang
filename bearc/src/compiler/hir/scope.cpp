@@ -297,5 +297,8 @@ OptId<DefId> ScopeAnon::already_defines_variable(SymbolId symbol) const {
     return variables.at(symbol);
 }
 OptId<DefId> ScopeAnon::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
-
+OptId<DefId> Scope::look_up_local_namespace(const Context& context, ScopeId local_scope,
+                                            SymbolId symbol) {
+    return context.scopes.cat(local_scope).namespaces.at(symbol);
+}
 } // namespace hir

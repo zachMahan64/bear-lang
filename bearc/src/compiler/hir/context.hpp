@@ -48,7 +48,7 @@ class Context {
     [[nodiscard]] FileAst& ast(FileId file_id);
     [[nodiscard]] const FileAst& c_ast(FileId file_id) const;
     [[nodiscard]] ScopeId get_top_level_scope();
-    [[nodiscard]] ScopeId make_named_scope();
+    [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
     [[nodiscard]] Scope& scope(ScopeId scope);
 
     // diagnostics

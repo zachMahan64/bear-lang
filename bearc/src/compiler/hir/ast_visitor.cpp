@@ -60,7 +60,16 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
         token_t* name_tkn = stmt->stmt.module.id;
         SymbolId name = context.get_symbol_id_for_tkn(name_tkn);
 
-        OptId<DefId> existing = Scope::look_up_namespace(context, scope, name).def_id;
+        // look up a LOCAL namespace since we don't want to traverse parents for already defined
+        // namespaces, because we want to allow nested namespaces. If we didn't do this, we might
+        // have this situation:
+        // mod foo { i32 BAR = 42; mod bar { i32 BAR = 42; } }
+        // mod foey { mod foo { i32 BAR = 42; } }
+        // where mod foo is found in the parent of mod foey and then BAR is added to the outer
+        // definition of foo!
+        //
+        // this would be bad.
+        OptId<DefId> existing = Scope::look_up_local_namespace(context, scope, name).as_id();
 
         bool existing_module
             = existing.has_value()
@@ -74,7 +83,7 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
                                   stmt, parent);
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.defs.cat(existing.as_id()).value).scope
-                                : context.make_named_scope();
+                                : context.make_named_scope(scope);
         // warn capitalized_mod if the mod is new and capitalized
         if (!existing_module && is_capital(name_tkn)) {
             context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
@@ -175,8 +184,8 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
         break;
     case scope_kind::TYPE:
         context.scope(scope).insert_type(name, def);
-        context.def_to_scope_for_types.insert(
-            def, context.make_named_scope()); // warn on lowercase structure definition
+        context.def_to_scope_for_types.insert(def, context.make_named_scope(scope));
+        // warn on lowercase structure definition
         if (is_lower(name_tkn)) {
             context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
                                        diag_code::lowercase_structure, diag_type::warning);
