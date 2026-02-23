@@ -3,7 +3,7 @@
 //   /_____  _____  _____  _____    /  _____   _  _  _____
 //  /     / /____  /____/ /____/   /  /____/  /\  / /  __
 // /_____/ /____  /    / /   \    /  /    /  /  \/ /____/
-// Copyright (C) 2025 Zachary Mahan
+// Copyright (C) 2025-2026 Zachary Mahan
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "utils/spill_arr.h"
@@ -46,8 +46,8 @@ void** spill_arr_ptr_at(spill_arr_ptr_t* sarr, size_t n) {
     }
     // assume internal buff is 64
     // say we ask for idx 64, we actually get 64 - 64 = vec[0]
-    assert(sarr->vec.elem_size == sizeof(void*) &&
-           "[spill_arr_8_at] internal vector elem_size corrupted\n");
+    assert(sarr->vec.elem_size == sizeof(void*)
+           && "[spill_arr_8_at] internal vector elem_size corrupted\n");
     return (void**)vector_at(&sarr->vec, n - sarr->arr_cap);
 }
 
