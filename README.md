@@ -16,7 +16,7 @@
 - Run these commands:
 ```
 # for installing the LLVM distribution, do this first (which will take a while):
-./scripts/llvm-install.sh              
+./scripts/llvm-init.sh              
 
 # convient scripts:
 ./scripts/clean-all.sh [Release|Debug] # builds bearc and libbearc

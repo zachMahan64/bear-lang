@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # starting from project root dir
 cd bearc || exit
 git clone --branch llvmorg-21.1.6 --depth 1 https://github.com/llvm/llvm-project.git
