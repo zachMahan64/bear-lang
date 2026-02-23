@@ -9,7 +9,7 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
 
-static const bool really_note[ERR__COUNT] = {0};
+static const bool really_note[ERR__COUNT] = {[NOTE_DID_YOU_MEAN_MT] = true};
 bool is_really_note(error_code_e error_code) { return really_note[error_code]; }
 static const char* error_messages[ERR__COUNT] = {
     [ERR_EXPECTED_IDENTIFER] = "expected identifier",
@@ -43,7 +43,10 @@ static const char* error_messages[ERR__COUNT] = {
     [ERR_INVALID_PATTERN]
     = "invalid patern; expected identifier, literal, or variant decomposition",
     [ERR_MUT_QUALIFIER_ON_NON_MT] = "'mut' qualifier can only be used on 'mt' methods",
-    [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION] = "too many qualifications on function declaration"};
+    [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION] = "too many qualifications on function declaration",
+    [ERR_QUALIFICATION_ON_NON_MT_FN_DECL]
+    = "leading structure qualification on an 'fn' function is malformed",
+    [NOTE_DID_YOU_MEAN_MT] = "did you mean to declare this as 'mt'?"};
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
 
 const char* error_message_context_for(compiler_error_t* error) {

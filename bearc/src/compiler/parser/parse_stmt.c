@@ -291,10 +291,17 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     parser_shed_visibility_qualis_with_error(p);
 
     decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
-    if (decl->stmt.fn_decl.name.len > 2) {
+    size_t len = decl->stmt.fn_decl.name.len;
+    // if the Name..method chain is too long OR the function is an fn
+    if (len > 2) {
         compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.name.start[0],
                                     ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION);
         cooked = true;
+    } else if (len == 2 && decl->stmt.fn_decl.kw->type == TOK_FN) {
+        compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.name.start[0],
+                                    ERR_QUALIFICATION_ON_NON_MT_FN_DECL);
+        cooked = true;
+        compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.kw, NOTE_DID_YOU_MEAN_MT);
     }
     decl->stmt.fn_decl.is_generic = false;
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine

@@ -23,7 +23,8 @@
 - [x] add better diagnostics (interned in HIR), which is file-wise, but track a `next_diag` chain and then store a `bool reported` to ensure no duplicate reporting
     - [x] add semantic diagnostics of various types, store metadata, and then write a stdout reporter (this will be seperate from tokenwise diagnostics). This will probably require dedicated DiagnosticId -> Diagnostic: Error | Warning | Noteo 
 - [x] hir test cases
-- [ ] add a diagnostic type to handle circular imports (DiagnosticValue containing a slice of FileId should work)
+- [x] add a diagnostic type to handle circular imports (DiagnosticValue containing a slice of FileId should work)
+- [ ] properly set parent scopes during top-level traversal
 - [ ] debug logger to display context and scope contents 
 
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis

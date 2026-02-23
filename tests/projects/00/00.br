@@ -1,0 +1,11 @@
+
+import "01.br";
+
+fn main() -> i32 {
+    Foo..do_work();
+    return 0;
+}
+
+fn Bar..thingie() -> usize {
+    return 22 * 12;
+}

@@ -82,6 +82,21 @@ int main(int argc, char** argv) {
         }                                                                                          \
         br_test_result.cnt_total++;                                                                \
     } while (0);
+#define ASSERT_EQ_ERR_FROM_ARGSN(args_, err_cnt, arg_index_indicating_name)                        \
+    do {                                                                                           \
+        bearc_args_t arrggss = parse_cli_args(sizeof(args_) / sizeof((args_)[0]), args_);          \
+        true_cnt = compile_file(&arrggss);                                                         \
+        if (true_cnt == (err_cnt)) {                                                               \
+            br_test_result.cnt_success++;                                                          \
+        } else {                                                                                   \
+            printf("%s [!] %sTEST FAILED %s('"                                                     \
+                   "%s"                                                                            \
+                   "'): expected %d errors, got %d %s\n\n",                                        \
+                   ansi_bold_white(), ansi_bold_red(), ansi_bold_white(),                          \
+                   (args_)[arg_index_indicating_name], err_cnt, true_cnt, ansi_reset());           \
+        }                                                                                          \
+        br_test_result.cnt_total++;                                                                \
+    } while (0);
 #define TEST_RESULT br_test_result
 
 br_test_result_t test_parser(void) {
@@ -148,6 +163,8 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args3, 10);
     char* args4[] = {"bearc", "tests/hir/00.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
+    char* args5[] = {"bearc", "-i", "tests/projects/00", "-c", "00.br"};
+    ASSERT_EQ_ERR_FROM_ARGSN(args5, 3, 3);
     return TEST_RESULT;
 }
 

@@ -1,0 +1,7 @@
+import "00.br"; // circular
+
+struct Foo {
+    fn do_work() -> i32 {
+        return 42;
+    }
+}

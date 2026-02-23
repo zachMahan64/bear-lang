@@ -124,7 +124,7 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     size_t line = error->start_tkn->loc.line;
     size_t col = error->start_tkn->loc.col;
     const char* accent_color
-        = is_really_note(error->error_code) ? ansi_bold_yellow() : ansi_bold_red();
+        = is_really_note(error->error_code) ? ansi_bold_cyan() : ansi_bold_red();
     const char* error_word = is_really_note(error->error_code) ? "note" : "error";
     const char* error_message = error_message_for_code(error->error_code);
     const char* context = error_message_context_for(error);

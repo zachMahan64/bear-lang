@@ -49,6 +49,8 @@ typedef enum error_code {
     ERR_EXPECTED_ASSIGNMENT,
     ERR_INVALID_PATTERN,
     ERR_MUT_QUALIFIER_ON_NON_MT,
+    ERR_QUALIFICATION_ON_NON_MT_FN_DECL,
+    NOTE_DID_YOU_MEAN_MT,
     ERR__COUNT
 } error_code_e;
 

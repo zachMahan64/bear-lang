@@ -69,8 +69,9 @@ const char* Diagnostic::accent_color_for_type(enum diag_type t) {
     case diag_type::error:
         return ansi_bold_red();
     case diag_type::warning:
-    case diag_type::note:
         return ansi_bold_yellow();
+    case diag_type::note:
+        return ansi_bold_cyan();
     }
     return "";
 }
