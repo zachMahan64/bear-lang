@@ -29,8 +29,8 @@ class Span {
     HirSize col;
     /// constructs an hir::Span from an existing FileId and none-owned ptrs to a src buffer and a
     /// token_t
-    Span(FileId file_id, const char* src, token_t* tkn);
-    Span(FileId file_id, const char* src, token_t* first, token_t* last);
+    Span(FileId file_id, const char* src, const token_t* tkn);
+    Span(FileId file_id, const char* src, const token_t* first, const token_t* last);
     [[nodiscard]] static std::string_view retrieve_from_buffer(const char* data, Span span);
 };
 

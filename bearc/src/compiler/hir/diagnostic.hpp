@@ -17,12 +17,14 @@ namespace hir {
 
 class Context;
 enum class diag_code : uint8_t {
+    imported_file_dne,
     redefinition,
     original_def_here,
     no_matching_struct_for_method,
     capitalized_mod,
     lowercase_structure,
     invalid_extern_lang,
+    cyclical_import,
 };
 enum class diag_type : uint8_t { error, warning, note };
 
@@ -44,13 +46,17 @@ struct Diagnostic {
     void print(const Context& context) const;
     Diagnostic(Span span, enum diag_code code, enum diag_type type,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
-        : span(span), code(code), type(type), next(next) {}
+        : span(span), code(code), type(type), next(next), value(DiagnosticNoOtherInfo{}) {}
+    Diagnostic(Span span, enum diag_code code, enum diag_type type, DiagnosticValue value,
+               OptId<DiagnosticId> next = OptId<DiagnosticId>{})
+        : span(span), code(code), type(type), next(next), value(value) {}
     void set_next(DiagnosticId next) { this->next = next; }
 
   private:
     static const char* message_for_code(enum diag_code c);
     static const char* name_for_type(enum diag_type t);
     static const char* accent_color_for_type(enum diag_type t);
+    void print_info_value(const Context& context) const;
 };
 
 } // namespace hir

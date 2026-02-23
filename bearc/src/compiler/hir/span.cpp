@@ -12,11 +12,11 @@
 #include <string_view>
 
 namespace hir {
-Span::Span(FileId file_id, const char* src, token_t* tkn)
+Span::Span(FileId file_id, const char* src, const token_t* tkn)
     : start(tkn->start - src), len(tkn->len), file_id(file_id), line(tkn->loc.line),
       col(tkn->loc.col) {}
 
-Span::Span(FileId file_id, const char* src, token_t* first, token_t* last)
+Span::Span(FileId file_id, const char* src, const token_t* first, const token_t* last)
     : start(first->start - src), file_id(file_id), len(last->start - src + last->len),
       line(first->loc.line), col(first->loc.col) {}
 

@@ -16,6 +16,7 @@
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
+#include "compiler/hir/span.hpp"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/log.hpp"
@@ -172,37 +173,28 @@ void Context::register_importer(FileId importee, FileId importer) {
 }
 
 // TODO make this a tracked internal file error system (DNE, and circularity tracking)
-void Context::report_cycle(FileId cyclical_file_id,
-                           llvm::SmallVectorImpl<FileId>& import_stack) const {
-    std::cout << ansi_bold_red() << "error" << ansi_reset()
-              << ": circular file import: " << ansi_bold_white() << file_name(cyclical_file_id)
-              << ansi_reset() << '\n';
-    auto print_trace = [&](FileId id) {
-        std::cout << "|    imported in: " << ansi_bold_white() << file_name(id) << ansi_reset();
-    };
-    for (auto it = import_stack.rbegin(); it != import_stack.rend(); ++it) {
-        print_trace(*it);
-        if (*it == cyclical_file_id) {
-            std::cout << ansi_bold_white() << " <-- cycle origin\n";
-            break;
-        }
-        std::cout << '\n';
-    }
+void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
+                           const token_t* import_path_tkn) {
+    // gonna be imported in the previous thing, so top of import stack
+    FileId imported_in = import_stack[import_stack.size() - 1];
+    emplace_diagnostic(Span{imported_in, c_ast(imported_in).buffer(), import_path_tkn},
+                       diag_code::cyclical_import, diag_type::error,
+                       DiagnosticImportStack{file_ids.freeze_small_vec(import_stack)});
 }
 void Context::explore_imports(FileId root_id) {
     llvm::SmallVector<FileId> import_stack{};
     import_stack.push_back(root_id);
-    explore_imports(root_id, import_stack);
+    explore_imports(root_id, import_stack, NULL);
 }
 
-void Context::explore_imports(FileId importer_file_id,
-                              llvm::SmallVectorImpl<FileId>& import_stack) {
+void Context::explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
+                              const token_t* import_path_tkn) {
     auto& file = files.at(importer_file_id);
 
     // angry base case, guard circularity
     if (file.load_state == file_import_state::in_progress) {
         // safe to take id because a circularity is only possible if a prev id exists
-        report_cycle(importer_file_id, import_stack);
+        report_cycle(importer_file_id, import_stack, import_path_tkn);
         return;
     }
     // happy base case
@@ -240,7 +232,8 @@ void Context::explore_imports(FileId importer_file_id,
 
             // recursively traverse
             import_stack.push_back(importer_file_id);
-            this->explore_imports(importee_file_id, import_stack);
+            const token_t* tkn = curr->stmt.import.file_path;
+            this->explore_imports(importee_file_id, import_stack, tkn);
             import_stack.pop_back();
         }
     }
@@ -321,10 +314,6 @@ void Context::try_print_info() {
 
 const char* Context::file_name(FileId id) const { return symbol_id_to_cstr(files.cat(id).path); }
 
-void Context::register_tokenwise_error(FileId file_id, token_t* tkn, error_code_e error_code) {
-    file_asts.at(files.at(file_id).ast_id).emplace_tokenwise_error(tkn, error_code);
-}
-
 OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
                                                       const ast_stmt_t* import_statement) {
     assert(import_statement->type == AST_STMT_IMPORT);
@@ -337,7 +326,9 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     // DNE guard
     auto maybe_path = resolve_on_import_path(path, parent, this->args);
     if (!maybe_path.has_value()) {
-        register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
+        // register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
+        emplace_diagnostic(Span(importer_id, ast(importer_id).buffer(), path_tkn),
+                           diag_code::imported_file_dne, diag_type::error);
         ++this->fatal_error_count;
         return OptId<FileId>{};
     }
@@ -379,6 +370,14 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
     return id;
 }
 
+DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                         DiagnosticValue value, OptId<DiagnosticId> next) {
+    DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, value, next);
+    diagnostics_used.bump();
+    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    return id;
+}
+
 void Context::print_diagnostic(DiagnosticId diag_id) {
     // as to not re-report
     if (diagnostics_used.cat(diag_id)) {
@@ -400,4 +399,5 @@ void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {
 
 Def& Context::def(DefId def_id) { return defs.at(def_id); }
 
+FileId Context::file_id_idx_to_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx); }
 } // namespace hir

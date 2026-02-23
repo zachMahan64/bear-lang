@@ -1,5 +1,4 @@
 import "tests/hir/01.br";
-import "tests/hir/02.br";
 
 
 fn main() -> i32 {

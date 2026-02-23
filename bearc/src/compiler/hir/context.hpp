@@ -50,10 +50,17 @@ class Context {
     [[nodiscard]] ScopeId get_top_level_scope();
     [[nodiscard]] ScopeId make_named_scope();
     [[nodiscard]] Scope& scope(ScopeId scope);
+
+    // diagnostics
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                    OptId<DiagnosticId> next = OptId<DiagnosticId>{});
+    DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                    DiagnosticValue value,
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag);
+
+    // accessfor for a def thru a DefId
     Def& def(DefId def_id);
 
     /// for registering definitions at the top level before resolution
@@ -65,9 +72,13 @@ class Context {
 
     // ------ transformers -----
     void explore_imports(FileId root_id);
-    void explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack);
+    void explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
+                         const token_t* import_path_tkn);
     /// prints info based on cli-flags
     void try_print_info();
+
+    // converters
+    FileId file_id_idx_to_id(IdIdx<FileId> ididx) const;
 
     friend class Scope;
     friend class ScopeAnon;
@@ -150,8 +161,8 @@ class Context {
     /// get a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
     void register_importer(FileId importee, FileId importer);
-    void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack) const;
-    void register_tokenwise_error(FileId file_id, token_t* tkn, error_code_e error_code);
+    void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
+                      const token_t* import_path_tkn);
     [[nodiscard]] OptId<FileId> try_file_from_import_statement(FileId importer_id,
                                                                const ast_stmt_t* import_statement);
 };

@@ -98,7 +98,7 @@ template <hir::IsId I> class IdVector : public IdVecMap<typename hir::IdIdx<I>, 
 
   public:
     explicit IdVector(HirSize capacity) : IdVecMap<typename hir::IdIdx<I>, I>(capacity) {}
-    template <HirSize N> IdSlice<I> freeze_small_vec(llvm::SmallVector<I, N>& svec) {
+    IdSlice<I> freeze_small_vec(llvm::SmallVectorImpl<I>& svec) {
         // basically we're just allocating a contiguous chunk inside the vector so that we can copy
         // in the small vector into internal, permanent storage
         IdIdx<I> first{static_cast<HirId>(this->vec.size() + OFFSET)};

@@ -9,10 +9,12 @@
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/hir/context.hpp"
+#include "compiler/hir/indexing.hpp"
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"
-#include <iomanip>
+#include <cmath>
 #include <iostream>
+#include <sstream>
 
 namespace hir {
 
@@ -21,7 +23,7 @@ void Diagnostic::print(const Context& context) const {
     auto s = Span::retrieve_from_buffer(buf->data, span);
     print_diagnostic(buf, (char*)s.data(), span.len, span.line, span.col,
                      accent_color_for_type(type), name_for_type(type), message_for_code(code), "");
-    // TODO handle DiagnosticValue
+    print_info_value(context);
 }
 
 const char* Diagnostic::message_for_code(enum diag_code c) {
@@ -41,6 +43,12 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         break;
     case diag_code::invalid_extern_lang:
         return "invalid language target specified for external linkage";
+        break;
+    case diag_code::imported_file_dne:
+        return "imported file does not exist";
+        break;
+    case diag_code::cyclical_import:
+        return "circular file imports are not permitted";
         break;
     }
     return "";
@@ -65,6 +73,48 @@ const char* Diagnostic::accent_color_for_type(enum diag_type t) {
         return ansi_bold_yellow();
     }
     return "";
+}
+
+template <class... Ts> struct Ovld : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts> Ovld(Ts...) -> Ovld<Ts...>;
+
+void Diagnostic::print_info_value(const Context& context) const {
+    auto line = [&](const auto& printable) {
+        std::cout << "  " << std::setw(static_cast<int>(log10(span.line + 1)) + 1) << "" << "  | "
+                  << printable << '\n';
+    };
+
+    auto import_stack_helper = [&](IdSlice<FileId> files) {
+        auto stream_trace = [&](FileId id, int idx) {
+            const char* lore = (idx == 0) ? "[!]   cycle origin: " : "|--> which imports: ";
+            const char* clr = (idx == 0) ? ansi_bold_cyan() : "";
+            return std::stringstream{} << clr << lore << ansi_bold_white() << context.file_name(id)
+                                       << ansi_reset();
+        };
+        int idx = 0;
+        for (auto fid = IdIdx<FileId>{files.begin().val() + 1}; fid != files.end(); ++fid) {
+            line(stream_trace(context.file_id_idx_to_id(fid), idx).str());
+            idx++;
+        }
+        line(stream_trace(context.file_id_idx_to_id(files.first()), idx).str());
+    };
+
+    const auto vs = Ovld{
+        [&](DiagnosticNoOtherInfo) { line(""); },
+        [&](DiagnosticImportStack import_stack) {
+            import_stack_helper(import_stack.files);
+            /*
+            for (auto fid = import_stack.files.first(); fid != import_stack.files.end(); ++fid) {
+                std::cout << "imported in: " << ansi_bold_white()
+                          << context.file_name(context.file_id_idx_to_id(fid)) << ansi_reset()
+                          << '\n';
+            }
+            */
+        },
+    };
+    std::visit(vs, this->value);
 }
 
 } // namespace hir
