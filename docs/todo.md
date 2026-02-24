@@ -25,6 +25,7 @@
 - [x] hir test cases
 - [x] add a diagnostic type to handle circular imports (DiagnosticValue containing a slice of FileId should work)
 - [x] properly set parent scopes during top-level traversal
+- [ ] handle proper ordering of struct fields in top level traversal (properly will need a dedicated function), achieve this by having `register_top_level_stmt`/`register_top_level_stmts` return `OptId<DefId>`/`IdSlice` where the OptId has a value only when the DefId is a var decl
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
     - [ ] add CanonicalTypeHashTable for single-instantiation generics
     - [ ] debug logger to display context and scope contents 
