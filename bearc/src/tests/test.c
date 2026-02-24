@@ -130,7 +130,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/26", 1);
     ASSERT_EQ_ERR("parser/27", 5);
     ASSERT_EQ_ERR("parser/28", 0);
-    ASSERT_EQ_ERR("parser/29", 0);
+    ASSERT_EQ_ERR("parser/29", 2);
     ASSERT_EQ_ERR("parser/30", 0);
     ASSERT_EQ_ERR("parser/31", 0);
     ASSERT_EQ_ERR("parser/32", 0);
@@ -164,7 +164,7 @@ br_test_result_t test_hir(void) {
     char* args4[] = {"bearc", "tests/hir/00.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
     char* args5[] = {"bearc", "-i", "tests/projects/00", "-c", "00.br"};
-    ASSERT_EQ_ERR_FROM_ARGSN(args5, 3, 3);
+    ASSERT_EQ_ERR_FROM_ARGSN(args5, 7, 2);
     return TEST_RESULT;
 }
 

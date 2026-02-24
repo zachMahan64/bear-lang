@@ -20,8 +20,11 @@ struct TopLevelInfo {
     std::optional<ast_slice_of_stmts_t> stmts;
     scope_kind kind;
 };
-
-class AstVisitor {
+/**
+ * class to traverse the entirety of the namespaces of a filling, filling in
+ *
+ */
+class FileAstVisitor {
     Context& context;
     FileId file;
     void register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
@@ -31,7 +34,7 @@ class AstVisitor {
     static TopLevelInfo top_level_info_for(const ast_stmt_t* stmt);
 
   public:
-    AstVisitor(Context& context, FileId file) : context(context), file(file) {}
+    FileAstVisitor(Context& context, FileId file) : context(context), file(file) {}
     void register_top_level_declarations();
 };
 

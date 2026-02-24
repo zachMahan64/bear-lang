@@ -1,4 +1,3 @@
-
 import "01.br";
 
 fn main() -> i32 {
@@ -6,6 +5,16 @@ fn main() -> i32 {
     return 0;
 }
 
-fn Bar..thingie() -> usize {
+
+fn Foo..thingie() -> usize {
     return 22 * 12;
+}
+
+mt Foo..bar() -> i32 {
+    return self.bar_;
+}
+
+//oops, should be mt
+fn Bar..size() -> usize {
+    return self.size_;
 }

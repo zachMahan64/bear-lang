@@ -25,10 +25,9 @@
 - [x] hir test cases
 - [x] add a diagnostic type to handle circular imports (DiagnosticValue containing a slice of FileId should work)
 - [x] properly set parent scopes during top-level traversal
-- [ ] debug logger to display context and scope contents 
-
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
-    - [ ] add CanonicalTypeHashTable for single-instantiation generics 
+    - [ ] add CanonicalTypeHashTable for single-instantiation generics
+    - [ ] debug logger to display context and scope contents 
 #### Medium term
 - [ ] HIR
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 

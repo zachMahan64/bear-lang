@@ -1,7 +1,15 @@
 import "00.br"; // circular
 
 struct Foo {
+    hid mut i32 bar_;
     fn do_work() -> i32 {
         return 42;
     }
+    mt bar() -> i32 {
+        return self.bar_;
+    }
+}
+
+struct Bar {
+    usize size_;
 }

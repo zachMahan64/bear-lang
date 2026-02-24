@@ -22,15 +22,15 @@ bool is_lower(const token_t* s);
 bool is_capital(const token_t* s);
 std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt);
 
-void AstVisitor::register_top_level_declarations() {
+void FileAstVisitor::register_top_level_declarations() {
     // registers all the top level stmts of the file using the top level scope
     register_top_level_stmts(context.get_top_level_scope(),
                              context.ast(file).root()->stmt.file.stmts, OptId<DefId>{},
                              abi_lang::native);
 }
 
-void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
-                                         abi_lang abi) {
+void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
+                                             abi_lang abi) {
     // handle prefix wrappers --------
     bool pub = false;
     if (stmt->type == AST_STMT_VISIBILITY_MODIFIER) {
@@ -182,28 +182,34 @@ void AstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<
     case scope_kind::VARIABLE:
         context.scope(scope).insert_variable(name, def);
         break;
-    case scope_kind::TYPE:
+    case scope_kind::TYPE: {
         context.scope(scope).insert_type(name, def);
-        context.def_to_scope_for_types.insert(def, context.make_named_scope(scope));
+        ScopeId types_scope = context.make_named_scope(scope);
+        context.def_to_scope_for_types.insert(def, types_scope);
         // warn on lowercase structure definition
         if (is_lower(name_tkn)) {
             context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
                                        diag_code::lowercase_structure, diag_type::warning);
         }
+        // try to parse fields
+        if (info.stmts.has_value()) {
+            register_top_level_stmts(types_scope, info.stmts.value(), def, abi);
+        }
         break;
+    }
     default:
         break;
     }
 }
 
-void AstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts,
-                                          OptId<DefId> parent, abi_lang abi) {
+void FileAstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts,
+                                              OptId<DefId> parent, abi_lang abi) {
     for (size_t i = 0; i < stmts.len; i++) {
         register_top_level_stmt(scope, stmts.start[i], parent, abi);
     }
 }
 
-TopLevelInfo AstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
+TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     scope_kind kind = scope_kind::VARIABLE;
     token_t* scope_prefix_tkn = nullptr;
     token_t* name_tkn = nullptr;

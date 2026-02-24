@@ -88,7 +88,7 @@ Context::Context(const bearc_args_t* args)
     for (FileId id = files.rfirst_id(); id != files.rlast_id(); --id) {
         File& f = files.at(id);
         const FileAst& ast = file_asts.cat(f.ast_id);
-        AstVisitor visitor{*this, id};
+        FileAstVisitor visitor{*this, id};
         visitor.register_top_level_declarations();
         this->bump_hard_error_count(ast.error_count());
     }
@@ -123,7 +123,7 @@ SymbolId Context::get_symbol_id(const char* start, size_t len) {
     return sym_id;
 }
 SymbolId Context::get_symbol_id_for_tkn(token_t* tkn) {
-    assert(tkn->type == TOK_IDENTIFIER);
+    assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
     return get_symbol_id(tkn->start, tkn->len);
 }
 SymbolId Context::get_symbol_id_for_str_lit_token(token_t* tkn) {

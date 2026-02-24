@@ -79,6 +79,14 @@ static ast_stmt_t* parser_sync_stmt(parser_t* p) {
     return dummy_stmt;
 }
 
+static ast_stmt_t* parser_invalid_stmt(parser_t* p, token_t* first, token_t* last) {
+    ast_stmt_t* dummy_stmt = parser_alloc_stmt(p);
+    dummy_stmt->type = AST_STMT_INVALID;
+    dummy_stmt->first = first;
+    dummy_stmt->last = last;
+    return dummy_stmt;
+}
+
 ast_stmt_t* parser_sync_stmt_call(parser_t* p, bool (*call)(token_type_e)) {
     token_range_t range = parser_sync_call(p, call);
     ast_stmt_t* dummy_stmt = parser_alloc_stmt(p);
@@ -335,7 +343,7 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     decl->last = decl->stmt.fn_decl.block->last;
 
     if (cooked) {
-        return parser_sync_stmt(p);
+        return parser_invalid_stmt(p, decl->first, decl->last);
     }
 
     return decl;

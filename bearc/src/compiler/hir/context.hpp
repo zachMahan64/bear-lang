@@ -82,7 +82,7 @@ class Context {
 
     friend class Scope;
     friend class ScopeAnon;
-    friend class AstVisitor;
+    friend class FileAstVisitor;
 
   private:
     // containers:
