@@ -2,21 +2,13 @@
 
 // empty structure test 
 
+import "01.br";
 
 struct Foo {} // error
 
 union Bar {} // error 
 
 variant Bin {} // error 
-
-variant BinButGood { // fine
-    Boo(i32 binben),
-    Bob(usize benbin),
-}
-
-contract Thingie { // fine
-    mt onetwothree() -> i32;
-}
 
 contract Thingie {} // redef error
 

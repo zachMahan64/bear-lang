@@ -1,0 +1,10 @@
+// 01.br
+
+variant BinButGood { // fine
+    Boo(i32 binben),
+    Bob(usize benbin),
+}
+
+contract Thingie { // fine
+    mt onetwothree() -> i32;
+}
