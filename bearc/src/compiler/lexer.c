@@ -59,7 +59,7 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
         if (c == '\n') {                                                                           \
             *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);            \
             len = 0;                                                                               \
-            loc.col = 0;                                                                           \
+            col = 0;                                                                               \
             ++loc.line;                                                                            \
             start = pos;                                                                           \
             break;                                                                                 \
@@ -68,12 +68,15 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
             ++len;                                                                                 \
             *((token_t*)vector_emplace_back(&tkn_vec)) = token_build(start, len, &loc);            \
             len = 0;                                                                               \
-            loc.col = 0;                                                                           \
             ++pos;                                                                                 \
             start = pos;                                                                           \
             break;                                                                                 \
         }                                                                                          \
     }                                                                                              \
+    do {                                                                                           \
+        loc.col = col;                                                                             \
+    } while (0);
+
     goto lex_start;
 
 lex_start:
