@@ -19,6 +19,7 @@ struct TopLevelInfo {
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts;
     scope_kind kind;
+    bool is_orderable_var = false;
 };
 /**
  * class to traverse the entirety of the namespaces of a filling, filling in
@@ -27,10 +28,13 @@ struct TopLevelInfo {
 class FileAstVisitor {
     Context& context;
     FileId file;
-    void register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
-                                 abi_lang abi);
+    OptId<DefId> register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
+                                         abi_lang abi);
     void register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts, OptId<DefId> parent,
                                   abi_lang abi);
+    void register_top_level_stmts_registering_ordered_members(DefId parent_def, ScopeId scope,
+                                                              ast_slice_of_stmts_t stmts,
+                                                              OptId<DefId> parent, abi_lang abi);
     static TopLevelInfo top_level_info_for(const ast_stmt_t* stmt);
 
   public:

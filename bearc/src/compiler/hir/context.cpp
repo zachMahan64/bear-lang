@@ -47,6 +47,7 @@ static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 static constexpr HirSize EXPECTED_HIGH_NUM_IMPORTS = 128;
 static constexpr size_t DEFAULT_DIAG_NUM = 0x100;
+static constexpr size_t DEFAULT_DEF_SLICE_COUNT = 0x100;
 
 Context::Context(const bearc_args_t* args)
     : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
@@ -64,7 +65,9 @@ Context::Context(const bearc_args_t* args)
       str_to_symbol_id_map{symbol_map_arena}, args{args}, scope_arena{DEFAULT_SCOPE_ARENA_CAP},
       def_ast_nodes(DEFAULT_DEF_CAP), diagnostics{DEFAULT_DIAG_NUM},
       diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
-      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP} {
+      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP},
+      def_to_ordered_def_slice{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
+      ordered_def_slices{DEFAULT_DEF_CAP} {
 
     // this may only fail in horribly malfored arguments in test cases
     assert(args->input_file_name);
@@ -403,4 +406,11 @@ void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {
 Def& Context::def(DefId def_id) { return defs.at(def_id); }
 
 FileId Context::file_id_idx_to_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx); }
+
+void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec) {
+    IdSlice<DefId> def_slice = def_ids.freeze_small_vec(vec);
+    OrderedDefSliceId ord_def_slice_id = ordered_def_slices.emplace_and_get_id(def_slice);
+    def_to_ordered_def_slice.insert(def, ord_def_slice_id);
+}
+
 } // namespace hir

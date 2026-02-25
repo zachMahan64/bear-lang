@@ -50,6 +50,9 @@ class Context {
     [[nodiscard]] ScopeId get_top_level_scope();
     [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
     [[nodiscard]] Scope& scope(ScopeId scope);
+    // record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
+    // (particularly requiring ordered members, like a struct)
+    void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
 
     // diagnostics
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
@@ -129,6 +132,11 @@ class Context {
 
     /// for tracking DefId -> ScopeId for structs during the top level resolution
     IdHashMap<DefId, ScopeId> def_to_scope_for_types;
+
+    // for storing ordered defs (namely ordered member definitions)
+    IdVecMap<OrderedDefSliceId, IdSlice<DefId>> ordered_def_slices;
+    // for accessing ordered def slices corresponding to a given DefId
+    IdHashMap<DefId, OrderedDefSliceId> def_to_ordered_def_slice;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

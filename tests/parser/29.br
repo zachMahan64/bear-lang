@@ -15,5 +15,5 @@ has(Bar, Copy)
 }
 
 struct Bar has(Copy) {
-    // ...
+    i32 a;
 }

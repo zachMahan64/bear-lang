@@ -25,6 +25,9 @@ enum class diag_code : uint8_t {
     lowercase_structure,
     invalid_extern_lang,
     cyclical_import,
+    empty_struct,
+    empty_variant,
+    empty_union,
 };
 enum class diag_type : uint8_t { error, warning, note };
 

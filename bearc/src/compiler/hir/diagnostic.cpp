@@ -34,22 +34,22 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "redefined symbol originally defined here";
     case diag_code::no_matching_struct_for_method:
         return "no matching struct for method declaration";
-        break;
     case diag_code::capitalized_mod:
         return "capitalized module name";
-        break;
     case diag_code::lowercase_structure:
         return "lowercase structure name";
-        break;
     case diag_code::invalid_extern_lang:
         return "invalid language target specified for external linkage";
-        break;
     case diag_code::imported_file_dne:
         return "imported file does not exist";
-        break;
     case diag_code::cyclical_import:
         return "circular file imports are not permitted";
-        break;
+    case diag_code::empty_struct:
+        return "empty struct not permitted";
+    case diag_code::empty_variant:
+        return "empty variant not permitted";
+    case diag_code::empty_union:
+        return "empty union not permitted";
     }
     return "";
 }

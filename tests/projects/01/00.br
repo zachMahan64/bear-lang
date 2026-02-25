@@ -1,0 +1,28 @@
+// projects/01/00.br
+
+// empty structure test 
+
+
+struct Foo {} // error
+
+union Bar {} // error 
+
+variant Bin {} // error 
+
+variant BinButGood { // fine
+    Boo(i32 binben),
+    Bob(usize benbin),
+}
+
+contract Thingie { // fine
+    mt onetwothree() -> i32;
+}
+
+contract Thingie {} // redef error
+
+struct Counter has(Thingie) {
+    i32 a;
+    mt onetwothree() -> i32 {
+        return a + 1 + 2 + 3;
+    }
+}

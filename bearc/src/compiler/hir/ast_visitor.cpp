@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/ast_visitor.hpp"
+#include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
@@ -14,6 +15,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/token.h"
+#include "llvm/ADT/SmallVector.h"
 #include <variant>
 
 namespace hir {
@@ -29,8 +31,8 @@ void FileAstVisitor::register_top_level_declarations() {
                              abi_lang::native);
 }
 
-void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, OptId<DefId> parent,
-                                             abi_lang abi) {
+OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt,
+                                                     OptId<DefId> parent, abi_lang abi) {
     // handle prefix wrappers --------
     bool pub = false;
     if (stmt->type == AST_STMT_VISIBILITY_MODIFIER) {
@@ -93,7 +95,7 @@ void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, Op
         context.scope(scope).insert_namespace(name, mod_def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls, mod_def,
                                  abi); // pass in this module def as parent
-        return;
+        return OptId<DefId>{};
     }
     // handle extern block
     if (stmt->type == AST_STMT_EXTERN_BLOCK) {
@@ -108,7 +110,7 @@ void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, Op
             enum abi_lang abi = maybe_abi.value();
             register_top_level_stmts(scope, stmt->stmt.extern_block.decls, parent, abi);
         }
-        return;
+        return OptId<DefId>{};
     }
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -119,7 +121,7 @@ void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, Op
 
     // if this wasn't named definition, then RETURN so we don't try to make a new hir::Def
     if (name_tkn == nullptr) {
-        return;
+        return OptId<DefId>{};
     }
 
     // hanlde scope prefix for Foo..bar() functions
@@ -170,7 +172,7 @@ void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, Op
         auto d2 = context.emplace_diagnostic(Span(orig_file, context.ast(orig_file).buffer(), t),
                                              diag_code::original_def_here, diag_type::note);
         context.set_next_diagnostic(d1, d2);
-        return;
+        return OptId<DefId>{};
     }
 
     // no issues, so register definition
@@ -181,6 +183,10 @@ void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, Op
     switch (kind) {
     case scope_kind::VARIABLE:
         context.scope(scope).insert_variable(name, def);
+        // return the DefId since this is an orderable definition
+        if (info.is_orderable_var) {
+            return def;
+        }
         break;
     case scope_kind::TYPE: {
         context.scope(scope).insert_type(name, def);
@@ -193,13 +199,15 @@ void FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt, Op
         }
         // try to parse fields
         if (info.stmts.has_value()) {
-            register_top_level_stmts(types_scope, info.stmts.value(), def, abi);
+            register_top_level_stmts_registering_ordered_members(def, types_scope,
+                                                                 info.stmts.value(), def, abi);
         }
         break;
     }
     default:
         break;
     }
+    return OptId<DefId>{};
 }
 
 void FileAstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_t stmts,
@@ -208,12 +216,53 @@ void FileAstVisitor::register_top_level_stmts(ScopeId scope, ast_slice_of_stmts_
         register_top_level_stmt(scope, stmts.start[i], parent, abi);
     }
 }
+void FileAstVisitor::register_top_level_stmts_registering_ordered_members(
+    DefId parent_def, ScopeId scope, ast_slice_of_stmts_t stmts, OptId<DefId> parent,
+    abi_lang abi) {
+    llvm::SmallVector<DefId> def_vec{};
+    for (size_t i = 0; i < stmts.len; i++) {
+        OptId<DefId> maybe_def = register_top_level_stmt(scope, stmts.start[i], parent, abi);
+        if (maybe_def.has_value()) {
+            def_vec.emplace_back(maybe_def.as_id());
+        }
+    }
 
+    // handle no members
+    if (def_vec.empty()) {
+        const ast_stmt_t* st = context.def_ast_nodes.cat(parent_def);
+        const ast_stmt_type_e statement_type = st->type;
+        const Span span{file, context.c_ast(file).buffer(), top_level_info_for(st).name_tkn};
+        diag_code code = diag_code::empty_struct;
+        switch (statement_type) {
+        case AST_STMT_STRUCT_DEF:
+            code = diag_code::empty_struct;
+            break;
+        case AST_STMT_UNION_DEF:
+            code = diag_code::empty_union;
+            break;
+        case AST_STMT_VARIANT_DEF:
+            code = diag_code::empty_variant;
+            break;
+        case AST_STMT_CONTRACT_DEF:
+            // this is actually expected to be empty since it's just method decls
+            return; // we're done here
+        default:
+            pretty_print_stmt(st);
+            assert(false && "tried to register ordered defs for an invalid type");
+            break;
+        }
+        context.emplace_diagnostic(span, code, diag_type::error);
+    } else {
+        // register the defs
+        context.register_ordered_defs(parent_def, def_vec);
+    }
+}
 TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     scope_kind kind = scope_kind::VARIABLE;
     token_t* scope_prefix_tkn = nullptr;
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
+    bool is_orderable_field = false;
     switch (stmt->type) {
     // internal scopes are deffered -----------------------------------
     case AST_STMT_STRUCT_DEF: {
@@ -244,16 +293,19 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     case AST_STMT_VARIANT_FIELD_DECL: {
         name_tkn = stmt->stmt.variant_field_decl.name;
         kind = scope_kind::VARIABLE;
+        is_orderable_field = true;
         break;
     }
     case AST_STMT_VAR_DECL: {
         name_tkn = stmt->stmt.var_decl.name;
         kind = scope_kind::VARIABLE;
+        is_orderable_field = true;
         break;
     }
     case AST_STMT_VAR_INIT_DECL: {
         name_tkn = stmt->stmt.var_init_decl.name;
         kind = scope_kind::VARIABLE;
+        is_orderable_field = true;
         break;
     }
     case AST_STMT_FN_DECL: {
@@ -286,6 +338,7 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         .name_tkn = name_tkn,
         .stmts = stmts,
         .kind = kind,
+        .is_orderable_var = is_orderable_field,
     };
 }
 

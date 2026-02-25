@@ -157,14 +157,22 @@ br_test_result_t test_hir(void) {
     TEST_INIT("hir");
     char* args1[] = {"bearc", "07.br", "-i", "tests/hir"};
     ASSERT_EQ_ERR_FROM_ARGS(args1, 0);
+
     char* args2[] = {"bearc", "tests/hir/07.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args2, 2);
+
     char* args3[] = {"bearc", "tests/hir/04.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args3, 10);
+
     char* args4[] = {"bearc", "tests/hir/00.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
+
     char* args5[] = {"bearc", "-i", "tests/projects/00", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args5, 7, 2);
+
+    char* args6[] = {"bearc", "-i", "tests/projects/01", "-c", "00.br"};
+    ASSERT_EQ_ERR_FROM_ARGSN(args6, 5, 2);
+
     return TEST_RESULT;
 }
 

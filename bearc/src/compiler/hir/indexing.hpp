@@ -127,6 +127,7 @@ template <hir::IsId T> class OptId {
     constexpr T as_id() const noexcept { return underlying; }
     [[nodiscard]] bool has_value() const noexcept { return underlying.val() != HIR_ID_NONE; }
     void set(T id_value) noexcept { this->underlying = id_value; }
+    static constexpr OptId none() { return OptId{}; }
 };
 
 template <hir::IsId T> class IdSlice {
@@ -146,6 +147,8 @@ template <hir::IsId T> class IdSlice {
 
     constexpr IdIdx<T> end() const noexcept { return IdIdx<T>{first_.val() + len_}; }
 };
+
+using OrderedDefSliceId = Id<IdSlice<DefId>>;
 
 } // namespace hir
 
