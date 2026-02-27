@@ -88,7 +88,7 @@ Context::Context(const bearc_args_t* args)
     // search imports to build all asts
     this->explore_imports(root_id);
     // tally parser errors
-    for (FileId id = files.rfirst_id(); id != files.rlast_id(); --id) {
+    for (FileId id = files.rbegin_id(); id != files.rend_id(); --id) {
         File& f = files.at(id);
         const FileAst& ast = file_asts.cat(f.ast_id);
         FileAstVisitor visitor{*this, id};
@@ -252,7 +252,7 @@ void Context::explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<Fil
 void Context::try_print_info() {
     if (!args->flags[CLI_FLAG_SILENT]) {
         // go thru each file ast to print info
-        for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
+        for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
             const FileAst& ast = c_ast(fid);
             // 1. print parse-time errors (ast-wise errors)
             ast.print_all_errors();
@@ -263,14 +263,14 @@ void Context::try_print_info() {
         }
     }
     // 3. try print out ast-wise information (token tables, pretty-printing)
-    for (auto fid = files.first_id(); fid != files.last_id(); fid++) {
+    for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
         c_ast(fid).try_print_info(args);
     }
     // print more info:
     if (args->flags[CLI_FLAG_LIST_FILES]) {
         std::cout << ansi_bold_white() << "all files" << '(' << files.size() << ')' << ":"
                   << ansi_reset() << '\n';
-        for (FileId curr = files.first_id(); curr != files.last_id(); ++curr) {
+        for (FileId curr = files.begin_id(); curr != files.end_id(); ++curr) {
 
             const FileAst& ast = file_asts.cat(files.cat(curr).ast_id);
 
@@ -353,7 +353,7 @@ const FileAst& Context::c_ast(FileId file_id) const {
     return file_asts.cat(files.cat(file_id).ast_id);
 }
 
-ScopeId Context::get_top_level_scope() {
+ScopeId Context::root_scope() {
     if (scopes.size() == 0) {
         return scopes.emplace_and_get_id(scope_arena);
     }
@@ -413,4 +413,44 @@ void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec
     def_to_ordered_def_slice.insert(def, ord_def_slice_id);
 }
 
+Def::resol_state Context::resol_state_of(DefId def) const { return def_resol_states.cat(def); }
+
+ScopeId Context::scope_for_top_level_def(DefId def_id) {
+    const auto& def_node = defs.cat(def_id);
+    // no parent means parent scope is root scope
+    if (!def_node.parent.has_value()) {
+        return root_scope();
+    }
+    if (def_node.holds<DefModule>()) {
+        return def_node.as<DefModule>().scope;
+    }
+    if (is_top_level_def_with_associated_scope(def_id)) {
+        OptId<Id<Scope>> hopefully_scope = def_to_scope_for_types.at(def_id);
+        if (hopefully_scope.has_value()) {
+            return hopefully_scope.as_id();
+        }
+    }
+    ERR(def(def_id).span.as_sv(*this));
+    assert(false && "tried to get a scope for a top level def that was incompatible");
+    return root_scope();
+}
+
+bool Context::is_top_level_def_with_associated_scope(DefId def_id) const {
+    ast_stmt_type_e decl_type = def_ast_nodes.cat(def_id)->type;
+    return decl_type == AST_STMT_VARIANT_DEF || decl_type == AST_STMT_CONTRACT_DEF
+           || decl_type == AST_STMT_STRUCT_DEF || decl_type == AST_STMT_UNION_DEF;
+}
+
+FileId Context::def_to_file_id(DefId def) const { return defs.cat(def).span.file_id; }
+
+Span Context::make_def_name_span(DefId def, const ast_stmt_t* stmt) const {
+    auto fid = def_to_file_id(def);
+    return Span(
+        fid, c_ast(fid).buffer(),
+        FileAstVisitor::name_of_ast_decl(stmt).value()); // TODO potentially dangerous unwrap
+}
+
+Span Context::make_top_level_def_name_span(DefId def) const {
+    return make_def_name_span(def, def_ast_nodes.cat(def));
+}
 } // namespace hir

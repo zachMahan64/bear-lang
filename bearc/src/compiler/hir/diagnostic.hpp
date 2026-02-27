@@ -28,6 +28,9 @@ enum class diag_code : uint8_t {
     empty_struct,
     empty_variant,
     empty_union,
+    circular_definition,
+    circular_definition_passes_thru,
+    circular_definition_origin,
 };
 enum class diag_type : uint8_t { error, warning, note };
 

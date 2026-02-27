@@ -26,9 +26,8 @@ std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt);
 
 void FileAstVisitor::register_top_level_declarations() {
     // registers all the top level stmts of the file using the top level scope
-    register_top_level_stmts(context.get_top_level_scope(),
-                             context.ast(file).root()->stmt.file.stmts, OptId<DefId>{},
-                             abi_lang::native);
+    register_top_level_stmts(context.root_scope(), context.ast(file).root()->stmt.file.stmts,
+                             OptId<DefId>{}, abi_lang::native);
 }
 
 OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt,
@@ -341,6 +340,13 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         .is_orderable_var = is_orderable_field,
     };
 }
+
+std::optional<const token_t*> FileAstVisitor::name_of_ast_decl(const ast_stmt_t* stmt) {
+    const token_t* tkn_ptr = top_level_info_for(stmt).name_tkn;
+    return (tkn_ptr) ? tkn_ptr : std::optional<const token_t*>{};
+}
+
+// some helpers
 
 bool is_lower(const token_t* s) { return !is_capital(s); }
 bool is_capital(const token_t* s) { return s->start[0] >= 'A' && s->start[0] <= 'Z'; }

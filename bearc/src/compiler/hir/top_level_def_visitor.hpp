@@ -9,14 +9,33 @@
 #ifndef COMPILER_TOP_LEVEL_DEF_VISITOR_HPP
 #define COMPILER_TOP_LEVEL_DEF_VISITOR_HPP
 
-#include "compiler/hir/context.hpp"
+#include "compiler/hir/indexing.hpp"
+#include "llvm/ADT/SmallVector.h"
+
 namespace hir {
 
+class Context;
+
 class TopLevelVisitor {
+
+    static constexpr size_t DEF_STACK_SIZE = 512;
+
     Context& context;
+    // for tracking the stack of defs to report circular defs
+    llvm::SmallVector<DefId, DEF_STACK_SIZE> def_stack;
+    bool began_resolution;
+
+    DefId resolve_def(DefId def);
+    DefId visit(DefId def);
+    void report_cycle(DefId culprit);
 
   public:
-    TopLevelVisitor(Context& context) : context{context} {}
+    TopLevelVisitor(Context& context) : context{context}, began_resolution{false} {}
+    void resolve_top_level_definitions();
+    /// visit a DefId where the def being visited is depended on by the visitor
+    DefId visit_as_dependent(DefId def);
+    /// visit when not all info is need (i.e. just validate existence for pointers/references)
+    DefId visit_as_transparent(DefId def);
 };
 
 } // namespace hir

@@ -21,6 +21,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/node_vector.hpp"
 #include "compiler/hir/scope.hpp"
+#include "compiler/hir/top_level_def_visitor.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "utils/data_arena.hpp"
@@ -47,12 +48,14 @@ class Context {
     [[nodiscard]] const char* file_name(FileId id) const;
     [[nodiscard]] FileAst& ast(FileId file_id);
     [[nodiscard]] const FileAst& c_ast(FileId file_id) const;
-    [[nodiscard]] ScopeId get_top_level_scope();
+    [[nodiscard]] ScopeId root_scope();
     [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
     [[nodiscard]] Scope& scope(ScopeId scope);
-    // record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
-    // (particularly requiring ordered members, like a struct)
+    /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
+    /// (particularly requiring ordered members, like a struct)
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
+    /// indicates resolution state of a definition
+    Def::resol_state resol_state_of(DefId def) const;
 
     // diagnostics
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
@@ -63,8 +66,15 @@ class Context {
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag);
 
-    // accessfor for a def thru a DefId
+    /// accessfor for a def thru a DefId
     Def& def(DefId def_id);
+    FileId def_to_file_id(DefId def) const;
+    Span make_def_name_span(DefId def, const ast_stmt_t* stmt) const;
+    Span make_top_level_def_name_span(DefId def) const;
+
+    bool is_top_level_def_with_associated_scope(DefId def_id) const;
+    /// gets the named scope for a def
+    ScopeId scope_for_top_level_def(DefId def);
 
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,
@@ -86,6 +96,7 @@ class Context {
     friend class Scope;
     friend class ScopeAnon;
     friend class FileAstVisitor;
+    friend class TopLevelVisitor;
 
   private:
     // containers:

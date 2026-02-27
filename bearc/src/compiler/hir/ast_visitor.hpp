@@ -22,7 +22,8 @@ struct TopLevelInfo {
     bool is_orderable_var = false;
 };
 /**
- * class to traverse the entirety of the namespaces of a filling, filling in
+ * class to traverse the entirety of the namespaces of a file, filling in top level declarations
+ * into an hir::Context
  *
  */
 class FileAstVisitor {
@@ -40,6 +41,7 @@ class FileAstVisitor {
   public:
     FileAstVisitor(Context& context, FileId file) : context(context), file(file) {}
     void register_top_level_declarations();
+    static std::optional<const token_t*> name_of_ast_decl(const ast_stmt_t* stmt);
 };
 
 } // namespace hir

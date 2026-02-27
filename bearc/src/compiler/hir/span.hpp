@@ -18,6 +18,8 @@
 
 namespace hir {
 
+class Context;
+
 class Span {
     Span(HirSize start, HirSize len, FileId file_id, HirSize line) noexcept;
 
@@ -32,6 +34,7 @@ class Span {
     Span(FileId file_id, const char* src, const token_t* tkn);
     Span(FileId file_id, const char* src, const token_t* first, const token_t* last);
     [[nodiscard]] static std::string_view retrieve_from_buffer(const char* data, Span span);
+    [[nodiscard]] std::string_view as_sv(const Context& context) const;
 };
 
 } // namespace hir

@@ -50,6 +50,15 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "empty variant not permitted";
     case diag_code::empty_union:
         return "empty union not permitted";
+    case diag_code::circular_definition_origin:
+        return "circular definition origin here";
+        break;
+    case diag_code::circular_definition:
+        return "circular definition; layout cannot be resolved";
+        break;
+    case diag_code::circular_definition_passes_thru:
+        return "circular definition passes through this definition";
+        break;
     }
     return "";
 }
