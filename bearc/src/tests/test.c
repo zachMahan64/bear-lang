@@ -173,6 +173,8 @@ br_test_result_t test_hir(void) {
     char* args6[] = {"bearc", "-i", "tests/projects/01", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args6, 5, 2);
 
+    char* args7[] = {"bearc", "00.br", "-i", "tests/projects/02"};
+    ASSERT_EQ_ERR_FROM_ARGSN(args7, 2, 3);
     return TEST_RESULT;
 }
 

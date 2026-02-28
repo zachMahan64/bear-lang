@@ -710,12 +710,8 @@ ast_stmt_t* parse_stmt_import(parser_t* p) {
         import_stmt->stmt.import.has_into_mod = true;
         import_stmt->stmt.import.into_mod = parse_id_token_slice(p, TOK_SCOPE_RES);
     }
-    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
-    if (!term) {
-        import_stmt->last = path;
-    } else {
-        import_stmt->last = term;
-    }
+    parser_expect_token(p, TOK_SEMICOLON);
+    import_stmt->last = parser_prev(p);
     return import_stmt;
 }
 

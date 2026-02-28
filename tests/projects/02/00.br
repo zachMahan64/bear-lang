@@ -1,0 +1,23 @@
+// 00.br
+
+fn main() {
+    Foo<i32> foo = Foo{.data = 42};
+    return foo.get_data();
+
+}
+
+struct Foo<T> {
+    T data;
+}
+
+mt Foo..get_data<T>() {
+    return self.data;
+}
+
+mt Foo..data<T>() { // error, redefined
+    return self.data;
+}
+
+mt Foo..set_data<T>(T data) {
+    self.data = data;
+}

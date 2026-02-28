@@ -75,8 +75,7 @@ vector_t lexer_tokenize_src_buffer(const src_buffer_t* buf) {
     }                                                                                              \
     do {                                                                                           \
         loc.col = col;                                                                             \
-    } while (0);
-
+    } while (0);                                                                                   \
     goto lex_start;
 
 lex_start:
