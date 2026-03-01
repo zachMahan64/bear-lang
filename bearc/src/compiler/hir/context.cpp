@@ -43,6 +43,7 @@ static constexpr size_t DEFAULT_SYMBOL_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_EXEC_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_DEF_CAP = 0x800;
 static constexpr size_t DEFAULT_TYPE_VEC_CAP = 0x400;
+static constexpr size_t DEFAULT_CANONICAL_TYPE_VEC_CAP = 0x100;
 static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 static constexpr HirSize EXPECTED_HIGH_NUM_IMPORTS = 128;
@@ -67,7 +68,7 @@ Context::Context(const bearc_args_t* args)
       diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
       def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP},
       def_to_ordered_def_slice{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
-      ordered_def_slices{DEFAULT_DEF_CAP} {
+      ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP) {
 
     // this may only fail in horribly malfored arguments in test cases
     assert(args->input_file_name);
@@ -175,7 +176,6 @@ void Context::register_importer(FileId importee, FileId importer) {
     importee_to_importers.at(importee).emplace_back(importer);
 }
 
-// TODO make this a tracked internal file error system (DNE, and circularity tracking)
 void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
                            const token_t* import_path_tkn) {
     // gonna be imported in the previous thing, so top of import stack

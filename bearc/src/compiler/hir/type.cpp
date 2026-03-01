@@ -12,7 +12,7 @@
 
 namespace hir {
 
-bool SameType::operator()(const Type& t1, const Type& t2) const {
+bool StructurallyEquivalentType::operator()(const Type& t1, const Type& t2) const {
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> bool {
             if (!t2.holds<TypeBuiltin>()) {
@@ -58,7 +58,7 @@ bool SameType::operator()(const Type& t1, const Type& t2) const {
             for (HirSize i = 0; i < len; i++) {
                 auto tid = context.type_id(t_start.at(i));
                 auto tid2 = context.type_id(t2_start.at(i));
-                if (!TypeComparator<SameType>{context}(tid, tid2)) {
+                if (!TypeComparator<StructurallyEquivalentType>{context}(tid, tid2)) {
                     return false;
                 }
             }
@@ -73,9 +73,59 @@ bool SameType::operator()(const Type& t1, const Type& t2) const {
     }
     return std::visit(vs, t1.value);
 }
+
+size_t HashType::operator()(const Type& t1) const {
+    // https://xorshift.di.unimi.it/splitmix64.c
+    auto mix = [](size_t x) {
+        x += 0x9e3779b97f4a7c15;
+        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
+        x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
+        x ^= x >> 31;
+        return x;
+    };
+
+    auto vs = Ovld{
+        [&](const TypeBuiltin& t) -> size_t { return mix(0x01ULL ^ static_cast<size_t>(t.type)); },
+        [&](const TypeStructure& t) -> size_t {
+            return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
+        },
+        [&](const TypeGenericStructure& t) -> size_t {
+            return mix(0x03ULL ^ static_cast<size_t>(t.definition.val()));
+        },
+        [&](const TypeArr& t) -> size_t {
+            return mix(0x04ULL ^ static_cast<size_t>(t.canonical_size));
+        },
+        [&](const TypeSlice&) -> size_t { return mix(0x05ULL); },
+        [&](const TypeRef&) -> size_t { return mix(0x06ULL); },
+        [&](const TypePtr&) -> size_t { return mix(0x07ULL); },
+        [&](const TypeFnPtr& t) -> size_t {
+            size_t h = mix(0x08ULL ^ static_cast<size_t>(t.return_type.val()));
+            h ^= static_cast<size_t>(t.param_types.len()) * 0x9e3779b97f4a7c15ULL;
+            for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
+                auto tid = context.type_id(tidx);
+                h = transform(h, TypeComparator<HashType>{context}(tid));
+            }
+            return mix(h);
+        },
+        [&](const TypeVariadic&) -> size_t { return mix(0x09ULL); }};
+
+    size_t h = std::visit(vs, t1.value);
+
+    if (t1.mut) {
+        h ^= 0x9e3779b97f4a7c15ULL;
+    }
+
+    return mix(h);
+}
+size_t HashType::transform(size_t res1, size_t res2) {
+    // high entropy hash transform
+    // https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values
+    return res1 ^ (res2 + 0x9e3779b97f4a7c15ULL + (res1 << 6) + (res1 >> 2));
+}
+
 template <TypeComparisonFunctor F> OptId<TypeId> TypeComparator<F>::try_inner(const Type& type) {
     using OTid = OptId<TypeId>;
-    TypeValue type_value = type.value;
+    const TypeValue& type_value = type.value;
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> OTid { return OTid{}; },
         [&](const TypeStructure& t) -> OTid { return OTid{}; },
@@ -98,16 +148,15 @@ typename F::value_type TypeComparator<F>::operator()(TypeId tid1, TypeId tid2) {
     auto t1 = get_t(tid1);
     auto t2 = get_t(tid2);
 
-    const auto comparison_functor = F{context};
+    const auto invoker = F{context};
 
     // get first value up-front (prevents collection bugs from a default initialized collector)
-    typename F::value_type collector = comparison_functor(t1, t2);
+    typename F::value_type collector = invoker(t1, t2);
 
     OptId<TypeId> maybe_tid1{tid1};
     OptId<TypeId> maybe_tid2{tid2};
 
-    while (maybe_tid1.has_value() && maybe_tid2.has_value()) {
-        collector = F::transform(collector, comparison_functor(t1, t2));
+    while (true) {
         maybe_tid1 = try_inner(t1);
         maybe_tid2 = try_inner(t2);
         if (maybe_tid1.has_value()) {
@@ -116,11 +165,46 @@ typename F::value_type TypeComparator<F>::operator()(TypeId tid1, TypeId tid2) {
         if (maybe_tid2.has_value()) {
             t2 = get_t(maybe_tid2.as_id());
         }
+        if (!maybe_tid1.has_value() || !maybe_tid2.has_value()) {
+            break;
+        }
+        collector = invoker.transform(collector, invoker(t1, t2));
+    }
+    // neither have a value, so return the collector
+    if (!maybe_tid1.has_value() && !maybe_tid2.has_value()) {
+        return collector;
     }
     // return conditional single-invocation
-    return maybe_tid1.has_value() ? F::transform(collector, comparison_functor(t1))
-                                  : F::transform(collector, comparison_functor(t2));
+    return maybe_tid1.has_value() ? invoker.transform(collector, invoker(t1))
+                                  : invoker.transform(collector, invoker(t2));
 }
-template class TypeComparator<SameType>;
+template <TypeComparisonFunctor F>
+typename F::value_type TypeComparator<F>::operator()(TypeId tid) {
+    auto get_t = [&](TypeId tid) { return context.ctype(tid); };
+
+    auto t = get_t(tid);
+
+    const auto invoker = F{context};
+
+    // get first value up-front (prevents collection bugs from a default initialized collector)
+    typename F::value_type collector = invoker(t);
+
+    OptId<TypeId> maybe_tid{tid};
+
+    while (true) {
+        maybe_tid = try_inner(t);
+        if (maybe_tid.has_value()) {
+            t = get_t(maybe_tid.as_id());
+        }
+        if (!maybe_tid.has_value()) {
+            break;
+        }
+        collector = invoker.transform(collector, invoker(t));
+    }
+    return collector;
+}
+// explicit instatiantiations for the TypeComparator
+template class TypeComparator<HashType>;
+template class TypeComparator<StructurallyEquivalentType>;
 
 } // namespace hir

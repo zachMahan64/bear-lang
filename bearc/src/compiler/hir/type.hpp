@@ -11,8 +11,12 @@
 
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "utils/data_arena.hpp"
+#include <cassert>
 #include <concepts>
+#include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <variant>
 namespace hir {
 
@@ -89,6 +93,7 @@ struct Type {
     using id_type = TypeId;
     TypeValue value;
     Span span;
+    CanonicalTypeId canonical;
     bool mut;
     void set_value(TypeValue value) { this->value = value; }
     template <typename V> bool holds() const noexcept { return std::holds_alternative<V>(value); }
@@ -104,8 +109,11 @@ concept TypeComparisonFunctor = requires(F f, const Context& context, const Type
                                          const Type& t2) {
     typename F::value_type;
     typename F::type_comparison_functor_tag;
-    std::is_trivially_copyable_v<typename F::value_type>;
-
+    // allow trivially copyable or strings as values
+    requires requires {
+        requires std::is_trivially_copyable_v<typename F::value_type>
+                     || std::convertible_to<typename F::value_type, std::string>;
+    };
     // constructor must take a const ref to a context
     { F{context} };
     // single invocation
@@ -124,18 +132,63 @@ template <TypeComparisonFunctor F> class TypeComparator {
   public:
     TypeComparator(const Context& context) : context(context) {}
     typename F::value_type operator()(TypeId tid1, TypeId tid2);
+    typename F::value_type operator()(TypeId tid);
 };
-class SameType {
+
+class StructurallyEquivalentType {
     const Context& context;
 
   public:
     using value_type = bool;
     using type_comparison_functor_tag = value_type;
-    SameType(const Context& context) : context(context) {}
+    StructurallyEquivalentType(const Context& context) : context(context) {}
     bool operator()(const Type& t1, const Type& t2) const;
     // single invocation -> mismatch => false
     bool operator()(const Type& t1) const { return false; }
     static bool transform(bool res1, bool res2) { return res1 && res2; }
+};
+
+class HashType {
+    const Context& context;
+
+  public:
+    using value_type = HirSize;
+    using type_comparison_functor_tag = value_type;
+    HashType(const Context& context) : context(context) {}
+    // probably not needed for the hasher
+    size_t operator()(const Type& t1, const Type& t2) const {
+        assert(false && "double invocation should not be called when hashing");
+        return 0;
+    }
+    size_t operator()(const Type& t1) const;
+    static size_t transform(size_t res1, size_t res2);
+};
+
+class CanonicalTypeTable {
+    struct Entry {
+        TypeId key_id;
+        CanonicalTypeId val;
+        Entry* next;
+    };
+    static constexpr size_t DEFAULT_CAP = 128;
+
+    Context& context;
+    DataArena& arena;
+
+    Entry** buckets;
+    size_t count;
+    size_t capacity;
+
+  public:
+    CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
+        : context(context), arena(arena), count{0} {
+        this->capacity = (capacity > DEFAULT_CAP) ? capacity : DEFAULT_CAP;
+        buckets = arena.alloc_as<Entry**>(capacity * sizeof(Entry*));
+
+        // zero-init buckets
+        memset(static_cast<void*>(buckets), 0, capacity * sizeof(Entry*));
+    }
+    // TODO fill out interface then impl
 };
 
 } // namespace hir

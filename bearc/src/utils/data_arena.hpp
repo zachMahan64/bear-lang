@@ -31,7 +31,7 @@ class DataArena {
     /// get an allocation from the arena of a specified size
     template <typename T> T* alloc_type() {
         return arena_alloc(&this->arena_, sizeof(T));
-    } /// returns the chunk size (in bytes)
+    } /// returns the a pointer data already casted to the desired ptr type
     template <typename T>
     T alloc_as(size_t size)
         requires std::is_pointer_v<T>

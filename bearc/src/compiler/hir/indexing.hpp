@@ -155,6 +155,9 @@ template <hir::IsId T> class IdSlice {
 
 using OrderedDefSliceId = Id<IdSlice<DefId>>;
 
+// id points to first TypeId mention
+using CanonicalTypeId = Id<TypeId>;
+
 // visit helper
 template <class... Ts> struct Ovld : Ts... {
     using Ts::operator()...;
