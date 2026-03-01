@@ -27,7 +27,7 @@
 - [x] properly set parent scopes during top-level traversal
 - [x] handle proper ordering of struct fields in top level traversal (properly will need a dedicated function), achieve this by having `register_top_level_stmt`/`register_top_level_stmts` return `OptId<DefId>`/`IdSlice` where the OptId has a value only when the DefId is a var decl
     - [ ] Type resolution requisites:
-        - [x] add `TypeComparator<T>` which is callable on 2 `TypeIds` (for recursive comparision) which is seeded with a functor `T` and a collected value `V` that takes in 2 `TypeId`'s, compares them, and returns some value based on that comparision (bool or some hash-component value will be helpful for typechecking and canonicalizing type hashing, respectively)
+        - [x] add `TypeTransformer<T>` which is callable on 2 `TypeIds` (for recursive comparision) which is seeded with a functor `T` and a collected value `V` that takes in 2 `TypeId`'s, compares them, and returns some value based on that comparision (bool or some hash-component value will be helpful for typechecking and canonicalizing type hashing, respectively)
         - [ ] CanonicalTypeHashTable, implement then add to context, (set canonical inside of Types and then also build the reverse map from CanonicalId -> first TypeId mention)
         - [ ] add a StringifyType seed for TypeComparator
         - [ ] all of this will make single instantiation generics trivial and type comparision fast

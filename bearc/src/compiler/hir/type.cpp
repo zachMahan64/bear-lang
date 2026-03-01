@@ -12,7 +12,7 @@
 
 namespace hir {
 
-bool StructurallyEquivalentType::operator()(const Type& t1, const Type& t2) const {
+bool TypeComparator::operator()(const Type& t1, const Type& t2) const {
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> bool {
             if (!t2.holds<TypeBuiltin>()) {
@@ -58,7 +58,7 @@ bool StructurallyEquivalentType::operator()(const Type& t1, const Type& t2) cons
             for (HirSize i = 0; i < len; i++) {
                 auto tid = context.type_id(t_start.at(i));
                 auto tid2 = context.type_id(t2_start.at(i));
-                if (!TypeComparator<StructurallyEquivalentType>{context}(tid, tid2)) {
+                if (!TypeTransformer<TypeComparator>{context}(tid, tid2)) {
                     return false;
                 }
             }
@@ -74,7 +74,7 @@ bool StructurallyEquivalentType::operator()(const Type& t1, const Type& t2) cons
     return std::visit(vs, t1.value);
 }
 
-size_t HashType::operator()(const Type& t1) const {
+size_t TypeHasher::operator()(const Type& t1) const {
     // https://xorshift.di.unimi.it/splitmix64.c
     auto mix = [](size_t x) {
         x += 0x9e3779b97f4a7c15;
@@ -103,7 +103,7 @@ size_t HashType::operator()(const Type& t1) const {
             h ^= static_cast<size_t>(t.param_types.len()) * 0x9e3779b97f4a7c15ULL;
             for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
                 auto tid = context.type_id(tidx);
-                h = transform(h, TypeComparator<HashType>{context}(tid));
+                h = transform(h, TypeTransformer<TypeHasher>{context}(tid));
             }
             return mix(h);
         },
@@ -117,13 +117,13 @@ size_t HashType::operator()(const Type& t1) const {
 
     return mix(h);
 }
-size_t HashType::transform(size_t res1, size_t res2) {
+size_t TypeHasher::transform(size_t res1, size_t res2) {
     // high entropy hash transform
     // https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values
     return res1 ^ (res2 + 0x9e3779b97f4a7c15ULL + (res1 << 6) + (res1 >> 2));
 }
 
-template <TypeComparisonFunctor F> OptId<TypeId> TypeComparator<F>::try_inner(const Type& type) {
+template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(const Type& type) {
     using OTid = OptId<TypeId>;
     const TypeValue& type_value = type.value;
     auto vs = Ovld{
@@ -141,8 +141,8 @@ template <TypeComparisonFunctor F> OptId<TypeId> TypeComparator<F>::try_inner(co
     return std::visit(vs, type_value);
 }
 
-template <TypeComparisonFunctor F>
-typename F::value_type TypeComparator<F>::operator()(TypeId tid1, TypeId tid2) {
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) {
     auto get_t = [&](TypeId tid) { return context.ctype(tid); };
 
     auto t1 = get_t(tid1);
@@ -178,8 +178,8 @@ typename F::value_type TypeComparator<F>::operator()(TypeId tid1, TypeId tid2) {
     return maybe_tid1.has_value() ? invoker.transform(collector, invoker(t1))
                                   : invoker.transform(collector, invoker(t2));
 }
-template <TypeComparisonFunctor F>
-typename F::value_type TypeComparator<F>::operator()(TypeId tid) {
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::operator()(TypeId tid) {
     auto get_t = [&](TypeId tid) { return context.ctype(tid); };
 
     auto t = get_t(tid);
@@ -203,8 +203,8 @@ typename F::value_type TypeComparator<F>::operator()(TypeId tid) {
     }
     return collector;
 }
-// explicit instatiantiations for the TypeComparator
-template class TypeComparator<HashType>;
-template class TypeComparator<StructurallyEquivalentType>;
+// explicit instatiantiations for the TypeTransformer
+template class TypeTransformer<TypeHasher>;
+template class TypeTransformer<TypeComparator>;
 
 } // namespace hir

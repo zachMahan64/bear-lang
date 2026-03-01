@@ -105,10 +105,9 @@ struct Type {
 };
 
 template <class F>
-concept TypeComparisonFunctor = requires(F f, const Context& context, const Type& t1,
-                                         const Type& t2) {
+concept TypeTransformerFunctor = requires(F f, const Context& context, const Type& t1,
+                                          const Type& t2) {
     typename F::value_type;
-    typename F::type_comparison_functor_tag;
     // allow trivially copyable or strings as values
     requires requires {
         requires std::is_trivially_copyable_v<typename F::value_type>
@@ -125,36 +124,34 @@ concept TypeComparisonFunctor = requires(F f, const Context& context, const Type
     } -> std::convertible_to<typename F::value_type>;
 };
 
-template <TypeComparisonFunctor F> class TypeComparator {
+template <TypeTransformerFunctor F> class TypeTransformer {
     const Context& context;
     OptId<TypeId> try_inner(const Type& type);
 
   public:
-    TypeComparator(const Context& context) : context(context) {}
+    TypeTransformer(const Context& context) : context(context) {}
     typename F::value_type operator()(TypeId tid1, TypeId tid2);
     typename F::value_type operator()(TypeId tid);
 };
 
-class StructurallyEquivalentType {
+class TypeComparator {
     const Context& context;
 
   public:
     using value_type = bool;
-    using type_comparison_functor_tag = value_type;
-    StructurallyEquivalentType(const Context& context) : context(context) {}
+    TypeComparator(const Context& context) : context(context) {}
     bool operator()(const Type& t1, const Type& t2) const;
     // single invocation -> mismatch => false
     bool operator()(const Type& t1) const { return false; }
     static bool transform(bool res1, bool res2) { return res1 && res2; }
 };
 
-class HashType {
+class TypeHasher {
     const Context& context;
 
   public:
     using value_type = HirSize;
-    using type_comparison_functor_tag = value_type;
-    HashType(const Context& context) : context(context) {}
+    TypeHasher(const Context& context) : context(context) {}
     // probably not needed for the hasher
     size_t operator()(const Type& t1, const Type& t2) const {
         assert(false && "double invocation should not be called when hashing");
