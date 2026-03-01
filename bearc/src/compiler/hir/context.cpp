@@ -366,6 +366,13 @@ ScopeId Context::make_named_scope(OptId<ScopeId> parent_scope) {
                                       : scopes.emplace_and_get_id(scope_arena);
 }
 
+ScopeId Context::make_small_named_scope(OptId<ScopeId> parent_scope) {
+    static constexpr size_t CAP = 0x8;
+    return (parent_scope.has_value())
+               ? scopes.emplace_and_get_id(parent_scope.as_id(), CAP, scope_arena)
+               : scopes.emplace_and_get_id(CAP, scope_arena);
+}
+
 Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }
 
 DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type type,

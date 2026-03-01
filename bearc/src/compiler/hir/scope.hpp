@@ -64,6 +64,10 @@ struct Scope {
     Scope(ScopeId parent, DataArena& arena);
     // constructs a top level scope
     Scope(DataArena& arena);
+    // constructs a non-top-level scope with a given capacity parent
+    Scope(ScopeId parent, size_t capacity, DataArena& arena);
+    // constructs a top level scope with a given capacity
+    Scope(size_t capacity, DataArena& arena);
     static ScopeLookUpResult look_up_namespace(const Context& context, ScopeId local_scope,
                                                SymbolId symbol);
     static ScopeLookUpResult look_up_variable(const Context& context, ScopeId local_scope,

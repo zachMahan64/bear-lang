@@ -185,7 +185,11 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         break;
     case scope_kind::TYPE: {
         context.scope(scope).insert_type(name, def);
-        ScopeId types_scope = context.make_named_scope(scope);
+        // if the type (namely a variant field decl) doesn't have statements then the scope needn't
+        // be large
+        const bool is_small_scope = !stmts.has_value();
+        ScopeId types_scope = (is_small_scope) ? context.make_small_named_scope(scope)
+                                               : context.make_named_scope(scope);
         context.def_to_scope_for_types.insert(def, types_scope);
         // warn on lowercase structure definition
         if (is_lower(name_tkn)) {

@@ -15,8 +15,8 @@
 #include <stddef.h>
 #include <stdint.h>
 // this may need to be tuned for a balance between cache locality and limited rehashing
-#define HIR_SCOPE_MAP_DEFAULT_SIZE 0x100
-#define HirScopeOP_LEVEL_SCALE_FACTOR 4
+static constexpr size_t HIR_SCOPE_MAP_DEFAULT_SIZE = 0x100;
+static constexpr size_t HirScopeOP_LEVEL_SCALE_FACTOR = 4;
 /// helper for looking into symbol -> def maps
 
 namespace hir {
@@ -29,6 +29,14 @@ Scope::Scope(ScopeId parent, DataArena& arena)
 Scope::Scope(DataArena& arena)
     : arena(arena), namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+      top_level(true) {}
+
+Scope::Scope(ScopeId parent, size_t capacity, DataArena& arena)
+    : named_parent(parent), arena(arena), namespaces(arena, capacity), variables(arena, capacity),
+      types(arena, capacity), top_level(false) {}
+
+Scope::Scope(size_t capacity, DataArena& arena)
+    : arena(arena), namespaces(arena, capacity), variables(arena, capacity), types(arena, capacity),
       top_level(true) {}
 
 ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scope_id,

@@ -50,6 +50,8 @@ class Context {
     [[nodiscard]] const FileAst& c_ast(FileId file_id) const;
     [[nodiscard]] ScopeId root_scope();
     [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
+    // makes a named scope with a small capacity
+    [[nodiscard]] ScopeId make_small_named_scope(OptId<ScopeId> parent_scope);
     [[nodiscard]] Scope& scope(ScopeId scope);
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
