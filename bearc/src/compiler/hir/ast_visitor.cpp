@@ -182,10 +182,6 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     switch (kind) {
     case scope_kind::VARIABLE:
         context.scope(scope).insert_variable(name, def);
-        // return the DefId since this is an orderable definition
-        if (info.is_orderable_var) {
-            return def;
-        }
         break;
     case scope_kind::TYPE: {
         context.scope(scope).insert_type(name, def);
@@ -205,6 +201,10 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     }
     default:
         break;
+    }
+    // return the DefId since this is an orderable definition
+    if (info.is_orderable_var) {
+        return def;
     }
     return OptId<DefId>{};
 }
@@ -291,7 +291,7 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     case AST_STMT_VARIANT_FIELD_DECL: {
         name_tkn = stmt->stmt.variant_field_decl.name;
-        kind = scope_kind::VARIABLE;
+        kind = scope_kind::TYPE;
         is_orderable_field = true;
         break;
     }
