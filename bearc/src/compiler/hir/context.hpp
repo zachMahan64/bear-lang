@@ -94,6 +94,11 @@ class Context {
 
     // converters
     FileId file_id_idx_to_id(IdIdx<FileId> ididx) const;
+    const Type& ctype(IdIdx<TypeId> ididx) const;
+    Type& type(IdIdx<TypeId> ididx);
+    const Type& ctype(TypeId id) const;
+    Type& type(TypeId id);
+    TypeId type_id(IdIdx<TypeId> tid) const;
 
     friend class Scope;
     friend class ScopeAnon;
@@ -155,7 +160,7 @@ class Context {
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IdVector<TypeId> type_ids;
-    NodeVector<Type> type_vec;
+    NodeVector<Type> types;
 
     IdVector<GenericParamId> generic_param_ids;
     NodeVector<GenericParam> generic_params;

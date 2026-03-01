@@ -26,8 +26,6 @@
 - [x] add a diagnostic type to handle circular imports (DiagnosticValue containing a slice of FileId should work)
 - [x] properly set parent scopes during top-level traversal
 - [x] handle proper ordering of struct fields in top level traversal (properly will need a dedicated function), achieve this by having `register_top_level_stmt`/`register_top_level_stmts` return `OptId<DefId>`/`IdSlice` where the OptId has a value only when the DefId is a var decl
-- [ ] improve phase 1 & 1.5 definition registration and semantic resolution
-    - [ ] handle `import "foo.br -> foo;` logic: essentially this must be achieved by the `->` into forcing any importing of foo to be into some module, which is ideally always the same, but, if not, make it so that each one essentially just creates a new module with the SAME ScopeId (error out if the module already exists! -> `cannot place import into existing module`)
     - [ ] Type resolution requisites:
         - [ ] add `TypeComparator<T, V>` which is callable on 2 `TypeIds` (for recursive comparision) which is seeded with a functor `T` and a collected value `V` that takes in 2 `TypeId`'s, compares them, and returns some value based on that comparision (bool or some hash-component value will be helpful for typechecking and canonicalizing type hashing, respectively)
         - [ ] CanonicalTypeHashTable for single-instantiation generics

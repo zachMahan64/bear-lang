@@ -85,11 +85,6 @@ const char* Diagnostic::accent_color_for_type(enum diag_type t) {
     return "";
 }
 
-template <class... Ts> struct Ovld : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> Ovld(Ts...) -> Ovld<Ts...>;
-
 void Diagnostic::print_info_value(const Context& context) const {
     auto line = [&](const auto& printable) {
         std::cout << "  " << std::setw(static_cast<int>(log10(span.line + 1)) + 1) << "" << "  | "

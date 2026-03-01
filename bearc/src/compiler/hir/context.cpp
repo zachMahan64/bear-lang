@@ -58,8 +58,8 @@ Context::Context(const bearc_args_t* args)
       file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees{DEFAULT_FILE_VEC_CAP},
       importee_to_importers{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
       exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_CAP}, def_resol_states{DEFAULT_DEF_CAP},
-      def_mention_states{DEFAULT_DEF_CAP}, type_vec{DEFAULT_TYPE_VEC_CAP},
-      type_ids{DEFAULT_DEF_CAP}, generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
+      def_mention_states{DEFAULT_DEF_CAP}, types{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_CAP},
+      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
       str_to_symbol_id_map{symbol_map_arena}, args{args}, scope_arena{DEFAULT_SCOPE_ARENA_CAP},
@@ -460,4 +460,10 @@ Span Context::make_def_name_span(DefId def, const ast_stmt_t* stmt) const {
 Span Context::make_top_level_def_name_span(DefId def) const {
     return make_def_name_span(def, def_ast_nodes.cat(def));
 }
+
+const Type& Context::ctype(IdIdx<TypeId> ididx) const { return types.cat(type_ids.cat(ididx)); }
+Type& Context::type(IdIdx<TypeId> ididx) { return types.at(type_ids.at(ididx)); }
+const Type& Context::ctype(TypeId id) const { return types.cat(id); }
+Type& Context::type(TypeId id) { return types.at(id); }
+TypeId Context::type_id(IdIdx<TypeId> tid) const { return type_ids.cat(tid); }
 } // namespace hir

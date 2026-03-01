@@ -11,9 +11,12 @@
 
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include <concepts>
 #include <cstdint>
 #include <variant>
 namespace hir {
+
+class Context;
 
 // ------ struct impls -------
 
@@ -40,11 +43,11 @@ struct TypeBuiltin {
 };
 
 struct TypeStructure {
-    SymbolId name;
+    DefId definition;
 };
 
 struct TypeGenericStructure {
-    SymbolId name;
+    DefId definition;
     IdSlice<GenericArgId> slice;
 };
 
@@ -87,6 +90,52 @@ struct Type {
     TypeValue value;
     Span span;
     bool mut;
+    void set_value(TypeValue value) { this->value = value; }
+    template <typename V> bool holds() const noexcept { return std::holds_alternative<V>(value); }
+    template <typename... Vs> bool holds_any_of() const noexcept {
+        return (std::holds_alternative<Vs>(value) || ...);
+    }
+    template <typename V> V& as() noexcept { return std::get<V>(value); }
+    template <typename V> const V& as() const noexcept { return std::get<V>(value); }
+};
+
+template <class F>
+concept TypeComparisonFunctor = requires(F f, const Context& context, const Type& t1,
+                                         const Type& t2) {
+    typename F::value_type;
+    typename F::type_comparison_functor_tag;
+    std::is_trivially_copyable_v<typename F::value_type>;
+
+    // constructor must take a const ref to a context
+    { F{context} };
+    // single invocation
+    { f(t1) } -> std::convertible_to<typename F::value_type>;
+    // double invocation
+    { f(t1, t2) } -> std::convertible_to<typename F::value_type>;
+    {
+        f.transform(std::declval<typename F::value_type>(), std::declval<typename F::value_type>())
+    } -> std::convertible_to<typename F::value_type>;
+};
+
+template <TypeComparisonFunctor F> class TypeComparator {
+    const Context& context;
+    OptId<TypeId> try_inner(const Type& type);
+
+  public:
+    TypeComparator(const Context& context) : context(context) {}
+    typename F::value_type operator()(TypeId tid1, TypeId tid2);
+};
+class SameType {
+    const Context& context;
+
+  public:
+    using value_type = bool;
+    using type_comparison_functor_tag = value_type;
+    SameType(const Context& context) : context(context) {}
+    bool operator()(const Type& t1, const Type& t2) const;
+    // single invocation -> mismatch => false
+    bool operator()(const Type& t1) const { return false; }
+    static bool transform(bool res1, bool res2) { return res1 && res2; }
 };
 
 } // namespace hir

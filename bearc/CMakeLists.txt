@@ -63,6 +63,7 @@ set(SRC
     src/compiler/hir/scope.cpp
     src/compiler/hir/ast_visitor.cpp
     src/compiler/hir/diagnostic.cpp
+    src/compiler/hir/type.cpp
 
 )
 

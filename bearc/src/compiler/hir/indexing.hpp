@@ -108,10 +108,15 @@ template <hir::IsId T> class IdIdx {
 
   public:
     using id_tag = Id<T>;
+    using self_type = IdIdx<T>;
     IdIdx() : value(HIR_ID_NONE) {}
     explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
-    constexpr HirId operator++() noexcept { return ++value; }
+    constexpr self_type operator++() { return IdIdx{++value}; }
+    constexpr self_type operator--() { return IdIdx{--value}; }
+    constexpr self_type operator++(int) { return IdIdx{value++}; }
+    constexpr self_type operator--(int) { return IdIdx{value--}; }
+    constexpr self_type at(HirSize offset) { return IdIdx{value + offset}; }
     friend constexpr bool operator==(IdIdx<T> a, IdIdx<T> b) { return a.value == b.value; }
 };
 
@@ -149,6 +154,12 @@ template <hir::IsId T> class IdSlice {
 };
 
 using OrderedDefSliceId = Id<IdSlice<DefId>>;
+
+// visit helper
+template <class... Ts> struct Ovld : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts> Ovld(Ts...) -> Ovld<Ts...>;
 
 } // namespace hir
 
