@@ -58,7 +58,7 @@
 - Visibility: \[`pub` | `hid`]?
 - *TopLevelStatement*: 
     - | *ModuleDeclaration*: Visibility `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
-    - | ImportStatement: `import` ExternalLanguage? -> PathLiteral -> \[`->` -> ModuleIdentifier]? -> `;` 
+    - | ImportStatement: `import` ExternalLanguage? -> PathLiteral `;` 
     - | *FunctionDeclaration*: Visibility `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
     - | GenericParams: `<` Identifier -> HasClause? `,` ... `>` 
         - *HasClause*: `has` `(` Contract(s) `)`

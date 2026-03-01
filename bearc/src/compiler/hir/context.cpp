@@ -187,7 +187,7 @@ void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId
 void Context::explore_imports(FileId root_id) {
     llvm::SmallVector<FileId> import_stack{};
     import_stack.push_back(root_id);
-    explore_imports(root_id, import_stack, NULL);
+    explore_imports(root_id, import_stack, nullptr);
 }
 
 void Context::explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<FileId>& import_stack,

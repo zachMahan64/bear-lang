@@ -113,6 +113,7 @@ class Context {
     IdVecMap<FileId, IdSlice<FileId>> importer_to_importees;
     /// FileId -> llvm::SmallVector<FileId> since this will be updated less predictably
     IdVecMap<FileId, llvm::SmallVector<FileId>> importee_to_importers;
+    // maps a FileId to a list of diagnostics
     IdVecMap<FileId, llvm::SmallVector<DiagnosticId>> file_to_diagnostics;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
