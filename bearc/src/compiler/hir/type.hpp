@@ -165,9 +165,13 @@ class CanonicalTypeTable {
     struct Entry {
         TypeId key_id;
         CanonicalTypeId val;
+        size_t hash;
         Entry* next;
+        Entry(TypeId key_id, CanonicalTypeId val, size_t hash, Entry* next)
+            : key_id(key_id), val(val), hash(hash), next(next) {}
     };
     static constexpr size_t DEFAULT_CAP = 128;
+    static constexpr double LOAD_FACTOR = 1.25;
 
     Context& context;
     DataArena& arena;
@@ -176,16 +180,18 @@ class CanonicalTypeTable {
     size_t count;
     size_t capacity;
 
-  public:
-    CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
-        : context(context), arena(arena), count{0} {
-        this->capacity = (capacity > DEFAULT_CAP) ? capacity : DEFAULT_CAP;
-        buckets = arena.alloc_as<Entry**>(capacity * sizeof(Entry*));
+    void rehash(size_t new_capacity);
+    bool same_structure(TypeId tid1, TypeId tid2) const;
+    size_t hash(TypeId type) const;
+    static size_t index(size_t hash, size_t cap);
+    static void put_new_head_on_chain(Entry** chain, Entry* new_entry);
+    // only use after at returns none to avoid duplicate inserts
+    void insert(TypeId tid, CanonicalTypeId cid);
 
-        // zero-init buckets
-        memset(static_cast<void*>(buckets), 0, capacity * sizeof(Entry*));
-    }
-    // TODO fill out interface then impl
+  public:
+    CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity);
+    OptId<CanonicalTypeId> at(TypeId tid) const;
+    [[nodiscard]] CanonicalTypeId canonical(TypeId tid);
 };
 
 } // namespace hir

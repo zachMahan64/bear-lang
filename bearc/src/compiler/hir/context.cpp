@@ -466,4 +466,8 @@ Type& Context::type(IdIdx<TypeId> ididx) { return types.at(type_ids.at(ididx)); 
 const Type& Context::ctype(TypeId id) const { return types.cat(id); }
 Type& Context::type(TypeId id) { return types.at(id); }
 TypeId Context::type_id(IdIdx<TypeId> tid) const { return type_ids.cat(tid); }
+CanonicalTypeId Context::emplace_and_get_canonical_type_id(TypeId first_structural_type_id) {
+    return canonical_to_type_id.emplace_and_get_id(first_structural_type_id);
+}
+
 } // namespace hir

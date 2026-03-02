@@ -40,7 +40,7 @@ class Context {
   public:
     Context(const bearc_args_t* args);
     int error_count() const noexcept;
-    // ----- accessors --------
+    // ----- accessors / emplacers --------
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     [[nodiscard]] SymbolId get_symbol_id(std::string_view str);
     [[nodiscard]] FileId get_file(SymbolId path);
@@ -67,6 +67,11 @@ class Context {
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag);
+    // type emplacer
+    /// emplaces and gets the id from a new CanonicalTypeId corresponding to a TypeId which points
+    /// to the first structural representation of the canonical type
+    [[nodiscard]] CanonicalTypeId
+    emplace_and_get_canonical_type_id(TypeId first_structural_type_id);
 
     /// accessfor for a def thru a DefId
     Def& def(DefId def_id);
@@ -93,12 +98,12 @@ class Context {
     void try_print_info();
 
     // converters
-    FileId file_id_idx_to_id(IdIdx<FileId> ididx) const;
-    const Type& ctype(IdIdx<TypeId> ididx) const;
-    Type& type(IdIdx<TypeId> ididx);
-    const Type& ctype(TypeId id) const;
-    Type& type(TypeId id);
-    TypeId type_id(IdIdx<TypeId> tid) const;
+    [[nodiscard]] FileId file_id_idx_to_id(IdIdx<FileId> ididx) const;
+    [[nodiscard]] const Type& ctype(IdIdx<TypeId> ididx) const;
+    [[nodiscard]] Type& type(IdIdx<TypeId> ididx);
+    [[nodiscard]] const Type& ctype(TypeId id) const;
+    [[nodiscard]] Type& type(TypeId id);
+    [[nodiscard]] TypeId type_id(IdIdx<TypeId> tid) const;
 
     friend class Scope;
     friend class ScopeAnon;

@@ -207,4 +207,80 @@ typename F::value_type TypeTransformer<F>::operator()(TypeId tid) {
 template class TypeTransformer<TypeHasher>;
 template class TypeTransformer<TypeComparator>;
 
+CanonicalTypeTable::CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
+    : context(context), arena(arena), count{0} {
+    this->capacity = (capacity > DEFAULT_CAP) ? capacity : DEFAULT_CAP;
+    buckets = arena.alloc_as<Entry**>(this->capacity * sizeof(Entry*));
+
+    // zero-init buckets
+    memset(static_cast<void*>(buckets), 0, this->capacity * sizeof(Entry*));
+}
+
+size_t CanonicalTypeTable::hash(TypeId type) const {
+    return TypeTransformer<TypeHasher>{context}(type);
+}
+
+bool CanonicalTypeTable::same_structure(TypeId tid1, TypeId tid2) const {
+    return TypeTransformer<TypeComparator>{context}(tid1, tid2);
+}
+
+size_t CanonicalTypeTable::index(size_t hash, size_t cap) { return hash % cap; }
+void CanonicalTypeTable::put_new_head_on_chain(Entry** chain, Entry* new_entry) {
+    assert(chain);
+    new_entry->next = *chain;
+    *chain = new_entry;
+}
+void CanonicalTypeTable::rehash(size_t new_capacity) {
+    Entry** new_buckets = arena.alloc_as<Entry**>(sizeof(Entry*) * new_capacity);
+    memset(static_cast<void*>(new_buckets), 0, new_capacity * sizeof(Entry*));
+    for (size_t i = 0; i < this->capacity; i++) {
+        Entry* curr = this->buckets[i];
+        while (curr) {
+            Entry* next = curr->next;
+            // just move curr into the new chain
+            put_new_head_on_chain(new_buckets + index(curr->hash, new_capacity), curr);
+            curr = next;
+        }
+    }
+    this->capacity = new_capacity;
+    this->buckets = new_buckets; // don't delete old buckets since arena will clean up later
+}
+
+OptId<CanonicalTypeId> CanonicalTypeTable::at(TypeId tid) const {
+    size_t hash_val = hash(tid);
+    Entry* curr = this->buckets[index(hash_val, this->capacity)];
+    while (curr) {
+        if (hash_val == curr->hash && same_structure(curr->key_id, tid)) {
+            return curr->val;
+        }
+        curr = curr->next;
+    }
+    return OptId<CanonicalTypeId>{};
+}
+
+void CanonicalTypeTable::insert(TypeId tid, CanonicalTypeId cid) {
+    size_t hash_val = hash(tid);
+    Entry** chain = this->buckets + index(hash_val, this->capacity);
+    Entry* new_entry = arena.alloc_type<Entry>();
+    ::new (new_entry) Entry{tid, cid, hash_val, nullptr};
+    put_new_head_on_chain(chain, new_entry);
+    ++this->count;
+}
+CanonicalTypeId CanonicalTypeTable::canonical(TypeId tid) {
+    // already cid
+    OptId<CanonicalTypeId> maybe_cid = this->at(tid);
+    if (maybe_cid.has_value()) {
+        return maybe_cid.as_id();
+    }
+    if (static_cast<double>(this->count + 1) > LOAD_FACTOR * static_cast<double>(this->capacity)) {
+        this->rehash(static_cast<size_t>(2 * static_cast<double>(this->capacity)));
+    }
+    // get new cid and set backward/forward pointing:
+    // forward: tid -> cid (in this table)
+    // backward: cid -> tid (first mention, for structural reversal of any abitrary cid)
+    CanonicalTypeId new_cid = context.emplace_and_get_canonical_type_id(tid);
+    this->insert(tid, new_cid);
+    return new_cid;
+}
+
 } // namespace hir
