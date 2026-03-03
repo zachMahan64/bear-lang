@@ -13,6 +13,7 @@
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/ast_visitor.hpp"
 #include "compiler/hir/def.hpp"
+#include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/file.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
@@ -100,18 +101,20 @@ Context::Context(const bearc_args_t* args)
         const FileAst& ast = file_asts.cat(f.ast_id);
         FileAstVisitor visitor{*this, id};
         visitor.register_top_level_declarations();
-        this->bump_hard_error_count(ast.error_count());
+        this->bump_parser_diag_count(ast.diagnostic_count());
+        this->fatal_error_count += ast.error_count();
     }
 }
 
-void Context::bump_hard_error_count(uint32_t cnt) noexcept {
-    hard_error_count.fetch_add(cnt, std::memory_order_relaxed);
+void Context::bump_parser_diag_count(uint32_t cnt) noexcept { parse_diagnostic_count += cnt; }
+
+int Context::diagnostic_count() const noexcept {
+    return static_cast<int>(this->parse_diagnostic_count + this->diagnostics.size());
 }
 
 int Context::error_count() const noexcept {
-    return static_cast<int>(this->hard_error_count + this->diagnostics.size());
+    return static_cast<int>(this->fatal_error_count + this->normal_error_count);
 }
-
 SymbolId Context::get_symbol_id(std::string_view str) {
     return get_symbol_id(str.data(), str.length());
 }
@@ -303,15 +306,21 @@ void Context::try_print_info() {
         }
     }
     if (!args->flags[CLI_FLAG_SILENT]) {
-        auto len = this->error_count();
-        if (len == 1) {
+        auto error_len = error_count();
+        if (error_len == 1) {
+            puts("1 error generated.");
+        } else /* if (error_len != 0) */ {
+            printf("%d errors generated.\n", error_len);
+        }
+        auto diag_len = diagnostic_count();
+        if (diag_len == 1) {
             puts("1 diagnostic generated.");
-        } else if (len != 0) {
-            printf("%d diagnostics generated.\n", len);
+        } else if (diag_len != 0) {
+            printf("%d total diagnostics generated.\n", diag_len);
         }
     }
     // std::cout << tables.files.size() << '\n';
-    if (this->error_count() != 0) {
+    if (this->diagnostic_count() != 0) {
         if (!args->flags[CLI_FLAG_SILENT]) {
             printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(),
                    symbol_id_to_cstr(files.cat(FileId{1}).path), ansi_reset());
@@ -338,7 +347,6 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
         // register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
         emplace_diagnostic(Span(importer_id, ast(importer_id).buffer(), path_tkn),
                            diag_code::imported_file_dne, diag_type::error);
-        ++this->fatal_error_count;
         return OptId<FileId>{};
     }
     return get_file(maybe_path.value());
@@ -383,11 +391,25 @@ ScopeId Context::make_small_named_scope(OptId<ScopeId> parent_scope) {
 
 Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }
 
+void Context::handle_bump_diag_counts(diag_code code, diag_type type) {
+    if (type == diag_type::error) {
+        switch (code) {
+        case diag_code::imported_file_dne:
+            fatal_error_count++;
+            break;
+        default:
+            normal_error_count++;
+            break;
+        }
+    }
+}
+
 DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type type,
                                          OptId<DiagnosticId> next) {
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, next);
     diagnostics_used.bump();
     file_to_diagnostics.at(span.file_id).emplace_back(id);
+    handle_bump_diag_counts(code, type);
     return id;
 }
 
@@ -396,6 +418,7 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, value, next);
     diagnostics_used.bump();
     file_to_diagnostics.at(span.file_id).emplace_back(id);
+    handle_bump_diag_counts(code, type);
     return id;
 }
 

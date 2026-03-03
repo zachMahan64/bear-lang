@@ -25,6 +25,7 @@ extern "C" {
 typedef struct compiler_error_list {
     const src_buffer_t src_buffer; // holds file_name and view into src code inside a buffer
     vector_t list_vec;             // hold type compiler_error_t
+    uint32_t error_cnt;
 } compiler_error_list_t;
 
 /// ctor for error_list_t
@@ -52,7 +53,10 @@ void compiler_error_list_print_all(const compiler_error_list_t* list);
 bool compiler_error_list_empty(const compiler_error_list_t* list);
 
 /// check a compiler_error_list_t's size
-size_t compiler_error_list_count(const compiler_error_list_t* list);
+size_t compiler_error_list_diagnostic_count(const compiler_error_list_t* list);
+
+/// check a compiler_error_list_t's err count
+size_t compiler_error_list_error_count(const compiler_error_list_t* list);
 
 /// base impl for diagnostic printing
 void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,

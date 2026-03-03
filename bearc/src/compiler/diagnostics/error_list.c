@@ -22,9 +22,10 @@
 #define ERROR_LIST_VEC_RESERVE_CAP 128
 
 compiler_error_list_t compiler_error_list_create(src_buffer_t* src_buffer) {
-    compiler_error_list_t err_list = {.src_buffer = *src_buffer,
-                                      .list_vec = vector_create_and_reserve(
-                                          sizeof(compiler_error_t), ERROR_LIST_VEC_RESERVE_CAP)};
+    compiler_error_list_t err_list = {
+        .src_buffer = *src_buffer,
+        .list_vec = vector_create_and_reserve(sizeof(compiler_error_t), ERROR_LIST_VEC_RESERVE_CAP),
+        .error_cnt = 0};
     return err_list;
 }
 
@@ -34,6 +35,9 @@ void compiler_error_list_destroy(compiler_error_list_t* error_list) {
 
 void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_t* compiler_error) {
     vector_push_back(&list->list_vec, compiler_error);
+    if (!is_really_note(compiler_error->error_code)) {
+        list->error_cnt++;
+    }
 }
 
 void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
@@ -41,6 +45,9 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
     const compiler_error_t err
         = {.start_tkn = token, .error_code = error_code, .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
+    if (!is_really_note(error_code)) {
+        list->error_cnt++;
+    }
 }
 
 void compiler_error_list_emplace_range(compiler_error_list_t* list, token_t* start, token_t* end,
@@ -50,6 +57,9 @@ void compiler_error_list_emplace_range(compiler_error_list_t* list, token_t* sta
                                   .error_code = error_code,
                                   .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
+    if (!is_really_note(error_code)) {
+        list->error_cnt++;
+    }
 }
 
 void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, token_t* token,
@@ -58,6 +68,9 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
     const compiler_error_t err
         = {.start_tkn = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
     vector_push_back(&list->list_vec, &err);
+    if (!is_really_note(error_code)) {
+        list->error_cnt++;
+    }
 }
 
 void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
@@ -144,4 +157,10 @@ bool compiler_error_list_empty(const compiler_error_list_t* list) {
     return list->list_vec.size == 0;
 }
 
-size_t compiler_error_list_count(const compiler_error_list_t* list) { return list->list_vec.size; }
+size_t compiler_error_list_diagnostic_count(const compiler_error_list_t* list) {
+    return list->list_vec.size;
+}
+
+size_t compiler_error_list_error_count(const compiler_error_list_t* list) {
+    return list->error_cnt;
+}

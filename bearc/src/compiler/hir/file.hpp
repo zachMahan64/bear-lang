@@ -41,6 +41,7 @@ class FileAst {
     void print_all_errors() const;
     void print_token_table() const;
     void emplace_tokenwise_error(token_t* tkn, error_code_e error_code);
+    size_t diagnostic_count() const;
     size_t error_count() const;
     FileAst(const char* file_name);
     ~FileAst();

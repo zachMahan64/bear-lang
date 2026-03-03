@@ -17,6 +17,6 @@ int compile_file(const bearc_args_t* args) {
     int code = 0; // return error code if hit error
     hir::Context context{args};
     context.try_print_info();
-    return context.error_count();
+    return context.diagnostic_count();
 }
 } // extern "C"

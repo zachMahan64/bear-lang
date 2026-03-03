@@ -39,6 +39,7 @@ namespace hir {
 class Context {
   public:
     Context(const bearc_args_t* args);
+    int diagnostic_count() const noexcept;
     int error_count() const noexcept;
     // ----- accessors / emplacers --------
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
@@ -60,6 +61,7 @@ class Context {
     Def::resol_state resol_state_of(DefId def) const;
 
     // diagnostics
+    void handle_bump_diag_counts(diag_code code, diag_type type);
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
@@ -185,12 +187,13 @@ class Context {
     NodeVector<Diagnostic> diagnostics;
     IdVecMap<DiagnosticId, uint8_t> diagnostics_used;
 
-    std::atomic<uint32_t> hard_error_count;
+    std::atomic<uint32_t> parse_diagnostic_count;
+    std::atomic<uint32_t> normal_error_count;
     std::atomic<uint32_t> fatal_error_count;
 
     // args
     const bearc_args_t* const args;
-    void bump_hard_error_count(uint32_t cnt) noexcept;
+    void bump_parser_diag_count(uint32_t cnt) noexcept;
 
     FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is
