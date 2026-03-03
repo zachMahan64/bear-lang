@@ -119,7 +119,7 @@ void Diagnostic::print_info_value(const Context& context) const {
             */
         },
     };
-    std::visit(vs, this->value);
+    this->visit(vs);
 }
 
 } // namespace hir

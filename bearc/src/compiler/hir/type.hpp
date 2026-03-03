@@ -119,7 +119,14 @@ template <TypeTransformerFunctor F> class TypeTransformer {
     typename F::value_type operator()(TypeId tid);
 };
 
-class TypeComparator {
+struct DoConsiderMut {
+    static consteval bool considers_mut() { return true; }
+};
+struct DoNotConsiderMut {
+    static consteval bool considers_mut() { return false; }
+};
+
+class TypeComparator : DoNotConsiderMut {
     const Context& context;
 
   public:
@@ -131,7 +138,7 @@ class TypeComparator {
     static bool transform(bool res1, bool res2) { return res1 && res2; }
 };
 
-class TypeHasher {
+class TypeHasher : DoNotConsiderMut {
     const Context& context;
 
   public:

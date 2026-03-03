@@ -8,7 +8,6 @@
 
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/context.hpp"
-#include <variant>
 
 namespace hir {
 
@@ -68,10 +67,12 @@ bool TypeComparator::operator()(const Type& t1, const Type& t2) const {
         [&](const TypeVariadic& t) -> bool { return t2.holds<TypeVariadic>(); },
 
     };
-    if (t1.mut != t2.mut) {
-        return false;
+    if constexpr (considers_mut()) {
+        if (t1.mut != t2.mut) {
+            return false;
+        }
     }
-    return std::visit(vs, t1.value);
+    return t1.visit(vs);
 }
 
 size_t TypeHasher::operator()(const Type& t1) const {
@@ -109,10 +110,12 @@ size_t TypeHasher::operator()(const Type& t1) const {
         },
         [&](const TypeVariadic&) -> size_t { return mix(0x09ULL); }};
 
-    size_t h = std::visit(vs, t1.value);
+    size_t h = t1.visit(vs);
 
-    if (t1.mut) {
-        h ^= 0x9e3779b97f4a7c15ULL;
+    if constexpr (considers_mut()) {
+        if (t1.mut) {
+            h ^= 0x9e3779b97f4a7c15ULL;
+        }
     }
 
     return mix(h);
@@ -125,7 +128,6 @@ size_t TypeHasher::transform(size_t res1, size_t res2) {
 
 template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(const Type& type) {
     using OTid = OptId<TypeId>;
-    const TypeValue& type_value = type.value;
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> OTid { return OTid{}; },
         [&](const TypeStructure& t) -> OTid { return OTid{}; },
@@ -136,9 +138,8 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
         [&](const TypePtr& t) -> OTid { return t.inner; },
         [&](const TypeFnPtr& t) -> OTid { return OTid{}; },
         [&](const TypeVariadic& t) -> OTid { return t.inner; },
-
     };
-    return std::visit(vs, type_value);
+    return type.visit(vs);
 }
 
 template <TypeTransformerFunctor F>

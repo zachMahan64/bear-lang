@@ -50,6 +50,9 @@ template <typename V> struct NodeWithVariantValue {
     template <typename... Ts> bool hold_same_any_of(const V& other) const noexcept {
         return holds_any_of<Ts...>() && other.template holds_any_of<Ts...>();
     }
+    template <typename T> constexpr decltype(auto) visit(T&& visitor) const {
+        return std::visit(visitor, self().value);
+    }
 
     friend V;
 };
