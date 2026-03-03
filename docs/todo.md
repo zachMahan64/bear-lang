@@ -32,7 +32,9 @@
     - [ ] add a StringifyType seed for TypeComparator
 - [ ] Implement a basic constant folder/compt resolver (useful for generic args!) 
 - [ ] Fully plan out generic instatiation (current sketch in hir_design doc)
+    - [x] the plan is to delay generic top level instatiation (2.a) until first mention (this is logical), and then resolve concrete-ified members in phase 2.b
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` (phase 2.a)
+    - [ ]  allow for passing of ast_generic_args_t* for generic instatiations in `top_level_def_visitor`
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
     - [ ] debug logger to display context and scope contents 
 #### Medium term

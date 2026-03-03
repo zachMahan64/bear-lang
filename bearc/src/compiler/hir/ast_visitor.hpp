@@ -20,6 +20,7 @@ struct TopLevelInfo {
     std::optional<ast_slice_of_stmts_t> stmts;
     scope_kind kind;
     bool is_orderable_var = false;
+    bool is_generic = false;
 };
 /**
  * class to traverse the entirety of the namespaces of a file, filling in top level declarations

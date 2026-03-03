@@ -149,12 +149,14 @@ struct Def : NodeWithVariantValue<Def> {
     const bool compt = false;
     /// indicates static (storage duration)
     const bool statik = false;
+    /// indicates generic
+    const bool generic = false;
     /// indicates ABI
     const abi_lang abi = abi_lang::native;
-    Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, Span span,
+    Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, bool generic, Span span,
         OptId<DefId> parent, enum abi_lang abi = abi_lang::native)
         : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
-          statik{statik}, abi{abi} {}
+          statik{statik}, abi{abi}, generic{generic} {}
 
     Def(SymbolId name, bool pub, Span span)
         : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}

@@ -21,7 +21,7 @@ void TopLevelVisitor::resolve_top_level_definitions() {
         resolve_def(d);
     }
 }
-
+// TODO allow for passing of ast_generic_args_t* for generic instatiations
 DefId TopLevelVisitor::visit(DefId def) {
     if (context.resol_state_of(def) == Def::resol_state::resolved) {
         return def;

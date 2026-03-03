@@ -84,8 +84,8 @@ class Context {
     ScopeId scope_for_top_level_def(DefId def);
 
     /// for registering definitions at the top level before resolution
-    DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,
-                                 ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
+    DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
+                                 Span span, ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
 
     // ----- info viewing ------
     const char* symbol_id_to_cstr(SymbolId id) const;
@@ -196,7 +196,7 @@ class Context {
     /// forceably emplaces ast, not checking if it has already been processed. This function is
     /// wrapped by file handling logic and should thus not be used directly anywhere else
     FileAstId emplace_ast(const char* file_name);
-    [[nodiscard]] SymbolId get_symbol_id_for_tkn(token_t* tkn);
+    [[nodiscard]] SymbolId get_symbol_id_for_tkn(const token_t* tkn);
     /// get a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
     void register_importer(FileId importee, FileId importer);

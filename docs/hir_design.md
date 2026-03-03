@@ -334,7 +334,7 @@ later iteratively resolved without fully rewalking the AST
 * compile-time constructs:
     on generic(type structure or function):
         - needs to be rebuilt from the top level ast_stmt* recorded in the def_ast_nodes:
-            - attempt a concrete instantiation (but delay building of bodies still)
+            - attempt a delay concrete instantiation (remembering to now register internal members recursively with TopLevelVisitor) (but delay building of bodies to 2.b still)
             - basically insert the generic param symbol's to be forwarded to valid DefIds corresponding to passed in generic args
 
     on compt value/array size/expression arg in generic:

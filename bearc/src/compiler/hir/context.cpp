@@ -132,7 +132,7 @@ SymbolId Context::get_symbol_id(const char* start, size_t len) {
     // give sym_id now that it's fully interned
     return sym_id;
 }
-SymbolId Context::get_symbol_id_for_tkn(token_t* tkn) {
+SymbolId Context::get_symbol_id_for_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
     return get_symbol_id(tkn->start, tkn->len);
 }
@@ -344,9 +344,11 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     return get_file(maybe_path.value());
 }
 
-DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, Span span,
-                                      ast_stmt_t* stmt, OptId<DefId> parent) {
-    DefId def = defs.emplace_and_get_id(DefUnevaluated{}, name, pub, compt, statik, span, parent);
+DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool statik,
+                                      bool generic, Span span, ast_stmt_t* stmt,
+                                      OptId<DefId> parent) {
+    DefId def = defs.emplace_and_get_id(DefUnevaluated{}, name, pub, compt, statik, generic, span,
+                                        parent);
     def_resol_states.bump(Def::resol_state::top_level_visited);
     def_ast_nodes.bump(stmt);
     def_mention_states.bump(Def::mention_state::unmentioned);

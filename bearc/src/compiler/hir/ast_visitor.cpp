@@ -79,7 +79,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         DefId mod_def = existing_module
                             ? existing.as_id()
                             : context.register_top_level_def(
-                                  name, pub, compt, statik,
+                                  name, pub, compt, /*not generic*/ false, statik,
                                   Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
                                   stmt, parent);
         ScopeId mod_scope = existing_module
@@ -113,10 +113,11 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     }
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    TopLevelInfo info = top_level_info_for(stmt);
-    scope_kind kind = info.kind;
-    token_t* name_tkn = info.name_tkn;
-    std::optional<ast_slice_of_stmts_t> stmts = info.stmts;
+    const TopLevelInfo info = top_level_info_for(stmt);
+    const scope_kind kind = info.kind;
+    const token_t* name_tkn = info.name_tkn;
+    const std::optional<ast_slice_of_stmts_t> stmts = info.stmts;
+    const bool is_generic = info.is_generic;
 
     // if this wasn't named definition, then RETURN so we don't try to make a new hir::Def
     if (name_tkn == nullptr) {
@@ -176,8 +177,8 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
 
     // no issues, so register definition
     DefId def = context.register_top_level_def(
-        name, pub, compt, statik, Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
-        stmt, parent);
+        name, pub, compt, statik, is_generic,
+        Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt, parent);
 
     switch (kind) {
     case scope_kind::VARIABLE:
@@ -185,6 +186,10 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         break;
     case scope_kind::TYPE: {
         context.scope(scope).insert_type(name, def);
+        // delay resolution (don't clutter scope tree with unspecialized/dead definitions)
+        if (is_generic) {
+            break;
+        }
         // if the type (namely a variant field decl) doesn't have statements then the scope needn't
         // be large
         const bool is_small_scope = !stmts.has_value();
@@ -266,12 +271,14 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
     bool is_orderable_field = false;
+    bool is_generic = false;
     switch (stmt->type) {
     // internal scopes are deffered -----------------------------------
     case AST_STMT_STRUCT_DEF: {
         name_tkn = stmt->stmt.struct_decl.name;
         stmts = stmt->stmt.struct_decl.fields;
         kind = scope_kind::TYPE;
+        is_generic = stmt->stmt.struct_decl.is_generic;
         break;
     }
     case AST_STMT_CONTRACT_DEF: {
@@ -290,6 +297,7 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         name_tkn = stmt->stmt.variant_decl.name;
         stmts = stmt->stmt.variant_decl.fields;
         kind = scope_kind::TYPE;
+        is_generic = stmt->stmt.variant_decl.is_generic;
         break;
     }
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -321,12 +329,14 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
             name_tkn = name_slice.start[0];
         }
         kind = scope_kind::VARIABLE;
+        is_generic = stmt->stmt.fn_decl.is_generic;
         break;
     }
     case AST_STMT_FN_PROTOTYPE: {
         // guranteed to be just one long
         name_tkn = stmt->stmt.fn_prototype.name.start[0];
         kind = scope_kind::VARIABLE;
+        is_generic = stmt->stmt.fn_prototype.is_generic;
         break;
     }
     case AST_STMT_DEFTYPE:
@@ -342,6 +352,7 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         .stmts = stmts,
         .kind = kind,
         .is_orderable_var = is_orderable_field,
+        .is_generic = is_generic,
     };
 }
 
