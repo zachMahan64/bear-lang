@@ -12,6 +12,7 @@
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/variant_helpers.hpp"
 #include <variant>
 
 namespace hir {
@@ -48,12 +49,13 @@ struct ExecYieldStmt {
 };
 
 struct ExecExprIdentifier {
-    IdentifierId identifier;
+    DefId identifier;
 };
 
+// SymbolId corresponds to a string, int64_t is an integer, double is floating
 using LiteralValue = std::variant<SymbolId, int64_t, double>;
 
-struct ExecExprLiteral {
+struct ExecExprLiteral : NodeWithVariantValue<ExecExprLiteral> {
     LiteralValue value;
 };
 
@@ -173,12 +175,14 @@ using ExecValue = std::variant<
     ExecExprClosure, ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch>;
 
 /// main exec structure, corresponds to an hir::ExecId
-struct Exec {
+struct Exec : NodeWithVariantValue<Exec> {
     using id_type = ExecId;
+    using value_type = ExecValue;
     ExecValue value;
     const Span span;
     const bool compt;
     Exec(ExecValue value, Span span, bool compt) : value{value}, span{span}, compt{compt} {}
+    static bool is_equivalent(const Context& ctx, ExecId eid1, ExecId eid2);
 };
 
 } // namespace hir

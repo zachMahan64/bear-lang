@@ -469,5 +469,5 @@ TypeId Context::type_id(IdIdx<TypeId> tid) const { return type_ids.cat(tid); }
 CanonicalTypeId Context::emplace_and_get_canonical_type_id(TypeId first_structural_type_id) {
     return canonical_to_type_id.emplace_and_get_id(first_structural_type_id);
 }
-
+[[nodiscard]] const Exec& Context::exec(ExecId id) const { return execs.cat(id); }
 } // namespace hir

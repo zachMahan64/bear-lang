@@ -11,6 +11,7 @@
 
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/variant_helpers.hpp"
 #include <variant>
 
 namespace hir {
@@ -118,7 +119,7 @@ enum class abi_lang : uint8_t {
 };
 
 /// main exec structure, corresponds to an hir_exec_id_t
-struct Def {
+struct Def : NodeWithVariantValue<Def> {
     /// represents the resolution state corresponding to an hir::DefId
     enum class resol_state : uint8_t {
         unvisited = 0,
@@ -160,12 +161,6 @@ struct Def {
     Def(SymbolId name, bool pub, Span span)
         : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
     void set_value(DefValue value) { this->value = value; }
-    template <typename V> bool holds() const noexcept { return std::holds_alternative<V>(value); }
-    template <typename... Vs> bool holds_any_of() const noexcept {
-        return (std::holds_alternative<Vs>(value) || ...);
-    }
-    template <typename V> V& as() noexcept { return std::get<V>(value); }
-    template <typename V> const V& as() const noexcept { return std::get<V>(value); }
 };
 
 } // namespace hir

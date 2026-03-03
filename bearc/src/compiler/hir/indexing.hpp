@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <string_view>
+#include <variant>
 
 namespace hir {
 
@@ -43,7 +44,6 @@ template <typename T> class Id {
 };
 
 struct Symbol;
-struct Identifier;
 struct File;
 struct FileAst;
 struct Scope;
@@ -57,9 +57,6 @@ struct Diagnostic;
 
 /// primary means of tracking interned strings in the hir
 using SymbolId = Id<Symbol>;
-
-/// primary means of tracking scoped identifers like foo..bar..thing in the hir
-using IdentifierId = Id<Identifier>;
 
 /// for addressing interned file names
 using FileId = Id<File>;
@@ -157,12 +154,6 @@ using OrderedDefSliceId = Id<IdSlice<DefId>>;
 
 // id points to first TypeId mention
 using CanonicalTypeId = Id<TypeId>;
-
-// visit helper
-template <class... Ts> struct Ovld : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> Ovld(Ts...) -> Ovld<Ts...>;
 
 } // namespace hir
 

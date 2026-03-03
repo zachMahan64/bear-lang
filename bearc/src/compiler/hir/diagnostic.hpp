@@ -11,6 +11,7 @@
 
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/variant_helpers.hpp"
 #include <cstdint>
 #include <variant>
 namespace hir {
@@ -41,9 +42,10 @@ struct DiagnosticImportStack {
 
 using DiagnosticValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack>;
 
-struct Diagnostic {
+struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 
     using id_type = DiagnosticId;
+    using value_type = DiagnosticValue;
     DiagnosticValue value;
     Span span;
     OptId<DiagnosticId> next;

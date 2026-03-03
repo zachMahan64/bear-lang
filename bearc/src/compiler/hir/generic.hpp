@@ -9,18 +9,21 @@
 #define COMPILER_HIR_GENERICS_HPP
 
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/variant_helpers.hpp"
 #include <variant>
 namespace hir {
 
 using GenericArgValue = std::variant<ExecId, TypeId>;
-struct GenericArg {
+struct GenericArg : NodeWithVariantValue<GenericArg> {
     using id_type = GenericArgId;
+    using value_type = GenericArgValue;
     GenericArgValue value;
 };
 
-using GenericParamValue = std::variant<IdentifierId, DefId>;
-struct GenericParam {
+using GenericParamValue = std::variant<ExecId, DefId>;
+struct GenericParam : NodeWithVariantValue<GenericParam> {
     using id_type = GenericArgId;
+    using value_type = GenericParamValue;
     GenericParamValue value;
 };
 

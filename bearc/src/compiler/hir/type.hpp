@@ -11,6 +11,7 @@
 
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/variant_helpers.hpp"
 #include "utils/data_arena.hpp"
 #include <cassert>
 #include <concepts>
@@ -87,22 +88,6 @@ struct TypeVariadic {
 /// main exec union
 using TypeValue = std::variant<TypeBuiltin, TypeStructure, TypeGenericStructure, TypeArr, TypeSlice,
                                TypeRef, TypePtr, TypeFnPtr, TypeVariadic>;
-
-/// main exec structure, corresponds to an hir_exec_id_t
-struct Type {
-    using id_type = TypeId;
-    TypeValue value;
-    Span span;
-    CanonicalTypeId canonical;
-    bool mut;
-    void set_value(TypeValue value) { this->value = value; }
-    template <typename V> bool holds() const noexcept { return std::holds_alternative<V>(value); }
-    template <typename... Vs> bool holds_any_of() const noexcept {
-        return (std::holds_alternative<Vs>(value) || ...);
-    }
-    template <typename V> V& as() noexcept { return std::get<V>(value); }
-    template <typename V> const V& as() const noexcept { return std::get<V>(value); }
-};
 
 template <class F>
 concept TypeTransformerFunctor = requires(F f, const Context& context, const Type& t1,
@@ -192,6 +177,19 @@ class CanonicalTypeTable {
     CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity);
     OptId<CanonicalTypeId> at(TypeId tid) const;
     [[nodiscard]] CanonicalTypeId canonical(TypeId tid);
+};
+
+struct Type : NodeWithVariantValue<Type> {
+    using id_type = TypeId;
+    using value_type = TypeValue;
+    TypeValue value;
+    Span span;
+    CanonicalTypeId canonical;
+    bool mut;
+    void set_value(TypeValue value) { this->value = value; }
+    static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2) {
+        return TypeTransformer<TypeComparator>{ctx}(tid1, tid2);
+    }
 };
 
 } // namespace hir

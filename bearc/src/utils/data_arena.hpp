@@ -30,7 +30,7 @@ class DataArena {
     arena_t* arena();
     /// get an allocation from the arena of a specified size
     template <typename T> T* alloc_type() {
-        return arena_alloc(&this->arena_, sizeof(T));
+        return static_cast<T*>(arena_alloc(&this->arena_, sizeof(T)));
     } /// returns the a pointer data already casted to the desired ptr type
     template <typename T>
     T alloc_as(size_t size)

@@ -104,6 +104,7 @@ class Context {
     [[nodiscard]] const Type& ctype(TypeId id) const;
     [[nodiscard]] Type& type(TypeId id);
     [[nodiscard]] TypeId type_id(IdIdx<TypeId> tid) const;
+    [[nodiscard]] const Exec& exec(ExecId id) const;
 
     friend class Scope;
     friend class ScopeAnon;
