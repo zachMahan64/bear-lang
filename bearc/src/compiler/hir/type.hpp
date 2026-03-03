@@ -119,14 +119,21 @@ template <TypeTransformerFunctor F> class TypeTransformer {
     typename F::value_type operator()(TypeId tid);
 };
 
+template <class C>
+concept ConsiderMut = requires(C c) {
+    { c.considers_mut() } -> std::convertible_to<bool>;
+};
+
 struct DoConsiderMut {
     static consteval bool considers_mut() { return true; }
 };
+// using this means mut-ness will need to be considered effectively lazily, consider the outermost
+// mut at any given time
 struct DoNotConsiderMut {
     static consteval bool considers_mut() { return false; }
 };
 
-class TypeComparator : DoNotConsiderMut {
+template <ConsiderMut C> class TypeComparator {
     const Context& context;
 
   public:
@@ -136,9 +143,10 @@ class TypeComparator : DoNotConsiderMut {
     // single invocation -> mismatch => false
     bool operator()(const Type& t1) const { return false; }
     static bool transform(bool res1, bool res2) { return res1 && res2; }
+    static consteval bool considers_mut() { return C::considers_mut(); }
 };
 
-class TypeHasher : DoNotConsiderMut {
+template <ConsiderMut C> class TypeHasher {
     const Context& context;
 
   public:
@@ -151,6 +159,7 @@ class TypeHasher : DoNotConsiderMut {
     }
     size_t operator()(const Type& t1) const;
     static size_t transform(size_t res1, size_t res2);
+    static consteval bool considers_mut() { return C::considers_mut(); }
 };
 
 class CanonicalTypeTable {
@@ -164,7 +173,8 @@ class CanonicalTypeTable {
     };
     static constexpr size_t DEFAULT_CAP = 128;
     static constexpr double LOAD_FACTOR = 1.25;
-
+    // internally, this consider mut recursively:
+    using considerer_type = DoConsiderMut;
     Context& context;
     DataArena& arena;
 
@@ -194,8 +204,9 @@ struct Type : NodeWithVariantValue<Type> {
     CanonicalTypeId canonical;
     bool mut;
     void set_value(TypeValue value) { this->value = value; }
+    // compares identical types (including mut)
     static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2) {
-        return TypeTransformer<TypeComparator>{ctx}(tid1, tid2);
+        return TypeTransformer<TypeComparator<DoConsiderMut>>{ctx}(tid1, tid2);
     }
 };
 

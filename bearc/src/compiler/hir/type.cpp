@@ -11,7 +11,7 @@
 
 namespace hir {
 
-bool TypeComparator::operator()(const Type& t1, const Type& t2) const {
+template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, const Type& t2) const {
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> bool {
             if (!t2.holds<TypeBuiltin>()) {
@@ -75,7 +75,7 @@ bool TypeComparator::operator()(const Type& t1, const Type& t2) const {
     return t1.visit(vs);
 }
 
-size_t TypeHasher::operator()(const Type& t1) const {
+template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const {
     // https://xorshift.di.unimi.it/splitmix64.c
     auto mix = [](size_t x) {
         x += 0x9e3779b97f4a7c15;
@@ -120,7 +120,7 @@ size_t TypeHasher::operator()(const Type& t1) const {
 
     return mix(h);
 }
-size_t TypeHasher::transform(size_t res1, size_t res2) {
+template <ConsiderMut C> size_t TypeHasher<C>::transform(size_t res1, size_t res2) {
     // high entropy hash transform
     // https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values
     return res1 ^ (res2 + 0x9e3779b97f4a7c15ULL + (res1 << 6) + (res1 >> 2));
@@ -205,8 +205,10 @@ typename F::value_type TypeTransformer<F>::operator()(TypeId tid) {
     return collector;
 }
 // explicit instatiantiations for the TypeTransformer
-template class TypeTransformer<TypeHasher>;
-template class TypeTransformer<TypeComparator>;
+template class TypeTransformer<TypeHasher<DoConsiderMut>>;
+template class TypeTransformer<TypeHasher<DoNotConsiderMut>>;
+template class TypeTransformer<TypeComparator<DoConsiderMut>>;
+template class TypeTransformer<TypeComparator<DoNotConsiderMut>>;
 
 CanonicalTypeTable::CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
     : context(context), arena(arena), count{0} {
@@ -218,11 +220,11 @@ CanonicalTypeTable::CanonicalTypeTable(Context& context, DataArena& arena, HirSi
 }
 
 size_t CanonicalTypeTable::hash(TypeId type) const {
-    return TypeTransformer<TypeHasher>{context}(type);
+    return TypeTransformer<TypeHasher<considerer_type>>{context}(type);
 }
 
 bool CanonicalTypeTable::same_structure(TypeId tid1, TypeId tid2) const {
-    return TypeTransformer<TypeComparator>{context}(tid1, tid2);
+    return TypeTransformer<TypeComparator<considerer_type>>{context}(tid1, tid2);
 }
 
 size_t CanonicalTypeTable::index(size_t hash, size_t cap) { return hash % cap; }
