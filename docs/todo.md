@@ -29,14 +29,14 @@
 - [ ] Type resolution requisites:
     - [x] add `TypeTransformer<T>` which is callable on 2 `TypeIds` (for recursive comparision) which is seeded with a functor `T` and a collected value `V` that takes in 2 `TypeId`'s, compares them, and returns some value based on that comparision (bool or some hash-component value will be helpful for typechecking and canonicalizing type hashing, respectively)
     - [x] CanonicalTypeHashTable, implement then add to context, (set canonical inside of Types and then also build the reverse map from CanonicalId -> first TypeId mention)
-    - [ ] add a StringifyType seed for TypeComparator
-- [ ] Implement a basic constant folder/compt resolver (useful for generic args!) 
-- [ ] Fully plan out generic instatiation (current sketch in hir_design doc)
+- [x] Fully plan out generic instatiation (current sketch in hir_design doc)
     - [x] the plan is to delay generic top level instatiation (2.a) until first mention (this is logical), and then resolve concrete-ified members in phase 2.b
+- [ ] Implement a basic constant folder/compt resolver -> string literal concat, basic operators for integral and floating values (useful for generic args!) 
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` (phase 2.a)
-    - [ ]  allow for passing of ast_generic_args_t* for generic instatiations in `top_level_def_visitor`
+    - [ ]  allow for passing of ast_generic_args_t* for generic instatiations in `top_level_def_visitor` 
+- [ ] debug logger to display context and scope contents
+    - [ ] add a StringifyType seed for TypeTransformer
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
-    - [ ] debug logger to display context and scope contents 
 #### Medium term
 - [ ] HIR
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 
