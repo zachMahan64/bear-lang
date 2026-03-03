@@ -94,8 +94,7 @@ struct Scope {
  */
 struct ScopeAnon {
     using id_type = ScopeAnonId;
-    OptId<ScopeId> opt_named_parent;
-    OptId<ScopeAnonId> opt_anon_parent;
+    std::variant<ScopeId, ScopeAnonId> parent;
     /// structs, variants, unions, deftypes
     ScopeIdMap types;
     /// var foo;

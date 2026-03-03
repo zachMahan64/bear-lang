@@ -13,7 +13,6 @@
 #include "utils/data_arena.hpp"
 #include <assert.h>
 #include <stddef.h>
-#include <stdint.h>
 // this may need to be tuned for a balance between cache locality and limited rehashing
 static constexpr size_t HIR_SCOPE_MAP_DEFAULT_SIZE = 0x100;
 static constexpr size_t HirScopeOP_LEVEL_SCALE_FACTOR = 4;
@@ -160,12 +159,18 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
             if (result_def.val()) {
                 break; // hit, stop now since we allow shadowing
             }
-            const ScopeAnonId parent_scope_anon_id = curr_scope_anon->opt_anon_parent.as_id();
+            const ScopeAnonId parent_scope_anon_id
+                = std::holds_alternative<ScopeAnonId>(curr_scope_anon->parent)
+                      ? std::get<ScopeAnonId>(curr_scope_anon->parent)
+                      : ScopeAnonId{};
             assert((parent_scope_anon_id.val() != curr_scope_anon_id.val())
                    && "self-referential scope\n");
             curr_scope_anon_id = parent_scope_anon_id;
 
-            const ScopeId parent_scope_named_id = curr_scope_anon->opt_named_parent.as_id();
+            const ScopeId parent_scope_named_id
+                = std::holds_alternative<ScopeId>(curr_scope_anon->parent)
+                      ? std::get<ScopeId>(curr_scope_anon->parent)
+                      : ScopeId{};
             assert((parent_scope_named_id.val() != curr_scope_named_id.val())
                    && "self-referential scope\n");
             curr_scope_named_id = parent_scope_named_id;
@@ -277,10 +282,10 @@ void ScopeAnon::add_used_module(DefId def_id) {
     this->used_defs.push_back(def_id);
 }
 ScopeAnon::ScopeAnon(ScopeId named_parent, DataArena& arena)
-    : opt_named_parent(named_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+    : parent(named_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
 ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, DataArena& arena)
-    : opt_anon_parent(anon_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
+    : parent(anon_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
       types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
 
 // ------------------------- named scope inserters -------------------------------

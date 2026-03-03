@@ -37,7 +37,7 @@
     - [ ] Implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
-- [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`?
+- [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`? or just insert into scope and pass thru the scope
     - some method of handling generic params -> concrete args forwarding inside the entire generic scope 
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
 - [ ] debug logger to display context and scope contents
