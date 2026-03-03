@@ -17,11 +17,13 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/log.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <atomic>
+#include <cstddef>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
@@ -31,8 +33,9 @@ namespace hir {
 
 static constexpr size_t DEFAULT_SYMBOL_ARENA_CAP = 0x10000;
 static constexpr size_t DEFAULT_SCOPE_ARENA_CAP = 0x10000;
+static constexpr size_t DEFAULT_CANONICAL_TYPE_ARENA_CAP = 0x1000;
 static constexpr size_t DEFAULT_ID_MAP_ARENA_CAP
-    = 0x1000; // increase if any other top level maps need to be made
+    = 0x8000; // increase if any other top level maps need to be made
 static constexpr size_t DEFAULT_SYM_TO_FILE_ID_MAP_CAP = 0x80;
 static constexpr size_t DEFAULT_SCOPE_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_FILE_VEC_CAP = 0x80;
@@ -49,6 +52,7 @@ static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 static constexpr HirSize EXPECTED_HIGH_NUM_IMPORTS = 128;
 static constexpr size_t DEFAULT_DIAG_NUM = 0x100;
 static constexpr size_t DEFAULT_DEF_SLICE_COUNT = 0x100;
+static constexpr size_t DEFAULT_CANONICAL_TT_CAP = 0x400;
 
 Context::Context(const bearc_args_t* args)
     : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
@@ -68,7 +72,9 @@ Context::Context(const bearc_args_t* args)
       diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
       def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP},
       def_to_ordered_def_slice{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
-      ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP) {
+      ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
+      canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
+      canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP) {
 
     // this may only fail in horribly malfored arguments in test cases
     assert(args->input_file_name);

@@ -171,7 +171,8 @@ class Context {
     // maps a canonical type back to its first TypeId mention so the type's structure can be rebuilt
     // even if only its canonical value is known
     IdVecMap<CanonicalTypeId, TypeId> canonical_to_type_id;
-    // TODO implement and then add here a CanonicalTypeMap
+    DataArena canonical_type_table_arena;
+    CanonicalTypeTable canonical_type_table;
 
     IdVector<GenericParamId> generic_param_ids;
     NodeVector<GenericParam> generic_params;
