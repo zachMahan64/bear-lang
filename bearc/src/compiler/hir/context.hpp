@@ -26,7 +26,6 @@
 #include "compiler/token.h"
 #include "utils/data_arena.hpp"
 #include "llvm/ADT/SmallVector.h"
-#include <atomic>
 #include <cstdint>
 #include <filesystem>
 
