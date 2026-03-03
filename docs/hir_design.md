@@ -330,6 +330,16 @@ build HIR with DFS (with circularity checks) for:
 - type syntax trees inside fields/params/return types
 - place bodies to be populated into a vector of the form {HirDefId, AstNode} to be 
 later iteratively resolved without fully rewalking the AST
+- Generic instantiation
+* compile-time constructs:
+    on generic(type structure or function):
+        - needs to be rebuilt from the top level ast_stmt* recorded in the def_ast_nodes:
+            - attempt a concrete instantiation (but delay building of bodies still)
+            - basically insert the generic param symbol's to be forwarded to valid DefIds corresponding to passed in generic args
+
+    on compt value/array size/expression arg in generic:
+        - ensure compile time computatbility (do simple visiting checks for first resolver version)
+        - recursive visiting nodes and checking compt all the way down will be necessary  
 
 b)
 - bodies { types / expressions (typecheck) / statements (typecheck) }
@@ -345,13 +355,8 @@ on identifier (type or variable reference):
     - recursive hashing thru SymbolId's for basetypes and then specific value for ref, ptr, arr, etc, should be sufficient
     - make sure to consider namespaces when canonicalizing 
 
-compile-time constructs:
-    on generic(type structure or function):
-        - attempt a concrete instantiation
-
-    on compt value/array size/expression arg in generic:
-        - ensure compile time computatbility (do simple visiting checks for first resolver version)
-        - recursive visiting nodes and checking compt all the way down will be necessary  
+* compile-time constructs:
+    similar approach as 2.a, but build generic bodies according to the generic params
 
 failure modes: 
     | DNE 

@@ -35,8 +35,7 @@ struct DefFunction {
 struct DefGenericFunction {
     IdSlice<GenericParamId> generic_params;
     SymbolId name;
-    // potentially problematic
-    DefId underlying_def;
+    DefId function_def;
 };
 
 struct DefFunctionPrototype {
@@ -78,8 +77,7 @@ struct DefVariant {
 struct DefGenericVariant {
     IdSlice<GenericParamId> generic_params;
     SymbolId name;
-    // potentially problematic
-    DefId underlying_def;
+    DefId variant_def;
 };
 
 struct DefVariantField {
