@@ -23,11 +23,11 @@
 #include "utils/ansi_codes.h"
 #include "utils/log.hpp"
 #include "llvm/ADT/SmallVector.h"
-#include <atomic>
 #include <cstddef>
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <iso646.h>
 #include <stddef.h>
 #include <string_view>
 namespace hir {
@@ -101,20 +101,22 @@ Context::Context(const bearc_args_t* args)
         const FileAst& ast = file_asts.cat(f.ast_id);
         FileAstVisitor visitor{*this, id};
         visitor.register_top_level_declarations();
-        this->bump_parser_diag_count(ast.diagnostic_count());
-        this->fatal_error_count += ast.error_count();
+        this->note_cnt += ast.diagnostic_count() - ast.error_count();
+        this->fatal_error_cnt += ast.error_count();
     }
 }
 
-void Context::bump_parser_diag_count(uint32_t cnt) noexcept { parse_diagnostic_count += cnt; }
-
 int Context::diagnostic_count() const noexcept {
-    return static_cast<int>(this->parse_diagnostic_count + this->diagnostics.size());
+    return static_cast<int>(fatal_error_cnt + normal_error_cnt + note_cnt + warning_cnt);
 }
 
 int Context::error_count() const noexcept {
-    return static_cast<int>(this->fatal_error_count + this->normal_error_count);
+    return static_cast<int>(this->fatal_error_cnt + this->normal_error_cnt);
 }
+
+int Context::warning_count() const noexcept { return static_cast<int>(warning_cnt); }
+int Context::note_count() const noexcept { return static_cast<int>(note_cnt); }
+
 SymbolId Context::get_symbol_id(std::string_view str) {
     return get_symbol_id(str.data(), str.length());
 }
@@ -306,17 +308,23 @@ void Context::try_print_info() {
         }
     }
     if (!args->flags[CLI_FLAG_SILENT]) {
-        auto error_len = error_count();
-        if (error_len == 1) {
+        auto errors = error_count();
+        if (errors == 1) {
             puts("1 error generated.");
-        } else /* if (error_len != 0) */ {
-            printf("%d errors generated.\n", error_len);
+        } else if (errors != 0) {
+            printf("%d errors generated.\n", errors);
         }
-        auto diag_len = diagnostic_count();
-        if (diag_len == 1) {
-            puts("1 diagnostic generated.");
-        } else if (diag_len != 0) {
-            printf("%d total diagnostics generated.\n", diag_len);
+        auto warnings = warning_count();
+        if (warnings == 1) {
+            puts("1 warning generated.");
+        } else if (warnings != 0) {
+            printf("%d warnings generated.\n", warnings);
+        }
+        auto notes = note_count();
+        if (notes == 1) {
+            puts("1 note generated.");
+        } else if (notes != 0) {
+            printf("%d notes generated.\n", notes);
         }
     }
     // std::cout << tables.files.size() << '\n';
@@ -395,12 +403,16 @@ void Context::handle_bump_diag_counts(diag_code code, diag_type type) {
     if (type == diag_type::error) {
         switch (code) {
         case diag_code::imported_file_dne:
-            fatal_error_count++;
+            fatal_error_cnt++;
             break;
         default:
-            normal_error_count++;
+            normal_error_cnt++;
             break;
         }
+    } else if (type == diag_type::note) {
+        note_cnt++;
+    } else if (type == diag_type::warning) {
+        warning_cnt++;
     }
 }
 

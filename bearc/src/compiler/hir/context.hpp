@@ -41,6 +41,8 @@ class Context {
     Context(const bearc_args_t* args);
     int diagnostic_count() const noexcept;
     int error_count() const noexcept;
+    int warning_count() const noexcept;
+    int note_count() const noexcept;
     // ----- accessors / emplacers --------
     [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
     [[nodiscard]] SymbolId get_symbol_id(std::string_view str);
@@ -186,14 +188,13 @@ class Context {
 
     NodeVector<Diagnostic> diagnostics;
     IdVecMap<DiagnosticId, uint8_t> diagnostics_used;
-
-    std::atomic<uint32_t> parse_diagnostic_count;
-    std::atomic<uint32_t> normal_error_count;
-    std::atomic<uint32_t> fatal_error_count;
+    HirSize warning_cnt{};
+    HirSize note_cnt{};
+    HirSize normal_error_cnt{};
+    HirSize fatal_error_cnt{};
 
     // args
     const bearc_args_t* const args;
-    void bump_parser_diag_count(uint32_t cnt) noexcept;
 
     FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is

@@ -21,3 +21,11 @@ mt Foo..data() { // error, redefined
 mt Foo..set_data(i32 data) {
     self.data = data;
 }
+
+mod Boo { // warning, capital module
+
+}
+
+struct boo { // warning, lowercase struct, error empty
+
+}
