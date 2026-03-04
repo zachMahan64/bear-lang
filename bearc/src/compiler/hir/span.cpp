@@ -26,7 +26,7 @@ std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
 }
 
 [[nodiscard]] std::string_view Span::as_sv(const Context& context) const {
-    return retrieve_from_buffer(context.c_ast(file_id).buffer(), *this);
+    return retrieve_from_buffer(context.ast(file_id).buffer(), *this);
 }
 
 } // namespace hir

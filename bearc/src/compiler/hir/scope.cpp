@@ -13,6 +13,7 @@
 #include "utils/data_arena.hpp"
 #include <assert.h>
 #include <stddef.h>
+#include <variant>
 // this may need to be tuned for a balance between cache locality and limited rehashing
 static constexpr size_t HIR_SCOPE_MAP_DEFAULT_SIZE = 0x100;
 static constexpr size_t HirScopeOP_LEVEL_SCALE_FACTOR = 4;
@@ -56,13 +57,13 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
     while (!def.val()) {
         curr_scope = &context.scopes.cat(curr_scope_id);
         switch (kind) {
-        case scope_kind::NAMESPACE:
+        case scope_kind::namespacee:
             def = curr_scope->namespaces.at(symbol).as_id();
             break;
-        case scope_kind::VARIABLE:
+        case scope_kind::variable:
             def = curr_scope->variables.at(symbol).as_id();
             break;
-        case scope_kind::TYPE:
+        case scope_kind::type:
             def = curr_scope->types.at(symbol).as_id();
             break;
         }
@@ -84,15 +85,15 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
 
 ScopeLookUpResult Scope::look_up_namespace(const Context& context, ScopeId local_scope,
                                            SymbolId symbol) {
-    return look_up_impl(context, local_scope, symbol, scope_kind::NAMESPACE);
+    return look_up_impl(context, local_scope, symbol, scope_kind::namespacee);
 }
 ScopeLookUpResult Scope::look_up_variable(const Context& context, ScopeId local_scope,
                                           SymbolId symbol) {
-    return look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
+    return look_up_impl(context, local_scope, symbol, scope_kind::variable);
 }
 ScopeLookUpResult Scope::look_up_type(const Context& context, ScopeId local_scope,
                                       SymbolId symbol) {
-    return look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
+    return look_up_impl(context, local_scope, symbol, scope_kind::type);
 }
 
 // ------------------ ANON SCOPE IMPL ----------------------
@@ -146,13 +147,13 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
         if (curr_scope_anon_id.val()) {
             curr_scope_anon = &context.scope_anons.cat(curr_scope_anon_id);
             switch (kind) {
-            case scope_kind::NAMESPACE:
+            case scope_kind::namespacee:
                 assert(false && "namespace lookup in anonymous scope");
                 break;
-            case scope_kind::VARIABLE:
+            case scope_kind::variable:
                 result_def = curr_scope_anon->variables.at(symbol).as_id();
                 break;
-            case scope_kind::TYPE:
+            case scope_kind::type:
                 result_def = curr_scope_anon->types.at(symbol).as_id();
                 break;
             }
@@ -178,13 +179,13 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
             assert(curr_scope_named_id.val());
             curr_scope_named = &context.scopes.cat(curr_scope_named_id);
             switch (kind) {
-            case scope_kind::NAMESPACE:
+            case scope_kind::namespacee:
                 result_def = curr_scope_named->namespaces.at(symbol).as_id();
                 break;
-            case scope_kind::VARIABLE:
+            case scope_kind::variable:
                 result_def = curr_scope_named->variables.at(symbol).as_id();
                 break;
-            case scope_kind::TYPE:
+            case scope_kind::type:
                 result_def = curr_scope_named->types.at(symbol).as_id();
                 break;
             }
@@ -219,25 +220,36 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
 ScopeLookUpResult hir_scope_anon_look_up_variable(Context& context, ScopeAnonId local_scope,
                                                   SymbolId symbol) {
 
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::variable);
 }
 
 ScopeLookUpResult hir_scope_anon_look_up_type(Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::type);
 }
 
 ScopeLookUpResult ScopeAnon::look_up_variable(const Context& context, ScopeAnonId local_scope,
                                               SymbolId symbol) {
 
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::VARIABLE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::variable);
 }
 
 ScopeLookUpResult ScopeAnon::look_up_type(const Context& context, ScopeAnonId local_scope,
                                           SymbolId symbol) {
 
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::TYPE);
+    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::type);
+}
+
+ScopeLookUpResult ScopeAnon::look_up_namespace(const Context& context, ScopeAnonId local_scope,
+                                               SymbolId symbol) {
+    NamedOrAnonScopeId parent = context.scope_anons.cat(local_scope).parent;
+    // base case is hit a named scope! (guranteed to hit since root scope is always named)
+    if (std::holds_alternative<ScopeId>(parent)) {
+        return Scope::look_up_namespace(context, std::get<ScopeId>(parent), symbol);
+    }
+    // standard case, keep traversing scopes in reverse till we hit a named scope
+    return ScopeAnon::look_up_namespace(context, std::get<ScopeAnonId>(parent), symbol);
 }
 
 // ------------------ insert helpers ----------------------
@@ -245,13 +257,13 @@ ScopeLookUpResult ScopeAnon::look_up_type(const Context& context, ScopeAnonId lo
 /// insert symbol -> def into a named hir_scope
 void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
     switch (kind) {
-    case scope_kind::NAMESPACE:
+    case scope_kind::namespacee:
         this->namespaces.insert(symbol, def);
         break;
-    case scope_kind::VARIABLE:
+    case scope_kind::variable:
         this->variables.insert(symbol, def);
         break;
-    case scope_kind::TYPE:
+    case scope_kind::type:
         this->types.insert(symbol, def);
         break;
     }
@@ -260,13 +272,13 @@ void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
 /// insert symbol -> def into an anonymous hir_scope_anon
 void ScopeAnon::insert(SymbolId symbol, DefId def, scope_kind kind) {
     switch (kind) {
-    case scope_kind::NAMESPACE:
+    case scope_kind::namespacee:
         assert(false && "namespace insertion in anonymous scope");
         break;
-    case scope_kind::VARIABLE:
+    case scope_kind::variable:
         this->variables.insert(symbol, def);
         break;
-    case scope_kind::TYPE:
+    case scope_kind::type:
         this->types.insert(symbol, def);
         break;
     }
@@ -290,18 +302,18 @@ ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, DataArena& arena)
 
 // ------------------------- named scope inserters -------------------------------
 void Scope::insert_namespace(SymbolId symbol, DefId def) {
-    insert(symbol, def, scope_kind::NAMESPACE);
+    insert(symbol, def, scope_kind::namespacee);
 }
 void Scope::insert_variable(SymbolId symbol, DefId def) {
-    insert(symbol, def, scope_kind::VARIABLE);
+    insert(symbol, def, scope_kind::variable);
 }
-void Scope::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::TYPE); }
+void Scope::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::type); }
 
 // -------------------------------------- anonymous scope inserters ----------------
 void ScopeAnon::insert_variable(SymbolId symbol, DefId def) {
-    insert(symbol, def, scope_kind::VARIABLE);
+    insert(symbol, def, scope_kind::variable);
 }
-void ScopeAnon::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::TYPE); }
+void ScopeAnon::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::type); }
 
 OptId<DefId> Scope::already_defines_variable(SymbolId symbol) const { return variables.at(symbol); }
 OptId<DefId> Scope::already_defines_type(SymbolId symbol) const { return types.at(symbol); }

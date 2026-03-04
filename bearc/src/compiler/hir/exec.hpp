@@ -13,6 +13,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/variant_helpers.hpp"
+#include <cstdint>
 #include <variant>
 
 namespace hir {
@@ -52,11 +53,13 @@ struct ExecExprIdentifier {
     DefId identifier;
 };
 
-// SymbolId corresponds to a string, int64_t is an integer, double is floating
-using LiteralValue = std::variant<SymbolId, int64_t, double>;
+// SymbolId corresponds to a builtin type
+using ConstantValue = std::variant<SymbolId, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t,
+                                   int64_t, uint64_t, char, float, double>;
 
-struct ExecExprLiteral : NodeWithVariantValue<ExecExprLiteral> {
-    LiteralValue value;
+/// represents literals and true compt values
+struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
+    ConstantValue value;
 };
 
 struct ExecExprListLiteral {
@@ -168,7 +171,7 @@ using ExecValue = std::variant<
     ExecBlock, ExecExprStmt, ExecBreakStmt, ExecIfStmt, ExecLoopStmt, ExecReturnStmt, ExecYieldStmt,
 
     // expressions
-    ExecExprIdentifier, ExecExprLiteral, ExecExprListLiteral, ExecExprAssignMove,
+    ExecExprIdentifier, ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove,
     ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
     ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
     ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprStructInit, ExecExprStructMemberInit,
@@ -180,9 +183,12 @@ struct Exec : NodeWithVariantValue<Exec> {
     using value_type = ExecValue;
     ExecValue value;
     const Span span;
-    const bool compt;
-    Exec(ExecValue value, Span span, bool compt) : value{value}, span{span}, compt{compt} {}
+    bool compt;
+    Exec(Context& ctx, ExecValue value, Span span, bool compt);
     static bool is_equivalent(const Context& ctx, ExecId eid1, ExecId eid2);
+
+  private:
+    bool can_be_compt(const Context& ctx);
 };
 
 } // namespace hir

@@ -19,7 +19,7 @@
 namespace hir {
 
 void Diagnostic::print(const Context& context) const {
-    const src_buffer_t* buf = context.c_ast(span.file_id).src();
+    const src_buffer_t* buf = context.ast(span.file_id).src();
     auto s = Span::retrieve_from_buffer(buf->data, span);
     print_diagnostic(buf, (char*)s.data(), span.len, span.line, span.col,
                      accent_color_for_type(type), name_for_type(type), message_for_code(code), "");
@@ -58,6 +58,9 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         break;
     case diag_code::circular_definition_passes_thru:
         return "circular definition passes through this definition";
+        break;
+    case diag_code::value_cannot_be_compt:
+        return "cannot resolve value at compile-time";
         break;
     }
     return "";
@@ -100,10 +103,10 @@ void Diagnostic::print_info_value(const Context& context) const {
         };
         int idx = 0;
         for (auto fid = IdIdx<FileId>{files.begin().val() + 1}; fid != files.end(); ++fid) {
-            line(stream_trace(context.file_id_idx_to_id(fid), idx).str());
+            line(stream_trace(context.file_id(fid), idx).str());
             idx++;
         }
-        line(stream_trace(context.file_id_idx_to_id(files.first()), idx).str());
+        line(stream_trace(context.file_id(files.first()), idx).str());
     };
 
     const auto vs = Ovld{

@@ -14,6 +14,7 @@
 #include "utils/data_arena.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
+#include <variant>
 
 namespace hir {
 
@@ -35,9 +36,9 @@ struct ScopeLookUpResult {
         : def_id(def_id), status(status) {}
 };
 enum class scope_kind : uint8_t {
-    NAMESPACE,
-    VARIABLE,
-    TYPE,
+    namespacee,
+    variable,
+    type,
 };
 /**
  * maps SymbolId -> hir_def_id
@@ -88,13 +89,15 @@ struct Scope {
     friend class ScopeAnon;
 };
 
+using NamedOrAnonScopeId = std::variant<ScopeId, ScopeAnonId>;
+
 /**
  * maps SymbolId -> hir_def_id
  * models anonymous blocks, such as function bodies or ctrl flow blocks
  */
 struct ScopeAnon {
     using id_type = ScopeAnonId;
-    std::variant<ScopeId, ScopeAnonId> parent;
+    NamedOrAnonScopeId parent;
     /// structs, variants, unions, deftypes
     ScopeIdMap types;
     /// var foo;
@@ -119,6 +122,8 @@ struct ScopeAnon {
                                               SymbolId symbol);
     static ScopeLookUpResult look_up_type(const Context& context, ScopeAnonId local_scope,
                                           SymbolId symbol);
+    static ScopeLookUpResult look_up_namespace(const Context& context, ScopeAnonId local_scope,
+                                               SymbolId symbol);
 
     /// adds a used module to non-top-level anonymous scope
     void add_used_module(DefId def_id);

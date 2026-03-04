@@ -144,7 +144,7 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
 
 template <TypeTransformerFunctor F>
 typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) {
-    auto get_t = [&](TypeId tid) { return context.ctype(tid); };
+    auto get_t = [&](TypeId tid) { return context.type(tid); };
 
     auto t1 = get_t(tid1);
     auto t2 = get_t(tid2);
@@ -181,7 +181,7 @@ typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) 
 }
 template <TypeTransformerFunctor F>
 typename F::value_type TypeTransformer<F>::operator()(TypeId tid) {
-    auto get_t = [&](TypeId tid) { return context.ctype(tid); };
+    auto get_t = [&](TypeId tid) { return context.type(tid); };
 
     auto t = get_t(tid);
 

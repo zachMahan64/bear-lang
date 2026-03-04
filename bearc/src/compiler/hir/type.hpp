@@ -40,7 +40,6 @@ enum class builtin_type : uint8_t {
     f64,
     voidd,
     str,
-
 };
 
 struct TypeBuiltin {

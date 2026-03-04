@@ -12,6 +12,7 @@
 #include "compiler/ast/stmt_slice.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/scope.hpp"
 namespace hir {
 
 struct TopLevelInfo {
@@ -43,6 +44,16 @@ class FileAstVisitor {
     FileAstVisitor(Context& context, FileId file) : context(context), file(file) {}
     void register_top_level_declarations();
     static std::optional<const token_t*> name_of_ast_decl(const ast_stmt_t* stmt);
+};
+
+class ExprVisitor {
+    Context& context;
+    explicit ExprVisitor(Context& ctx) : context{ctx} {}
+
+  public:
+    [[nodiscard]] ExecId resolve_expr(const ast_expr_t* expr);
+    [[nodiscard]] ExecId fold_expr_compt(NamedOrAnonScopeId scope, const ast_expr_t* expr,
+                                         TypeId into);
 };
 
 } // namespace hir

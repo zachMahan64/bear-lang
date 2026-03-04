@@ -32,9 +32,12 @@
     - [x] CanonicalTypeHashTable, implement then add to context, (set canonical inside of Types and then also build the reverse map from CanonicalId -> first TypeId mention)
 - [x] Fully plan out generic instatiation (current sketch in hir_design doc)
     - [x] the plan is to delay generic top level instatiation (2.a) until first mention (this is logical), and then resolve concrete-ified members in phase 2.b 
+
 ##### hir phase 2.a:
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
-    - [ ] Implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
+    - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
+    - [ ] implement kind of operator <--> type mapping system (just worry about builtin types for now)
+    - [ ] debug and increase safety of particularly (large) integral literal parsing
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
 - [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`? or just insert into scope and pass thru the scope

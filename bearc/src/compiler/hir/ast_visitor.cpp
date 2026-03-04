@@ -14,6 +14,7 @@
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
+#include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
 #include <variant>
@@ -152,10 +153,10 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     // check for redefintion
     OptId<DefId> already_defined{};
     switch (kind) {
-    case scope_kind::VARIABLE:
+    case scope_kind::variable:
         already_defined = context.scope(scope).already_defines_variable(name);
         break;
-    case scope_kind::TYPE:
+    case scope_kind::type:
         already_defined = context.scope(scope).already_defines_type(name);
         break;
     default:
@@ -181,10 +182,10 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt, parent);
 
     switch (kind) {
-    case scope_kind::VARIABLE:
+    case scope_kind::variable:
         context.scope(scope).insert_variable(name, def);
         break;
-    case scope_kind::TYPE: {
+    case scope_kind::type: {
         context.scope(scope).insert_type(name, def);
         // delay resolution (don't clutter scope tree with unspecialized/dead definitions)
         if (is_generic) {
@@ -239,7 +240,7 @@ void FileAstVisitor::register_top_level_stmts_registering_ordered_members(
     if (def_vec.empty()) {
         const ast_stmt_t* st = context.def_ast_nodes.cat(parent_def);
         const ast_stmt_type_e statement_type = st->type;
-        const Span span{file, context.c_ast(file).buffer(), top_level_info_for(st).name_tkn};
+        const Span span{file, context.ast(file).buffer(), top_level_info_for(st).name_tkn};
         diag_code code = diag_code::empty_struct;
         switch (statement_type) {
         case AST_STMT_STRUCT_DEF:
@@ -266,7 +267,7 @@ void FileAstVisitor::register_top_level_stmts_registering_ordered_members(
     }
 }
 TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
-    scope_kind kind = scope_kind::VARIABLE;
+    scope_kind kind = scope_kind::variable;
     token_t* scope_prefix_tkn = nullptr;
     token_t* name_tkn = nullptr;
     std::optional<ast_slice_of_stmts_t> stmts{};
@@ -277,45 +278,45 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     case AST_STMT_STRUCT_DEF: {
         name_tkn = stmt->stmt.struct_decl.name;
         stmts = stmt->stmt.struct_decl.fields;
-        kind = scope_kind::TYPE;
+        kind = scope_kind::type;
         is_generic = stmt->stmt.struct_decl.is_generic;
         break;
     }
     case AST_STMT_CONTRACT_DEF: {
         name_tkn = stmt->stmt.contract_decl.name;
         stmts = stmt->stmt.contract_decl.fields;
-        kind = scope_kind::TYPE;
+        kind = scope_kind::type;
         break;
     }
     case AST_STMT_UNION_DEF: {
         name_tkn = stmt->stmt.union_decl.name;
         stmts = stmt->stmt.union_decl.fields;
-        kind = scope_kind::TYPE;
+        kind = scope_kind::type;
         break;
     }
     case AST_STMT_VARIANT_DEF: {
         name_tkn = stmt->stmt.variant_decl.name;
         stmts = stmt->stmt.variant_decl.fields;
-        kind = scope_kind::TYPE;
+        kind = scope_kind::type;
         is_generic = stmt->stmt.variant_decl.is_generic;
         break;
     }
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     case AST_STMT_VARIANT_FIELD_DECL: {
         name_tkn = stmt->stmt.variant_field_decl.name;
-        kind = scope_kind::TYPE;
+        kind = scope_kind::type;
         is_orderable_field = true;
         break;
     }
     case AST_STMT_VAR_DECL: {
         name_tkn = stmt->stmt.var_decl.name;
-        kind = scope_kind::VARIABLE;
+        kind = scope_kind::variable;
         is_orderable_field = true;
         break;
     }
     case AST_STMT_VAR_INIT_DECL: {
         name_tkn = stmt->stmt.var_init_decl.name;
-        kind = scope_kind::VARIABLE;
+        kind = scope_kind::variable;
         is_orderable_field = true;
         break;
     }
@@ -328,20 +329,20 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         } else if (name_slice.len == 1) {
             name_tkn = name_slice.start[0];
         }
-        kind = scope_kind::VARIABLE;
+        kind = scope_kind::variable;
         is_generic = stmt->stmt.fn_decl.is_generic;
         break;
     }
     case AST_STMT_FN_PROTOTYPE: {
         // guranteed to be just one long
         name_tkn = stmt->stmt.fn_prototype.name.start[0];
-        kind = scope_kind::VARIABLE;
+        kind = scope_kind::variable;
         is_generic = stmt->stmt.fn_prototype.is_generic;
         break;
     }
     case AST_STMT_DEFTYPE:
         name_tkn = stmt->stmt.deftype.alias_id;
-        kind = scope_kind::TYPE;
+        kind = scope_kind::type;
         break;
     default:
         break;
@@ -370,6 +371,48 @@ std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt) {
             && stmt->stmt.extern_block.extern_language->start[0] == 'C')
                ? abi_lang::c
                : std::optional<abi_lang>{};
+}
+
+ExecId ExprVisitor::resolve_expr(const ast_expr_t* expr) {
+    // TODO
+    return ExecId{};
+}
+ExecId ExprVisitor::fold_expr_compt(NamedOrAnonScopeId scope, const ast_expr_t* expr, TypeId into) {
+    const Type& into_type = context.type(into);
+    if (!into_type.holds<TypeBuiltin>()) {
+        // TODO error handle
+        return ExecId{};
+    }
+    builtin_type builtin_type = into_type.as<TypeBuiltin>().type;
+    // TODO, handle based on builtin_type and the strucuture of the expr (recurse)
+    switch (expr->type) {
+    case AST_EXPR_ID: {
+        // TODO, add a scope helper that will look up thing..foo..bar in a fixed order like search
+        // namespace, then type
+        // pick up here 20260304
+    }
+    case AST_EXPR_LITERAL:
+    case AST_EXPR_LIST_LITERAL:
+    case AST_EXPR_BINARY:
+    case AST_EXPR_GROUPING:
+    case AST_EXPR_PRE_UNARY:
+    case AST_EXPR_POST_UNARY:
+    case AST_EXPR_SUBSCRIPT:
+    case AST_EXPR_FN_CALL:
+    case AST_EXPR_TYPE:
+    case AST_EXPR_BORROW:
+    case AST_EXPR_STRUCT_INIT:
+    case AST_EXPR_STRUCT_MEMBER_INIT:
+    case AST_EXPR_CLOSURE:
+    case AST_EXPR_VARIANT_DECOMP:
+    case AST_EXPR_BLOCK:
+    case AST_EXPR_MATCH_BRANCH:
+    case AST_EXPR_MATCH:
+    case AST_EXPR_ELSE_MATCH_BRANCH:
+    case AST_EXPR_INVALID:
+        break;
+    }
+    return ExecId{}; // TODO
 }
 
 } // namespace hir

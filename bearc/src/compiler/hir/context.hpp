@@ -49,12 +49,18 @@ class Context {
     [[nodiscard]] FileId get_file(std::filesystem::path& path);
     [[nodiscard]] const char* file_name(FileId id) const;
     [[nodiscard]] FileAst& ast(FileId file_id);
-    [[nodiscard]] const FileAst& c_ast(FileId file_id) const;
+    [[nodiscard]] const FileAst& ast(FileId file_id) const;
+
+    // ------ scoping -----------
     [[nodiscard]] ScopeId root_scope();
     [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
     // makes a named scope with a small capacity
     [[nodiscard]] ScopeId make_small_named_scope(OptId<ScopeId> parent_scope);
     [[nodiscard]] Scope& scope(ScopeId scope);
+    [[nodiscard]] OptId<DefId> look_up_variable(NamedOrAnonScopeId scope, SymbolId sid) const;
+    [[nodiscard]] OptId<DefId> look_up_type(NamedOrAnonScopeId scope, SymbolId sid) const;
+    [[nodiscard]] OptId<DefId> look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) const;
+
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
@@ -101,13 +107,16 @@ class Context {
     void try_print_info();
 
     // converters
-    [[nodiscard]] FileId file_id_idx_to_id(IdIdx<FileId> ididx) const;
-    [[nodiscard]] const Type& ctype(IdIdx<TypeId> ididx) const;
+    [[nodiscard]] FileId file_id(IdIdx<FileId> ididx) const;
+    [[nodiscard]] const Type& type(IdIdx<TypeId> ididx) const;
     [[nodiscard]] Type& type(IdIdx<TypeId> ididx);
-    [[nodiscard]] const Type& ctype(TypeId id) const;
+    [[nodiscard]] const Type& type(TypeId id) const;
     [[nodiscard]] Type& type(TypeId id);
     [[nodiscard]] TypeId type_id(IdIdx<TypeId> tid) const;
+    [[nodiscard]] const Def& def(DefId id) const;
+    [[nodiscard]] const Def& def(IdIdx<DefId> id) const;
     [[nodiscard]] const Exec& exec(ExecId id) const;
+    [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
 
     friend class Scope;
     friend class ScopeAnon;

@@ -30,6 +30,7 @@
 #include <iso646.h>
 #include <stddef.h>
 #include <string_view>
+#include <variant>
 namespace hir {
 
 static constexpr size_t DEFAULT_SYMBOL_ARENA_CAP = 0x10000;
@@ -191,7 +192,7 @@ void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId
                            const token_t* import_path_tkn) {
     // gonna be imported in the previous thing, so top of import stack
     FileId imported_in = import_stack[import_stack.size() - 1];
-    emplace_diagnostic(Span{imported_in, c_ast(imported_in).buffer(), import_path_tkn},
+    emplace_diagnostic(Span{imported_in, ast(imported_in).buffer(), import_path_tkn},
                        diag_code::cyclical_import, diag_type::error,
                        DiagnosticImportStack{file_ids.freeze_small_vec(import_stack)});
 }
@@ -264,9 +265,9 @@ void Context::try_print_info() {
     if (!args->flags[CLI_FLAG_SILENT]) {
         // go thru each file ast to print info
         for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
-            const FileAst& ast = c_ast(fid);
+            const FileAst& aast = ast(fid);
             // 1. print parse-time errors (ast-wise errors)
-            ast.print_all_errors();
+            aast.print_all_errors();
             // 2. print diagnostics (semantic/non-grammatical errors)
             for (const auto d : file_to_diagnostics.cat(fid)) {
                 print_diagnostic(d);
@@ -275,7 +276,7 @@ void Context::try_print_info() {
     }
     // 3. try print out ast-wise information (token tables, pretty-printing)
     for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
-        c_ast(fid).try_print_info(args);
+        ast(fid).try_print_info(args);
     }
     // print more info:
     if (args->flags[CLI_FLAG_LIST_FILES]) {
@@ -373,7 +374,7 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
 
 FileAst& Context::ast(FileId file_id) { return file_asts.at(files.at(file_id).ast_id); }
 
-const FileAst& Context::c_ast(FileId file_id) const {
+const FileAst& Context::ast(FileId file_id) const {
     return file_asts.cat(files.cat(file_id).ast_id);
 }
 
@@ -455,7 +456,7 @@ void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {
 
 Def& Context::def(DefId def_id) { return defs.at(def_id); }
 
-FileId Context::file_id_idx_to_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx); }
+FileId Context::file_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx); }
 
 void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec) {
     IdSlice<DefId> def_slice = def_ids.freeze_small_vec(vec);
@@ -496,7 +497,7 @@ FileId Context::def_to_file_id(DefId def) const { return defs.cat(def).span.file
 Span Context::make_def_name_span(DefId def, const ast_stmt_t* stmt) const {
     auto fid = def_to_file_id(def);
     return Span(
-        fid, c_ast(fid).buffer(),
+        fid, ast(fid).buffer(),
         FileAstVisitor::name_of_ast_decl(stmt).value()); // TODO potentially dangerous unwrap
 }
 
@@ -504,13 +505,46 @@ Span Context::make_top_level_def_name_span(DefId def) const {
     return make_def_name_span(def, def_ast_nodes.cat(def));
 }
 
-const Type& Context::ctype(IdIdx<TypeId> ididx) const { return types.cat(type_ids.cat(ididx)); }
+const Type& Context::type(IdIdx<TypeId> ididx) const { return types.cat(type_ids.cat(ididx)); }
 Type& Context::type(IdIdx<TypeId> ididx) { return types.at(type_ids.at(ididx)); }
-const Type& Context::ctype(TypeId id) const { return types.cat(id); }
+const Type& Context::type(TypeId id) const { return types.cat(id); }
 Type& Context::type(TypeId id) { return types.at(id); }
 TypeId Context::type_id(IdIdx<TypeId> tid) const { return type_ids.cat(tid); }
 CanonicalTypeId Context::emplace_and_get_canonical_type_id(TypeId first_structural_type_id) {
     return canonical_to_type_id.emplace_and_get_id(first_structural_type_id);
 }
 [[nodiscard]] const Exec& Context::exec(ExecId id) const { return execs.cat(id); }
+
+[[nodiscard]] const Def& Context::def(DefId id) const { return defs.cat(id); }
+
+[[nodiscard]] const Exec& Context::exec(IdIdx<ExecId> id) const {
+    return execs.cat(exec_ids.cat(id));
+}
+[[nodiscard]] const Def& Context::def(IdIdx<DefId> id) const { return defs.cat(def_ids.cat(id)); }
+
+OptId<DefId> Context::look_up_variable(NamedOrAnonScopeId scope, SymbolId sid) const {
+    if (std::holds_alternative<ScopeAnonId>(scope)) {
+        auto res = hir::ScopeAnon::look_up_variable(*this, std::get<ScopeAnonId>(scope), sid);
+        return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+    }
+    auto res = hir::Scope::look_up_variable(*this, std::get<ScopeId>(scope), sid);
+    return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+}
+OptId<DefId> Context::look_up_type(NamedOrAnonScopeId scope, SymbolId sid) const {
+    if (std::holds_alternative<ScopeAnonId>(scope)) {
+        auto res = hir::ScopeAnon::look_up_type(*this, std::get<ScopeAnonId>(scope), sid);
+        return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+    }
+    auto res = hir::Scope::look_up_type(*this, std::get<ScopeId>(scope), sid);
+    return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+}
+OptId<DefId> Context::look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) const {
+    if (std::holds_alternative<ScopeAnonId>(scope)) {
+        auto res = hir::ScopeAnon::look_up_namespace(*this, std::get<ScopeAnonId>(scope), sid);
+        return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+    }
+    auto res = hir::Scope::look_up_variable(*this, std::get<ScopeId>(scope), sid);
+    return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+}
+
 } // namespace hir
