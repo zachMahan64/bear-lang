@@ -10,6 +10,7 @@
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/type.hpp"
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"
 #include <cmath>
@@ -62,6 +63,12 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::value_cannot_be_compt:
         return "cannot resolve value at compile-time";
         break;
+    case diag_code::cannot_convert_to_some_builtin_type:
+        return "cannot convert to built-in type: ";
+        break;
+    case diag_code::cannot_resolve_at_compt:
+        return "cannot resolve expression at compile-time";
+        break;
     }
     return "";
 }
@@ -111,6 +118,10 @@ void Diagnostic::print_info_value(const Context& context) const {
 
     const auto vs = Ovld{
         [&](DiagnosticNoOtherInfo) { line(""); },
+        [&](DiagnosticCannotConvertToBuiltinType t) {
+            line((std::stringstream{} << "could convert to type: " << builtin_type_to_cstr(t.type))
+                     .str());
+        },
         [&](DiagnosticImportStack import_stack) {
             import_stack_helper(import_stack.files);
             /*

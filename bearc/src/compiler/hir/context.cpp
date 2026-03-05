@@ -118,11 +118,9 @@ int Context::error_count() const noexcept {
 int Context::warning_count() const noexcept { return static_cast<int>(warning_cnt); }
 int Context::note_count() const noexcept { return static_cast<int>(note_cnt); }
 
-SymbolId Context::get_symbol_id(std::string_view str) {
-    return get_symbol_id(str.data(), str.length());
-}
-
-SymbolId Context::get_symbol_id(const char* start, size_t len) {
+SymbolId Context::symbol_id(std::string_view str) { return symbol_id(str.data(), str.length()); }
+SymbolId Context::symbol_id(const token_t* tkn) { return symbol_id(tkn->start, tkn->len); }
+SymbolId Context::symbol_id(const char* start, size_t len) {
     OptId<SymbolId> maybe_symbol = str_to_symbol_id_map.atn(start, len);
     if (maybe_symbol.has_value()) {
         return maybe_symbol.as_id();
@@ -140,20 +138,20 @@ SymbolId Context::get_symbol_id(const char* start, size_t len) {
 }
 SymbolId Context::get_symbol_id_for_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
-    return get_symbol_id(tkn->start, tkn->len);
+    return symbol_id(tkn->start, tkn->len);
 }
 SymbolId Context::get_symbol_id_for_str_lit_token(token_t* tkn) {
     assert(tkn->type == TOK_STR_LIT);
-    return get_symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes
+    return symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes
 }
 
 FileId Context::provide_root_file(const char* file_name) {
-    SymbolId path_symbol = get_symbol_id(file_name, strlen(file_name));
-    FileId file_id = get_file(path_symbol);
+    SymbolId path_symbol = symbol_id(file_name, strlen(file_name));
+    FileId file_id = file(path_symbol);
     return file_id;
 }
 
-FileId Context::get_file(SymbolId path_symbol) {
+FileId Context::file(SymbolId path_symbol) {
     // check if file has already been requested
     OptId<FileId> maybe_file_id = symbol_id_to_file_id_map.at(path_symbol);
     if (maybe_file_id.has_value()) {
@@ -170,9 +168,9 @@ FileId Context::get_file(SymbolId path_symbol) {
     return file_id;
 }
 
-FileId Context::get_file(std::filesystem::path& path) {
-    SymbolId symbol_id = get_symbol_id(path.c_str());
-    return get_file(symbol_id);
+FileId Context::file(std::filesystem::path& path) {
+    SymbolId symbol = symbol_id(path.c_str());
+    return file(symbol);
 }
 FileAstId Context::emplace_ast(const char* file_name) {
     return this->file_asts.emplace_and_get_id(file_name);
@@ -358,7 +356,7 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
                            diag_code::imported_file_dne, diag_type::error);
         return OptId<FileId>{};
     }
-    return get_file(maybe_path.value());
+    return file(maybe_path.value());
 }
 
 DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool statik,
@@ -547,4 +545,31 @@ OptId<DefId> Context::look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) 
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
 
+OptId<DefId> Context::find_variable_from_scoped_id(NamedOrAnonScopeId scope,
+                                                   IdSlice<SymbolId> id_slice) {
+    NamedOrAnonScopeId curr_scope = scope;
+    for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
+        SymbolId sid = symbol_ids.cat(sidx);
+        // base case, last elem should be the variable
+        if (sidx == id_slice.last_elem()) {
+            return look_up_variable(curr_scope, sid);
+        }
+        if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
+            curr_scope = def(maybe_mod.as_id()).as<DefModule>().scope;
+        } else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
+            curr_scope = scope_for_top_level_def(maybe_type.as_id());
+        }
+    }
+    // never entered the loop, so not found
+    return OptId<DefId>{};
+}
+
+IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
+    llvm::SmallVector<SymbolId> vec{};
+    for (size_t i = 0; i < token_slice.len; i++) {
+        const token_t* tkn = token_slice.start[i];
+        vec.push_back(symbol_id(tkn));
+    }
+    return symbol_ids.freeze_small_vec(vec);
+}
 } // namespace hir

@@ -12,11 +12,13 @@
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
+#include "compiler/hir/exec.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
+#include <utility>
 #include <variant>
 
 namespace hir {
@@ -377,30 +379,64 @@ ExecId ExprVisitor::resolve_expr(const ast_expr_t* expr) {
     // TODO
     return ExecId{};
 }
-ExecId ExprVisitor::fold_expr_compt(NamedOrAnonScopeId scope, const ast_expr_t* expr, TypeId into) {
+OptId<ExecId> ExprVisitor::fold_top_level_builtin_compt_expr(FileId fid, NamedOrAnonScopeId scope,
+                                                             const ast_expr_t* expr, TypeId into) {
+    auto emplace_e = [&](ExecValue val) {
+        return context.execs.emplace_and_get_id(
+            context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
+    };
+
     const Type& into_type = context.type(into);
     if (!into_type.holds<TypeBuiltin>()) {
-        // TODO error handle
-        return ExecId{};
+        context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                                   diag_code::cannot_resolve_at_compt, diag_type::error);
+        return OptId<ExecId>{};
     }
     builtin_type builtin_type = into_type.as<TypeBuiltin>().type;
-    // TODO, handle based on builtin_type and the strucuture of the expr (recurse)
+    // TODO, finish handling based on builtin_type and the strucuture of the expr (recurse)
+    std::optional<ExecExprComptConstant> value;
     switch (expr->type) {
     case AST_EXPR_ID: {
-        // TODO, add a scope helper that will look up thing..foo..bar in a fixed order like search
-        // namespace, then type
-        // pick up here 20260304
+        auto maybe_def = context.find_variable_from_scoped_id(
+            scope, context.symbol_slice(expr->expr.id.slice));
+        if (maybe_def.has_value()) {
+            // happy path, canonicalize compt value
+            DefId did = maybe_def.as_id();
+            const Def& def = context.def(did);
+            if (def.holds<DefVariable>() && def.compt) {
+                value = context.execs.cat(def.as<DefVariable>().compt_value.as_id())
+                            .as<ExecExprComptConstant>();
+            }
+        }
+        break;
     }
-    case AST_EXPR_LITERAL:
-    case AST_EXPR_LIST_LITERAL:
+    case AST_EXPR_LITERAL: {
+        // TODO, handle
+        switch (expr->expr.literal.tkn->type) {
+        case TOK_CHAR_LIT:
+        case TOK_INT_LIT:
+        case TOK_FLOAT_LIT:
+        case TOK_STR_LIT:
+        case TOK_BOOL_LIT_FALSE:
+        case TOK_BOOL_LIT_TRUE:
+        case TOK_NULL_LIT:
+            break;
+        default:
+            std::unreachable();
+            break;
+        }
+    }
+    // TODO -----------------
     case AST_EXPR_BINARY:
     case AST_EXPR_GROUPING:
     case AST_EXPR_PRE_UNARY:
     case AST_EXPR_POST_UNARY:
+    // TODO ^^^^^^^^^^^^^^^^^
     case AST_EXPR_SUBSCRIPT:
     case AST_EXPR_FN_CALL:
     case AST_EXPR_TYPE:
     case AST_EXPR_BORROW:
+    case AST_EXPR_LIST_LITERAL:
     case AST_EXPR_STRUCT_INIT:
     case AST_EXPR_STRUCT_MEMBER_INIT:
     case AST_EXPR_CLOSURE:
@@ -412,7 +448,20 @@ ExecId ExprVisitor::fold_expr_compt(NamedOrAnonScopeId scope, const ast_expr_t* 
     case AST_EXPR_INVALID:
         break;
     }
-    return ExecId{}; // TODO
+    if (value.has_value()) {
+        if (!value->matches_type(builtin_type)) {
+            context.emplace_diagnostic(
+                Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
+            return OptId<ExecId>{};
+        }
+        return emplace_e(value.value());
+    }
+    context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                               diag_code::cannot_resolve_at_compt, diag_type::error);
+// as to not duplicate compt errors from bubbling up
+ret_without_diag:
+    return OptId<ExecId>{};
 }
 
 } // namespace hir

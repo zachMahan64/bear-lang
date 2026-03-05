@@ -64,6 +64,7 @@ set(SRC
     src/compiler/hir/ast_visitor.cpp
     src/compiler/hir/diagnostic.cpp
     src/compiler/hir/type.cpp
+    src/compiler/hir/exec.cpp
 
 )
 

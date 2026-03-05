@@ -12,6 +12,7 @@
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/type.hpp"
 #include "compiler/hir/variant_helpers.hpp"
 #include <cstdint>
 #include <variant>
@@ -54,12 +55,47 @@ struct ExecExprIdentifier {
 };
 
 // SymbolId corresponds to a builtin type
-using ConstantValue = std::variant<SymbolId, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t,
-                                   int64_t, uint64_t, char, float, double>;
+using ConstantValue
+    = std::variant</* 0 */ SymbolId, /* 1 */ int8_t, /*2*/ uint8_t, /*3*/ int16_t, /*4*/ uint16_t,
+                   /*5*/ int32_t, /*6*/ uint32_t,
+                   /*7*/ int64_t, /*8*/ uint64_t, /*9*/ char, /*10*/ float, /*11*/ double,
+                   /* 12 */ std::nullptr_t>;
 
 /// represents literals and true compt values
 struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     ConstantValue value;
+    bool matches_type(builtin_type type) const {
+        switch (value.index()) {
+        case 0:
+            return type == builtin_type::str;
+        case 1:
+            return type == builtin_type::i8;
+        case 2:
+            return type == builtin_type::u8;
+        case 3:
+            return type == builtin_type::i16;
+        case 4:
+            return type == builtin_type::u16;
+        case 5:
+            return type == builtin_type::i32;
+        case 6:
+            return type == builtin_type::u32;
+        case 7:
+            return type == builtin_type::i64;
+        case 8:
+            return type == builtin_type::u64;
+        case 9:
+            return type == builtin_type::charr;
+        case 10:
+            return type == builtin_type::f32;
+        case 11:
+            return type == builtin_type::f64;
+        case 12:
+            return type == builtin_type::nullpointer;
+        default:
+            return false;
+        }
+    }
 };
 
 struct ExecExprListLiteral {
@@ -184,7 +220,7 @@ struct Exec : NodeWithVariantValue<Exec> {
     ExecValue value;
     const Span span;
     bool compt;
-    Exec(Context& ctx, ExecValue value, Span span, bool compt);
+    Exec(Context& ctx, ExecValue value, Span span, bool should_be_compt);
     static bool is_equivalent(const Context& ctx, ExecId eid1, ExecId eid2);
 
   private:

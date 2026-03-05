@@ -52,8 +52,10 @@ class ExprVisitor {
 
   public:
     [[nodiscard]] ExecId resolve_expr(const ast_expr_t* expr);
-    [[nodiscard]] ExecId fold_expr_compt(NamedOrAnonScopeId scope, const ast_expr_t* expr,
-                                         TypeId into);
+    [[nodiscard]] OptId<ExecId> fold_top_level_builtin_compt_expr(FileId fid,
+                                                                  NamedOrAnonScopeId scope,
+                                                                  const ast_expr_t* expr,
+                                                                  TypeId into);
 };
 
 } // namespace hir

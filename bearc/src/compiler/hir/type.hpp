@@ -40,7 +40,10 @@ enum class builtin_type : uint8_t {
     f64,
     voidd,
     str,
+    nullpointer,
 };
+
+const char* builtin_type_to_cstr(builtin_type t);
 
 struct TypeBuiltin {
     builtin_type type;

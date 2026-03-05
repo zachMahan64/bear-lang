@@ -43,10 +43,11 @@ class Context {
     int warning_count() const noexcept;
     int note_count() const noexcept;
     // ----- accessors / emplacers --------
-    [[nodiscard]] SymbolId get_symbol_id(const char* start, size_t len);
-    [[nodiscard]] SymbolId get_symbol_id(std::string_view str);
-    [[nodiscard]] FileId get_file(SymbolId path);
-    [[nodiscard]] FileId get_file(std::filesystem::path& path);
+    [[nodiscard]] SymbolId symbol_id(const token_t* tkn);
+    [[nodiscard]] SymbolId symbol_id(const char* start, size_t len);
+    [[nodiscard]] SymbolId symbol_id(std::string_view str);
+    [[nodiscard]] FileId file(SymbolId path);
+    [[nodiscard]] FileId file(std::filesystem::path& path);
     [[nodiscard]] const char* file_name(FileId id) const;
     [[nodiscard]] FileAst& ast(FileId file_id);
     [[nodiscard]] const FileAst& ast(FileId file_id) const;
@@ -66,6 +67,9 @@ class Context {
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
     /// indicates resolution state of a definition
     Def::resol_state resol_state_of(DefId def) const;
+    IdSlice<SymbolId> symbol_slice(token_ptr_slice_t token_slice);
+    /// finds a variable and attempts to resolve definitions on the way to it
+    OptId<DefId> find_variable_from_scoped_id(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice);
 
     // diagnostics
     void handle_bump_diag_counts(diag_code code, diag_type type);
@@ -122,6 +126,7 @@ class Context {
     friend class ScopeAnon;
     friend class FileAstVisitor;
     friend class TopLevelVisitor;
+    friend class ExprVisitor;
 
   private:
     // containers:

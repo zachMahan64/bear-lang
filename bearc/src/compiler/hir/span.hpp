@@ -13,7 +13,6 @@
 #include "compiler/token.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <string_view>
 
 namespace hir {

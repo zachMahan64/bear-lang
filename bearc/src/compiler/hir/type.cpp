@@ -286,4 +286,41 @@ CanonicalTypeId CanonicalTypeTable::canonical(TypeId tid) {
     return new_cid;
 }
 
+const char* builtin_type_to_cstr(builtin_type t) {
+    switch (t) {
+    case builtin_type::u8:
+        return "u8";
+    case builtin_type::i8:
+        return "i8";
+    case builtin_type::u16:
+        return "u16";
+    case builtin_type::i16:
+        return "i16";
+    case builtin_type::u32:
+        return "u32";
+    case builtin_type::i32:
+        return "i32";
+    case builtin_type::u64:
+        return "u64";
+    case builtin_type::i64:
+        return "i64";
+    case builtin_type::usize:
+        return "usize";
+    case builtin_type::charr:
+        return "char";
+    case builtin_type::f32:
+        return "f32";
+    case builtin_type::f64:
+        return "f64";
+    case builtin_type::voidd:
+        return "void";
+    case builtin_type::str:
+        return "str";
+        break;
+    case builtin_type::nullpointer:
+        return "nulltpr";
+        break;
+    }
+}
+
 } // namespace hir

@@ -11,6 +11,7 @@
 
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/type.hpp"
 #include "compiler/hir/variant_helpers.hpp"
 #include <cstdint>
 #include <variant>
@@ -33,6 +34,8 @@ enum class diag_code : uint8_t {
     circular_definition_passes_thru,
     circular_definition_origin,
     value_cannot_be_compt,
+    cannot_convert_to_some_builtin_type, // TODO make multiline
+    cannot_resolve_at_compt,             // TODO make multiline
 };
 enum class diag_type : uint8_t { error, warning, note };
 
@@ -40,8 +43,12 @@ struct DiagnosticNoOtherInfo {};
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
 };
+struct DiagnosticCannotConvertToBuiltinType {
+    builtin_type type;
+};
 
-using DiagnosticValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack>;
+using DiagnosticValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack,
+                                     DiagnosticCannotConvertToBuiltinType>;
 
 struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 

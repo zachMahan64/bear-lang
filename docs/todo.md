@@ -34,8 +34,9 @@
     - [x] the plan is to delay generic top level instatiation (2.a) until first mention (this is logical), and then resolve concrete-ified members in phase 2.b 
 
 ##### hir phase 2.a:
+- all while in the process of *resolivng* top-level declarations:
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
-    - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
+    - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
     - [ ] implement kind of operator <--> type mapping system (just worry about builtin types for now)
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
@@ -47,6 +48,6 @@
     - [ ] add a StringifyType seed for TypeTransformer
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### Medium term
-- [ ] HIR
+- [ ] multi-line diagnostics
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 
 - [ ] LLVM IR

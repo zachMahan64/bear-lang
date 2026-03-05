@@ -16,6 +16,28 @@ template <class... Ts> struct Ovld : Ts... {
 };
 template <class... Ts> Ovld(Ts...) -> Ovld<Ts...>;
 
+namespace priv_impl_variant_helper {
+template <typename Variant, std::size_t... Is>
+bool variant_equal_impl(const Variant& a, const Variant& b, std::index_sequence<Is...> seq) {
+    using Fn = bool (*)(const Variant&, const Variant&);
+
+    static constexpr Fn table[] = {+[](const Variant& x, const Variant& y) -> bool {
+        using T = std::variant_alternative_t<Is, Variant>;
+        return std::get<T>(x) == std::get<T>(y);
+    }...};
+
+    return table[a.index()](a, b);
+}
+} // namespace priv_impl_variant_helper
+template <typename... Ts>
+bool variant_equal(const std::variant<Ts...>& a, const std::variant<Ts...>& b) {
+    if (a.index() != b.index()) {
+        return false;
+    }
+
+    return priv_impl_variant_helper::variant_equal_impl(a, b, std::index_sequence_for<Ts...>{});
+}
+
 // helper for structs with a subvalue that is a variant (see hir::Exec, hir::Def, etc. for examples)
 template <typename V> struct NodeWithVariantValue {
   private:
@@ -56,25 +78,4 @@ template <typename V> struct NodeWithVariantValue {
 
     friend V;
 };
-namespace priv_impl_variant_helper {
-template <typename Variant, std::size_t... Is>
-bool variant_equal_impl(const Variant& a, const Variant& b, std::index_sequence<Is...> seq) {
-    using Fn = bool (*)(const Variant&, const Variant&);
-
-    static constexpr Fn table[] = {+[](const Variant& x, const Variant& y) -> bool {
-        using T = std::variant_alternative_t<Is, Variant>;
-        return std::get<T>(x) == std::get<T>(y);
-    }...};
-
-    return table[a.index()](a, b);
-}
-} // namespace priv_impl_variant_helper
-template <typename... Ts>
-bool variant_equal(const std::variant<Ts...>& a, const std::variant<Ts...>& b) {
-    if (a.index() != b.index()) {
-        return false;
-    }
-
-    return priv_impl_variant_helper::variant_equal_impl(a, b, std::index_sequence_for<Ts...>{});
-}
 #endif
