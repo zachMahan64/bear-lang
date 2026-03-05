@@ -7,9 +7,12 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/top_level_def_visitor.hpp"
+#include "compiler/ast/expr.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/diagnostic.hpp"
+#include "compiler/hir/exec.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/type.hpp"
 #include <cassert>
 
 namespace hir {
@@ -124,7 +127,8 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
 }
 
 OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
-                                                           const ast_expr_t* expr, TypeId into) {
+                                                           const ast_expr_t* expr,
+                                                           TypeId into_tid) {
     auto emplace_e = [&](ExecValue val) {
         return context.execs.emplace_and_get_id(
             context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
@@ -132,15 +136,15 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 
     auto visit_def = [&](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
 
-    const Type& into_type = context.type(into);
+    const Type& into_type = context.type(into_tid);
     if (!into_type.holds<TypeBuiltin>()) {
         context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                                    diag_code::cannot_resolve_at_compt, diag_type::error);
         return OptId<ExecId>{};
     }
-    builtin_type builtin_type = into_type.as<TypeBuiltin>().type;
+    builtin_type into_builtin_type = into_type.as<TypeBuiltin>().type;
     // TODO, finish handling based on builtin_type and the strucuture of the expr (recurse)
-    std::optional<ExecExprComptConstant> value;
+    std::optional<ExecExprComptConstant> maybe_value;
     switch (expr->type) {
     case AST_EXPR_ID: {
         auto maybe_def = context.find_variable_from_scoped_id(
@@ -150,22 +154,35 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
             DefId did = maybe_def.as_id();
             const Def& def = visit_def(did);
             if (def.holds<DefVariable>() && def.compt) {
-                value = context.execs.cat(def.as<DefVariable>().compt_value.as_id())
-                            .as<ExecExprComptConstant>();
+                maybe_value = context.execs.cat(def.as<DefVariable>().compt_value.as_id())
+                                  .as<ExecExprComptConstant>();
             }
         }
         break;
     }
     case AST_EXPR_LITERAL: {
+        const token_t* tkn = expr->expr.literal.tkn;
         // TODO, handle
-        switch (expr->expr.literal.tkn->type) {
+        switch (tkn->type) {
         case TOK_CHAR_LIT:
+            maybe_value = ExecExprComptConstant{tkn->val.character};
+            break;
         case TOK_INT_LIT:
+            maybe_value = ExecExprComptConstant{tkn->val.integral};
+            break;
         case TOK_FLOAT_LIT:
+            maybe_value = ExecExprComptConstant{static_cast<float>(tkn->val.floating)};
+            break;
         case TOK_STR_LIT:
+            maybe_value = ExecExprComptConstant{context.symbol_id(tkn)};
+            break;
         case TOK_BOOL_LIT_FALSE:
+            maybe_value = ExecExprComptConstant{false};
+            break;
         case TOK_BOOL_LIT_TRUE:
+            maybe_value = ExecExprComptConstant{true};
         case TOK_NULL_LIT:
+            maybe_value = ExecExprComptConstant{nullptr};
             break;
         default:
             std::unreachable();
@@ -173,8 +190,15 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
         }
     }
     // TODO -----------------
-    case AST_EXPR_BINARY:
-    case AST_EXPR_GROUPING:
+    case AST_EXPR_BINARY: {
+        // TODO operator and type handlers
+        break;
+    }
+    case AST_EXPR_GROUPING: {
+        // get inner
+        return solve_compt_expr(fid, scope, expr->expr.grouping.expr, into_tid);
+        break;
+    }
     case AST_EXPR_PRE_UNARY:
     case AST_EXPR_POST_UNARY:
     // TODO ^^^^^^^^^^^^^^^^^
@@ -192,22 +216,43 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
     case AST_EXPR_MATCH:
     case AST_EXPR_ELSE_MATCH_BRANCH:
     case AST_EXPR_INVALID:
-        break;
+        // not a valid compile-time expr
+        context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                                   diag_code::cannot_resolve_at_compt, diag_type::error);
+        goto ret_without_diag;
     }
-    if (value.has_value()) {
-        if (!value->matches_type(builtin_type)) {
+    if (maybe_value.has_value()) {
+        auto maybe_converted = maybe_value.value().try_up_convert_to(into_builtin_type);
+        if (!maybe_value->matches_type(into_builtin_type)) {
             context.emplace_diagnostic(
                 Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                 diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
             return OptId<ExecId>{};
         }
-        return emplace_e(value.value());
+        assert(maybe_converted.value().matches_type(into_builtin_type));
+        return emplace_e(maybe_converted.value());
     }
     context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                                diag_code::cannot_resolve_at_compt, diag_type::error);
 // as to not duplicate compt errors from bubbling up
 ret_without_diag:
     return OptId<ExecId>{};
+}
+
+[[nodiscard]] OptId<ExecId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
+                                                               const ast_type_t* type) {
+    // TODO
+    switch (type->tag) {
+    case AST_TYPE_BASE:
+    case AST_TYPE_REF_PTR:
+    case AST_TYPE_ARR:
+    case AST_TYPE_SLICE:
+    case AST_TYPE_GENERIC:
+    case AST_TYPE_FN_PTR:
+    case AST_TYPE_VARIADIC:
+    case AST_TYPE_INVALID:
+        break;
+    }
 }
 
 } // namespace hir

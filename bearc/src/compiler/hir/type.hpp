@@ -41,6 +41,7 @@ enum class builtin_type : uint8_t {
     voidd,
     str,
     nullpointer,
+    boolean,
 };
 
 const char* builtin_type_to_cstr(builtin_type t);
@@ -207,9 +208,7 @@ struct Type : NodeWithVariantValue<Type> {
     bool mut;
     void set_value(TypeValue value) { this->value = value; }
     // compares identical types (including mut)
-    static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2) {
-        return TypeTransformer<TypeComparator<DoConsiderMut>>{ctx}(tid1, tid2);
-    }
+    static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2);
 };
 
 } // namespace hir

@@ -9,7 +9,461 @@
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/diagnostic.hpp"
+#include <cstddef>
+#include <cstdint>
 namespace hir {
+
+std::optional<ExecExprComptConstant> ExecExprComptConstant::try_up_convert_to(builtin_type type) {
+    using OptConst = std::optional<ExecExprComptConstant>;
+    auto to_optconst = +[](ConstantValue constval) -> OptConst {
+        return OptConst{ExecExprComptConstant{constval}};
+    };
+    auto none = +[] { return OptConst{}; };
+    switch (value.index()) {
+    case 0:
+        // builtin_type::str;
+        switch (type) {
+        case builtin_type::str:
+            return *this;
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+        case builtin_type::u64:
+        case builtin_type::i64:
+        case builtin_type::usize:
+        case builtin_type::charr:
+        case builtin_type::f32:
+        case builtin_type::f64:
+        case builtin_type::voidd:
+        case builtin_type::nullpointer:
+        case builtin_type::boolean:
+            break;
+        }
+        break;
+    case 1: {
+        // builtin_type::i8
+        const int8_t val = as<int8_t>();
+        switch (type) {
+        case builtin_type::u8:
+            return to_optconst(ConstantValue{static_cast<uint8_t>(val)});
+        case builtin_type::i8:
+            return *this;
+        case builtin_type::u16:
+            return to_optconst(ConstantValue{static_cast<uint16_t>(val)});
+        case builtin_type::i16:
+            return to_optconst(ConstantValue{static_cast<int16_t>(val)});
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(val)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 2: {
+        // builtin_type::u8;
+        const uint8_t val = as<uint8_t>();
+        switch (type) {
+        case builtin_type::u8:
+            return *this;
+        case builtin_type::i8:
+            return to_optconst(ConstantValue{static_cast<uint8_t>(val)});
+        case builtin_type::u16:
+            return to_optconst(ConstantValue{static_cast<uint16_t>(val)});
+        case builtin_type::i16:
+            return to_optconst(ConstantValue{static_cast<int16_t>(val)});
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(val)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 3: {
+        // builtin_type::i16;
+        const int16_t val = as<int16_t>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+            return none();
+        case builtin_type::u16:
+            return to_optconst(ConstantValue{static_cast<uint16_t>(val)});
+        case builtin_type::i16:
+            return *this;
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(val)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 4: {
+        // builtin_type::u16;
+        const uint16_t val = as<uint16_t>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+            return none();
+        case builtin_type::u16:
+            return *this;
+        case builtin_type::i16:
+            return to_optconst(ConstantValue{static_cast<int16_t>(val)});
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(val)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 5: {
+        // builtin_type::i32;
+        const int32_t val = as<int32_t>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+            return none();
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
+        case builtin_type::i32:
+            return *this;
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 6: {
+        // builtin_type::u32;
+        const uint32_t val = as<uint32_t>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+            return none();
+        case builtin_type::u32:
+            return *this;
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(val)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 7: {
+        // builtin_type::i64;
+        const int64_t val = as<int64_t>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+            return none();
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return *this;
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 8: {
+        // builtin_type::u64;
+        const uint64_t val = as<uint64_t>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+            return none();
+        case builtin_type::u64:
+            return *this;
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 9: {
+        // builtin_type::charr;
+        const char val = as<char>();
+        switch (type) {
+        case builtin_type::u8:
+            return to_optconst(ConstantValue{static_cast<uint8_t>(val)});
+        case builtin_type::i8:
+            return to_optconst(ConstantValue{static_cast<int8_t>(val)});
+        case builtin_type::u16:
+            return to_optconst(ConstantValue{static_cast<uint16_t>(val)});
+        case builtin_type::i16:
+            return to_optconst(ConstantValue{static_cast<int16_t>(val)});
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(val)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
+        case builtin_type::usize:
+            return to_optconst(ConstantValue{static_cast<size_t>(val)});
+        case builtin_type::charr:
+            return to_optconst(ConstantValue{static_cast<char>(val)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(val)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+        }
+    }
+    case 10: {
+        // builtin_type::f32;
+        const float val = as<float>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+        case builtin_type::u64:
+        case builtin_type::i64:
+        case builtin_type::usize:
+        case builtin_type::charr:
+            return none();
+        case builtin_type::f32:
+            return *this;
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(val)});
+            break;
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+            break;
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+            break;
+        }
+    }
+    case 11: {
+        // builtin_type::f64;
+        const double val = as<double>();
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+        case builtin_type::u64:
+        case builtin_type::i64:
+        case builtin_type::usize:
+        case builtin_type::charr:
+        case builtin_type::f32:
+            return none();
+        case builtin_type::f64:
+            return *this;
+            break;
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+            break;
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(val)});
+            break;
+        }
+    }
+    case 12: {
+        // builtin_type::nullpointer;
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+        case builtin_type::u64:
+        case builtin_type::i64:
+        case builtin_type::usize:
+        case builtin_type::charr:
+        case builtin_type::f32:
+        case builtin_type::f64:
+        case builtin_type::voidd:
+        case builtin_type::str:
+            return none();
+        case builtin_type::nullpointer:
+            return *this;
+            break;
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{false});
+            break;
+        }
+    }
+    case 13: {
+        // builtin_type::boolean;
+        switch (type) {
+        case builtin_type::u8:
+        case builtin_type::i8:
+        case builtin_type::u16:
+        case builtin_type::i16:
+        case builtin_type::u32:
+        case builtin_type::i32:
+        case builtin_type::u64:
+        case builtin_type::i64:
+        case builtin_type::usize:
+        case builtin_type::charr:
+        case builtin_type::f32:
+        case builtin_type::f64:
+        case builtin_type::voidd:
+        case builtin_type::str:
+        case builtin_type::nullpointer:
+            return none();
+        case builtin_type::boolean:
+            return *this;
+            break;
+        }
+    }
+    default:
+        break;
+    }
+    assert(false && "unconsidered builtin type");
+    return OptConst{};
+}
 
 Exec::Exec(Context& ctx, ExecValue value, Span span, bool should_be_compt)
     : value{value}, span{span} {

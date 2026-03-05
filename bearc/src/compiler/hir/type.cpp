@@ -320,7 +320,14 @@ const char* builtin_type_to_cstr(builtin_type t) {
     case builtin_type::nullpointer:
         return "nulltpr";
         break;
+    case builtin_type::boolean:
+        return "bool";
+        break;
     }
 }
-
+bool Type::is_same(const Context& ctx, TypeId tid1, TypeId tid2) {
+    return ctx.type(tid1).canonical == ctx.type(tid2).canonical;
+    // to check structurally:
+    // return TypeTransformer<TypeComparator<DoConsiderMut>>{ctx}(tid1, tid2);
+}
 } // namespace hir

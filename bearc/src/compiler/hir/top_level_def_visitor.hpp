@@ -53,6 +53,18 @@ class TopLevelConstantExprSolver {
                                                  const ast_expr_t* expr, TypeId into);
 };
 
+class TopLevelTypeResolver {
+    TopLevelDefVisitor& def_visitor;
+    Context& context;
+    explicit TopLevelTypeResolver(Context& ctx, TopLevelDefVisitor& def_visitor)
+        : context{ctx}, def_visitor{def_visitor} {}
+
+  public:
+    // resolves a mentioned type at the top level
+    [[nodiscard]] OptId<ExecId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
+                                             const ast_type_t* type);
+};
+
 } // namespace hir
 
 #endif

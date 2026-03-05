@@ -15,6 +15,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/variant_helpers.hpp"
 #include <cstdint>
+#include <optional>
 #include <variant>
 
 namespace hir {
@@ -59,7 +60,7 @@ using ConstantValue
     = std::variant</* 0 */ SymbolId, /* 1 */ int8_t, /*2*/ uint8_t, /*3*/ int16_t, /*4*/ uint16_t,
                    /*5*/ int32_t, /*6*/ uint32_t,
                    /*7*/ int64_t, /*8*/ uint64_t, /*9*/ char, /*10*/ float, /*11*/ double,
-                   /* 12 */ std::nullptr_t>;
+                   /* 12 */ std::nullptr_t, /* 13 */ bool>;
 
 /// represents literals and true compt values
 struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
@@ -92,10 +93,16 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
             return type == builtin_type::f64;
         case 12:
             return type == builtin_type::nullpointer;
+        case 13:
+            return type == builtin_type::boolean;
         default:
+            assert(false && "unconsidered builtin type");
             return false;
         }
     }
+    // returns none if conversion fails, diagnostics must be reported outside of this method
+    [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type);
+    ExecExprComptConstant(ConstantValue constval) : value{constval} {}
 };
 
 struct ExecExprListLiteral {
