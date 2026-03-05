@@ -125,8 +125,8 @@ class Context {
     friend class Scope;
     friend class ScopeAnon;
     friend class FileAstVisitor;
-    friend class TopLevelVisitor;
-    friend class ExprVisitor;
+    friend class TopLevelDefVisitor;
+    friend class TopLevelConstantExprSolver;
 
   private:
     // containers:

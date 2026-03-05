@@ -14,7 +14,7 @@
 
 namespace hir {
 
-void TopLevelVisitor::resolve_top_level_definitions() {
+void TopLevelDefVisitor::resolve_top_level_definitions() {
     assert(!this->began_resolution && "already began resolving top level declarations");
     this->began_resolution = true;
     for (auto d = context.defs.begin_id(); d != context.defs.end_id(); d++) {
@@ -22,7 +22,7 @@ void TopLevelVisitor::resolve_top_level_definitions() {
     }
 }
 // TODO allow for passing of ast_generic_args_t* for generic instatiations?
-DefId TopLevelVisitor::visit(DefId def) {
+DefId TopLevelDefVisitor::visit(DefId def) {
     if (context.resol_state_of(def) == Def::resol_state::resolved) {
         return def;
     }
@@ -32,7 +32,7 @@ DefId TopLevelVisitor::visit(DefId def) {
     return d;
 }
 
-DefId TopLevelVisitor::visit_as_dependent(DefId def) {
+DefId TopLevelDefVisitor::visit_as_dependent(DefId def) {
     if (context.resol_state_of(def) == Def::resol_state::in_progress) {
         // reports the double diagnostic revealing the origin of the circular def
         report_cycle(def);
@@ -41,13 +41,13 @@ DefId TopLevelVisitor::visit_as_dependent(DefId def) {
     }
     return visit(def);
 }
-DefId TopLevelVisitor::visit_as_transparent(DefId def) {
+DefId TopLevelDefVisitor::visit_as_transparent(DefId def) {
     // in_progress is fine here since this is a transparent visitation (pointer or reference, so no
     // information dependency)
     return visit(def);
 }
 
-DefId TopLevelVisitor::resolve_def(DefId def) {
+DefId TopLevelDefVisitor::resolve_def(DefId def) {
     const ast_stmt* stmt = context.def_ast_nodes.cat(def);
     ScopeId scope = context.scope_for_top_level_def(def);
     // TODO write handlers
@@ -87,7 +87,7 @@ DefId TopLevelVisitor::resolve_def(DefId def) {
     return def;
 }
 
-void TopLevelVisitor::report_cycle(DefId culprit) {
+void TopLevelDefVisitor::report_cycle(DefId culprit) {
     // culprit is the origin, but accomplice has just referred to the culprit
     assert(!def_stack.empty());
     DefId accomplice = def_stack[def_stack.size() - 1];
@@ -121,6 +121,93 @@ void TopLevelVisitor::report_cycle(DefId culprit) {
     }
     // unreachable since we *should* find the culprit in the def_stack
     assert(false && "failed to find culprit defintion when reporting a circular defintion");
+}
+
+OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
+                                                           const ast_expr_t* expr, TypeId into) {
+    auto emplace_e = [&](ExecValue val) {
+        return context.execs.emplace_and_get_id(
+            context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
+    };
+
+    auto visit_def = [&](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
+
+    const Type& into_type = context.type(into);
+    if (!into_type.holds<TypeBuiltin>()) {
+        context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                                   diag_code::cannot_resolve_at_compt, diag_type::error);
+        return OptId<ExecId>{};
+    }
+    builtin_type builtin_type = into_type.as<TypeBuiltin>().type;
+    // TODO, finish handling based on builtin_type and the strucuture of the expr (recurse)
+    std::optional<ExecExprComptConstant> value;
+    switch (expr->type) {
+    case AST_EXPR_ID: {
+        auto maybe_def = context.find_variable_from_scoped_id(
+            scope, context.symbol_slice(expr->expr.id.slice));
+        if (maybe_def.has_value()) {
+            // happy path, canonicalize compt value
+            DefId did = maybe_def.as_id();
+            const Def& def = visit_def(did);
+            if (def.holds<DefVariable>() && def.compt) {
+                value = context.execs.cat(def.as<DefVariable>().compt_value.as_id())
+                            .as<ExecExprComptConstant>();
+            }
+        }
+        break;
+    }
+    case AST_EXPR_LITERAL: {
+        // TODO, handle
+        switch (expr->expr.literal.tkn->type) {
+        case TOK_CHAR_LIT:
+        case TOK_INT_LIT:
+        case TOK_FLOAT_LIT:
+        case TOK_STR_LIT:
+        case TOK_BOOL_LIT_FALSE:
+        case TOK_BOOL_LIT_TRUE:
+        case TOK_NULL_LIT:
+            break;
+        default:
+            std::unreachable();
+            break;
+        }
+    }
+    // TODO -----------------
+    case AST_EXPR_BINARY:
+    case AST_EXPR_GROUPING:
+    case AST_EXPR_PRE_UNARY:
+    case AST_EXPR_POST_UNARY:
+    // TODO ^^^^^^^^^^^^^^^^^
+    case AST_EXPR_SUBSCRIPT:
+    case AST_EXPR_FN_CALL:
+    case AST_EXPR_TYPE:
+    case AST_EXPR_BORROW:
+    case AST_EXPR_LIST_LITERAL:
+    case AST_EXPR_STRUCT_INIT:
+    case AST_EXPR_STRUCT_MEMBER_INIT:
+    case AST_EXPR_CLOSURE:
+    case AST_EXPR_VARIANT_DECOMP:
+    case AST_EXPR_BLOCK:
+    case AST_EXPR_MATCH_BRANCH:
+    case AST_EXPR_MATCH:
+    case AST_EXPR_ELSE_MATCH_BRANCH:
+    case AST_EXPR_INVALID:
+        break;
+    }
+    if (value.has_value()) {
+        if (!value->matches_type(builtin_type)) {
+            context.emplace_diagnostic(
+                Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
+            return OptId<ExecId>{};
+        }
+        return emplace_e(value.value());
+    }
+    context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                               diag_code::cannot_resolve_at_compt, diag_type::error);
+// as to not duplicate compt errors from bubbling up
+ret_without_diag:
+    return OptId<ExecId>{};
 }
 
 } // namespace hir

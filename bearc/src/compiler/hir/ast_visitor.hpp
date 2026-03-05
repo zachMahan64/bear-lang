@@ -46,18 +46,6 @@ class FileAstVisitor {
     static std::optional<const token_t*> name_of_ast_decl(const ast_stmt_t* stmt);
 };
 
-class ExprVisitor {
-    Context& context;
-    explicit ExprVisitor(Context& ctx) : context{ctx} {}
-
-  public:
-    [[nodiscard]] ExecId resolve_expr(const ast_expr_t* expr);
-    [[nodiscard]] OptId<ExecId> fold_top_level_builtin_compt_expr(FileId fid,
-                                                                  NamedOrAnonScopeId scope,
-                                                                  const ast_expr_t* expr,
-                                                                  TypeId into);
-};
-
 } // namespace hir
 
 #endif
