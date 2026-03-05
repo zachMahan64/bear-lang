@@ -223,7 +223,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
     }
     if (maybe_value.has_value()) {
         auto maybe_converted = maybe_value.value().try_up_convert_to(into_builtin_type);
-        if (!maybe_value->matches_type(into_builtin_type)) {
+        if (!maybe_converted.has_value()) {
             context.emplace_diagnostic(
                 Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                 diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
