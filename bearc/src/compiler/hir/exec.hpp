@@ -100,6 +100,41 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
             return false;
         }
     }
+    builtin_type type() const {
+        switch (value.index()) {
+        case 0:
+            return builtin_type::str;
+        case 1:
+            return builtin_type::i8;
+        case 2:
+            return builtin_type::u8;
+        case 3:
+            return builtin_type::i16;
+        case 4:
+            return builtin_type::u16;
+        case 5:
+            return builtin_type::i32;
+        case 6:
+            return builtin_type::u32;
+        case 7:
+            return builtin_type::i64;
+        case 8:
+            return builtin_type::u64;
+        case 9:
+            return builtin_type::charr;
+        case 10:
+            return builtin_type::f32;
+        case 11:
+            return builtin_type::f64;
+        case 12:
+            return builtin_type::nullpointer;
+        case 13:
+            return builtin_type::boolean;
+        default:
+            assert(false && "unconsidered builtin type");
+            return builtin_type::voidd;
+        }
+    }
     // returns none if conversion fails, diagnostics must be reported outside of this method
     [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type);
     ExecExprComptConstant(ConstantValue constval) : value{constval} {}
