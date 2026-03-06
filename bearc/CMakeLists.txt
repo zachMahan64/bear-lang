@@ -65,6 +65,7 @@ set(SRC
     src/compiler/hir/diagnostic.cpp
     src/compiler/hir/type.cpp
     src/compiler/hir/exec.cpp
+    src/compiler/hir/top_level_def_visitor.cpp
 
 )
 

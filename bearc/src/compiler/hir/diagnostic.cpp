@@ -69,6 +69,9 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::cannot_resolve_at_compt:
         return "cannot resolve expression at compile-time";
         break;
+    case diag_code::type_not_defined:
+        return "type not defined";
+        break;
     }
     return "";
 }

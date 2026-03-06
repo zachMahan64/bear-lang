@@ -70,7 +70,7 @@ typedef struct ast_type_wrapped {
 
 typedef union ast_type_u {
     ast_type_base_t base;
-    ast_type_ref_t ref;
+    ast_type_ref_t ptr_ref;
     ast_type_arr_t arr;
     ast_type_generic_t generic;
     ast_type_slice_t slice;

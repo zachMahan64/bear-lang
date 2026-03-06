@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 br_test_result_t test_parser(void) {
     TEST_INIT("parser");
     ASSERT_EQ_ERR("parser/00", 5);
-    ASSERT_EQ_ERR("parser/01", 0);
+    ASSERT_EQ_ERR("parser/01", 2);
     ASSERT_EQ_ERR("parser/02", 5);
     ASSERT_EQ_ERR("parser/03", 0);
     ASSERT_EQ_ERR("parser/04", 6);
@@ -120,7 +120,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/16", 0);
     ASSERT_EQ_ERR("parser/17", 0);
     ASSERT_EQ_ERR("parser/18", 6);
-    ASSERT_EQ_ERR("parser/19", 3);
+    ASSERT_EQ_ERR("parser/19", 4);
     ASSERT_EQ_ERR("parser/20", 0);
     ASSERT_EQ_ERR("parser/21", 5);
     ASSERT_EQ_ERR("parser/22", 1);
@@ -148,7 +148,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/42", 1);
     ASSERT_EQ_ERR("parser/43", 0);
     ASSERT_EQ_ERR("parser/44", 1);
-    ASSERT_EQ_ERR("parser/45", 1);
+    ASSERT_EQ_ERR("parser/45", 2);
     ASSERT_EQ_ERR("parser/46", 1);
     ASSERT_EQ_ERR("parser/47", 1);
 
@@ -177,6 +177,10 @@ br_test_result_t test_hir(void) {
 
     char* args7[] = {"bearc", "00.br", "-i", "tests/projects/02"};
     ASSERT_EQ_ERR_FROM_ARGSN(args7, 5, 3);
+
+    char* args8[] = {"bearc", "tests/hir/09.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args8, 0);
+
     return TEST_RESULT;
 }
 

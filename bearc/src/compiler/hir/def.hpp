@@ -12,11 +12,14 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/variant_helpers.hpp"
+#include <utility>
 #include <variant>
 
 namespace hir {
 
 // ------ struct impls -------
+
+struct DefMalformed {};
 
 struct DefModule {
     ScopeId scope;
@@ -47,7 +50,7 @@ struct DefVariable {
     TypeId type;
     SymbolId name;
     OptId<ExecId> compt_value;
-    bool moved;
+    bool moved = false;
 };
 
 struct DefStruct {
@@ -109,7 +112,7 @@ struct DefUnevaluated {};
 using DefValue
     = std::variant<DefModule, DefFunction, DefGenericFunction, DefFunctionPrototype, DefVariable,
                    DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
-                   DefUnion, DefContract, DefDefType, DefUnevaluated>;
+                   DefUnion, DefContract, DefDefType, DefUnevaluated, DefMalformed>;
 
 enum class abi_lang : uint8_t {
     native = 0,
@@ -126,6 +129,20 @@ struct Def : NodeWithVariantValue<Def> {
         in_progress,
         resolved,
     };
+    static const char* resol_state_to_str(resol_state st) {
+        switch (st) {
+        case resol_state::unvisited:
+            return "unvisited";
+        case resol_state::top_level_visited:
+            return "top_level_visited";
+        case resol_state::in_progress:
+            return "in_progress";
+        case resol_state::resolved:
+            return "resolved";
+        }
+        std::unreachable();
+        return nullptr;
+    }
 
     /// represents the mention state corresponding to an hir::DefId
     enum class mention_state : uint8_t {

@@ -5,3 +5,12 @@ union FooBar {
     Bar bar;
     oops;
 }
+
+
+struct Foo {
+    [4]i32 vec;
+}
+
+struct Bar {
+    Foo foo;
+}

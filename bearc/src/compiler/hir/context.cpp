@@ -18,6 +18,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/span.hpp"
+#include "compiler/hir/top_level_def_visitor.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
@@ -105,6 +106,7 @@ Context::Context(const bearc_args_t* args)
         this->note_cnt += ast.diagnostic_count() - ast.error_count();
         this->fatal_error_cnt += ast.error_count();
     }
+    TopLevelDefVisitor{*this}.resolve_top_level_definitions();
 }
 
 int Context::diagnostic_count() const noexcept {
@@ -260,23 +262,12 @@ void Context::explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<Fil
 }
 
 void Context::try_print_info() {
-    if (!args->flags[CLI_FLAG_SILENT]) {
-        // go thru each file ast to print info
-        for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
-            const FileAst& aast = ast(fid);
-            // 1. print parse-time errors (ast-wise errors)
-            aast.print_all_errors();
-            // 2. print diagnostics (semantic/non-grammatical errors)
-            for (const auto d : file_to_diagnostics.cat(fid)) {
-                print_diagnostic(d);
-            }
-        }
-    }
-    // 3. try print out ast-wise information (token tables, pretty-printing)
+
+    // 1. try print out ast-wise information (token tables, pretty-printing)
     for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
         ast(fid).try_print_info(args);
     }
-    // print more info:
+    // 2. print more info:
     if (args->flags[CLI_FLAG_LIST_FILES]) {
         std::cout << ansi_bold_white() << "all files" << '(' << files.size() << ')' << ":"
                   << ansi_reset() << '\n';
@@ -304,6 +295,19 @@ void Context::try_print_info() {
                 }
             }
             std::cout << ansi_reset() << "\n";
+        }
+    }
+    // 3. print diagnostics last (so always seen first in terminal)
+    if (!args->flags[CLI_FLAG_SILENT]) {
+        // go thru each file ast to print info
+        for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
+            const FileAst& aast = ast(fid);
+            // 1. print parse-time errors (ast-wise errors)
+            aast.print_all_errors();
+            // 2. print diagnostics (semantic/non-grammatical errors)
+            for (const auto d : file_to_diagnostics.cat(fid)) {
+                print_diagnostic(d);
+            }
         }
     }
     if (!args->flags[CLI_FLAG_SILENT]) {
@@ -376,11 +380,17 @@ const FileAst& Context::ast(FileId file_id) const {
     return file_asts.cat(files.cat(file_id).ast_id);
 }
 
-ScopeId Context::root_scope() {
+ScopeId Context::get_or_make_root_scope() {
     if (scopes.size() == 0) {
         return scopes.emplace_and_get_id(scope_arena);
     }
     // the top-level scope will have to be the first scope!
+    return ScopeId{1};
+}
+
+ScopeId Context::root_scope() const {
+    // the top-level scope will have to be the first scope!
+    assert(scopes.size() != 0 && "tried to get the root scope before its creation");
     return ScopeId{1};
 }
 
@@ -464,7 +474,21 @@ void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec
 
 Def::resol_state Context::resol_state_of(DefId def) const { return def_resol_states.cat(def); }
 
-ScopeId Context::scope_for_top_level_def(DefId def_id) {
+void Context::set_resol_state_of(DefId def, Def::resol_state resol_state) {
+    def_resol_states.at(def) = resol_state;
+}
+
+ScopeId Context::scope_for_top_level_def(DefId def_id) const {
+    auto hopefully_scope = try_scope_for_top_level_def(def_id);
+    if (hopefully_scope.has_value()) {
+        return hopefully_scope.as_id();
+    }
+    ERR(def(def_id).span.as_sv(*this));
+    assert(false && "tried to get a scope for a top level def that was incompatible");
+    return root_scope();
+}
+
+OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {
     const auto& def_node = defs.cat(def_id);
     // no parent means parent scope is root scope
     if (!def_node.parent.has_value()) {
@@ -479,9 +503,7 @@ ScopeId Context::scope_for_top_level_def(DefId def_id) {
             return hopefully_scope.as_id();
         }
     }
-    ERR(def(def_id).span.as_sv(*this));
-    assert(false && "tried to get a scope for a top level def that was incompatible");
-    return root_scope();
+    return OptId<ScopeId>{};
 }
 
 bool Context::is_top_level_def_with_associated_scope(DefId def_id) const {
@@ -494,9 +516,11 @@ FileId Context::def_to_file_id(DefId def) const { return defs.cat(def).span.file
 
 Span Context::make_def_name_span(DefId def, const ast_stmt_t* stmt) const {
     auto fid = def_to_file_id(def);
-    return Span(
-        fid, ast(fid).buffer(),
-        FileAstVisitor::name_of_ast_decl(stmt).value()); // TODO potentially dangerous unwrap
+    auto maybe_name = FileAstVisitor::name_of_ast_decl(stmt);
+    if (!maybe_name.has_value()) {
+        assert(false && "failed to get name for an AST declaration");
+    }
+    return Span(fid, ast(fid).buffer(), maybe_name.value());
 }
 
 Span Context::make_top_level_def_name_span(DefId def) const {
@@ -510,6 +534,13 @@ Type& Context::type(TypeId id) { return types.at(id); }
 TypeId Context::type_id(IdIdx<TypeId> tid) const { return type_ids.cat(tid); }
 CanonicalTypeId Context::emplace_and_get_canonical_type_id(TypeId first_structural_type_id) {
     return canonical_to_type_id.emplace_and_get_id(first_structural_type_id);
+}
+
+TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
+    TypeId tid = types.emplace_and_get_id(value, span, mut);
+    // set canonical
+    types.at(tid).canonical = canonical_type_table.canonical(tid);
+    return tid;
 }
 [[nodiscard]] const Exec& Context::exec(ExecId id) const { return execs.cat(id); }
 
@@ -545,8 +576,8 @@ OptId<DefId> Context::look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) 
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
 
-OptId<DefId> Context::find_variable_from_scoped_id(NamedOrAnonScopeId scope,
-                                                   IdSlice<SymbolId> id_slice) {
+OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope,
+                                              IdSlice<SymbolId> id_slice) {
     NamedOrAnonScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
@@ -564,6 +595,26 @@ OptId<DefId> Context::find_variable_from_scoped_id(NamedOrAnonScopeId scope,
     return OptId<DefId>{};
 }
 
+OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice) {
+    NamedOrAnonScopeId curr_scope = scope;
+    for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
+        SymbolId sid = symbol_ids.cat(sidx);
+        // base case, last elem should be the variable
+        if (sidx == id_slice.last_elem()) {
+            return look_up_type(curr_scope, sid);
+        }
+        if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
+            curr_scope = def(maybe_mod.as_id()).as<DefModule>().scope;
+        }
+        // yes, since nested structs are allowed
+        else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
+            curr_scope = scope_for_top_level_def(maybe_type.as_id());
+        }
+    }
+    // never entered the loop, so not found
+    return OptId<DefId>{};
+}
+
 IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
     llvm::SmallVector<SymbolId> vec{};
     for (size_t i = 0; i < token_slice.len; i++) {
@@ -572,4 +623,27 @@ IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
     }
     return symbol_ids.freeze_small_vec(vec);
 }
+
+NamedOrAnonScopeId Context::containing_scope(DefId did) const {
+    auto maybe_parent = defs.cat(did).parent;
+    // ----- base cases (parent w/ scope)---------
+    if (!maybe_parent.has_value()) {
+        return root_scope();
+    }
+    const Def& defi = def(maybe_parent.as_id());
+    if (defi.holds<DefModule>()) {
+        return defi.as<DefModule>().scope;
+    }
+    if (defi.holds<DefModule>()) {
+        return defi.as<DefModule>().scope;
+    }
+    auto maybe_structure = try_scope_for_top_level_def(did);
+    if (maybe_structure.has_value()) {
+        return maybe_structure.as_id();
+    }
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // recursive up to find parent's parent scope, etc.
+    return containing_scope(maybe_parent.as_id());
+}
+
 } // namespace hir

@@ -12,13 +12,11 @@
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
-#include "compiler/hir/exec.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
-#include <utility>
 #include <variant>
 
 namespace hir {
@@ -29,8 +27,9 @@ std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt);
 
 void FileAstVisitor::register_top_level_declarations() {
     // registers all the top level stmts of the file using the top level scope
-    register_top_level_stmts(context.root_scope(), context.ast(file).root()->stmt.file.stmts,
-                             OptId<DefId>{}, abi_lang::native);
+    register_top_level_stmts(context.get_or_make_root_scope(),
+                             context.ast(file).root()->stmt.file.stmts, OptId<DefId>{},
+                             abi_lang::native);
 }
 
 OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt,

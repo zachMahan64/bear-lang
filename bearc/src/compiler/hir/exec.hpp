@@ -136,7 +136,7 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
         }
     }
     // returns none if conversion fails, diagnostics must be reported outside of this method
-    [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type);
+    [[nodiscard]] std::optional<ExecExprComptConstant> try_implicit_convert_to(builtin_type type);
     ExecExprComptConstant(ConstantValue constval) : value{constval} {}
 };
 

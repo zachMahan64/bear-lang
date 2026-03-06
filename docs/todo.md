@@ -48,6 +48,7 @@
     - [ ] add a StringifyType seed for TypeTransformer
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### Medium term
+- [ ] `-o` / `--output` cli arg
 - [ ] multi-line diagnostics
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 
 - [ ] LLVM IR

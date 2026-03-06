@@ -46,7 +46,9 @@ static const char* error_messages[ERR__COUNT] = {
     [ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION] = "too many qualifications on function declaration",
     [ERR_QUALIFICATION_ON_NON_MT_FN_DECL]
     = "leading structure qualification on an 'fn' function is malformed",
-    [NOTE_DID_YOU_MEAN_MT] = "did you mean to declare this as 'mt'?"};
+    [NOTE_DID_YOU_MEAN_MT] = "did you mean to declare this as 'mt'?",
+    [ERR_MULTILEVEL_REF]
+    = "multi-level reference type is malformed; did you mean to declare a multi-level pointer?"};
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
 
 const char* error_message_context_for(compiler_error_t* error) {

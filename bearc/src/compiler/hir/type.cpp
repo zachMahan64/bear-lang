@@ -8,6 +8,7 @@
 
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/context.hpp"
+#include <utility>
 
 namespace hir {
 
@@ -29,6 +30,7 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             if (!t2.holds<TypeGenericStructure>()) {
                 return false;
             }
+            // TODO handle generic arg equality
             return t.definition == t2.as<TypeGenericStructure>().definition;
         },
         [&](const TypeArr& t) -> bool {
@@ -91,6 +93,7 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
             return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeGenericStructure& t) -> size_t {
+            // TODO handle generic args
             return mix(0x03ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeArr& t) -> size_t {
@@ -324,10 +327,54 @@ const char* builtin_type_to_cstr(builtin_type t) {
         return "bool";
         break;
     }
+    std::unreachable();
+    return nullptr;
 }
 bool Type::is_same(const Context& ctx, TypeId tid1, TypeId tid2) {
     return ctx.type(tid1).canonical == ctx.type(tid2).canonical;
     // to check structurally:
     // return TypeTransformer<TypeComparator<DoConsiderMut>>{ctx}(tid1, tid2);
 }
+
+std::optional<builtin_type> id_tkn_slice_to_maybe_builtin(token_ptr_slice_t tkn_slice) {
+    if (tkn_slice.len != 1) {
+        return std::optional<builtin_type>{};
+    }
+    switch (tkn_slice.start[0]->type) {
+    case TOK_I8:
+        return builtin_type::i8;
+    case TOK_U8:
+        return builtin_type::u8;
+    case TOK_I16:
+        return builtin_type::i16;
+    case TOK_U16:
+        return builtin_type::u16;
+    case TOK_I32:
+        return builtin_type::i32;
+    case TOK_U32:
+        return builtin_type::u32;
+    case TOK_I64:
+        return builtin_type::i64;
+    case TOK_U64:
+        return builtin_type::u64;
+    case TOK_USIZE:
+        return builtin_type::usize;
+    case TOK_CHAR:
+        return builtin_type::charr;
+    case TOK_F32:
+        return builtin_type::f32;
+    case TOK_F64:
+        return builtin_type::f64;
+    case TOK_STR:
+        return builtin_type::str;
+    case TOK_BOOL:
+        return builtin_type::boolean;
+    case TOK_VOID:
+        return builtin_type::voidd;
+    default:
+        break;
+    }
+    return std::optional<builtin_type>{};
+}
+
 } // namespace hir

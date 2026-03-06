@@ -13,7 +13,8 @@
 #include <cstdint>
 namespace hir {
 
-std::optional<ExecExprComptConstant> ExecExprComptConstant::try_up_convert_to(builtin_type type) {
+std::optional<ExecExprComptConstant>
+ExecExprComptConstant::try_implicit_convert_to(builtin_type type) {
     using OptConst = std::optional<ExecExprComptConstant>;
     auto to_optconst = +[](ConstantValue constval) -> OptConst {
         return OptConst{ExecExprComptConstant{constval}};

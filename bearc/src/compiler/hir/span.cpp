@@ -18,7 +18,7 @@ Span::Span(FileId file_id, const char* src, const token_t* tkn)
       col(tkn->loc.col) {}
 
 Span::Span(FileId file_id, const char* src, const token_t* first, const token_t* last)
-    : start(first->start - src), file_id(file_id), len(last->start - src + last->len),
+    : start(first->start - src), file_id(file_id), len((last->start + last->len) - first->start),
       line(first->loc.line), col(first->loc.col) {}
 
 std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
@@ -28,5 +28,8 @@ std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
 [[nodiscard]] std::string_view Span::as_sv(const Context& context) const {
     return retrieve_from_buffer(context.ast(file_id).buffer(), *this);
 }
+
+Span::Span(const Context& ctx, FileId file_id, const token_t* first, const token_t* last)
+    : Span(file_id, ctx.ast(file_id).buffer(), first, last) {}
 
 } // namespace hir

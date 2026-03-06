@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_INDEXING_HPP
 #define COMPILER_HIR_INDEXING_HPP
 
+#include <optional>
 #include <stdint.h>
 #include <string_view>
 
@@ -124,11 +125,15 @@ template <hir::IsId T> class OptId {
     using id_tag = T;
     OptId() = default;
     OptId(T id_value) : underlying(id_value) {}
+    OptId(std::nullopt_t nopt) : OptId{} {}
     HirId val() const { return underlying.val(); }
     constexpr T as_id() const noexcept { return underlying; }
     [[nodiscard]] bool has_value() const noexcept { return underlying.val() != HIR_ID_NONE; }
     void set(T id_value) noexcept { this->underlying = id_value; }
     static constexpr OptId none() { return OptId{}; }
+    T get_or(T or_else_this_value) {
+        return this->has_value() ? this->as_id() : or_else_this_value;
+    };
 };
 
 template <hir::IsId T> class IdSlice {

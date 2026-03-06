@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <variant>
 namespace hir {
 
@@ -45,11 +46,13 @@ enum class builtin_type : uint8_t {
 };
 
 const char* builtin_type_to_cstr(builtin_type t);
+std::optional<builtin_type> id_tkn_slice_to_maybe_builtin(token_ptr_slice_t tkn_slice);
 
 struct TypeBuiltin {
     builtin_type type;
 };
 
+// structure meaning struct, variant, or union
 struct TypeStructure {
     DefId definition;
 };
@@ -209,6 +212,9 @@ struct Type : NodeWithVariantValue<Type> {
     void set_value(TypeValue value) { this->value = value; }
     // compares identical types (including mut)
     static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2);
+    // canonical should get immediately set by context
+    Type(const TypeValue& value, Span span, bool mut)
+        : value{value}, span{span}, mut{mut}, canonical{HIR_ID_NONE} {}
 };
 
 } // namespace hir

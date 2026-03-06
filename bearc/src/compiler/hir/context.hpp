@@ -53,7 +53,8 @@ class Context {
     [[nodiscard]] const FileAst& ast(FileId file_id) const;
 
     // ------ scoping -----------
-    [[nodiscard]] ScopeId root_scope();
+    [[nodiscard]] ScopeId get_or_make_root_scope();
+    [[nodiscard]] ScopeId root_scope() const;
     [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
     // makes a named scope with a small capacity
     [[nodiscard]] ScopeId make_small_named_scope(OptId<ScopeId> parent_scope);
@@ -61,15 +62,23 @@ class Context {
     [[nodiscard]] OptId<DefId> look_up_variable(NamedOrAnonScopeId scope, SymbolId sid) const;
     [[nodiscard]] OptId<DefId> look_up_type(NamedOrAnonScopeId scope, SymbolId sid) const;
     [[nodiscard]] OptId<DefId> look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) const;
+    /// finds a variable and attempts to resolve definitions on the way to it
+    [[nodiscard]] OptId<DefId> look_up_scoped_variable(NamedOrAnonScopeId scope,
+                                                       IdSlice<SymbolId> id_slice);
+    /// finds a type and attempts to resolve definitions on the way to it
+    [[nodiscard]] OptId<DefId> look_up_scoped_type(NamedOrAnonScopeId scope,
+                                                   IdSlice<SymbolId> id_slice);
+    /// finds the scope containing a definition
+    /// TODO needs to handle non-top level stmts too
+    [[nodiscard]] NamedOrAnonScopeId containing_scope(DefId did) const;
 
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
     /// indicates resolution state of a definition
     Def::resol_state resol_state_of(DefId def) const;
+    void set_resol_state_of(DefId def, Def::resol_state resol_state);
     IdSlice<SymbolId> symbol_slice(token_ptr_slice_t token_slice);
-    /// finds a variable and attempts to resolve definitions on the way to it
-    OptId<DefId> find_variable_from_scoped_id(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice);
 
     // diagnostics
     void handle_bump_diag_counts(diag_code code, diag_type type);
@@ -86,6 +95,8 @@ class Context {
     [[nodiscard]] CanonicalTypeId
     emplace_and_get_canonical_type_id(TypeId first_structural_type_id);
 
+    [[nodiscard]] TypeId emplace_type(const TypeValue& value, Span span, bool mut);
+
     /// accessfor for a def thru a DefId
     Def& def(DefId def_id);
     FileId def_to_file_id(DefId def) const;
@@ -93,8 +104,10 @@ class Context {
     Span make_top_level_def_name_span(DefId def) const;
 
     bool is_top_level_def_with_associated_scope(DefId def_id) const;
-    /// gets the named scope for a def
-    ScopeId scope_for_top_level_def(DefId def);
+    /// gets the named scope for a certainly top level def
+    ScopeId scope_for_top_level_def(DefId def) const;
+    /// trys to look up the scope for a top level def
+    OptId<ScopeId> try_scope_for_top_level_def(DefId def) const;
 
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,

@@ -12,6 +12,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
+#include "compiler/hir/type.hpp"
 #include "llvm/ADT/SmallVector.h"
 
 namespace hir {
@@ -51,17 +52,24 @@ class TopLevelConstantExprSolver {
     // level generic instantiation with compt parameterizations)
     [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                  const ast_expr_t* expr, TypeId into);
+    [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
+                                                 const ast_expr_t* expr, builtin_type into_builtin);
 };
 
 class TopLevelTypeResolver {
     TopLevelDefVisitor& def_visitor;
     Context& context;
-    explicit TopLevelTypeResolver(Context& ctx, TopLevelDefVisitor& def_visitor)
-        : context{ctx}, def_visitor{def_visitor} {}
+
+    [[nodiscard]] OptId<TypeId> type_base(FileId fid, NamedOrAnonScopeId scope,
+                                          const ast_type_t* type);
+    [[nodiscard]] OptId<TypeId> type_ptr_ref(FileId fid, NamedOrAnonScopeId scope,
+                                             const ast_type_t* type);
 
   public:
+    explicit TopLevelTypeResolver(Context& ctx, TopLevelDefVisitor& def_visitor)
+        : context{ctx}, def_visitor{def_visitor} {}
     // resolves a mentioned type at the top level
-    [[nodiscard]] OptId<ExecId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type);
 };
 

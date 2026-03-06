@@ -180,9 +180,9 @@ static void print_type(ast_type_t* type) {
     }
     case AST_TYPE_REF_PTR: {
         print_title("ref/ptr type");
-        print_type(type->type.ref.inner);
-        print_op(type->type.ref.modifier);
-        if (type->type.ref.mut) {
+        print_type(type->type.ptr_ref.inner);
+        print_op(type->type.ptr_ref.modifier);
+        if (type->type.ptr_ref.mut) {
             printer_do_indent();
             print_mut();
             printer_deindent();

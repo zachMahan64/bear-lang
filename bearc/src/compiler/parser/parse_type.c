@@ -8,6 +8,7 @@
 
 #include "compiler/parser/parse_type.h"
 #include "compiler/ast/expr.h"
+#include "compiler/ast/type.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_expr.h"
@@ -201,13 +202,20 @@ ast_type_t* parse_type(parser_t* p) {
 
 ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner) {
     ast_type_t* outer = parser_alloc_type(p);
-    outer->type.ref.modifier = parser_eat(p); // definitely fine because we know to be in this func
-    outer->type.ref.mut = parser_match_token(p, TOK_MUT); // match into bool
+    outer->type.ptr_ref.modifier
+        = parser_eat(p); // definitely fine because we know to be in this func
+    outer->type.ptr_ref.mut = parser_match_token(p, TOK_MUT); // match into bool
     outer->canonical_base = inner->canonical_base;
-    outer->type.ref.inner = inner;
+    outer->type.ptr_ref.inner = inner;
     outer->tag = AST_TYPE_REF_PTR;
     outer->first = inner->first;
     outer->last = parser_prev(p);
+    if (outer->type.ptr_ref.inner->tag == AST_TYPE_REF_PTR
+        && outer->type.ptr_ref.inner->type.ptr_ref.modifier->type == TOK_AMPER) {
+        compiler_error_list_emplace(p->error_list, outer->type.ptr_ref.modifier,
+                                    ERR_MULTILEVEL_REF);
+        outer->type.ptr_ref.inner->tag = AST_TYPE_INVALID;
+    }
     return outer;
 }
 

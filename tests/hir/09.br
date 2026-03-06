@@ -1,0 +1,41 @@
+// tests/hir/09.br 
+
+fn main() -> i32 {
+    return 0;
+}
+
+struct Foo {
+    [24]i32 a;
+    struct Bar {
+        [4 * 8]i32 b;
+    }
+   Arr<i32, 4> c; 
+}
+
+struct Arr<T, usize N> {
+    [N]T arr;
+}
+
+struct Bar {
+    u8 a;
+    i8 b;
+    u16 c;
+    i16 d;
+    u32 e;
+    i32 f;
+    u64 g;
+    i64 h;
+    usize i;
+    char j;
+    bool k;
+    str stringy;
+    str& stringy_jr;
+}
+
+struct Cir {
+    Le circular;
+}
+
+struct Le {
+    Cir circular;
+}

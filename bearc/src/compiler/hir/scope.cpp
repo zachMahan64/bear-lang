@@ -124,8 +124,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
 
             const DefId def_id = vec[i];
 
-            // TODO replace with encapsulated context logic
-            const Def& used_def = context.defs.cat(def_id);
+            const Def& used_def = context.def(def_id);
             const ScopeLookUpResult used_res = Scope::look_up_impl(
                 context, std::get<DefModule>(used_def.value).scope, symbol, kind);
 

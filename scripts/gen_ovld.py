@@ -15,7 +15,7 @@ names = [t.strip() for t in types.replace("\n", "").split(",") if t.strip()]
 
 template = """\
 [&](const {name}& t) -> {ret} {{
-    // TODO
+    // todo
 }},"""
 
 print("auto vs = Ovld{")

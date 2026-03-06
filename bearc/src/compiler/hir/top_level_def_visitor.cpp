@@ -13,24 +13,28 @@
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
+#include "compiler/token.h"
 #include <cassert>
+#include <iostream>
 
 namespace hir {
 
 void TopLevelDefVisitor::resolve_top_level_definitions() {
     assert(!this->began_resolution && "already began resolving top level declarations");
     this->began_resolution = true;
-    for (auto d = context.defs.begin_id(); d != context.defs.end_id(); d++) {
-        resolve_def(d);
+    auto last_top_level = context.defs.end_id();
+    for (auto d = context.defs.begin_id(); d != last_top_level; d++) {
+        visit_as_dependent(d);
     }
 }
-// TODO allow for passing of ast_generic_args_t* for generic instatiations?
 DefId TopLevelDefVisitor::visit(DefId def) {
     if (context.resol_state_of(def) == Def::resol_state::resolved) {
         return def;
     }
     def_stack.push_back(def);
+    context.set_resol_state_of(def, Def::resol_state::in_progress);
     auto d = resolve_def(def);
+    context.set_resol_state_of(def, Def::resol_state::resolved);
     def_stack.pop_back();
     return d;
 }
@@ -52,12 +56,25 @@ DefId TopLevelDefVisitor::visit_as_transparent(DefId def) {
 
 DefId TopLevelDefVisitor::resolve_def(DefId def) {
     const ast_stmt* stmt = context.def_ast_nodes.cat(def);
-    ScopeId scope = context.scope_for_top_level_def(def);
-    // TODO write handlers
+    auto scope = context.containing_scope(def);
+    // auto scope = context.root_scope();
+    //  TODO write handlers
     switch (stmt->type) {
     case AST_STMT_FILE:
     case AST_STMT_EXTERN_BLOCK:
-    case AST_STMT_VAR_DECL:
+    case AST_STMT_VAR_DECL: {
+        Def& defin = context.def(def);
+        Span span = defin.span;
+        OptId<TypeId> maybe_type = TopLevelTypeResolver{context, *this}.resolve_type(
+            span.file_id, scope, stmt->stmt.var_init_decl.type);
+        if (!maybe_type.has_value()) {
+            return def; // maybe set a special value to indicate error differently
+        }
+        defin.set_value(DefVariable{.type = maybe_type.as_id(),
+                                    .name = context.symbol_id(stmt->stmt.var_decl.name)});
+        // TODO handle invalid non-initialized statements
+        break;
+    }
     case AST_STMT_VAR_INIT_DECL:
     case AST_STMT_MODULE:
     case AST_STMT_VISIBILITY_MODIFIER:
@@ -125,34 +142,28 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
     // unreachable since we *should* find the culprit in the def_stack
     assert(false && "failed to find culprit defintion when reporting a circular defintion");
 }
-
 OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                            const ast_expr_t* expr,
-                                                           TypeId into_tid) {
+                                                           builtin_type into_builtin) {
     auto emplace_e = [&](ExecValue val) {
         return context.execs.emplace_and_get_id(
             context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
     };
 
     auto visit_def = [&](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
-
-    const Type& into_type = context.type(into_tid);
-    if (!into_type.holds<TypeBuiltin>()) {
-        context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
-                                   diag_code::cannot_resolve_at_compt, diag_type::error);
-        return OptId<ExecId>{};
-    }
-    builtin_type into_builtin_type = into_type.as<TypeBuiltin>().type;
     // TODO, finish handling based on builtin_type and the strucuture of the expr (recurse)
     std::optional<ExecExprComptConstant> maybe_value;
     switch (expr->type) {
     case AST_EXPR_ID: {
-        auto maybe_def = context.find_variable_from_scoped_id(
-            scope, context.symbol_slice(expr->expr.id.slice));
+        auto maybe_def
+            = context.look_up_scoped_variable(scope, context.symbol_slice(expr->expr.id.slice));
         if (maybe_def.has_value()) {
             // happy path, canonicalize compt value
             DefId did = maybe_def.as_id();
             const Def& def = visit_def(did);
+            std::cout << def.span.as_sv(context)
+                      << ", resol: " << Def::resol_state_to_str(context.resol_state_of(did))
+                      << '\n';
             if (def.holds<DefVariable>() && def.compt) {
                 maybe_value = context.execs.cat(def.as<DefVariable>().compt_value.as_id())
                                   .as<ExecExprComptConstant>();
@@ -181,6 +192,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
             break;
         case TOK_BOOL_LIT_TRUE:
             maybe_value = ExecExprComptConstant{true};
+            break;
         case TOK_NULL_LIT:
             maybe_value = ExecExprComptConstant{nullptr};
             break;
@@ -188,20 +200,26 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
             std::unreachable();
             break;
         }
+        break;
     }
-    // TODO -----------------
     case AST_EXPR_BINARY: {
         // TODO operator and type handlers
         break;
     }
     case AST_EXPR_GROUPING: {
         // get inner
-        return solve_compt_expr(fid, scope, expr->expr.grouping.expr, into_tid);
+        return solve_compt_expr(fid, scope, expr->expr.grouping.expr, into_builtin);
         break;
     }
-    case AST_EXPR_PRE_UNARY:
+    case AST_EXPR_PRE_UNARY: {
+        // eventually allow sizeof, allignof
+        // TODO handle bool not
+        if (expr->expr.unary.op->type == TOK_BOOL_NOT) {
+            auto inner = solve_compt_expr(fid, scope, expr->expr.unary.expr, into_builtin);
+        }
+    }
     case AST_EXPR_POST_UNARY:
-    // TODO ^^^^^^^^^^^^^^^^^
+        // not supported (-- or ++ require mutable lvalues)
     case AST_EXPR_SUBSCRIPT:
     case AST_EXPR_FN_CALL:
     case AST_EXPR_TYPE:
@@ -222,14 +240,14 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
         goto ret_without_diag;
     }
     if (maybe_value.has_value()) {
-        auto maybe_converted = maybe_value.value().try_up_convert_to(into_builtin_type);
+        auto maybe_converted = maybe_value.value().try_implicit_convert_to(into_builtin);
         if (!maybe_converted.has_value()) {
             context.emplace_diagnostic(
                 Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                 diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
             return OptId<ExecId>{};
         }
-        assert(maybe_converted.value().matches_type(into_builtin_type));
+        assert(maybe_converted.value().matches_type(into_builtin));
         return emplace_e(maybe_converted.value());
     }
     context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
@@ -238,21 +256,80 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 ret_without_diag:
     return OptId<ExecId>{};
 }
+OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
+                                                           const ast_expr_t* expr,
+                                                           TypeId into_tid) {
+    const Type& into_type = context.type(into_tid);
+    if (!into_type.holds<TypeBuiltin>()) {
+        context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                                   diag_code::cannot_resolve_at_compt, diag_type::error);
+        return OptId<ExecId>{};
+    }
+    builtin_type into_builtin_type = into_type.as<TypeBuiltin>().type;
+    return solve_compt_expr(fid, scope, expr, into_builtin_type);
+}
 
-[[nodiscard]] OptId<ExecId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
+[[nodiscard]] OptId<TypeId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                                                const ast_type_t* type) {
     // TODO
     switch (type->tag) {
-    case AST_TYPE_BASE:
-    case AST_TYPE_REF_PTR:
+    case AST_TYPE_BASE: {
+        return type_base(fid, scope, type);
+        break;
+    }
+    case AST_TYPE_REF_PTR: {
+        return type_ptr_ref(fid, scope, type);
+        break;
+    }
     case AST_TYPE_ARR:
     case AST_TYPE_SLICE:
-    case AST_TYPE_GENERIC:
+    case AST_TYPE_GENERIC: {
+        break;
+    }
     case AST_TYPE_FN_PTR:
     case AST_TYPE_VARIADIC:
     case AST_TYPE_INVALID:
         break;
     }
+    return OptId<TypeId>{};
+}
+[[nodiscard]] OptId<TypeId> TopLevelTypeResolver::type_base(FileId fid, NamedOrAnonScopeId scope,
+                                                            const ast_type_t* type) {
+    auto maybe_builtin = id_tkn_slice_to_maybe_builtin(type->type.base.id);
+    if (maybe_builtin.has_value()) {
+        return context.emplace_type(TypeBuiltin{maybe_builtin.value()},
+                                    Span(context, fid, type->first, type->last),
+                                    type->type.base.mut);
+    }
+    auto maybe_structure
+        = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id));
+    if (maybe_structure.has_value()) {
+        return context.emplace_type(TypeStructure{maybe_structure.as_id()},
+                                    Span(context, fid, type->first, type->last),
+                                    type->type.base.mut);
+    }
+    // not builtin and no struct, variant, or union found
+    context.emplace_diagnostic(Span(context, fid, type->first, type->last),
+                               diag_code::type_not_defined, diag_type::error);
+    return OptId<TypeId>{};
+}
+
+OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId scope,
+                                                 const ast_type_t* type) {
+    auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner);
+    if (!maybe_inner.has_value()) {
+        return OptId<TypeId>{};
+    }
+    // inner*
+    if (type->type.ptr_ref.modifier->type == TOK_STAR) {
+        return context.emplace_type(TypePtr{maybe_inner.as_id()},
+                                    Span(context, fid, type->first, type->last),
+                                    type->type.ptr_ref.mut);
+    }
+    // inner&
+    return context.emplace_type(TypeRef{maybe_inner.as_id()},
+                                Span(context, fid, type->first, type->last),
+                                type->type.ptr_ref.mut);
 }
 
 } // namespace hir
