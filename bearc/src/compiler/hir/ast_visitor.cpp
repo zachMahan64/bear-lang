@@ -61,7 +61,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     // handle module, first search for an existing module to insert into
     if (stmt->type == AST_STMT_MODULE) {
         token_t* name_tkn = stmt->stmt.module.id;
-        SymbolId name = context.get_symbol_id_for_tkn(name_tkn);
+        SymbolId name = context.symbol_id_for_identifier_tkn(name_tkn);
 
         // look up a LOCAL namespace since we don't want to traverse parents for already defined
         // namespaces, because we want to allow nested namespaces. If we didn't do this, we might
@@ -130,7 +130,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     token_t* prefix = info.scope_prefix_tkn;
     if (prefix) {
         auto r = Scope::look_up_type(context, scope,
-                                     context.get_symbol_id_for_tkn(info.scope_prefix_tkn));
+                                     context.symbol_id_for_identifier_tkn(info.scope_prefix_tkn));
         bool no_struct = false;
         if (r.status == scope_look_up_status::okay) {
             if (auto s = context.def_to_scope_for_types.at(r.def_id); s.has_value()) {
@@ -149,7 +149,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     }
 
     // get symbol from token
-    SymbolId name = context.get_symbol_id_for_tkn(name_tkn);
+    SymbolId name = context.symbol_id_for_identifier_tkn(name_tkn);
 
     // check for redefintion
     OptId<DefId> already_defined{};

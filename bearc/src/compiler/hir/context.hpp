@@ -46,6 +46,9 @@ class Context {
     [[nodiscard]] SymbolId symbol_id(const token_t* tkn);
     [[nodiscard]] SymbolId symbol_id(const char* start, size_t len);
     [[nodiscard]] SymbolId symbol_id(std::string_view str);
+    [[nodiscard]] SymbolId symbol_id_for_identifier_tkn(const token_t* tkn);
+    /// get a symbol, trimming the "" quotes on the outside when interning
+    [[nodiscard]] SymbolId symbol_id_for_str_lit_tkn(const token_t* tkn);
     [[nodiscard]] FileId file(SymbolId path);
     [[nodiscard]] FileId file(std::filesystem::path& path);
     [[nodiscard]] const char* file_name(FileId id) const;
@@ -226,9 +229,6 @@ class Context {
     /// forceably emplaces ast, not checking if it has already been processed. This function is
     /// wrapped by file handling logic and should thus not be used directly anywhere else
     FileAstId emplace_ast(const char* file_name);
-    [[nodiscard]] SymbolId get_symbol_id_for_tkn(const token_t* tkn);
-    /// get a symbol, trimming the "" quotes on the outside when interning
-    [[nodiscard]] SymbolId get_symbol_id_for_str_lit_token(token_t* tkn);
     void register_importer(FileId importee, FileId importer);
     void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
                       const token_t* import_path_tkn);

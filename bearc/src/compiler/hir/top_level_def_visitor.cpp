@@ -179,13 +179,14 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
             maybe_value = ExecExprComptConstant{tkn->val.character};
             break;
         case TOK_INT_LIT:
+            // TODO, this is gonna cause casting issues since it's always being set as in64_t here
             maybe_value = ExecExprComptConstant{tkn->val.integral};
             break;
         case TOK_FLOAT_LIT:
             maybe_value = ExecExprComptConstant{static_cast<float>(tkn->val.floating)};
             break;
         case TOK_STR_LIT:
-            maybe_value = ExecExprComptConstant{context.symbol_id(tkn)};
+            maybe_value = ExecExprComptConstant{context.symbol_id_for_str_lit_tkn(tkn)};
             break;
         case TOK_BOOL_LIT_FALSE:
             maybe_value = ExecExprComptConstant{false};

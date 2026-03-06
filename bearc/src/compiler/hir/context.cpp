@@ -138,11 +138,11 @@ SymbolId Context::symbol_id(const char* start, size_t len) {
     // give sym_id now that it's fully interned
     return sym_id;
 }
-SymbolId Context::get_symbol_id_for_tkn(const token_t* tkn) {
+SymbolId Context::symbol_id_for_identifier_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
     return symbol_id(tkn->start, tkn->len);
 }
-SymbolId Context::get_symbol_id_for_str_lit_token(token_t* tkn) {
+SymbolId Context::symbol_id_for_str_lit_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_STR_LIT);
     return symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes
 }
@@ -347,7 +347,7 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
                                                       const ast_stmt_t* import_statement) {
     assert(import_statement->type == AST_STMT_IMPORT);
     token_t* path_tkn = import_statement->stmt.import.file_path;
-    SymbolId path_symbol_id = get_symbol_id_for_str_lit_token(path_tkn);
+    SymbolId path_symbol_id = symbol_id_for_str_lit_tkn(path_tkn);
     const char* path = symbol_id_to_cstr(path_symbol_id);
 
     const std::filesystem::path parent = std::filesystem::path(path).parent_path();
