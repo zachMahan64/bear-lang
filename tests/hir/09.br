@@ -39,3 +39,5 @@ struct Cir {
 struct Le {
     Cir circular;
 }
+
+u8 a = 255;

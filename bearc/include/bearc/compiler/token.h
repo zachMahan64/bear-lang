@@ -145,6 +145,7 @@ typedef enum token_type {
     // built-in types
     TOK_CHAR_LIT,
     TOK_INT_LIT,
+    TOK_UINT_LIT,
     TOK_FLOAT_LIT, // currently float literals not suported, so we would need to downcast at
                    // comptime
     TOK_STR_LIT,
@@ -212,7 +213,8 @@ typedef enum token_type {
 /// stores the value of literals in source code
 typedef union token_value {
     char character;
-    int64_t integral;
+    int64_t signed_integral;
+    uint64_t unsigned_integral;
     double floating;
 } token_value_u;
 
