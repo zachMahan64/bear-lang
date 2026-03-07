@@ -94,7 +94,7 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::try_up_convert_to(bu
         case builtin_type::u8:
             return *this;
         case builtin_type::i8:
-            return to_optconst(ConstantValue{static_cast<uint8_t>(val)});
+            return to_optconst(ConstantValue{static_cast<int8_t>(val)});
         case builtin_type::u16:
             return to_optconst(ConstantValue{static_cast<uint16_t>(val)});
         case builtin_type::i16:
