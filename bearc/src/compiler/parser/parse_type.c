@@ -245,7 +245,7 @@ ast_type_t* parse_type_arr(parser_t* p) {
     // handle canonical base
     outer->canonical_base = inner->canonical_base;
     outer->first = lbrack;
-    inner->last = inner->last;
+    outer->last = inner->last;
     return outer;
 }
 

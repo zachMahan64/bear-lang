@@ -29,6 +29,13 @@ compiler_error_list_t compiler_error_list_create(src_buffer_t* src_buffer) {
     return err_list;
 }
 
+void compiler_error_list_init(compiler_error_list_t* list, src_buffer_t* src_buffer) {
+    *list = (compiler_error_list_t){
+        .src_buffer = *src_buffer,
+        .list_vec = vector_create_and_reserve(sizeof(compiler_error_t), ERROR_LIST_VEC_RESERVE_CAP),
+        .error_cnt = 0};
+}
+
 void compiler_error_list_destroy(compiler_error_list_t* error_list) {
     vector_destroy(&error_list->list_vec);
 }

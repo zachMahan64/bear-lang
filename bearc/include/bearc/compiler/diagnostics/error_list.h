@@ -23,13 +23,15 @@ extern "C" {
  * list of compiler_error_t's with a file_name
  */
 typedef struct compiler_error_list {
-    const src_buffer_t src_buffer; // holds file_name and view into src code inside a buffer
-    vector_t list_vec;             // hold type compiler_error_t
+    src_buffer_t src_buffer; // holds file_name and view into src code inside a buffer
+    vector_t list_vec;       // hold type compiler_error_t
     uint32_t error_cnt;
 } compiler_error_list_t;
 
 /// ctor for error_list_t
 compiler_error_list_t compiler_error_list_create(src_buffer_t* src_buffer);
+
+void compiler_error_list_init(compiler_error_list_t* list, src_buffer_t* src_buffer);
 
 /// dtor for error_list_t
 void compiler_error_list_destroy(compiler_error_list_t* error_list);

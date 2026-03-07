@@ -246,6 +246,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
         goto ret_without_diag;
     }
     if (maybe_value.has_value()) {
+        // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
         auto maybe_converted = maybe_value.value().try_implicit_convert_to(into_builtin);
         if (!maybe_converted.has_value()) {
             context.emplace_diagnostic(
@@ -253,6 +254,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
                 diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
             return OptId<ExecId>{};
         }
+        std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
         assert(maybe_converted.value().matches_type(into_builtin));
         return emplace_e(maybe_converted.value());
     }
@@ -277,17 +279,16 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 
 [[nodiscard]] OptId<TypeId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                                                const ast_type_t* type) {
-    // TODO
+    // TODO finish
     switch (type->tag) {
     case AST_TYPE_BASE: {
         return type_base(fid, scope, type);
-        break;
     }
     case AST_TYPE_REF_PTR: {
         return type_ptr_ref(fid, scope, type);
-        break;
     }
     case AST_TYPE_ARR:
+        return type_arr(fid, scope, type);
     case AST_TYPE_SLICE:
     case AST_TYPE_GENERIC: {
         break;
@@ -336,6 +337,22 @@ OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId 
     return context.emplace_type(TypeRef{maybe_inner.as_id()},
                                 Span(context, fid, type->first, type->last),
                                 type->type.ptr_ref.mut);
+}
+
+OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scope,
+                                             const ast_type_t* type) {
+    auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner);
+    if (!maybe_inner.has_value()) {
+        return OptId<TypeId>{};
+    }
+    auto maybe_size_exec = TopLevelConstantExprSolver{context, def_visitor}.solve_compt_expr(
+        fid, scope, type->type.arr.size_expr, builtin_type::usize);
+    if (!maybe_size_exec.has_value()) {
+        return OptId<TypeId>{};
+    }
+    auto size = context.exec(maybe_size_exec.as_id()).as<ExecExprComptConstant>().as<size_t>();
+    return context.emplace_type(TypeArr{maybe_inner.as_id(), maybe_size_exec.as_id(), size},
+                                Span(context, fid, type->first, type->last), false);
 }
 
 } // namespace hir

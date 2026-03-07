@@ -7,7 +7,7 @@ fn main() -> i32 {
 struct Foo {
     [24]i32 a;
     struct Bar {
-        [4 * 8]i32 b;
+        [8]i32 b;
     }
    Arr<i32, 4> c; 
 }

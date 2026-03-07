@@ -44,10 +44,10 @@ class TopLevelDefVisitor {
 class TopLevelConstantExprSolver {
     TopLevelDefVisitor& def_visitor;
     Context& context;
-    explicit TopLevelConstantExprSolver(Context& ctx, TopLevelDefVisitor& def_visitor)
-        : context{ctx}, def_visitor{def_visitor} {}
 
   public:
+    explicit TopLevelConstantExprSolver(Context& ctx, TopLevelDefVisitor& def_visitor)
+        : context{ctx}, def_visitor{def_visitor} {}
     // solves a top level compt expr (this is primarily for array sizing & builtin types for top
     // level generic instantiation with compt parameterizations)
     [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
@@ -64,6 +64,8 @@ class TopLevelTypeResolver {
                                           const ast_type_t* type);
     [[nodiscard]] OptId<TypeId> type_ptr_ref(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type);
+    [[nodiscard]] OptId<TypeId> type_arr(FileId fid, NamedOrAnonScopeId scope,
+                                         const ast_type_t* type);
 
   public:
     explicit TopLevelTypeResolver(Context& ctx, TopLevelDefVisitor& def_visitor)
