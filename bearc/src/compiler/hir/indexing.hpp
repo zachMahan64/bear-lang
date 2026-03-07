@@ -15,6 +15,9 @@
 
 namespace hir {
 
+// helper trait (useful for enumerating over various possible Ids in concepts)
+template <typename T, typename... Ts> constexpr bool is_any_of_v = (std::is_same_v<T, Ts> || ...);
+
 /// defines the underlying size of indices of vectors storing HIR nodes
 using HirSize = uint32_t;
 
@@ -117,20 +120,24 @@ template <hir::IsId T> class IdIdx {
     friend constexpr bool operator==(IdIdx<T> a, IdIdx<T> b) { return a.value == b.value; }
 };
 
+static constinit std::nullopt_t OPT_ID_NONE = std::nullopt;
+using NoneId = std::nullopt_t;
+
 /// holds an optional HirId or HirIdIdx type
 template <hir::IsId T> class OptId {
     T underlying{};
 
   public:
+    using none_type = NoneId;
+    static constexpr none_type none = OPT_ID_NONE;
     using id_tag = T;
     OptId() = default;
     OptId(T id_value) : underlying(id_value) {}
-    OptId(std::nullopt_t nopt) : OptId{} {}
+    OptId(NoneId none) : OptId{} {}
     HirId val() const { return underlying.val(); }
     constexpr T as_id() const noexcept { return underlying; }
     [[nodiscard]] bool has_value() const noexcept { return underlying.val() != HIR_ID_NONE; }
     void set(T id_value) noexcept { this->underlying = id_value; }
-    static constexpr OptId none() { return OptId{}; }
     T get_or(T or_else_this_value) {
         return this->has_value() ? this->as_id() : or_else_this_value;
     };

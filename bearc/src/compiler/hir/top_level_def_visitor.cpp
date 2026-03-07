@@ -16,6 +16,7 @@
 #include "compiler/token.h"
 #include <cassert>
 #include <iostream>
+#include <optional>
 
 namespace hir {
 
@@ -179,12 +180,9 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
             maybe_value = ExecExprComptConstant{tkn->val.character};
             break;
         case TOK_INT_LIT:
-            // TODO, this is gonna cause casting issues since it's always being set as in64_t here
             maybe_value = ExecExprComptConstant{tkn->val.signed_integral};
             break;
         case TOK_UINT_LIT:
-            // TODO, also this is gonna cause casting issues since it's always being set as uin64_t
-            // here
             maybe_value = ExecExprComptConstant{tkn->val.unsigned_integral};
             break;
         case TOK_FLOAT_LIT:
@@ -290,7 +288,9 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
     case AST_TYPE_ARR:
         return type_arr(fid, scope, type);
     case AST_TYPE_SLICE:
+        return type_slice(fid, scope, type);
     case AST_TYPE_GENERIC: {
+        // TODO, attempt a generic instantiation
         break;
     }
     case AST_TYPE_FN_PTR:
@@ -329,19 +329,19 @@ OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId 
     }
     // inner*
     if (type->type.ptr_ref.modifier->type == TOK_STAR) {
-        return context.emplace_type(TypePtr{maybe_inner.as_id()},
+        return context.emplace_type(TypePtr{.inner = maybe_inner.as_id()},
                                     Span(context, fid, type->first, type->last),
                                     type->type.ptr_ref.mut);
     }
     // inner&
-    return context.emplace_type(TypeRef{maybe_inner.as_id()},
+    return context.emplace_type(TypeRef{.inner = maybe_inner.as_id()},
                                 Span(context, fid, type->first, type->last),
                                 type->type.ptr_ref.mut);
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type) {
-    auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner);
+    auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner);
     if (!maybe_inner.has_value()) {
         return OptId<TypeId>{};
     }
@@ -351,8 +351,43 @@ OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scop
         return OptId<TypeId>{};
     }
     auto size = context.exec(maybe_size_exec.as_id()).as<ExecExprComptConstant>().as<size_t>();
-    return context.emplace_type(TypeArr{maybe_inner.as_id(), maybe_size_exec.as_id(), size},
+    return context.emplace_type(TypeArr{.inner = maybe_inner.as_id(),
+                                        .compt_size_expr = maybe_size_exec.as_id(),
+                                        .canonical_size = size},
                                 Span(context, fid, type->first, type->last), false);
+}
+
+OptId<TypeId> TopLevelTypeResolver::type_slice(FileId fid, NamedOrAnonScopeId scope,
+                                               const ast_type_t* type) {
+    auto maybe_inner = resolve_type(fid, scope, type->type.slice.inner);
+    if (!maybe_inner.has_value()) {
+        return OptId<TypeId>{};
+    }
+    return context.emplace_type(TypeSlice{.inner = maybe_inner.as_id()},
+                                Span(context, fid, type->first, type->last), type->type.slice.mut);
+}
+
+OptId<TypeId> TopLevelTypeResolver::type_fn_ptr(FileId fid, NamedOrAnonScopeId scope,
+                                                const ast_type_t* type) {
+    auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type);
+    if (!maybe_return_type.has_value()) {
+        return OptId<TypeId>{};
+    }
+    auto return_type = maybe_return_type.as_id();
+    llvm::SmallVector<TypeId> tid_vec;
+    auto ast_param_type_slice = type->type.fn_ptr.param_types;
+    // get slice of of params
+    for (size_t i = 0; i < ast_param_type_slice.len; i++) {
+        auto maybe_tid = resolve_type(fid, scope, ast_param_type_slice.start[i]);
+        if (!maybe_tid.has_value()) {
+            return OptId<TypeId>{};
+        }
+        tid_vec.push_back(maybe_tid.as_id());
+    }
+    IdSlice<TypeId> param_tid_slice = context.freeze_id_vec(tid_vec);
+    return context.emplace_type(
+        TypeFnPtr{.param_types = param_tid_slice, .return_type = return_type},
+        Span(context, fid, type->first, type->last), type->type.slice.mut);
 }
 
 } // namespace hir

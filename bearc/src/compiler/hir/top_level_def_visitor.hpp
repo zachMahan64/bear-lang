@@ -66,6 +66,11 @@ class TopLevelTypeResolver {
                                              const ast_type_t* type);
     [[nodiscard]] OptId<TypeId> type_arr(FileId fid, NamedOrAnonScopeId scope,
                                          const ast_type_t* type);
+    [[nodiscard]] OptId<TypeId> type_slice(FileId fid, NamedOrAnonScopeId scope,
+                                           const ast_type_t* type);
+
+    [[nodiscard]] OptId<TypeId> type_fn_ptr(FileId fid, NamedOrAnonScopeId scope,
+                                            const ast_type_t* type);
 
   public:
     explicit TopLevelTypeResolver(Context& ctx, TopLevelDefVisitor& def_visitor)

@@ -28,6 +28,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
 #include <filesystem>
+#include <type_traits>
 
 namespace hir {
 
@@ -143,6 +144,31 @@ class Context {
     friend class FileAstVisitor;
     friend class TopLevelDefVisitor;
     friend class TopLevelConstantExprSolver;
+
+    // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
+    template <IsId I>
+    [[nodiscard]] IdSlice<I> freeze_id_vec(const llvm::SmallVectorImpl<I>& vec)
+        requires is_any_of_v<I, TypeId, ExecId, DefId, GenericParamId, GenericArgId, FileId,
+                             SymbolId>
+    {
+        if constexpr (std::is_same_v<I, TypeId>) {
+            return type_ids.freeze_small_vec(vec);
+        } else if constexpr (std::is_same_v<I, ExecId>) {
+            return exec_ids.freeze_small_vec(vec);
+        } else if constexpr (std::is_same_v<I, DefId>) {
+            return def_ids.freeze_small_vec(vec);
+        } else if constexpr (std::is_same_v<I, GenericParamId>) {
+            return generic_param_ids.freeze_small_vec(vec);
+        } else if constexpr (std::is_same_v<I, GenericArgId>) {
+            return generic_arg_ids.freeze_small_vec(vec);
+        } else if constexpr (std::is_same_v<I, FileId>) {
+            return file_ids.freeze_small_vec(vec);
+        } else if constexpr (std::is_same_v<I, SymbolId>) {
+            return symbol_ids.freeze_small_vec(vec);
+        } else {
+            static_assert(false, "try to freeze a vector of an unconsidered hir::Id type");
+        }
+    }
 
   private:
     // containers:

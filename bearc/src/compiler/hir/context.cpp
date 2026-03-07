@@ -194,7 +194,7 @@ void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId
     FileId imported_in = import_stack[import_stack.size() - 1];
     emplace_diagnostic(Span{imported_in, ast(imported_in).buffer(), import_path_tkn},
                        diag_code::cyclical_import, diag_type::error,
-                       DiagnosticImportStack{file_ids.freeze_small_vec(import_stack)});
+                       DiagnosticImportStack{freeze_id_vec(import_stack)});
 }
 void Context::explore_imports(FileId root_id) {
     llvm::SmallVector<FileId> import_stack{};
@@ -254,7 +254,7 @@ void Context::explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<Fil
     }
 
     // set forward dependency list
-    auto importer_to_importees_slice = file_ids.freeze_small_vec(importees);
+    auto importer_to_importees_slice = freeze_id_vec(importees);
 
     importer_to_importees.at(importer_file_id) = importer_to_importees_slice;
 
@@ -467,7 +467,7 @@ Def& Context::def(DefId def_id) { return defs.at(def_id); }
 FileId Context::file_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx); }
 
 void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec) {
-    IdSlice<DefId> def_slice = def_ids.freeze_small_vec(vec);
+    IdSlice<DefId> def_slice = freeze_id_vec(vec);
     OrderedDefSliceId ord_def_slice_id = ordered_def_slices.emplace_and_get_id(def_slice);
     def_to_ordered_def_slice.insert(def, ord_def_slice_id);
 }
@@ -621,7 +621,7 @@ IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
         const token_t* tkn = token_slice.start[i];
         vec.push_back(symbol_id(tkn));
     }
-    return symbol_ids.freeze_small_vec(vec);
+    return freeze_id_vec(vec);
 }
 
 NamedOrAnonScopeId Context::containing_scope(DefId did) const {
