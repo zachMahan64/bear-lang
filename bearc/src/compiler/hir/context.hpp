@@ -98,7 +98,7 @@ class Context {
     /// to the first structural representation of the canonical type
     [[nodiscard]] CanonicalTypeId
     emplace_and_get_canonical_type_id(TypeId first_structural_type_id);
-
+    /// emplaces a type, setting its CanonicalTypeId, and returning its TypeId
     [[nodiscard]] TypeId emplace_type(const TypeValue& value, Span span, bool mut);
 
     /// accessfor for a def thru a DefId

@@ -101,10 +101,15 @@ Context::Context(const bearc_args_t* args)
     for (FileId id = files.rbegin_id(); id != files.rend_id(); --id) {
         File& f = files.at(id);
         const FileAst& ast = file_asts.cat(f.ast_id);
-        FileAstVisitor visitor{*this, id};
-        visitor.register_top_level_declarations();
+        if (!args->flags[CLI_FLAG_PARSE_ONLY]) {
+            FileAstVisitor visitor{*this, id};
+            visitor.register_top_level_declarations();
+        }
         this->note_cnt += ast.diagnostic_count() - ast.error_count();
         this->fatal_error_cnt += ast.error_count();
+    }
+    if (args->flags[CLI_FLAG_PARSE_ONLY]) {
+        return;
     }
     TopLevelDefVisitor{*this}.resolve_top_level_definitions();
 }

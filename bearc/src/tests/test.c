@@ -51,6 +51,10 @@ int main(int argc, char** argv) {
  * macros to easily test tests in the form tests/00.br
  */
 
+#define TEST_SET_ARGS(_args)                                                                       \
+    do {                                                                                           \
+        args = parse_cli_args(sizeof(_args) / sizeof((_args)[0]), _args);                          \
+    } while (0);
 #define TEST_INIT(_name)                                                                           \
     br_test_result_t br_test_result = {.cnt_success = 0, .cnt_total = 0, .name = (_name)};         \
     int true_cnt = 0;
@@ -101,8 +105,10 @@ int main(int argc, char** argv) {
 
 br_test_result_t test_parser(void) {
     TEST_INIT("parser");
+    char* parser_args[] = {"bearc", "--parse-only"};
+    TEST_SET_ARGS(parser_args);
     ASSERT_EQ_ERR("parser/00", 5);
-    ASSERT_EQ_ERR("parser/01", 2);
+    ASSERT_EQ_ERR("parser/01", 0);
     ASSERT_EQ_ERR("parser/02", 5);
     ASSERT_EQ_ERR("parser/03", 0);
     ASSERT_EQ_ERR("parser/04", 6);
@@ -148,7 +154,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/42", 1);
     ASSERT_EQ_ERR("parser/43", 0);
     ASSERT_EQ_ERR("parser/44", 1);
-    ASSERT_EQ_ERR("parser/45", 2);
+    ASSERT_EQ_ERR("parser/45", 1);
     ASSERT_EQ_ERR("parser/46", 1);
     ASSERT_EQ_ERR("parser/47", 1);
 

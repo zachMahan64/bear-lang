@@ -59,18 +59,20 @@ class TopLevelConstantExprSolver {
 class TopLevelTypeResolver {
     TopLevelDefVisitor& def_visitor;
     Context& context;
-
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
+                                             const ast_type_t* type, bool visit_as_transparent);
     [[nodiscard]] OptId<TypeId> type_base(FileId fid, NamedOrAnonScopeId scope,
-                                          const ast_type_t* type);
+                                          const ast_type_t* type, bool visit_as_transparent);
     [[nodiscard]] OptId<TypeId> type_ptr_ref(FileId fid, NamedOrAnonScopeId scope,
-                                             const ast_type_t* type);
+                                             const ast_type_t* type, bool visit_as_transparent);
     [[nodiscard]] OptId<TypeId> type_arr(FileId fid, NamedOrAnonScopeId scope,
-                                         const ast_type_t* type);
+                                         const ast_type_t* type, bool visit_as_transparent);
     [[nodiscard]] OptId<TypeId> type_slice(FileId fid, NamedOrAnonScopeId scope,
-                                           const ast_type_t* type);
-
+                                           const ast_type_t* type, bool visit_as_transparent);
     [[nodiscard]] OptId<TypeId> type_fn_ptr(FileId fid, NamedOrAnonScopeId scope,
-                                            const ast_type_t* type);
+                                            const ast_type_t* type, bool visit_as_transparent);
+    [[nodiscard]] OptId<TypeId> type_variadic(FileId fid, NamedOrAnonScopeId scope,
+                                              const ast_type_t* type, bool visit_as_transparent);
 
   public:
     explicit TopLevelTypeResolver(Context& ctx, TopLevelDefVisitor& def_visitor)

@@ -67,7 +67,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId def) {
         Def& defin = context.def(def);
         Span span = defin.span;
         OptId<TypeId> maybe_type = TopLevelTypeResolver{context, *this}.resolve_type(
-            span.file_id, scope, stmt->stmt.var_init_decl.type);
+            span.file_id, scope, stmt->stmt.var_decl.type);
         if (!maybe_type.has_value()) {
             return def; // maybe set a special value to indicate error differently
         }
@@ -76,7 +76,26 @@ DefId TopLevelDefVisitor::resolve_def(DefId def) {
         // TODO handle invalid non-initialized statements
         break;
     }
-    case AST_STMT_VAR_INIT_DECL:
+    case AST_STMT_VAR_INIT_DECL: {
+        Def& defin = context.def(def);
+        Span span = defin.span;
+        OptId<TypeId> maybe_type = TopLevelTypeResolver{context, *this}.resolve_type(
+            span.file_id, scope, stmt->stmt.var_init_decl.type);
+        if (!maybe_type.has_value()) {
+            return def; // maybe set a special value to indicate error differently
+        }
+        auto maybe_compt_exec
+            = TopLevelConstantExprSolver(context, *this)
+                  .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
+                                    maybe_type.as_id());
+        if (!maybe_compt_exec.has_value()) {
+            return def;
+        }
+        defin.set_value(DefVariable{.type = maybe_type.as_id(),
+                                    .name = context.symbol_id(stmt->stmt.var_init_decl.name),
+                                    .compt_value = maybe_compt_exec.as_id()});
+        break;
+    }
     case AST_STMT_MODULE:
     case AST_STMT_VISIBILITY_MODIFIER:
     case AST_STMT_COMPT_MODIFIER:
@@ -252,7 +271,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
                 diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
             return OptId<ExecId>{};
         }
-        std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
+        // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
         assert(maybe_converted.value().matches_type(into_builtin));
         return emplace_e(maybe_converted.value());
     }
@@ -266,6 +285,13 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
                                                            const ast_expr_t* expr,
                                                            TypeId into_tid) {
     const Type& into_type = context.type(into_tid);
+    // try to solve str& at comptime
+    if (into_type.holds<TypeRef>()) {
+        auto inner = context.type(into_type.as<TypeRef>().inner);
+        return (inner.holds<TypeBuiltin>() && inner.as<TypeBuiltin>().type == builtin_type::str)
+                   ? solve_compt_expr(fid, scope, expr, builtin_type::str)
+                   : std::nullopt;
+    }
     if (!into_type.holds<TypeBuiltin>()) {
         context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                                    diag_code::cannot_resolve_at_compt, diag_type::error);
@@ -277,42 +303,52 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 
 [[nodiscard]] OptId<TypeId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                                                const ast_type_t* type) {
-    // TODO finish
+    return resolve_type(fid, scope, type, false);
+}
+
+[[nodiscard]] OptId<TypeId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
+                                                               const ast_type_t* type,
+                                                               bool visit_as_transparent) {
     switch (type->tag) {
     case AST_TYPE_BASE: {
-        return type_base(fid, scope, type);
+        return type_base(fid, scope, type, visit_as_transparent);
     }
     case AST_TYPE_REF_PTR: {
-        return type_ptr_ref(fid, scope, type);
+        return type_ptr_ref(fid, scope, type, visit_as_transparent);
     }
     case AST_TYPE_ARR:
-        return type_arr(fid, scope, type);
+        return type_arr(fid, scope, type, visit_as_transparent);
     case AST_TYPE_SLICE:
-        return type_slice(fid, scope, type);
+        return type_slice(fid, scope, type, visit_as_transparent);
     case AST_TYPE_GENERIC: {
         // TODO, attempt a generic instantiation
         break;
     }
     case AST_TYPE_FN_PTR:
+        return type_fn_ptr(fid, scope, type, visit_as_transparent);
     case AST_TYPE_VARIADIC:
+        return type_variadic(fid, scope, type, visit_as_transparent);
     case AST_TYPE_INVALID:
         break;
     }
     return OptId<TypeId>{};
 }
+
 [[nodiscard]] OptId<TypeId> TopLevelTypeResolver::type_base(FileId fid, NamedOrAnonScopeId scope,
-                                                            const ast_type_t* type) {
+                                                            const ast_type_t* type,
+                                                            bool visit_as_transparent) {
     auto maybe_builtin = id_tkn_slice_to_maybe_builtin(type->type.base.id);
     if (maybe_builtin.has_value()) {
         return context.emplace_type(TypeBuiltin{maybe_builtin.value()},
                                     Span(context, fid, type->first, type->last),
                                     type->type.base.mut);
     }
-    auto maybe_structure
+    OptId<DefId> maybe_structure
         = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id));
     if (maybe_structure.has_value()) {
-        return context.emplace_type(TypeStructure{maybe_structure.as_id()},
-                                    Span(context, fid, type->first, type->last),
+        auto def = visit_as_transparent ? def_visitor.visit_as_transparent(maybe_structure.as_id())
+                                        : def_visitor.visit_as_dependent(maybe_structure.as_id());
+        return context.emplace_type(TypeStructure{def}, Span(context, fid, type->first, type->last),
                                     type->type.base.mut);
     }
     // not builtin and no struct, variant, or union found
@@ -322,8 +358,10 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId scope,
-                                                 const ast_type_t* type) {
-    auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner);
+                                                 const ast_type_t* type,
+                                                 bool visit_as_transparent) {
+    auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner,
+                                    true); // inner always transparent thru a ref/ptr
     if (!maybe_inner.has_value()) {
         return OptId<TypeId>{};
     }
@@ -340,8 +378,8 @@ OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId 
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scope,
-                                             const ast_type_t* type) {
-    auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner);
+                                             const ast_type_t* type, bool visit_as_transparent) {
+    auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner, visit_as_transparent);
     if (!maybe_inner.has_value()) {
         return OptId<TypeId>{};
     }
@@ -358,8 +396,10 @@ OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scop
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_slice(FileId fid, NamedOrAnonScopeId scope,
-                                               const ast_type_t* type) {
-    auto maybe_inner = resolve_type(fid, scope, type->type.slice.inner);
+                                               const ast_type_t* type, bool visit_as_transparent) {
+    auto maybe_inner
+        = resolve_type(fid, scope, type->type.slice.inner,
+                       true); // thru slice is always transparent (since it's a wide ptr)
     if (!maybe_inner.has_value()) {
         return OptId<TypeId>{};
     }
@@ -368,8 +408,9 @@ OptId<TypeId> TopLevelTypeResolver::type_slice(FileId fid, NamedOrAnonScopeId sc
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_fn_ptr(FileId fid, NamedOrAnonScopeId scope,
-                                                const ast_type_t* type) {
-    auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type);
+                                                const ast_type_t* type, bool visit_as_transparent) {
+    auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type,
+                                          true); // thru fn ptr is always transparent
     if (!maybe_return_type.has_value()) {
         return OptId<TypeId>{};
     }
@@ -389,5 +430,17 @@ OptId<TypeId> TopLevelTypeResolver::type_fn_ptr(FileId fid, NamedOrAnonScopeId s
         TypeFnPtr{.param_types = param_tid_slice, .return_type = return_type},
         Span(context, fid, type->first, type->last), type->type.slice.mut);
 }
-
+OptId<TypeId> TopLevelTypeResolver::type_variadic(FileId fid, NamedOrAnonScopeId scope,
+                                                  const ast_type_t* type,
+                                                  bool visit_as_transparent) {
+    auto maybe_inner = resolve_type(
+        fid, scope, type->type.variadic.inner,
+        true); // thru variadic is always transparent (since it's effectively a slice)
+    if (!maybe_inner.has_value()) {
+        return OptId<TypeId>{};
+    }
+    return context.emplace_type(TypeVariadic{.inner = maybe_inner.as_id()},
+                                Span(context, fid, type->first, type->last),
+                                false); // mut bound to variadic is not possible
+}
 } // namespace hir
