@@ -1,0 +1,8 @@
+// tests/hir/10.br
+struct Lo {
+    Op& op;
+}
+
+struct Op {
+    Lo& lo;
+}

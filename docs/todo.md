@@ -35,6 +35,7 @@
 
 ##### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
+- [ ] TODO fix `tests/hir/10.br` falsely reported circular 
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
     - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
     - [ ] implement kind of operator <--> type mapping system (just worry about builtin types for now)

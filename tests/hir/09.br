@@ -32,12 +32,12 @@ struct Bar {
     str& stringy_jr;
 }
 
-struct Cir {
+struct Circ {
     Le circular;
 }
 
 struct Le {
-    Cir circular;
+    Circ circular;
 }
 
 u8 a = 255;

@@ -162,7 +162,7 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
 
     for (auto it = def_stack.rbegin(); it != def_stack.rend(); it++) {
         DefId d = *it;
-        if (d != culprit) {
+        if (d != culprit && it != def_stack.rbegin()) {
             DiagnosticId curr_diag = context.emplace_diagnostic(
                 context.make_top_level_def_name_span(d), diag_code::circular_definition_passes_thru,
                 diag_type::note);
@@ -367,6 +367,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
     }
     OptId<DefId> maybe_structure
         = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id));
+    std::cout << visit_as_transparent << '\n';
     if (maybe_structure.has_value()) {
         auto def = visit_as_transparent ? def_visitor.visit_as_transparent(maybe_structure.as_id())
                                         : def_visitor.visit_as_dependent(maybe_structure.as_id());

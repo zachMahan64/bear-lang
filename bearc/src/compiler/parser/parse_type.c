@@ -273,7 +273,7 @@ ast_type_t* parse_type_slice(parser_t* p) {
     outer->type.slice.inner = inner;
     outer->canonical_base = inner->canonical_base;
     outer->first = lbrack;
-    inner->last = inner->last;
+    outer->last = inner->last;
     return outer;
 }
 
