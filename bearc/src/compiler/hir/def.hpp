@@ -29,6 +29,7 @@ struct DefModule {
 struct DefFunction {
     SymbolId name;
     IdSlice<DefId> params;
+    IdSlice<TypeId> param_types;
     OptId<TypeId> return_type;
     ExecId body;
     /// if this function was derived from an original generic function
@@ -54,8 +55,8 @@ struct DefVariable {
 };
 
 struct DefStruct {
-    ScopeId scope;
     SymbolId name;
+    ScopeId scope;
     /// data members/fields, not functions
     IdSlice<DefId> ordered_members;
     IdSlice<DefId> contracts;

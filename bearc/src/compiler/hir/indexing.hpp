@@ -155,6 +155,7 @@ template <hir::IsId T> class IdSlice {
     constexpr IdIdx<T> last_elem() const noexcept { return IdIdx<T>{first_.val() + len_ - 1}; }
     constexpr IdIdx<T> get(HirSize i) const noexcept { return IdIdx<T>{first_.val() + i}; }
     constexpr HirSize len() const noexcept { return len_; }
+    constexpr bool is_empty() const noexcept { return len_ == 0; }
 
     constexpr IdIdx<T> begin() const noexcept { return first_; }
 

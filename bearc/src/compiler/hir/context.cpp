@@ -74,7 +74,7 @@ Context::Context(const bearc_args_t* args)
       def_ast_nodes(DEFAULT_DEF_CAP), diagnostics{DEFAULT_DIAG_NUM},
       diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
       def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP},
-      def_to_ordered_def_slice{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
+      def_to_ordered_def_slice_id{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
       ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
       canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP) {
@@ -474,7 +474,16 @@ FileId Context::file_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx);
 void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec) {
     IdSlice<DefId> def_slice = freeze_id_vec(vec);
     OrderedDefSliceId ord_def_slice_id = ordered_def_slices.emplace_and_get_id(def_slice);
-    def_to_ordered_def_slice.insert(def, ord_def_slice_id);
+    def_to_ordered_def_slice_id.insert(def, ord_def_slice_id);
+}
+
+IdSlice<DefId> Context::ordered_defs_for(DefId def) {
+    auto maybe_odef_slice_id = def_to_ordered_def_slice_id.at(def);
+    if (!maybe_odef_slice_id.has_value()) {
+        // empty slice
+        return IdSlice<DefId>{};
+    }
+    return ordered_def_slices.cat(maybe_odef_slice_id.as_id());
 }
 
 Def::resol_state Context::resol_state_of(DefId def) const { return def_resol_states.cat(def); }
@@ -555,6 +564,8 @@ TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
     return execs.cat(exec_ids.cat(id));
 }
 [[nodiscard]] const Def& Context::def(IdIdx<DefId> id) const { return defs.cat(def_ids.cat(id)); }
+
+[[nodiscard]] DefId Context::def_id(IdIdx<DefId> id) const { return def_ids.cat(id); }
 
 OptId<DefId> Context::look_up_variable(NamedOrAnonScopeId scope, SymbolId sid) const {
     if (std::holds_alternative<ScopeAnonId>(scope)) {

@@ -79,8 +79,10 @@ class Context {
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
+    /// gets the ordered def for a structure's def
+    [[nodiscard]] IdSlice<DefId> ordered_defs_for(DefId def);
     /// indicates resolution state of a definition
-    Def::resol_state resol_state_of(DefId def) const;
+    [[nodiscard]] Def::resol_state resol_state_of(DefId def) const;
     void set_resol_state_of(DefId def, Def::resol_state resol_state);
     IdSlice<SymbolId> symbol_slice(token_ptr_slice_t token_slice);
 
@@ -136,6 +138,7 @@ class Context {
     [[nodiscard]] TypeId type_id(IdIdx<TypeId> tid) const;
     [[nodiscard]] const Def& def(DefId id) const;
     [[nodiscard]] const Def& def(IdIdx<DefId> id) const;
+    [[nodiscard]] DefId def_id(IdIdx<DefId> id) const;
     [[nodiscard]] const Exec& exec(ExecId id) const;
     [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
 
@@ -220,7 +223,7 @@ class Context {
     // for storing ordered defs (namely ordered member definitions)
     IdVecMap<OrderedDefSliceId, IdSlice<DefId>> ordered_def_slices;
     // for accessing ordered def slices corresponding to a given DefId
-    IdHashMap<DefId, OrderedDefSliceId> def_to_ordered_def_slice;
+    IdHashMap<DefId, OrderedDefSliceId> def_to_ordered_def_slice_id;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

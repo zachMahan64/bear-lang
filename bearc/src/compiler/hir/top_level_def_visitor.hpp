@@ -28,7 +28,7 @@ class TopLevelDefVisitor {
     llvm::SmallVector<DefId, DEF_STACK_SIZE> def_stack;
     bool began_resolution;
 
-    DefId resolve_def(DefId def);
+    DefId resolve_def(DefId did);
     DefId visit(DefId def);
     void report_cycle(DefId culprit);
 
