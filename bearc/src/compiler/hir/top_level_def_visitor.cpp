@@ -96,10 +96,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId def) {
                                     .compt_value = maybe_compt_exec.as_id()});
         break;
     }
-    case AST_STMT_MODULE:
-    case AST_STMT_VISIBILITY_MODIFIER:
-    case AST_STMT_COMPT_MODIFIER:
-    case AST_STMT_STATIC_MODIFIER:
     case AST_STMT_STRUCT_DEF:
     case AST_STMT_CONTRACT_DEF:
     case AST_STMT_UNION_DEF:
@@ -108,6 +104,10 @@ DefId TopLevelDefVisitor::resolve_def(DefId def) {
     case AST_STMT_FN_DECL:
     case AST_STMT_FN_PROTOTYPE:
     case AST_STMT_DEFTYPE:
+    case AST_STMT_MODULE:
+    case AST_STMT_VISIBILITY_MODIFIER:
+    case AST_STMT_COMPT_MODIFIER:
+    case AST_STMT_STATIC_MODIFIER:
     case AST_STMT_IMPORT:
     case AST_STMT_USE:
     case AST_STMT_BLOCK:

@@ -9,8 +9,9 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
 
-static const bool really_note[ERR__COUNT] = {[NOTE_DID_YOU_MEAN_MT] = true};
-bool is_really_note(error_code_e error_code) { return really_note[error_code]; }
+static const uint8_t diag_types[ERR__COUNT]
+    = {[NOTE_DID_YOU_MEAN_MT] = DIAG_TYPE_NOTE, [NOTE_EXTRANEOUS_SEMICOLON] = DIAG_TYPE_WARNING};
+bool is_non_error_diagnostic(error_code_e error_code) { return diag_types[error_code]; }
 static const char* error_messages[ERR__COUNT] = {
     [ERR_EXPECTED_IDENTIFER] = "expected identifier",
     [ERR_EXPECTED_LITERAL] = "expected literal",
@@ -30,7 +31,7 @@ static const char* error_messages[ERR__COUNT] = {
     [ERR_EXPECTED_DECLARTION] = "expected variable or function declaration",
     [ERR_EXPECTED_DELIM_IN_MODULE_DECL] = "expected '{' or ';' in module declaration",
     [ERR_INVALID_MODULE_NAME] = "invalid module name",
-    [ERR_EXTRANEOUS_SEMICOLON] = "extraneous ';'",
+    [NOTE_EXTRANEOUS_SEMICOLON] = "extraneous ';'",
     [ERR_EXTRANEOUS_VISIBILITY_MODIFIER] = "extraneous visibility modifier",
     [ERR_BODY_MUST_BE_WRAPPED_IN_BRACES]
     = "expected '{' since statements following condition must be wrapped in braces",
@@ -50,6 +51,8 @@ static const char* error_messages[ERR__COUNT] = {
     [ERR_MULTILEVEL_REF]
     = "multi-level reference type is malformed; did you mean to declare a multi-level pointer?"};
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
+
+error_diag_type_e error_diagnostic_type(error_code_e error_code) { return diag_types[error_code]; }
 
 const char* error_message_context_for(compiler_error_t* error) {
     if (error->expected_token_type != TOK_NONE) {

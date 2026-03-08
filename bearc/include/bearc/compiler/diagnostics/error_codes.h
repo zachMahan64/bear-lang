@@ -14,6 +14,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum error_diag_type {
+    DIAG_TYPE_ERROR = 0,
+    DIAG_TYPE_NOTE,
+    DIAG_TYPE_WARNING
+} error_diag_type_e;
 /**
  * predefined set of errors, these have associated diagnostics with
  * the functions in this header
@@ -37,7 +43,7 @@ typedef enum error_code {
     ERR_EXPECTED_DECLARTION,
     ERR_EXPECTED_DELIM_IN_MODULE_DECL,
     ERR_INVALID_MODULE_NAME,
-    ERR_EXTRANEOUS_SEMICOLON,
+    NOTE_EXTRANEOUS_SEMICOLON,
     ERR_EXTRANEOUS_VISIBILITY_MODIFIER,
     ERR_BODY_MUST_BE_WRAPPED_IN_BRACES,
     ERR_MISMATCHED_RPAREN,
@@ -74,7 +80,10 @@ typedef struct {
 const char* error_message_for_code(error_code_e error_code);
 
 // getting if the error is really a note for a given error_code_e
-bool is_really_note(error_code_e error_code);
+bool is_non_error_diagnostic(error_code_e error_code);
+
+// gets the diagnostic type for a given code
+error_diag_type_e error_diagnostic_type(error_code_e error_code);
 
 /**
  * gives addition context for appropriate compiler_error_t's

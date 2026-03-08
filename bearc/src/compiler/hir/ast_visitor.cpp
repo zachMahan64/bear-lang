@@ -181,37 +181,40 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     DefId def = context.register_top_level_def(
         name, pub, compt, statik, is_generic,
         Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt, parent);
-
-    switch (kind) {
-    case scope_kind::variable:
-        context.scope(scope).insert_variable(name, def);
-        break;
-    case scope_kind::type: {
-        context.scope(scope).insert_type(name, def);
-        // delay resolution (don't clutter scope tree with unspecialized/dead definitions)
-        if (is_generic) {
+    // register into a scope
+    if (!info.do_not_insert_in_scope) {
+        switch (kind) {
+        case scope_kind::variable:
+            context.scope(scope).insert_variable(name, def);
+            break;
+        case scope_kind::type: {
+            context.scope(scope).insert_type(name, def);
+            // delay resolution (don't clutter scope tree with unspecialized/dead definitions)
+            if (is_generic) {
+                break;
+            }
+            // if the type (namely a variant field decl) doesn't have statements then the scope
+            // needn't be large
+            const bool is_small_scope = !stmts.has_value();
+            ScopeId types_scope = (is_small_scope) ? context.make_small_named_scope(scope)
+                                                   : context.make_named_scope(scope);
+            context.def_to_scope_for_types.insert(def, types_scope);
+            // warn on lowercase structure definition
+            if (is_lower(name_tkn)) {
+                context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
+                                           diag_code::lowercase_structure, diag_type::warning);
+            }
+            // try to parse fields
+            if (info.stmts.has_value()) {
+                register_top_level_stmts_registering_ordered_members(def, types_scope,
+                                                                     info.stmts.value(), def, abi);
+            }
             break;
         }
-        // if the type (namely a variant field decl) doesn't have statements then the scope needn't
-        // be large
-        const bool is_small_scope = !stmts.has_value();
-        ScopeId types_scope = (is_small_scope) ? context.make_small_named_scope(scope)
-                                               : context.make_named_scope(scope);
-        context.def_to_scope_for_types.insert(def, types_scope);
-        // warn on lowercase structure definition
-        if (is_lower(name_tkn)) {
-            context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
-                                       diag_code::lowercase_structure, diag_type::warning);
+
+        default:
+            break;
         }
-        // try to parse fields
-        if (info.stmts.has_value()) {
-            register_top_level_stmts_registering_ordered_members(def, types_scope,
-                                                                 info.stmts.value(), def, abi);
-        }
-        break;
-    }
-    default:
-        break;
     }
     // return the DefId since this is an orderable definition
     if (info.is_orderable_var) {
@@ -274,6 +277,7 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     std::optional<ast_slice_of_stmts_t> stmts{};
     bool is_orderable_field = false;
     bool is_generic = false;
+    bool do_not_insert_in_scope = false;
     switch (stmt->type) {
     // internal scopes are deffered -----------------------------------
     case AST_STMT_STRUCT_DEF: {
@@ -344,18 +348,19 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     case AST_STMT_DEFTYPE:
         name_tkn = stmt->stmt.deftype.alias_id;
         kind = scope_kind::type;
+        do_not_insert_in_scope = true; // since we want this tkn to forward directly to another
+                                       // type, so this will have to be handled in resolution later
         break;
     default:
         break;
     }
-    return TopLevelInfo{
-        .scope_prefix_tkn = scope_prefix_tkn,
-        .name_tkn = name_tkn,
-        .stmts = stmts,
-        .kind = kind,
-        .is_orderable_var = is_orderable_field,
-        .is_generic = is_generic,
-    };
+    return TopLevelInfo{.scope_prefix_tkn = scope_prefix_tkn,
+                        .name_tkn = name_tkn,
+                        .stmts = stmts,
+                        .kind = kind,
+                        .is_orderable_var = is_orderable_field,
+                        .is_generic = is_generic,
+                        .do_not_insert_in_scope = do_not_insert_in_scope};
 }
 
 std::optional<const token_t*> FileAstVisitor::name_of_ast_decl(const ast_stmt_t* stmt) {

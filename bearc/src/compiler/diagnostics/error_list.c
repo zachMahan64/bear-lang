@@ -42,7 +42,7 @@ void compiler_error_list_destroy(compiler_error_list_t* error_list) {
 
 void compiler_error_list_push(compiler_error_list_t* list, const compiler_error_t* compiler_error) {
     vector_push_back(&list->list_vec, compiler_error);
-    if (!is_really_note(compiler_error->error_code)) {
+    if (!is_non_error_diagnostic(compiler_error->error_code)) {
         list->error_cnt++;
     }
 }
@@ -52,7 +52,7 @@ void compiler_error_list_emplace(compiler_error_list_t* list, token_t* token,
     const compiler_error_t err
         = {.start_tkn = token, .error_code = error_code, .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
-    if (!is_really_note(error_code)) {
+    if (!is_non_error_diagnostic(error_code)) {
         list->error_cnt++;
     }
 }
@@ -64,7 +64,7 @@ void compiler_error_list_emplace_range(compiler_error_list_t* list, token_t* sta
                                   .error_code = error_code,
                                   .expected_token_type = TOK_NONE};
     vector_push_back(&list->list_vec, &err);
-    if (!is_really_note(error_code)) {
+    if (!is_non_error_diagnostic(error_code)) {
         list->error_cnt++;
     }
 }
@@ -75,7 +75,7 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
     const compiler_error_t err
         = {.start_tkn = token, .error_code = error_code, .expected_token_type = expected_tkn_type};
     vector_push_back(&list->list_vec, &err);
-    if (!is_really_note(error_code)) {
+    if (!is_non_error_diagnostic(error_code)) {
         list->error_cnt++;
     }
 }
@@ -134,7 +134,6 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
     string_destroy(&line_under_num_str);
 }
 
-// private helper
 void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     compiler_error_t* error = vector_at(&list->list_vec, i);
 
@@ -143,9 +142,24 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     size_t len = error->start_tkn->len;
     size_t line = error->start_tkn->loc.line;
     size_t col = error->start_tkn->loc.col;
-    const char* accent_color
-        = is_really_note(error->error_code) ? ansi_bold_cyan() : ansi_bold_red();
-    const char* error_word = is_really_note(error->error_code) ? "note" : "error";
+
+    const char* accent_color = NULL;
+    const char* error_word = NULL;
+
+    switch (error_diagnostic_type(error->error_code)) {
+    case DIAG_TYPE_ERROR:
+        accent_color = ansi_bold_red();
+        error_word = "error";
+        break;
+    case DIAG_TYPE_NOTE:
+        accent_color = ansi_bold_cyan();
+        error_word = "note";
+        break;
+    case DIAG_TYPE_WARNING:
+        accent_color = ansi_bold_yellow();
+        error_word = "warning";
+        break;
+    }
     const char* error_message = error_message_for_code(error->error_code);
     const char* context = error_message_context_for(error);
     print_diagnostic(src_buffer, start, len, line, col, accent_color, error_word, error_message,
