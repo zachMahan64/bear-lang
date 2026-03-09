@@ -25,3 +25,5 @@ compt Ben ben = Ben{.b = 32}; // not compt resolvable (as of now, since it's a s
 compt u64 a = 2000000000000000000000000000000000000000000000000; // too big (floating pt literal)
 compt i32 b = 20.0; // floating to integer no good 
 compt u64 c = 2000000000000000000; // fine
+
+compt mut u64 aa = 185;

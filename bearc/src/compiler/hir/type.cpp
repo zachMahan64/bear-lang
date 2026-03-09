@@ -377,4 +377,9 @@ std::optional<builtin_type> id_tkn_slice_to_maybe_builtin(token_ptr_slice_t tkn_
     return std::optional<builtin_type>{};
 }
 
+bool contains_mut(const Context& ctx, TypeId tid) {
+    return TypeTransformer<TypeContainsMut>{ctx}(tid);
+}
+
+bool TypeContainsMut::operator()(const Type& t1) const { return t1.mut; }
 } // namespace hir

@@ -75,6 +75,9 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::must_initialize_global_variable:
         return "global variables must be initialized";
         break;
+    case diag_code::compt_variable_should_be_immutable:
+        return "type of variable declared as 'compt' should be immutable";
+        break;
     }
     return "";
 }

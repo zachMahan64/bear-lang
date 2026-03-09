@@ -152,6 +152,21 @@ template <ConsiderMut C> class TypeComparator {
     static consteval bool considers_mut() { return C::considers_mut(); }
 };
 
+class TypeContainsMut {
+    const Context& context;
+
+  public:
+    using value_type = bool;
+    TypeContainsMut(const Context& context) : context(context) {}
+    bool operator()(const Type& t1, const Type& t2) const {
+        assert(false
+               && "double invocation should not be called when checking if a type contains mut");
+        return 0;
+    }
+    bool operator()(const Type& t1) const;
+    static bool transform(bool res1, bool res2) { return res1 || res2; }
+};
+
 template <ConsiderMut C> class TypeHasher {
     const Context& context;
 
@@ -216,6 +231,9 @@ struct Type : NodeWithVariantValue<Type> {
     Type(const TypeValue& value, Span span, bool mut)
         : value{value}, span{span}, mut{mut}, canonical{HIR_ID_NONE} {}
 };
+
+// function to determine whether a type contains mut
+bool contains_mut(const Context& ctx, TypeId tid);
 
 } // namespace hir
 

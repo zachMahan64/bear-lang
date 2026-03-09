@@ -54,6 +54,15 @@ DefId TopLevelDefVisitor::visit_as_transparent(DefId def) {
 }
 
 DefId TopLevelDefVisitor::resolve_def(DefId did) {
+
+    auto check_to_err_when_compt_is_not_mut = [&](TypeId tid, const Def& def) {
+        if (contains_mut(context, tid) && def.compt) {
+            context.emplace_diagnostic(context.type(tid).span,
+                                       diag_code::compt_variable_should_be_immutable,
+                                       diag_type::error);
+        }
+    };
+
     const ast_stmt* stmt = context.def_ast_nodes.cat(did);
     auto scope = context.containing_scope(did);
     Def& def = context.def(did);
@@ -68,6 +77,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         if (!maybe_type.has_value()) {
             return did; // maybe set a special value to indicate error differently
         }
+        // compt =/= mut guard
+        check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
         def.set_value(DefVariable{.type = maybe_type.as_id(),
                                   .name = context.symbol_id(stmt->stmt.var_decl.name)});
         // TODO handle invalid non-initialized statements
@@ -79,6 +90,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         if (!maybe_type.has_value()) {
             return did; // maybe set a special value to indicate error differently
         }
+        // compt =/= mut guard
+        check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
         auto maybe_compt_exec
             = ComptExprSolver(context, *this)
                   .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,

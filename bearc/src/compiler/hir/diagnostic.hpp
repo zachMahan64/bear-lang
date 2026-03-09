@@ -37,6 +37,7 @@ enum class diag_code : uint8_t {
     cannot_convert_to_some_builtin_type, // TODO make multiline
     cannot_resolve_at_compt,             // TODO make multiline
     type_not_defined,                    // TODO make multiline
+    compt_variable_should_be_immutable,  // TODO make multiline
     must_initialize_global_variable,
 };
 enum class diag_type : uint8_t { error, warning, note };
