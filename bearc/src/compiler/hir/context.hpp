@@ -111,9 +111,9 @@ class Context {
 
     bool is_top_level_def_with_associated_scope(DefId def_id) const;
     /// gets the named scope for a certainly top level def
-    ScopeId scope_for_top_level_def(DefId def) const;
+    [[nodiscard]] ScopeId scope_for_top_level_def(DefId def) const;
     /// trys to look up the scope for a top level def
-    OptId<ScopeId> try_scope_for_top_level_def(DefId def) const;
+    [[nodiscard]] OptId<ScopeId> try_scope_for_top_level_def(DefId def) const;
 
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
@@ -123,7 +123,7 @@ class Context {
     }
 
     // ----- info viewing ------
-    const char* symbol_id_to_cstr(SymbolId id) const;
+    [[nodiscard]] const char* symbol_id_to_cstr(SymbolId id) const;
 
     // ------ transformers -----
     void explore_imports(FileId root_id);
@@ -256,10 +256,10 @@ class Context {
     // args
     const bearc_args_t* const args;
 
-    FileId provide_root_file(const char* file_name);
+    [[nodiscard]] FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is
     /// wrapped by file handling logic and should thus not be used directly anywhere else
-    FileAstId emplace_ast(const char* file_name);
+    [[nodiscard]] FileAstId emplace_ast(const char* file_name);
     void register_importer(FileId importee, FileId importer);
     void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
                       const token_t* import_path_tkn);
