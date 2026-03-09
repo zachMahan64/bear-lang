@@ -9,6 +9,7 @@
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/token.h"
 #include <assert.h>
+#include <utility>
 
 namespace hir {
 binary_op token_to_binary_op(token_t* tkn) {
@@ -52,6 +53,7 @@ binary_op token_to_binary_op(token_t* tkn) {
         assert(false && "invalid binary op token\n");
         break;
     }
+    std::unreachable();
 }
 unary_op token_to_unary_op(token_t* tkn) {
     switch (tkn->type) {
@@ -69,5 +71,6 @@ unary_op token_to_unary_op(token_t* tkn) {
         assert(false && "invalid unary op token\n");
         break;
     }
+    std::unreachable();
 }
 } // namespace hir
