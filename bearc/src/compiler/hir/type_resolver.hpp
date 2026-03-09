@@ -115,7 +115,7 @@ template <IsDefVisitor V> class TypeResolver {
 
         auto size = context.exec(maybe_size_exec.as_id())
                         .template as<ExecExprComptConstant>()
-                        .template as<size_t>();
+                        .template as<uint64_t>();
 
         return context.emplace_type(TypeArr{.inner = maybe_inner.as_id(),
                                             .compt_size_expr = maybe_size_exec.as_id(),

@@ -31,7 +31,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         // try to solve str& at comptime
         if (into_type.holds<TypeRef>()) {
             auto inner = context.type(into_type.as<TypeRef>().inner);
-            return (inner.holds<TypeBuiltin>() && inner.as<TypeBuiltin>().type == builtin_type::str)
+            return (inner.template holds<TypeBuiltin>()
+                    && inner.template as<TypeBuiltin>().type == builtin_type::str)
                        ? solve_compt_expr(fid, scope, expr, builtin_type::str)
                        : std::nullopt;
         }
@@ -70,7 +71,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 //          << '\n';
                 if (def.holds<DefVariable>() && def.compt) {
                     maybe_value = context.exec(def.as<DefVariable>().compt_value.as_id())
-                                      .as<ExecExprComptConstant>();
+                                      .template as<ExecExprComptConstant>();
                 }
             }
             break;
