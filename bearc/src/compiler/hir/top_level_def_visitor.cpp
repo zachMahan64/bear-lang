@@ -290,7 +290,8 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
         if (!maybe_converted.has_value()) {
             context.emplace_diagnostic(
                 Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
-                diag_code::cannot_convert_to_some_builtin_type, diag_type::error);
+                diag_code::cannot_convert_to_some_builtin_type, diag_type::error,
+                DiagnosticCannotConvertToBuiltinType{.type = into_builtin});
             return OptId<ExecId>{};
         }
         // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug

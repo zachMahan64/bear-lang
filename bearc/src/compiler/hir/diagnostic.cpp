@@ -64,13 +64,16 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "cannot resolve value at compile-time";
         break;
     case diag_code::cannot_convert_to_some_builtin_type:
-        return "cannot convert to built-in type: ";
+        return "type mismatch; cannot not assign to variable";
         break;
     case diag_code::cannot_resolve_at_compt:
         return "cannot resolve expression at compile-time";
         break;
     case diag_code::type_not_defined:
         return "type not defined";
+        break;
+    case diag_code::must_initialize_global_variable:
+        return "global variables must be initialized";
         break;
     }
     return "";
@@ -122,7 +125,8 @@ void Diagnostic::print_info_value(const Context& context) const {
     const auto vs = Ovld{
         [&](DiagnosticNoOtherInfo) { line(""); },
         [&](DiagnosticCannotConvertToBuiltinType t) {
-            line((std::stringstream{} << "could convert to type: " << builtin_type_to_cstr(t.type))
+            line((std::stringstream{} << "unable to convert to type: "
+                                      << builtin_type_to_cstr(t.type))
                      .str());
         },
         [&](DiagnosticImportStack import_stack) {

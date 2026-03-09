@@ -1,0 +1,27 @@
+// 11.br 
+
+compt i32 LIFE = 42;
+
+compt i32 val = LIFE;
+
+compt str val_str = val;
+
+u64 maybe_but_not_narrowing = LIFE; // fine since LIFE is not negative
+
+compt u8 maybe_but_not_narrowing2 = maybe_but_not_narrowing; // error not compt
+
+compt f32 floaty = LIFE; // fine conversion, since no info loss is guranteed
+
+compt i32 big = 2003234234;
+
+compt u8 small = big; // illegal conversion
+
+struct Ben {
+    u64 b = 2048;
+}
+
+compt Ben ben = Ben{.b = 32}; // not compt resolvable (as of now, since it's a struct)
+
+compt u64 a = 2000000000000000000000000000000000000000000000000; // too big (floating pt literal)
+compt i32 b = 20.0; // floating to integer no good 
+compt u64 c = 2000000000000000000; // fine
