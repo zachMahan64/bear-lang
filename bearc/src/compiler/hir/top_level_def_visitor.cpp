@@ -203,9 +203,9 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
             // happy path, canonicalize compt value
             DefId did = maybe_def.as_id();
             const Def& def = visit_def(did);
-            std::cout << def.span.as_sv(context)
-                      << ", resol: " << Def::resol_state_to_str(context.resol_state_of(did))
-                      << '\n';
+            // std::cout << def.span.as_sv(context)
+            //          << ", resol: " << Def::resol_state_to_str(context.resol_state_of(did))
+            //          << '\n';
             if (def.holds<DefVariable>() && def.compt) {
                 maybe_value = context.execs.cat(def.as<DefVariable>().compt_value.as_id())
                                   .as<ExecExprComptConstant>();
