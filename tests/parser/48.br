@@ -1,0 +1,5 @@
+i32*& a; // safe
+i32&* b; // illegal
+i32& & c; // malformed
+i32&& oopsie;
+i32*****&* oopsie1;

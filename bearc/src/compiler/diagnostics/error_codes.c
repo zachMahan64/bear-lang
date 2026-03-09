@@ -49,7 +49,8 @@ static const char* error_messages[ERR__COUNT] = {
     = "leading structure qualification on an 'fn' function is malformed",
     [NOTE_DID_YOU_MEAN_MT] = "did you mean to declare this as 'mt'?",
     [ERR_MULTILEVEL_REF]
-    = "multi-level reference type is malformed; did you mean to declare a multi-level pointer?"};
+    = "multi-level reference type is malformed; did you mean to declare a multi-level pointer?",
+};
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
 
 error_diag_type_e error_diagnostic_type(error_code_e error_code) { return diag_types[error_code]; }

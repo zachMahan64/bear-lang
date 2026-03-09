@@ -32,6 +32,16 @@ ast_type_t* parser_sync_type(parser_t* p) {
     return dummy_type;
 }
 
+static ast_type_t* parser_invalid_type_and_toss_next_tkn(parser_t* p) {
+    token_t* tkn = parser_peek(p);
+    parser_toss(p);
+    ast_type_t* dummy_type = parser_alloc_type(p);
+    dummy_type->tag = AST_TYPE_INVALID;
+    dummy_type->first = tkn;
+    dummy_type->last = tkn;
+    return dummy_type;
+}
+
 ast_slice_of_params_t parser_freeze_params_spill_arr(parser_t* p, spill_arr_ptr_t* sarr) {
     ast_slice_of_params_t slice = {
         .start = (ast_param_t**)arena_alloc(p->arena, sarr->size * sizeof(ast_param_t*)),
@@ -184,6 +194,12 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
     if (parser_peek_match(p, TOK_ELLIPSE)) {
         inner = parse_type_variadic(p, inner);
     }
+
+    if (parser_peek_match(p, TOK_BOOL_AND)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_MULTILEVEL_REF);
+        return parser_invalid_type_and_toss_next_tkn(p);
+    }
+
     if (inner) {
         return inner;
     }
