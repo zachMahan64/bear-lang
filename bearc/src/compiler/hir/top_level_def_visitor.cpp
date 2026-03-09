@@ -330,26 +330,26 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 
 [[nodiscard]] OptId<TypeId> TopLevelTypeResolver::resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                                                const ast_type_t* type,
-                                                               bool visit_as_transparent) {
+                                                               bool need_layout_info) {
     switch (type->tag) {
     case AST_TYPE_BASE: {
-        return type_base(fid, scope, type, visit_as_transparent);
+        return type_base(fid, scope, type, need_layout_info);
     }
     case AST_TYPE_REF_PTR: {
-        return type_ptr_ref(fid, scope, type, visit_as_transparent);
+        return type_ptr_ref(fid, scope, type, need_layout_info);
     }
     case AST_TYPE_ARR:
-        return type_arr(fid, scope, type, visit_as_transparent);
+        return type_arr(fid, scope, type, need_layout_info);
     case AST_TYPE_SLICE:
-        return type_slice(fid, scope, type, visit_as_transparent);
+        return type_slice(fid, scope, type, need_layout_info);
     case AST_TYPE_GENERIC: {
         // TODO, attempt a generic instantiation
         break;
     }
     case AST_TYPE_FN_PTR:
-        return type_fn_ptr(fid, scope, type, visit_as_transparent);
+        return type_fn_ptr(fid, scope, type, need_layout_info);
     case AST_TYPE_VARIADIC:
-        return type_variadic(fid, scope, type, visit_as_transparent);
+        return type_variadic(fid, scope, type, need_layout_info);
     case AST_TYPE_INVALID:
         break;
     }
@@ -358,7 +358,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 
 [[nodiscard]] OptId<TypeId> TopLevelTypeResolver::type_base(FileId fid, NamedOrAnonScopeId scope,
                                                             const ast_type_t* type,
-                                                            bool visit_as_transparent) {
+                                                            bool need_layout_info) {
     auto maybe_builtin = id_tkn_slice_to_maybe_builtin(type->type.base.id);
     if (maybe_builtin.has_value()) {
         return context.emplace_type(TypeBuiltin{maybe_builtin.value()},
@@ -367,10 +367,10 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
     }
     OptId<DefId> maybe_structure
         = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id));
-    std::cout << visit_as_transparent << '\n';
+    // std::cout << need_layout_info << '\n';
     if (maybe_structure.has_value()) {
-        auto def = visit_as_transparent ? def_visitor.visit_as_transparent(maybe_structure.as_id())
-                                        : def_visitor.visit_as_dependent(maybe_structure.as_id());
+        auto def = need_layout_info ? maybe_structure.as_id()
+                                    : def_visitor.visit_as_dependent(maybe_structure.as_id());
         return context.emplace_type(TypeStructure{def}, Span(context, fid, type->first, type->last),
                                     type->type.base.mut);
     }
@@ -381,8 +381,7 @@ OptId<ExecId> TopLevelConstantExprSolver::solve_compt_expr(FileId fid, NamedOrAn
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId scope,
-                                                 const ast_type_t* type,
-                                                 bool visit_as_transparent) {
+                                                 const ast_type_t* type, bool need_layout_info) {
     auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner,
                                     true); // inner always transparent thru a ref/ptr
     if (!maybe_inner.has_value()) {
@@ -401,8 +400,8 @@ OptId<TypeId> TopLevelTypeResolver::type_ptr_ref(FileId fid, NamedOrAnonScopeId 
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scope,
-                                             const ast_type_t* type, bool visit_as_transparent) {
-    auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner, visit_as_transparent);
+                                             const ast_type_t* type, bool need_layout_info) {
+    auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner, need_layout_info);
     if (!maybe_inner.has_value()) {
         return OptId<TypeId>{};
     }
@@ -419,7 +418,7 @@ OptId<TypeId> TopLevelTypeResolver::type_arr(FileId fid, NamedOrAnonScopeId scop
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_slice(FileId fid, NamedOrAnonScopeId scope,
-                                               const ast_type_t* type, bool visit_as_transparent) {
+                                               const ast_type_t* type, bool need_layout_info) {
     auto maybe_inner
         = resolve_type(fid, scope, type->type.slice.inner,
                        true); // thru slice is always transparent (since it's a wide ptr)
@@ -431,7 +430,7 @@ OptId<TypeId> TopLevelTypeResolver::type_slice(FileId fid, NamedOrAnonScopeId sc
 }
 
 OptId<TypeId> TopLevelTypeResolver::type_fn_ptr(FileId fid, NamedOrAnonScopeId scope,
-                                                const ast_type_t* type, bool visit_as_transparent) {
+                                                const ast_type_t* type, bool need_layout_info) {
     auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type,
                                           true); // thru fn ptr is always transparent
     if (!maybe_return_type.has_value()) {
@@ -454,8 +453,7 @@ OptId<TypeId> TopLevelTypeResolver::type_fn_ptr(FileId fid, NamedOrAnonScopeId s
         Span(context, fid, type->first, type->last), type->type.slice.mut);
 }
 OptId<TypeId> TopLevelTypeResolver::type_variadic(FileId fid, NamedOrAnonScopeId scope,
-                                                  const ast_type_t* type,
-                                                  bool visit_as_transparent) {
+                                                  const ast_type_t* type, bool need_layout_info) {
     auto maybe_inner = resolve_type(
         fid, scope, type->type.variadic.inner,
         true); // thru variadic is always transparent (since it's effectively a slice)

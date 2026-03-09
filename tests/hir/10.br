@@ -1,8 +1,25 @@
 // tests/hir/10.br
+
+// these are thru ptrs/refs/slices so it's fine
+
 struct Lo {
     Op& op;
+    Op* op1;
+    [&]Op op2;
 }
 
 struct Op {
     Lo& lo;
+    Lo* lo1;
+    [&]Lo lo2;
+}
+
+// cannot have an infinitely size struct (error)
+
+struct Inition {
+    CircularDef circular_def;
+}
+
+struct CircularDef {
+    [24]Inition Inition1;
 }
