@@ -64,7 +64,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "cannot resolve value at compile-time";
         break;
     case diag_code::cannot_convert_to_some_builtin_type:
-        return "type mismatch; cannot not assign to variable";
+        return "type mismatch; cannot assign to variable";
         break;
     case diag_code::cannot_resolve_at_compt:
         return "cannot resolve expression at compile-time";
