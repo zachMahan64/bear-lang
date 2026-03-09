@@ -13,6 +13,7 @@
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/arena_str_hash_map.hpp"
 #include "compiler/hir/def.hpp"
+#include "compiler/hir/def_visitor.hpp"
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/file.hpp"
@@ -21,7 +22,6 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/node_vector.hpp"
 #include "compiler/hir/scope.hpp"
-#include "compiler/hir/top_level_def_visitor.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "utils/data_arena.hpp"
@@ -118,6 +118,9 @@ class Context {
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
                                  Span span, ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
+    template <typename... Args> [[nodiscard]] ExecId register_exec(Args&&... args) {
+        return execs.emplace_and_get_id(std::forward<Args>(args)...);
+    }
 
     // ----- info viewing ------
     const char* symbol_id_to_cstr(SymbolId id) const;
@@ -146,7 +149,6 @@ class Context {
     friend class ScopeAnon;
     friend class FileAstVisitor;
     friend class TopLevelDefVisitor;
-    friend class TopLevelConstantExprSolver;
 
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
     template <IsId I>
