@@ -31,10 +31,12 @@ typedef enum cli_flag {
     CLI_FLAG_COMPILE,
     CLI_FLAG_IMPORT_PATH,
     CLI_FLAG_PARSE_ONLY,
+    CLI_FLAG_OUTPUT,
     CLI_FLAG_ERR_DUPLICATE,
     CLI_FLAG_ERR_FILE_NAME_TOO_LONG,
     CLI_FLAG_ERR_TOO_MANY_INPUT_FILES,
     CLI_FLAG_ERR_NO_ARGUMENT_PROVIDED_TO_IMPORT_PATH,
+    CLI_FLAG_ERR_NO_ARGUMENT_PROVIDED_TO_OUTPUT,
     CLI_FLAG__NUM,
 } cli_flag_e;
 
@@ -42,6 +44,7 @@ typedef struct bearc_args {
     char* import_paths[CLI_ARGS_MAX_IMPORT_PATH_COUNT];
     bool flags[CLI_FLAG__NUM];
     char* input_file_name;
+    char* output_file_name;
     uint8_t import_path_cnt;
 } bearc_args_t;
 

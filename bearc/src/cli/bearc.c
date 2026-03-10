@@ -32,6 +32,7 @@ void cli_announce_unknown_flag(void);
 void warn_duplicate_flag(void);
 void warn_too_many_input_files(void);
 void warn_no_arg_for_import_path(void);
+void warn_no_arg_for_output(void);
 // checks if the args are otherwise empty besides the specified flag
 bool cli_args_otherwise_empty(bearc_args_t* args, cli_flag_e flag);
 
@@ -43,47 +44,58 @@ int bearc_compile_from_args(int argc, char** argv) {
     bearc_args_t args = parse_cli_args(argc, argv);
 
     // error that dispatched cli functions can return, default to inoffensive values
-    cli_error_status error_status = {0, ""};
+
+    bool err = false;
+
     if (args.flags[CLI_FLAG_ERR_UNKNOWN]) {
         cli_announce_unknown_flag();
-        return -1;
+        err = true;
     }
     if (args.flags[CLI_FLAG_ERR_DUPLICATE]) {
         warn_duplicate_flag();
-        return -1;
+        err = true;
     }
     if (args.flags[CLI_FLAG_ERR_TOO_MANY_INPUT_FILES]) {
         warn_too_many_input_files();
-        return -1;
+        err = true;
     }
 
     if (args.flags[CLI_FLAG_ERR_NO_ARGUMENT_PROVIDED_TO_IMPORT_PATH]) {
         warn_no_arg_for_import_path();
-        return -1;
+        err = true;
+    }
+
+    if (args.flags[CLI_FLAG_ERR_NO_ARGUMENT_PROVIDED_TO_OUTPUT]) {
+        warn_no_arg_for_output();
+        err = true;
     }
 
     // no compilation options
     if (args.flags[CLI_FLAG_HELP]) {
         if (!cli_args_otherwise_empty(&args, CLI_FLAG_HELP)) {
             do_cli_announce_incompatible_flags();
-            return -1;
+            err = true;
         }
-        cli_help();
+        if (!err) {
+            cli_help();
+        }
         return 0;
     }
     if (args.flags[CLI_FLAG_VERSION]) {
         if (!cli_args_otherwise_empty(&args, CLI_FLAG_VERSION)) {
             do_cli_announce_incompatible_flags();
-            return -1;
+            err = true;
         }
-        cli_version();
+        if (!err) {
+            cli_version();
+        }
         return 0;
     }
 
     if (args.flags[CLI_FLAG_ERR_FILE_NAME_TOO_LONG]) {
 
         printf("%s(bearc)%s file name exessively long\n", ansi_bold(), ansi_reset());
-        return -1;
+        err = true;
     }
 
     if (!args.input_file_name && cli_args_otherwise_empty(&args, CLI_FLAG_ERR_UNKNOWN)) {
@@ -95,16 +107,20 @@ int bearc_compile_from_args(int argc, char** argv) {
     if (!args.input_file_name) {
         printf("%s(bearc)%s no root file provided\n", ansi_bold_white(), ansi_reset());
 
-        return -1;
+        err = true;
     }
 
-    if (strlen(args.input_file_name) != 0
+    if (args.input_file_name != NULL
         && !file_exists_on_import_path(args.input_file_name, ".", &args)) {
-        printf("%serror:%s file does not exist: %s'%s'\n%s", ansi_bold_red(), ansi_reset(),
-               ansi_bold(), args.input_file_name, ansi_reset());
-        return -1;
+        printf("%s(bearc)%s error: %sfile does not exist: %s'%s'\n%s", ansi_bold_white(),
+               ansi_bold_red(), ansi_reset(), ansi_bold(), args.input_file_name, ansi_reset());
+        err = true;
     }
 
+    if (err) {
+        return -1;
+    }
+    cli_error_status error_status = {0, ""};
     // compilation
     if (strlen(args.input_file_name)) {
         error_status = cli_compile(&args);
@@ -119,7 +135,6 @@ void cli_help(void) {
     const char* help_message
         = "usage:\n"
           "        bearc <file_name> [flags]\n"
-          "        bearc [flags]\n"
           "        bearc [options]\n"
           "options:\n"
           "        [--version | -v]  display current bearc version\n"
@@ -132,7 +147,8 @@ void cli_help(void) {
           "        [--parse-only]    stop compilation after parsing\n"
           "flags with arguments:\n"
           "        [--import-path | -i] <import_dirs...>  supply import paths\n"
-          "        [--compile | -c]     <root_file>       compile from a root_file\n"
+          "        [--compile | -c]     <root_file>       compile from a root file\n"
+          "        [--output | -o]      <output_file>     specify an output file\n"
 
         ;
 
@@ -181,5 +197,9 @@ bool cli_args_otherwise_empty(bearc_args_t* args, cli_flag_e flag) {
 }
 
 void warn_no_arg_for_import_path(void) {
-    printf("%s(bearc)%s no arguments given for import-path\n", ansi_bold(), ansi_reset());
+    printf("%s(bearc)%s no arguments provided for import-path\n", ansi_bold(), ansi_reset());
+}
+
+void warn_no_arg_for_output(void) {
+    printf("%s(bearc)%s no argument provided for output\n", ansi_bold(), ansi_reset());
 }

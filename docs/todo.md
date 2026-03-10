@@ -50,8 +50,8 @@
     - [ ] add a StringifyType seed for TypeTransformer
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### medium term/non-main path tasks
+- [x] `-o` / `--output` cli arg instead of implicit output
 - [ ] std::string builder for hir::Type using `TypeTransformer`
-- [ ] `-o` / `--output` cli arg instead of implicit output
 #### long term
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 
 - [ ] LLVM IR
