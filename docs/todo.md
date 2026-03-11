@@ -36,7 +36,7 @@
 ##### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
 - [x] fix `tests/hir/10.br` falsely reported circular
-- [ ] multi-line and more complicated diagnostics handling
+- [x] multi-line and more complicated diagnostics handling
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
     - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
     - [ ] implement kind of operator <--> type mapping system (just worry about builtin types for now)
@@ -51,7 +51,7 @@
 - [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
 #### medium term/non-main path tasks
 - [x] `-o` / `--output` cli arg instead of implicit output
-- [ ] std::string builder for hir::Type using `TypeTransformer`
+- [x] std::string builder for hir::Type using `TypeTransformer`
 #### long term
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 
 - [ ] LLVM IR
