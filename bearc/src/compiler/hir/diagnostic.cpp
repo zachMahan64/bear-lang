@@ -104,7 +104,7 @@ const char* Diagnostic::accent_color_for_type(enum diag_type t) {
     return "";
 }
 
-void Diagnostic::print_info_value(const Context& context) const {
+void Diagnostic::print_info_value(Context& context) const {
     auto line = [&](const auto& printable) {
         std::cout << "  " << std::setw(static_cast<int>(log10(span.line + 1)) + 1) << "" << "  | "
                   << printable << '\n';

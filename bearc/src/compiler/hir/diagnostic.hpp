@@ -76,7 +76,8 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     static const char* message_for_code(enum diag_code c);
     static const char* name_for_type(enum diag_type t);
     static const char* accent_color_for_type(enum diag_type t);
-    void print_info_value(const Context& context) const;
+    void print_info_value(Context& context) const;
+    void print_multiline(Context& context) const;
 };
 
 } // namespace hir
