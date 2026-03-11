@@ -78,7 +78,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_LITERAL: {
             const token_t* tkn = expr->expr.literal.tkn;
-            // TODO, handle
             switch (tkn->type) {
             case TOK_CHAR_LIT:
                 maybe_value = ExecExprComptConstant{tkn->val.character};
