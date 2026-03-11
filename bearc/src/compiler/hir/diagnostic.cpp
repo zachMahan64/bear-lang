@@ -130,7 +130,14 @@ std::string Diagnostic::line_with_number(HirSize line, int min_width) const {
     return ss.str();
 }
 
-int Diagnostic::width(HirSize line) { return static_cast<int>(log10(line + 1)) + 1; }
+int Diagnostic::width(HirSize line) {
+    int w = 1;
+    while (line >= 10) {
+        line /= 10;
+        ++w;
+    }
+    return w;
+}
 
 // TODO make this return a string for improved render flexibility
 void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
