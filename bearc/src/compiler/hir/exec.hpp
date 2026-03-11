@@ -100,7 +100,7 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
             return false;
         }
     }
-    builtin_type type() const {
+    builtin_type type_builtin() const {
         switch (value.index()) {
         case 0:
             return builtin_type::str;

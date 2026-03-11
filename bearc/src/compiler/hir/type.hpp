@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstring>
 #include <optional>
+#include <string>
 #include <variant>
 namespace hir {
 
@@ -99,11 +100,6 @@ template <class F>
 concept TypeTransformerFunctor = requires(F f, const Context& context, const Type& t1,
                                           const Type& t2) {
     typename F::value_type;
-    // allow trivially copyable or strings as values
-    requires requires {
-        requires std::is_trivially_copyable_v<typename F::value_type>
-                     || std::convertible_to<typename F::value_type, std::string>;
-    };
     // constructor must take a const ref to a context
     { F{context} };
     // single invocation
@@ -183,6 +179,27 @@ template <ConsiderMut C> class TypeHasher {
     static consteval bool considers_mut() { return C::considers_mut(); }
 };
 
+struct TypeToStringValue {
+    std::string str;
+    bool inner_goes_right = false;
+};
+
+template <ConsiderMut C> class TypeToString {
+    const Context& context;
+
+  public:
+    using value_type = TypeToStringValue;
+    TypeToString(const Context& context) : context(context) {}
+    // probably not needed for the hasher
+    TypeToStringValue operator()(const Type& t1, const Type& t2) const {
+        assert(false && "double invocation should not be called when using ToString");
+        return {};
+    }
+    TypeToStringValue operator()(const Type& t1) const;
+    static TypeToStringValue transform(TypeToStringValue res1, TypeToStringValue res2);
+    static consteval bool considers_mut() { return C::considers_mut(); }
+};
+
 class CanonicalTypeTable {
     struct Entry {
         TypeId key_id;
@@ -234,7 +251,10 @@ struct Type : NodeWithVariantValue<Type> {
 
 // function to determine whether a type contains mut
 bool contains_mut(const Context& ctx, TypeId tid);
-
+// converts a TypeId to a string
+std::string type_to_string(const Context& ctx, TypeId tid);
+// converts a TypeId to a string without any muts
+std::string type_to_string_without_muts(const Context& ctx, TypeId tid);
 } // namespace hir
 
 #endif

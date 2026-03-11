@@ -467,9 +467,9 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::try_up_convert_to(bu
         }
     }
     default:
+        assert(false && "unconsidered builtin type");
         break;
     }
-    assert(false && "unconsidered builtin type");
     return OptConst{};
 }
 std::optional<ExecExprComptConstant> ExecExprComptConstant::try_down_convert_to(builtin_type type) {

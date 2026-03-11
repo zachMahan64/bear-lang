@@ -152,10 +152,15 @@ template <IsDefVisitor V> class ComptExprSolver {
             // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
             auto maybe_converted = maybe_value.value().try_implicit_convert_to(into_builtin);
             if (!maybe_converted.has_value()) {
+                auto from_builtin = maybe_value.value().type_builtin();
+                TypeId from = context.emplace_type(TypeBuiltin{.type = from_builtin},
+                                                   Span::generated(), false);
+                TypeId to = context.emplace_type(TypeBuiltin{.type = into_builtin},
+                                                 Span::generated(), false);
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
-                    diag_code::cannot_convert_to_some_builtin_type, diag_type::error,
-                    DiagnosticCannotConvertToBuiltinType{.type = into_builtin});
+                    diag_code::cannot_convert_type, diag_type::error,
+                    DiagnosticCannotConvertFromTypeToType{.from = from, .to = to});
                 return OptId<ExecId>{};
             }
             // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug

@@ -31,5 +31,5 @@ std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
 
 Span::Span(const Context& ctx, FileId file_id, const token_t* first, const token_t* last)
     : Span(file_id, ctx.ast(file_id).buffer(), first, last) {}
-
+Span Span::generated() { return Span{0, 0, FileId{HIR_ID_NONE}, 0, 0}; }
 } // namespace hir

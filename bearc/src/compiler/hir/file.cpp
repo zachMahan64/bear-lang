@@ -23,7 +23,9 @@ const src_buffer* FileAst::src() const noexcept { return &this->ast.src_buffer; 
 const compiler_error_list_t& FileAst::error_list() const noexcept { return this->ast.error_list; }
 const ast_stmt_t* FileAst::root() const noexcept { return this->ast.file_stmt_root_node; }
 void FileAst::pretty_print() const { pretty_print_stmt(this->root()); }
-void FileAst::print_all_errors() const { compiler_error_list_print_all(&this->ast.error_list); }
+void FileAst::print_all_errors(bool compact) const {
+    compiler_error_list_print_all(&this->ast.error_list, compact);
+}
 size_t FileAst::diagnostic_count() const {
     return compiler_error_list_diagnostic_count(&this->ast.error_list);
 }

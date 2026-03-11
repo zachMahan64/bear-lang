@@ -31,7 +31,8 @@ cli_flag_long_mapping_t cli_flag_long_map[] = {{"help", CLI_FLAG_HELP},
                                                {"import-path", CLI_FLAG_IMPORT_PATH},
                                                {"compile", CLI_FLAG_COMPILE},
                                                {"parse-only", CLI_FLAG_PARSE_ONLY},
-                                               {"output", CLI_FLAG_OUTPUT}};
+                                               {"output", CLI_FLAG_OUTPUT},
+                                               {"compact-diags", CLI_FLAG_COMPACT_DIAGS}};
 static bool is_valid_cli_flag_short(const char* arg) {
     return strlen(arg) == 2 && arg[0] == '-' && short_flag_map[(unsigned char)arg[1]];
 }

@@ -82,16 +82,16 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
 
 void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
                       size_t col, const char* accent_color, const char* error_word,
-                      const char* error_message, const char* context) {
+                      const char* error_message, const char* context, bool compact) {
     // line is zero-indexed inside of token_t, so adjust
-    size_t adusted_line = line + 1;
+    size_t adjusted_line = line + 1;
     size_t adjusted_col = col + 1;
 
 // setup " | <line num> strings"
 // max buf of size 21 since size_t max is 18'446'744'073'709'551'615
 #define LINE_NUM_BUF_SIZE 21
     char line_num_buf[LINE_NUM_BUF_SIZE] = {0};
-    snprintf(line_num_buf, LINE_NUM_BUF_SIZE, "%zu", adusted_line);
+    snprintf(line_num_buf, LINE_NUM_BUF_SIZE, "%zu", adjusted_line);
     string_t line_num_str = string_create_and_reserve(LINE_NUM_BUF_SIZE + 4); // for spaces
     string_push_cstr(&line_num_str, "  ");
     string_push_cstr(&line_num_str, line_num_buf);
@@ -101,9 +101,14 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
     string_push_cstr(&line_under_num_str, COMP_ERR_SIDE_BAR);
 
     // do printing now that we have all strings setup
-    printf("%s\'%s\': at (line %zu,%zu): %s%s: %s%s%s%s\n", ansi_bold_white(),
-           src_buffer->file_name, adusted_line, adjusted_col, accent_color, error_word,
-           ansi_bold_white(), error_message, context, ansi_reset());
+    if (compact) {
+        printf("%s\'%s\':%zu:%zu: %s%s: %s%s%s%s\n", ansi_bold_white(), src_buffer->file_name,
+               adjusted_line, adjusted_col, accent_color, error_word, ansi_bold_white(),
+               error_message, context, ansi_reset());
+    } else {
+        printf("%s%s: %s%s \n --> \'%s\':%zu:%zu %s\n", accent_color, error_word, ansi_bold_white(),
+               error_message, src_buffer->file_name, adjusted_line, adjusted_col, ansi_reset());
+    }
 
     string_view_t line_preview = get_line_string_view(src_buffer, start);
 
@@ -120,13 +125,15 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
     revised_col -= LINE_LEN_CRIT_VAL * len_factor;
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    // print an extra "   |   "
+    if (!compact) {
+        printf("%s\n", string_data(&line_under_num_str));
+    }
+
     printf("%s %.*s\n", string_data(&line_num_str), (int)line_preview.len, line_preview.start);
 
     string_t cursor_string = get_cursor_string(line_preview, len, revised_col, accent_color);
-
     printf("%s %s\n", string_data(&line_under_num_str), string_data(&cursor_string));
-    // print an extra "   |   "
-    // printf("%s\n", string_data(&line_under_num_str));
 
     // free resources
     string_destroy(&cursor_string);
@@ -134,7 +141,7 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
     string_destroy(&line_under_num_str);
 }
 
-void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
+void compiler_error_print_err(const compiler_error_list_t* list, size_t i, bool compact) {
     compiler_error_t* error = vector_at(&list->list_vec, i);
 
     const src_buffer_t* src_buffer = &list->src_buffer;
@@ -163,14 +170,14 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i) {
     const char* error_message = error_message_for_code(error->error_code);
     const char* context = error_message_context_for(error);
     print_diagnostic(src_buffer, start, len, line, col, accent_color, error_word, error_message,
-                     context);
+                     context, compact);
 }
 
-void compiler_error_list_print_all(const compiler_error_list_t* list) {
+void compiler_error_list_print_all(const compiler_error_list_t* list, bool compact) {
     ansi_init();
     size_t len = list->list_vec.size;
     for (size_t i = 0; i < len; i++) {
-        compiler_error_print_err(list, i);
+        compiler_error_print_err(list, i, compact);
     }
 }
 

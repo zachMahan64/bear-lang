@@ -38,7 +38,7 @@ class FileAst {
     const compiler_error_list_t& error_list() const noexcept;
     const ast_stmt_t* root() const noexcept;
     void pretty_print() const;
-    void print_all_errors() const;
+    void print_all_errors(bool compact) const;
     void print_token_table() const;
     void emplace_tokenwise_error(token_t* tkn, error_code_e error_code);
     size_t diagnostic_count() const;

@@ -145,6 +145,7 @@ void cli_help(void) {
           "        [--pretty-print]  print a syntax tree diagram\n"
           "        [--list-files]    list all compile files with their dependencies\n"
           "        [--parse-only]    stop compilation after parsing\n"
+          "        [--compact-diags] print diagnostics that are vertically compact\n"
           "flags with arguments:\n"
           "        [--import-path | -i] <import_dirs...>  supply import paths\n"
           "        [--compile | -c]     <root_file>       compile from a root file\n"

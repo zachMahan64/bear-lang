@@ -49,7 +49,7 @@ void compiler_error_list_emplace_expected_token(compiler_error_list_t* list, tok
                                                 token_type_e expected_tkn_type);
 
 /// print out all compiler errors
-void compiler_error_list_print_all(const compiler_error_list_t* list);
+void compiler_error_list_print_all(const compiler_error_list_t* list, bool compact);
 
 /// check if a compiler_error_list_t is empty
 bool compiler_error_list_empty(const compiler_error_list_t* list);
@@ -63,7 +63,7 @@ size_t compiler_error_list_error_count(const compiler_error_list_t* list);
 /// base impl for diagnostic printing
 void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t len, size_t line,
                       size_t col, const char* accent_color, const char* error_word,
-                      const char* error_message, const char* context);
+                      const char* error_message, const char* context, bool compact);
 
 #ifdef __cplusplus
 }

@@ -43,6 +43,7 @@ class Context {
     int error_count() const noexcept;
     int warning_count() const noexcept;
     int note_count() const noexcept;
+    bool compact_diagnostics_enabled() const noexcept;
     // ----- accessors / emplacers --------
     [[nodiscard]] SymbolId symbol_id(const token_t* tkn);
     [[nodiscard]] SymbolId symbol_id(const char* start, size_t len);
@@ -94,7 +95,7 @@ class Context {
                                     DiagnosticValue value,
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
-    void print_diagnostic(DiagnosticId diag);
+    void print_diagnostic(DiagnosticId diag, bool print_file = true);
     // type emplacer
     /// emplaces and gets the id from a new CanonicalTypeId corresponding to a TypeId which points
     /// to the first structural representation of the canonical type
@@ -255,6 +256,7 @@ class Context {
 
     // args
     const bearc_args_t* const args;
+    bool compact_diagnostics = false;
 
     [[nodiscard]] FileId provide_root_file(const char* file_name);
     /// forceably emplaces ast, not checking if it has already been processed. This function is

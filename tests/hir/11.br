@@ -17,13 +17,21 @@ compt i32 big = 2003234234;
 compt u8 small = big; // illegal conversion
 
 struct Ben {
+    u64 a;
     u64 b = 2048;
+    u64 c;
 }
 
-compt Ben ben = Ben{.b = 32}; // not compt resolvable (as of now, since it's a struct)
+compt Ben ben = Ben{
+    .a = 12,
+    .b = 32,
+    .c = 12,
+}; // not compt resolvable (as of now, since it's a struct)
 
-compt u64 a = 2000000000000000000000000000000000000000000000000; // too big (floating pt literal)
+compt u64 a = 2000000000000000000000000000000000000000000000000; // too big (floating pt literal), long lineeeeeeeeeeeee
 compt i32 b = 20.0; // floating to integer no good 
 compt u64 c = 2000000000000000000; // fine
 
 compt mut u64 aa = 185;
+
+compt i64 fooooooooooooooooooooooooooooooooooooooooooooooooooooooo = "foo"; // long

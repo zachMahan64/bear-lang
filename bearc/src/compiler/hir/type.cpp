@@ -129,6 +129,84 @@ template <ConsiderMut C> size_t TypeHasher<C>::transform(size_t res1, size_t res
     return res1 ^ (res2 + 0x9e3779b97f4a7c15ULL + (res1 << 6) + (res1 >> 2));
 }
 
+template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Type& t1) const {
+    TypeToStringValue val{.str = std::string{}};
+    val.str.reserve(64); // decently sized
+    std::string& str = val.str;
+    auto vs
+        = Ovld{[&](const TypeBuiltin& t) { str += builtin_type_to_cstr(t.type); },
+               [&](const TypeStructure& t) {
+                   str += context.symbol_id_to_cstr(context.def(t.definition).name);
+                   if constexpr (considers_mut()) {
+                       str += "mut";
+                   }
+               },
+               [&](const TypeGenericStructure& t) {
+                   // TODO properly handle
+                   str += context.symbol_id_to_cstr(context.def(t.definition).name);
+                   str += "::<>";
+                   if constexpr (considers_mut()) {
+                       str += "mut";
+                   }
+               },
+               [&](const TypeArr& t) {
+                   str += '[';
+                   str += std::to_string(t.canonical_size);
+                   str += ']';
+                   val.inner_goes_right = true;
+               },
+               [&](const TypeSlice&) {
+                   str += '[';
+                   str += '&';
+                   if constexpr (considers_mut()) {
+                       str += "mut";
+                   }
+                   str += ']';
+                   val.inner_goes_right = true;
+               },
+               [&](const TypeRef&) {
+                   str += '&';
+                   if constexpr (considers_mut()) {
+                       str += "mut";
+                   }
+               },
+               [&](const TypePtr&) {
+                   str += '*';
+                   if constexpr (considers_mut()) {
+                       str += "mut";
+                   }
+               },
+               [&](const TypeFnPtr& t) {
+                   str += "*fn";
+                   if constexpr (considers_mut()) {
+                       str += " mut";
+                   }
+                   str += '(';
+                   for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
+                       auto tid = context.type_id(tidx);
+                       TypeToStringValue s = TypeTransformer<TypeToString>{context}(tid);
+                       str += s.str;
+                       if (tidx != t.param_types.last_elem()) {
+                           str += ", ";
+                       }
+                   }
+                   str += ')';
+               },
+               [&](const TypeVariadic&) { str += "..."; }};
+
+    t1.visit(vs);
+
+    return val;
+}
+
+template <ConsiderMut C>
+TypeToStringValue TypeToString<C>::transform(TypeToStringValue res1,   // NOLINT
+                                             TypeToStringValue res2) { // NOLINT
+    return TypeToStringValue{.str
+                             = (res1.inner_goes_right) ? res1.str + res2.str : res2.str + res1.str,
+                             .inner_goes_right = res2.inner_goes_right};
+}
+
 template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(const Type& type) {
     using OTid = OptId<TypeId>;
     auto vs = Ovld{
@@ -212,6 +290,8 @@ template class TypeTransformer<TypeHasher<DoConsiderMut>>;
 template class TypeTransformer<TypeHasher<DoNotConsiderMut>>;
 template class TypeTransformer<TypeComparator<DoConsiderMut>>;
 template class TypeTransformer<TypeComparator<DoNotConsiderMut>>;
+template class TypeTransformer<TypeToString<DoConsiderMut>>;
+template class TypeTransformer<TypeToString<DoNotConsiderMut>>;
 
 CanonicalTypeTable::CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
     : context(context), arena(arena), count{0} {
@@ -382,4 +462,13 @@ bool contains_mut(const Context& ctx, TypeId tid) {
 }
 
 bool TypeContainsMut::operator()(const Type& t1) const { return t1.mut; }
+
+std::string type_to_string(const Context& ctx, TypeId tid) {
+    return TypeTransformer<TypeToString<DoConsiderMut>>{ctx}(tid).str;
+}
+
+std::string type_to_string_without_muts(const Context& ctx, TypeId tid) {
+    return TypeTransformer<TypeToString<DoNotConsiderMut>>{ctx}(tid).str;
+}
+
 } // namespace hir

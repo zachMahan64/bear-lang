@@ -77,7 +77,8 @@ Context::Context(const bearc_args_t* args)
       def_to_ordered_def_slice_id{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
       ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
       canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
-      canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP) {
+      canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP),
+      compact_diagnostics(args->flags[CLI_FLAG_COMPACT_DIAGS]) {
 
     // this may only fail in horribly malfored arguments in test cases
     assert(args->input_file_name);
@@ -124,6 +125,8 @@ int Context::error_count() const noexcept {
 
 int Context::warning_count() const noexcept { return static_cast<int>(warning_cnt); }
 int Context::note_count() const noexcept { return static_cast<int>(note_cnt); }
+
+bool Context::compact_diagnostics_enabled() const noexcept { return compact_diagnostics; }
 
 SymbolId Context::symbol_id(std::string_view str) { return symbol_id(str.data(), str.length()); }
 SymbolId Context::symbol_id(const token_t* tkn) { return symbol_id(tkn->start, tkn->len); }
@@ -308,10 +311,22 @@ void Context::try_print_info() {
         for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
             const FileAst& aast = ast(fid);
             // 1. print parse-time errors (ast-wise errors)
-            aast.print_all_errors();
+            aast.print_all_errors(compact_diagnostics_enabled());
             // 2. print diagnostics (semantic/non-grammatical errors)
+            // OptId<DiagnosticId> prev_diag{};
             for (const auto d : file_to_diagnostics.cat(fid)) {
-                print_diagnostic(d);
+                /*
+                bool print_file = true;
+                // check if we should bother printing the file name again
+                if (prev_diag.has_value()) {
+                    auto curr = diagnostics.cat(d);
+                    auto prev = diagnostics.cat(prev_diag.as_id());
+                    print_file = curr.span.file_id != prev.span.file_id;
+                }
+                */
+                print_diagnostic(d /*, print_file*/);
+                // rotate
+                // prev_diag = d;
             }
         }
     }
@@ -448,18 +463,20 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
     return id;
 }
 
-void Context::print_diagnostic(DiagnosticId diag_id) {
+void Context::print_diagnostic(DiagnosticId diag_id, bool print_file) {
     // as to not re-report
     if (diagnostics_used.cat(diag_id)) {
         return;
     }
     const Diagnostic& diag = diagnostics.cat(diag_id);
-    diag.print(*this);
+    diag.print(*this, print_file);
     // mark used
     diagnostics_used.at(diag_id) = true;
     // try print next
     if (diag.next.has_value() && !diagnostics_used.cat(diag.next.as_id())) {
-        print_diagnostic(diag.next.as_id());
+        // only print next's file if it differs
+        bool print_next_file = diag.span.file_id != diagnostics.cat(diag.next.as_id()).span.file_id;
+        print_diagnostic(diag.next.as_id(), print_next_file);
     }
 }
 

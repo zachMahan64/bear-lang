@@ -34,11 +34,12 @@ enum class diag_code : uint8_t {
     circular_definition_passes_thru,
     circular_definition_origin,
     value_cannot_be_compt,
-    cannot_convert_to_some_builtin_type, // TODO make multiline
-    cannot_resolve_at_compt,             // TODO make multiline
-    type_not_defined,                    // TODO make multiline
-    compt_variable_should_be_immutable,  // TODO make multiline
+    cannot_convert_type,
+    cannot_resolve_at_compt,
+    type_not_defined,
+    compt_variable_should_be_immutable,
     must_initialize_global_variable,
+    count,
 };
 enum class diag_type : uint8_t { error, warning, note };
 
@@ -47,12 +48,13 @@ struct DiagnosticImportStack {
     IdSlice<FileId> files;
 };
 
-struct DiagnosticCannotConvertToBuiltinType {
-    builtin_type type;
+struct DiagnosticCannotConvertFromTypeToType {
+    TypeId from;
+    TypeId to;
 };
 
 using DiagnosticValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack,
-                                     DiagnosticCannotConvertToBuiltinType>;
+                                     DiagnosticCannotConvertFromTypeToType>;
 
 struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 
@@ -63,7 +65,7 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     OptId<DiagnosticId> next;
     diag_code code;
     diag_type type;
-    void print(const Context& context) const;
+    void print(Context& context, bool print_file) const;
     Diagnostic(Span span, enum diag_code code, enum diag_type type,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
         : span(span), code(code), type(type), next(next), value(DiagnosticNoOtherInfo{}) {}
@@ -76,8 +78,14 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     static const char* message_for_code(enum diag_code c);
     static const char* name_for_type(enum diag_type t);
     static const char* accent_color_for_type(enum diag_type t);
-    void print_info_value(Context& context) const;
-    void print_multiline(Context& context) const;
+    void print_info_value(Context& context, HirSize min_width) const;
+    void print_multiline(Context& context, bool print_file) const;
+    void print_line(const auto& printable) const;
+    void print_line_with_number(HirSize line, const auto& printable) const;
+    [[nodiscard]] std::string line(int min_width) const;
+    [[nodiscard]] std::string diag(int min_width) const;
+    [[nodiscard]] std::string line_with_number(HirSize line, int min_width) const;
+    static int width(HirSize line);
 };
 
 } // namespace hir
