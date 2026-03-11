@@ -20,26 +20,10 @@
 
 namespace hir {
 
-static bool code_is_multiline(diag_code code) {
-    switch (code) {
-    case diag_code::cannot_convert_type:
-    case diag_code::cannot_resolve_at_compt:
-    case diag_code::type_not_defined:
-    case diag_code::compt_variable_should_be_immutable:
-    case diag_code::cyclical_import:
-        return true;
-    default:
-        break;
-    }
-    return false;
-}
-
 void Diagnostic::print(Context& context, bool print_file) const {
     const src_buffer_t* buf = context.ast(span.file_id).src();
     auto s = Span::retrieve_from_buffer(buf->data, span);
-    // if (code_is_multiline(code)) {
     print_multiline(context, print_file);
-    // }
     /*
     else {
         print_diagnostic(buf, (char*)s.data(), span.len, span.line, span.col,
