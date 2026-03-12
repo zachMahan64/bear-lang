@@ -44,6 +44,7 @@ class Context {
     int warning_count() const noexcept;
     int note_count() const noexcept;
     bool compact_diagnostics_enabled() const noexcept;
+    bool has_flag(cli_flag_e flag) const noexcept;
     // ----- accessors / emplacers --------
     [[nodiscard]] SymbolId symbol_id(const token_t* tkn);
     [[nodiscard]] SymbolId symbol_id(const char* start, size_t len);

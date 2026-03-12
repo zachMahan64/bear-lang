@@ -102,14 +102,14 @@ Context::Context(const bearc_args_t* args)
     for (FileId id = files.rbegin_id(); id != files.rend_id(); --id) {
         File& f = files.at(id);
         const FileAst& ast = file_asts.cat(f.ast_id);
-        if (!args->flags[CLI_FLAG_PARSE_ONLY]) {
+        if (!has_flag(CLI_FLAG_PARSE_ONLY)) {
             FileAstVisitor visitor{*this, id};
             visitor.register_top_level_declarations();
         }
         this->note_cnt += ast.diagnostic_count() - ast.error_count();
         this->fatal_error_cnt += ast.error_count();
     }
-    if (args->flags[CLI_FLAG_PARSE_ONLY]) {
+    if (has_flag(CLI_FLAG_PARSE_ONLY)) {
         return;
     }
     TopLevelDefVisitor{*this}.resolve_top_level_definitions();
@@ -127,6 +127,8 @@ int Context::warning_count() const noexcept { return static_cast<int>(warning_cn
 int Context::note_count() const noexcept { return static_cast<int>(note_cnt); }
 
 bool Context::compact_diagnostics_enabled() const noexcept { return compact_diagnostics; }
+
+bool Context::has_flag(cli_flag_e flag) const noexcept { return args->flags[flag]; }
 
 SymbolId Context::symbol_id(std::string_view str) { return symbol_id(str.data(), str.length()); }
 SymbolId Context::symbol_id(const token_t* tkn) { return symbol_id(tkn->start, tkn->len); }
@@ -276,7 +278,7 @@ void Context::try_print_info() {
         ast(fid).try_print_info(args);
     }
     // 2. print more info:
-    if (args->flags[CLI_FLAG_LIST_FILES]) {
+    if (has_flag(CLI_FLAG_LIST_FILES)) {
         std::cout << ansi_bold_white() << "all files" << '(' << files.size() << ')' << ":"
                   << ansi_reset() << '\n';
         for (FileId curr = files.begin_id(); curr != files.end_id(); ++curr) {
@@ -306,7 +308,7 @@ void Context::try_print_info() {
         }
     }
     // 3. print diagnostics last (so always seen first in terminal)
-    if (!args->flags[CLI_FLAG_SILENT]) {
+    if (!has_flag(CLI_FLAG_SILENT)) {
         // go thru each file ast to print info
         for (auto fid = files.begin_id(); fid != files.end_id(); fid++) {
             const FileAst& aast = ast(fid);
@@ -330,7 +332,7 @@ void Context::try_print_info() {
             }
         }
     }
-    if (!args->flags[CLI_FLAG_SILENT]) {
+    if (has_flag(CLI_FLAG_SILENT)) {
         auto errors = error_count();
         if (errors == 1) {
             puts("1 error generated.");
@@ -352,7 +354,7 @@ void Context::try_print_info() {
     }
     // std::cout << tables.files.size() << '\n';
     if (this->diagnostic_count() != 0) {
-        if (!args->flags[CLI_FLAG_SILENT]) {
+        if (!has_flag(CLI_FLAG_SILENT)) {
             printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(),
                    symbol_id_to_cstr(files.cat(FileId{1}).path), ansi_reset());
         }
