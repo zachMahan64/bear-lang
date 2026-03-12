@@ -102,11 +102,11 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
 
     // do printing now that we have all strings setup
     if (compact) {
-        printf("%s\'%s\':%zu:%zu: %s%s: %s%s%s%s\n", ansi_bold_white(), src_buffer->file_name,
+        printf("%s%s:%zu:%zu: %s%s: %s%s%s%s\n", ansi_bold_white(), src_buffer->file_name,
                adjusted_line, adjusted_col, accent_color, error_word, ansi_bold_white(),
                error_message, context, ansi_reset());
     } else {
-        printf("%s%s: %s%s \n --> \'%s\':%zu:%zu %s\n", accent_color, error_word, ansi_bold_white(),
+        printf("%s%s: %s%s \n --> %s:%zu:%zu %s\n", accent_color, error_word, ansi_bold_white(),
                error_message, src_buffer->file_name, adjusted_line, adjusted_col, ansi_reset());
     }
 

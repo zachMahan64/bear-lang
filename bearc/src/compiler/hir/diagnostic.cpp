@@ -190,7 +190,7 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     const char* accent_color = accent_color_for_type(type);
     if (context.compact_diagnostics_enabled()) {
         if (print_file) {
-            printf("%s\'%s\':%u:%u: ", ansi_bold_white(), file_name, adjusted_line, adjusted_col);
+            printf("%s%s:%u:%u: ", ansi_bold_white(), file_name, adjusted_line, adjusted_col);
         }
         printf("%s%s: %s%s%s\n", accent_color, name_for_type(type), ansi_bold_white(),
                message_for_code(code), ansi_reset());
@@ -198,7 +198,7 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
         printf("%s%s: %s%s \n", accent_color, name_for_type(type), ansi_bold_white(),
                message_for_code(code));
         if (print_file) {
-            printf(" --> \'%s\':%u:%u %s\n", file_name, adjusted_line, adjusted_col, ansi_reset());
+            printf(" --> %s:%u:%u %s\n", file_name, adjusted_line, adjusted_col, ansi_reset());
         }
     }
 
