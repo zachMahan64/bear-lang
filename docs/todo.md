@@ -32,6 +32,11 @@
     - [x] CanonicalTypeHashTable, implement then add to context, (set canonical inside of Types and then also build the reverse map from CanonicalId -> first TypeId mention)
 - [x] Fully plan out generic instatiation (current sketch in hir_design doc)
     - [x] the plan is to delay generic top level instatiation (2.a) until first mention (this is logical), and then resolve concrete-ified members in phase 2.b 
+- [x] `-o` / `--output` cli arg instead of implicit output
+- [x] std::string builder for hir::Type using `TypeTransformer`
+- [ ] better diagnostic notes, add tips (ansi_bold_green)
+- [ ] add trimming of cwd from file paths in diagnostics reporting
+- [ ] fully allow cyclical imports? validate full compatibility
 
 ##### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
@@ -48,10 +53,6 @@
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
 - [ ] debug logger to display context and scope contents
     - [ ] add a StringifyType seed for TypeTransformer
-- [ ] hir phase 2: begin identifier resolution, typechecking, and constant folidng/compt analysis
-#### medium term/non-main path tasks
-- [x] `-o` / `--output` cli arg instead of implicit output
-- [x] std::string builder for hir::Type using `TypeTransformer`
 #### long term
 - [ ] MIR? (compile-time ctrl flow and better optimizations) 
 - [ ] LLVM IR

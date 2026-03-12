@@ -175,7 +175,7 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
 
     char* args5[] = {"bearc", "-i", "tests/projects/00", "-c", "00.br"};
-    ASSERT_EQ_ERR_FROM_ARGSN(args5, 7, 2);
+    ASSERT_EQ_ERR_FROM_ARGSN(args5, 3, 2);
 
     char* args6[] = {"bearc", "-i", "tests/projects/01", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args6, 5, 2);

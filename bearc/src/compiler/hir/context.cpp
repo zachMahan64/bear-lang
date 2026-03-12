@@ -201,7 +201,7 @@ void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId
     // gonna be imported in the previous thing, so top of import stack
     FileId imported_in = import_stack[import_stack.size() - 1];
     emplace_diagnostic(Span{imported_in, ast(imported_in).buffer(), import_path_tkn},
-                       diag_code::cyclical_import, diag_type::error,
+                       diag_code::cyclical_import, diag_type::warning,
                        DiagnosticImportStack{freeze_id_vec(import_stack)});
 }
 void Context::explore_imports(FileId root_id) {
@@ -375,7 +375,6 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     // DNE guard
     auto maybe_path = resolve_on_import_path(path, parent, this->args);
     if (!maybe_path.has_value()) {
-        // register_tokenwise_error(importer_id, path_tkn, ERR_IMPORTED_FILE_DOES_NOT_EXIST);
         emplace_diagnostic(Span(importer_id, ast(importer_id).buffer(), path_tkn),
                            diag_code::imported_file_dne, diag_type::error);
         return OptId<FileId>{};

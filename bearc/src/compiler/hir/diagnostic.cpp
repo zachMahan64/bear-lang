@@ -50,7 +50,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::imported_file_dne:
         return "imported file does not exist";
     case diag_code::cyclical_import:
-        return "circular file imports are not permitted";
+        return "cyclical file import detected";
     case diag_code::empty_struct:
         return "empty struct not permitted";
     case diag_code::empty_variant:
