@@ -13,7 +13,6 @@
 #include "utils/ansi_codes.h"
 #include "utils/file_io.h"
 #include <algorithm>
-#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -161,7 +160,7 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
     const auto vs = Ovld{
         [&](DiagnosticNoOtherInfo) { std::cout << '\n'; },
         [&](DiagnosticCannotConvertFromTypeToType t) {
-            std::cout << ansi_bold_cyan() << "cannot convert value of type `"
+            std::cout << accent_color_for_type(type) << "cannot convert value of type `"
                       << type_to_string(context, t.from) << "` to `"
                       << type_to_string(context, t.to) << '`' << ansi_reset() << '\n';
         },
