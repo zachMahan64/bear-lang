@@ -43,7 +43,8 @@
 - [x] fix `tests/hir/10.br` falsely reported circular
 - [x] multi-line and more complicated diagnostics handling
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
-    - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types 
+    - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types
+    - [ ] struct compt handling (propagate constants thru member inits)
     - [ ] implement kind of operator <--> type mapping system (just worry about builtin types for now)
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
