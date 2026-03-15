@@ -93,7 +93,10 @@ class Context {
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
-                                    DiagnosticValue value,
+                                    DiagnosticInfoValue value,
+                                    OptId<DiagnosticId> next = OptId<DiagnosticId>{});
+    DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                    DiagnosticMessageValue message_value, DiagnosticInfoValue value,
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag, bool print_file = true);
@@ -135,6 +138,7 @@ class Context {
     void try_print_info();
 
     // converters
+    [[nodiscard]] SymbolId symbol_id(IdIdx<SymbolId> sididx) const;
     [[nodiscard]] FileId file_id(IdIdx<FileId> ididx) const;
     [[nodiscard]] const Type& type(IdIdx<TypeId> ididx) const;
     [[nodiscard]] Type& type(IdIdx<TypeId> ididx);

@@ -16,6 +16,7 @@
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <variant>
 
 namespace hir {
 
@@ -38,7 +39,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         break;
     case diag_code::redefinition:
         return "redefined symbol";
-    case diag_code::original_def_here:
+    case diag_code::previous_def_here:
         return "previous definition here";
     case diag_code::no_matching_struct_for_method:
         return "no matching struct for method declaration";
@@ -76,8 +77,16 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "global variables must be initialized";
     case diag_code::compt_variable_should_be_immutable:
         return "compt variables must be immutable";
-    case diag_code::variable_not_declared_compt:
-        return "cannot initialize a compt value with a non-compt variable";
+    case diag_code::cannot_init_with_non_compt_value:
+        return "initializer for 'compt' value must be a compile-time constant";
+    case diag_code::declared_here_without_compt:
+        return "declared here without 'compt' specifier";
+    case diag_code::not_a_compile_time_constant:
+        return "not a compile-time constant";
+    case diag_code::use_of_undeclared_identifier:
+        return "use of undeclared identifier";
+    case diag_code::not_declared_in_this_scope:
+        return "not declared in this scope";
     }
     std::unreachable();
     return "";
@@ -90,6 +99,8 @@ const char* Diagnostic::name_for_type(enum diag_type t) {
         return "warning";
     case diag_type::note:
         return "note";
+    case diag_type::help:
+        return "help";
     }
     return "diagnostic";
 }
@@ -101,6 +112,8 @@ const char* Diagnostic::accent_color_for_type(enum diag_type t) {
         return ansi_bold_yellow();
     case diag_type::note:
         return ansi_bold_cyan();
+    case diag_type::help:
+        return ansi_bold_green();
     }
     return "";
 }
@@ -166,15 +179,10 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
                       << type_to_string(context, t.from) << "` to `"
                       << type_to_string(context, t.to) << '`' << ansi_reset() << '\n';
         },
-        [&](DiagnosticImportStack import_stack) {
-            import_stack_helper(import_stack.files);
-            /*
-            for (auto fid = import_stack.files.first(); fid != import_stack.files.end(); ++fid) {
-                std::cout << "imported in: " << ansi_bold_white()
-                          << context.file_name(context.file_id_idx_to_id(fid)) << ansi_reset()
-                          << '\n';
-            }
-            */
+        [&](DiagnosticImportStack import_stack) { import_stack_helper(import_stack.files); },
+        [&](DiagnosticSubCode sc) {
+            std::cout << accent_color_for_type(type) << message_for_code(sc.sub_code)
+                      << ansi_reset() << '\n';
         },
     };
     this->visit(vs);
@@ -189,15 +197,20 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     auto adjusted_line = span.line + 1;
     auto adjusted_col = span.col + 1;
     const char* accent_color = accent_color_for_type(type);
+    std::string complex_message_str{};
+    if (has_complex_message()) {
+        build_complex_message(context, complex_message_str);
+    }
+    const char* message
+        = has_complex_message() ? complex_message_str.c_str() : message_for_code(code);
     if (context.compact_diagnostics_enabled()) {
         if (print_file) {
             printf("%s%s:%u:%u: ", ansi_bold_white(), file_name, adjusted_line, adjusted_col);
         }
-        printf("%s%s: %s%s%s\n", accent_color, name_for_type(type), ansi_bold_white(),
-               message_for_code(code), ansi_reset());
+        printf("%s%s: %s%s%s\n", accent_color, name_for_type(type), ansi_bold_white(), message,
+               ansi_reset());
     } else {
-        printf("%s%s: %s%s \n", accent_color, name_for_type(type), ansi_bold_white(),
-               message_for_code(code));
+        printf("%s%s: %s%s \n", accent_color, name_for_type(type), ansi_bold_white(), message);
         if (print_file) {
             printf(" --> %s:%u:%u %s\n", file_name, adjusted_line, adjusted_col, ansi_reset());
         }
@@ -218,6 +231,13 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     if (src_buf_span_start[0] == '\n') {
         ++src_buf_span_start;
     }
+
+    // as to not have a trailing newline
+    if (src_buf_span_start[src_buf_span_len - 1] == '\n') {
+        assert(src_buf_span_len != 0);
+        --src_buf_span_len;
+    }
+
     // end (keep bumping end till newline or end of buffer)
     while (src_buf_span_start[src_buf_span_len] != '\0'
            && src_buf_span_start[src_buf_span_len] != '\n') {
@@ -325,19 +345,18 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
         }
 
         bool single_line_done
-            = !has_faux_lines && (adjusted_line == max_line && i == full_src_span.size() - 1);
-
+            = !has_faux_lines && (adjusted_line == max_line) && (i == full_src_span.size() - 1);
+        // std::cout << (adjusted_line == max_line); // TODO DEBUG
         if (single_line_done) {
             if (c != '\n') {
                 buf += '\n';
             }
             buf += line_without_num();
-            for (HirSize i = 0; i < issue_len; i++) {
+            for (HirSize k = 0; k < issue_len; k++) {
                 buf += ' ';
             }
             buf += accent_color;
-            buf += '^';
-            for (HirSize i = 0; i <= span.len - 2; i++) {
+            for (HirSize k = 0; k <= span.len - 1; k++) {
                 buf += '^';
             }
         }
@@ -367,6 +386,27 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     // else if truly multiline
 
     print_info_value(context, min_width);
+}
+
+bool Diagnostic::has_complex_message() const {
+    return !std::holds_alternative<DiagnosticNoOtherInfo>(message_value);
+}
+
+void Diagnostic::build_complex_message(const Context& ctx, std::string& str) const {
+    str.reserve(64); // decent size
+    auto vs = Ovld{[](DiagnosticNoOtherInfo) {},
+                   [&](DiagnosticIdentifierAfterMessage d) {
+                       str += message_for_code(code);
+                       str += " `";
+                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                           if (sidx != d.sid_slice.last_elem()) {
+                               str += "..";
+                           }
+                       }
+                       str += '`';
+                   }};
+    std::visit(vs, message_value);
 }
 
 } // namespace hir

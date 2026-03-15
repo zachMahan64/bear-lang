@@ -21,7 +21,7 @@ class Context;
 enum class diag_code : uint8_t {
     imported_file_dne,
     redefinition,
-    original_def_here,
+    previous_def_here,
     no_matching_struct_for_method,
     capitalized_mod,
     lowercase_structure,
@@ -39,12 +39,24 @@ enum class diag_code : uint8_t {
     type_not_defined,
     compt_variable_should_be_immutable,
     must_initialize_global_variable,
-    variable_not_declared_compt,
+    cannot_init_with_non_compt_value,
+    declared_here_without_compt,
+    not_a_compile_time_constant,
+    use_of_undeclared_identifier,
+    not_declared_in_this_scope,
     count, // this must be last,
 };
-enum class diag_type : uint8_t { error, warning, note };
+enum class diag_type : uint8_t { error, warning, note, help };
 
 struct DiagnosticNoOtherInfo {};
+
+struct DiagnosticIdentifierAfterMessage {
+    IdSlice<SymbolId> sid_slice;
+};
+
+using DiagnosticMessageValue
+    = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage>;
+
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
 };
@@ -54,14 +66,19 @@ struct DiagnosticCannotConvertFromTypeToType {
     TypeId to;
 };
 
-using DiagnosticValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack,
-                                     DiagnosticCannotConvertFromTypeToType>;
+struct DiagnosticSubCode {
+    diag_code sub_code;
+};
+
+using DiagnosticInfoValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack,
+                                         DiagnosticCannotConvertFromTypeToType, DiagnosticSubCode>;
 
 struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 
     using id_type = DiagnosticId;
-    using value_type = DiagnosticValue;
-    DiagnosticValue value;
+    using value_type = DiagnosticInfoValue;
+    DiagnosticMessageValue message_value = DiagnosticNoOtherInfo{};
+    DiagnosticInfoValue value = DiagnosticNoOtherInfo{};
     Span span;
     OptId<DiagnosticId> next;
     diag_code code;
@@ -70,12 +87,19 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     Diagnostic(Span span, enum diag_code code, enum diag_type type,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
         : span(span), code(code), type(type), next(next), value(DiagnosticNoOtherInfo{}) {}
-    Diagnostic(Span span, enum diag_code code, enum diag_type type, DiagnosticValue value,
+    Diagnostic(Span span, enum diag_code code, enum diag_type type, DiagnosticInfoValue value,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
         : span(span), code(code), type(type), next(next), value(value) {}
+    Diagnostic(Span span, enum diag_code code, enum diag_type type,
+               DiagnosticMessageValue message_value, DiagnosticInfoValue value,
+               OptId<DiagnosticId> next = OptId<DiagnosticId>{})
+        : span(span), code(code), type(type), next(next), message_value(message_value),
+          value(value) {}
     void set_next(DiagnosticId next) { this->next = next; }
 
   private:
+    bool has_complex_message() const;
+    void build_complex_message(const Context& ctx, std::string& message_str) const;
     static const char* message_for_code(enum diag_code c);
     static const char* name_for_type(enum diag_type t);
     static const char* accent_color_for_type(enum diag_type t);

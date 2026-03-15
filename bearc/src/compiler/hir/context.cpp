@@ -456,8 +456,18 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
 }
 
 DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type type,
-                                         DiagnosticValue value, OptId<DiagnosticId> next) {
+                                         DiagnosticInfoValue value, OptId<DiagnosticId> next) {
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, value, next);
+    diagnostics_used.bump();
+    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    handle_bump_diag_counts(code, type);
+    return id;
+}
+
+DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type type,
+                                         DiagnosticMessageValue message_value,
+                                         DiagnosticInfoValue value, OptId<DiagnosticId> next) {
+    DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, message_value, value, next);
     diagnostics_used.bump();
     file_to_diagnostics.at(span.file_id).emplace_back(id);
     handle_bump_diag_counts(code, type);
@@ -679,5 +689,7 @@ NamedOrAnonScopeId Context::containing_scope(DefId did) const {
     // recursive up to find parent's parent scope, etc.
     return containing_scope(maybe_parent.as_id());
 }
+
+SymbolId Context::symbol_id(IdIdx<SymbolId> sididx) const { return symbol_ids.cat(sididx); }
 
 } // namespace hir

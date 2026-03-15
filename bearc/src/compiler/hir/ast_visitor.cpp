@@ -172,7 +172,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         auto orig_file = context.defs.cat(already_defined.as_id()).span.file_id;
         auto* t = top_level_info_for(context.def_ast_nodes.at(already_defined.as_id())).name_tkn;
         auto d2 = context.emplace_diagnostic(Span(orig_file, context.ast(orig_file).buffer(), t),
-                                             diag_code::original_def_here, diag_type::note);
+                                             diag_code::previous_def_here, diag_type::note);
         context.set_next_diagnostic(d1, d2);
         return OptId<DefId>{};
     }

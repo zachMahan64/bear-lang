@@ -11,6 +11,7 @@
 
 #include "compiler/ast/expr.h"
 #include "compiler/hir/context.hpp"
+#include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
@@ -69,10 +70,28 @@ template <IsDefVisitor V> class ComptExprSolver {
                 // std::cout << def.span.as_sv(context)
                 //          << ", resol: " << Def::resol_state_to_str(context.resol_state_of(did))
                 //          << '\n';
-                if (def.holds<DefVariable>() && def.compt) {
+                if (def.holds<DefVariable>()) {
+                    if (!def.compt) {
+                        auto diag_id = context.emplace_diagnostic(
+                            Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                            diag_code::cannot_init_with_non_compt_value, diag_type::error,
+                            DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
+                        auto sub_diag_id = context.emplace_diagnostic(
+                            def.span, diag_code::declared_here_without_compt, diag_type::note);
+                        context.set_next_diagnostic(diag_id, sub_diag_id);
+                        return std::nullopt;
+                    }
                     maybe_value = context.exec(def.as<DefVariable>().compt_value.as_id())
                                       .template as<ExecExprComptConstant>();
                 }
+            } else {
+                auto sid_slice = context.symbol_slice(expr->expr.id.slice);
+                auto diag_id = context.emplace_diagnostic(
+                    Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                    diag_code::use_of_undeclared_identifier, diag_type::error,
+                    DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice},
+                    DiagnosticSubCode{.sub_code = diag_code::not_declared_in_this_scope});
+                return std::nullopt;
             }
             break;
         }
