@@ -120,7 +120,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_PRE_UNARY: {
             // eventually allow sizeof, allignof
-            // TODO handle bool not
             if (expr->expr.unary.op->type == TOK_BOOL_NOT) {
                 auto inner = solve_compt_expr(fid, scope, expr->expr.unary.expr, into_builtin);
             }

@@ -34,6 +34,8 @@ void Diagnostic::print(Context& context, bool print_file) const {
 
 const char* Diagnostic::message_for_code(enum diag_code c) {
     switch (c) {
+    case diag_code::count:
+        break;
     case diag_code::redefinition:
         return "redefined symbol";
     case diag_code::original_def_here:
@@ -74,8 +76,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "global variables must be initialized";
     case diag_code::compt_variable_should_be_immutable:
         return "compt variables must be immutable";
-    case diag_code::count:
-        break;
+    case diag_code::variable_not_declared_compt:
+        return "cannot initialize a compt value with a non-compt variable";
     }
     std::unreachable();
     return "";

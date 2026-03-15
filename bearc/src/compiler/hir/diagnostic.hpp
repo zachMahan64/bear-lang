@@ -39,7 +39,8 @@ enum class diag_code : uint8_t {
     type_not_defined,
     compt_variable_should_be_immutable,
     must_initialize_global_variable,
-    count,
+    variable_not_declared_compt,
+    count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note };
 
