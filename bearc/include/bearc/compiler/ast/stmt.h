@@ -79,6 +79,7 @@ typedef enum ast_statement_type {
     AST_STMT_FOR_IN,
     AST_STMT_RETURN,
     AST_STMT_YIELD,
+    AST_STMT_CONTINUE,
 
     AST_STMT_INVALID,
 } ast_stmt_type_e;

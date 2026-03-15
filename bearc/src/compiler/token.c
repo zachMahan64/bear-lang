@@ -126,6 +126,7 @@ static void string_to_token_map_init(void) {
     strimap_emplace(&string_to_token_map, "return", TOK_RETURN);
     strimap_emplace(&string_to_token_map, "yield", TOK_YIELD);
     strimap_emplace(&string_to_token_map, "break", TOK_BREAK);
+    strimap_emplace(&string_to_token_map, "continue", TOK_CONTINUE);
     strimap_emplace(&string_to_token_map, "match", TOK_MATCH);
 
     // more operators
@@ -283,6 +284,7 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_RETURN] = "return",
     [TOK_YIELD] = "yield",
     [TOK_BREAK] = "break",
+    [TOK_CONTINUE] = "continue",
     [TOK_MATCH] = "match",
 
     // more operators

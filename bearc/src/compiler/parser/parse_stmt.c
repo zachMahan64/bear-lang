@@ -134,6 +134,15 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_break(p);
     }
 
+    if (next_type == TOK_CONTINUE) {
+        if (parser_mode(p) != PARSER_MODE_IN_LOOP) {
+            compiler_error_list_emplace(p->error_list, first_tkn,
+                                        ERR_CONTINUE_STMT_OUTSIDE_OF_LOOP);
+            return parser_sync_stmt_until(p, TOK_SEMICOLON);
+        }
+        return parse_stmt_continue(p);
+    }
+
     // handle decls with leading mut or brackets (slices and arrays)
     if (token_is_non_id_type_idicator(next_type)) {
         if (next_type == TOK_MUT) {
@@ -684,6 +693,23 @@ ast_stmt_t* parse_stmt_break(parser_t* p) {
         break_stmt->last = break_tkn;
     }
     return break_stmt;
+}
+
+ast_stmt_t* parse_stmt_continue(parser_t* p) {
+    ast_stmt_t* cont_stmt = parser_alloc_stmt(p);
+    cont_stmt->type = AST_STMT_CONTINUE;
+    token_t* cont_tkn = parser_expect_token(p, TOK_CONTINUE);
+    if (!cont_tkn) {
+        return parser_sync_stmt(p);
+    }
+    cont_stmt->first = cont_tkn;
+    token_t* term = parser_expect_token(p, TOK_SEMICOLON);
+    if (term) {
+        cont_stmt->last = term;
+    } else {
+        cont_stmt->last = cont_tkn;
+    }
+    return cont_stmt;
 }
 
 ast_stmt_t* parse_stmt_import(parser_t* p) {

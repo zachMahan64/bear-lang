@@ -932,6 +932,13 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         printer_deindent();
         break;
     }
+    case AST_STMT_CONTINUE:
+        print_title("continue statement");
+        printer_do_indent();
+        print_op_from_type(TOK_CONTINUE);
+        printer_deindent();
+        print_delineator_from_type(TOK_SEMICOLON);
+        break;
     }
     print_closing_green_brace();
     puts(",");

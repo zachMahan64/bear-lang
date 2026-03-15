@@ -50,6 +50,7 @@ static const char* error_messages[ERR__COUNT] = {
     [NOTE_DID_YOU_MEAN_MT] = "did you mean to declare this as 'mt'?",
     [ERR_MULTILEVEL_REF]
     = "multi-level reference type is malformed; did you mean to declare a multi-level pointer?",
+    [ERR_CONTINUE_STMT_OUTSIDE_OF_LOOP] = "continue statement outside of loop",
 };
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
 

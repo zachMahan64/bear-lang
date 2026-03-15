@@ -1,0 +1,13 @@
+// tests/parser/49.br
+
+fn main() -> i32 {
+    mut i32 a;
+    for i32 b in 1...200 {
+        if (a % 2 == 0) {
+            continue;
+        }
+        a += b;
+    }
+    continue; // outside of loop, err
+    return a;
+}
