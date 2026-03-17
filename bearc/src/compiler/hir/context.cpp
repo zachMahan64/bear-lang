@@ -169,7 +169,9 @@ FileId Context::file(SymbolId path_symbol) {
     if (maybe_file_id.has_value()) {
         return maybe_file_id.as_id();
     }
+    // ****************** all lexing and parsing done in this one line
     FileAstId ast_id = this->file_asts.emplace_and_get_id(symbol_id_to_cstr(path_symbol));
+    // ^^^^^^^^^^^^^^^^^^
     FileId file_id = this->files.emplace_and_get_id(path_symbol, ast_id);
     /// store this mapping for future detection
     this->symbol_id_to_file_id_map.insert(path_symbol, file_id);
@@ -368,7 +370,7 @@ const char* Context::file_name(FileId id) const { return symbol_id_to_cstr(files
 OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
                                                       const ast_stmt_t* import_statement) {
     assert(import_statement->type == AST_STMT_IMPORT);
-    token_t* path_tkn = import_statement->stmt.import.file_path;
+    const token_t* path_tkn = import_statement->stmt.import.file_path;
     SymbolId path_symbol_id = symbol_id_for_str_lit_tkn(path_tkn);
     const char* path = symbol_id_to_cstr(path_symbol_id);
 
