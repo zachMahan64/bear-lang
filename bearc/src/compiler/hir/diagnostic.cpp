@@ -346,7 +346,6 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
 
         bool single_line_done
             = !has_faux_lines && (adjusted_line == max_line) && (i == full_src_span.size() - 1);
-        // std::cout << (adjusted_line == max_line); // TODO DEBUG
         if (single_line_done) {
             if (c != '\n') {
                 buf += '\n';

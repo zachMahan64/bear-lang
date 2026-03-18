@@ -1129,11 +1129,7 @@ ast_stmt_t* parse_stmt_extern_block(parser_t* p) {
     if (!first) {
         return parser_sync_stmt(p);
     }
-    token_t* extern_language = parser_expect_token(p, TOK_IDENTIFIER);
-    if (!extern_language) {
-        return parser_sync_stmt(p);
-    }
-    stmt->stmt.extern_block.extern_language = extern_language;
+    stmt->stmt.extern_block.extern_language = parser_match_token(p, TOK_IDENTIFIER);
     token_t* lbrace = parser_expect_token(p, TOK_LBRACE);
     if (!lbrace) {
         return parser_sync_stmt(p);

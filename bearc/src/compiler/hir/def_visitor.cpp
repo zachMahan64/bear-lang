@@ -152,6 +152,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_FOR:
     case AST_STMT_FOR_IN:
     case AST_STMT_RETURN:
+    case AST_STMT_CONTINUE:
     case AST_STMT_YIELD:
     case AST_STMT_INVALID:
         break;
