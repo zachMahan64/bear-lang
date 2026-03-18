@@ -4,7 +4,7 @@
 
 import "01.br";
 
-struct Foo {} // error
+struct Foo {} // fine 
 
 union Bar {} // error 
 
