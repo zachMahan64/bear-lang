@@ -27,7 +27,6 @@ enum class diag_code : uint8_t {
     lowercase_structure,
     invalid_extern_lang,
     cyclical_import,
-    empty_struct,
     empty_variant,
     empty_union,
     circular_definition,
@@ -44,7 +43,7 @@ enum class diag_code : uint8_t {
     not_a_compile_time_constant,
     use_of_undeclared_identifier,
     not_declared_in_this_scope,
-    declare_this_as,
+    replace_with,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };

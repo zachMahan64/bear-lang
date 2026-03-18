@@ -48,13 +48,11 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::lowercase_structure:
         return "lowercase structure name";
     case diag_code::invalid_extern_lang:
-        return "invalid language target specified for external linkage:";
+        return "unkown extern ABI:";
     case diag_code::imported_file_dne:
         return "imported file does not exist";
     case diag_code::cyclical_import:
         return "cyclical file import detected";
-    case diag_code::empty_struct:
-        return "empty struct not permitted";
     case diag_code::empty_variant:
         return "empty variant not permitted";
     case diag_code::empty_union:
@@ -87,8 +85,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "use of undeclared identifier";
     case diag_code::not_declared_in_this_scope:
         return "not declared in this scope";
-    case diag_code::declare_this_as:
-        return "declare this as";
+    case diag_code::replace_with:
+        return "replace with";
     }
     std::unreachable();
     return "";

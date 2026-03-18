@@ -111,7 +111,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                 DiagnosticNoOtherInfo{});
             auto did_next = context.emplace_diagnostic(
                 Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
-                diag_code::declare_this_as, diag_type::help,
+                diag_code::replace_with, diag_type::help,
                 DiagnosticSymbolAfterMessage{context.symbol_id("extern C")},
                 DiagnosticNoOtherInfo{});
             context.set_next_diagnostic(did, did_next);
@@ -254,11 +254,11 @@ void FileAstVisitor::register_top_level_stmts_registering_ordered_members(
         const ast_stmt_t* st = context.def_ast_nodes.cat(parent_def);
         const ast_stmt_type_e statement_type = st->type;
         const Span span{file, context.ast(file).buffer(), top_level_info_for(st).name_tkn};
-        diag_code code = diag_code::empty_struct;
+        diag_code code = diag_code::empty_variant;
         switch (statement_type) {
         case AST_STMT_STRUCT_DEF:
-            code = diag_code::empty_struct;
-            break;
+            // fine, just return
+            return;
         case AST_STMT_UNION_DEF:
             code = diag_code::empty_union;
             break;
