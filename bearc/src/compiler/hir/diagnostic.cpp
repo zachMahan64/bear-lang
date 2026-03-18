@@ -48,7 +48,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::lowercase_structure:
         return "lowercase structure name";
     case diag_code::invalid_extern_lang:
-        return "invalid language target specified for external linkage";
+        return "invalid language target specified for external linkage:";
     case diag_code::imported_file_dne:
         return "imported file does not exist";
     case diag_code::cyclical_import:
@@ -87,6 +87,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "use of undeclared identifier";
     case diag_code::not_declared_in_this_scope:
         return "not declared in this scope";
+    case diag_code::declare_this_as:
+        return "declare this as";
     }
     std::unreachable();
     return "";
@@ -214,6 +216,11 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
         if (print_file) {
             printf(" --> %s:%u:%u %s\n", file_name, adjusted_line, adjusted_col, ansi_reset());
         }
+    }
+
+    // if it's help, don't reshow the src buffer!
+    if (type == diag_type::help) {
+        return;
     }
 
     const char* span_start = span.as_sv(context).data();
@@ -397,12 +404,22 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                    [&](DiagnosticIdentifierAfterMessage d) {
                        str += message_for_code(code);
                        str += " `";
+                       str += accent_color_for_type(type);
                        for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
                            str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
                            if (sidx != d.sid_slice.last_elem()) {
                                str += "..";
                            }
                        }
+                       str += ansi_reset();
+                       str += '`';
+                   },
+                   [&](DiagnosticSymbolAfterMessage d) {
+                       str += message_for_code(code);
+                       str += " `";
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol_id_to_cstr(d.sid);
+                       str += ansi_reset();
                        str += '`';
                    }};
     std::visit(vs, message_value);

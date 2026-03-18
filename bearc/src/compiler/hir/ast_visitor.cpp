@@ -103,9 +103,17 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         auto maybe_abi = abi_for_extern_stmt(stmt);
         // ensure valid specified abi
         if (!maybe_abi.has_value()) {
-            context.emplace_diagnostic(
+            auto did = context.emplace_diagnostic(
                 Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
-                diag_code::invalid_extern_lang, diag_type::error);
+                diag_code::invalid_extern_lang, diag_type::error,
+                DiagnosticSymbolAfterMessage{
+                    context.symbol_id(stmt->stmt.extern_block.extern_language)},
+                DiagnosticNoOtherInfo{});
+            auto didn = context.emplace_diagnostic(
+                Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
+                diag_code::declare_this_as, diag_type::help,
+                DiagnosticSymbolAfterMessage{context.symbol_id("extern C")},
+                DiagnosticNoOtherInfo{});
 
         } else {
             enum abi_lang abi = maybe_abi.value();
@@ -373,6 +381,9 @@ std::optional<const token_t*> FileAstVisitor::name_of_ast_decl(const ast_stmt_t*
 bool is_lower(const token_t* s) { return !is_capital(s); }
 bool is_capital(const token_t* s) { return s->start[0] >= 'A' && s->start[0] <= 'Z'; }
 std::optional<abi_lang> abi_for_extern_stmt(const ast_stmt_t* stmt) {
+    if (stmt->stmt.extern_block.extern_language == nullptr) {
+        return abi_lang::native;
+    }
     return (stmt->stmt.extern_block.extern_language->len != 0
             && stmt->stmt.extern_block.extern_language->start[0] == 'C')
                ? abi_lang::c

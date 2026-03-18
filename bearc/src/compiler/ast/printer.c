@@ -923,7 +923,9 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
     case AST_STMT_EXTERN_BLOCK: {
         print_title("extern block");
         print_delineator_from_type(TOK_EXTERN);
-        print_id_tok(stmt->stmt.extern_block.extern_language);
+        if (stmt->stmt.extern_block.extern_language) {
+            print_id_tok(stmt->stmt.extern_block.extern_language);
+        }
         printer_do_indent();
         ast_slice_of_stmts_t decls = stmt->stmt.extern_block.decls;
         for (size_t i = 0; i < decls.len; i++) {

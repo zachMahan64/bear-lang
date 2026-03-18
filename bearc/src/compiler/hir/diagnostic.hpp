@@ -44,6 +44,7 @@ enum class diag_code : uint8_t {
     not_a_compile_time_constant,
     use_of_undeclared_identifier,
     not_declared_in_this_scope,
+    declare_this_as,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };
@@ -54,8 +55,12 @@ struct DiagnosticIdentifierAfterMessage {
     IdSlice<SymbolId> sid_slice;
 };
 
-using DiagnosticMessageValue
-    = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage>;
+struct DiagnosticSymbolAfterMessage {
+    SymbolId sid;
+};
+
+using DiagnosticMessageValue = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
+                                            DiagnosticSymbolAfterMessage>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
