@@ -109,11 +109,12 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                 DiagnosticSymbolAfterMessage{
                     context.symbol_id(stmt->stmt.extern_block.extern_language)},
                 DiagnosticNoOtherInfo{});
-            auto didn = context.emplace_diagnostic(
+            auto did_next = context.emplace_diagnostic(
                 Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
                 diag_code::declare_this_as, diag_type::help,
                 DiagnosticSymbolAfterMessage{context.symbol_id("extern C")},
                 DiagnosticNoOtherInfo{});
+            context.set_next_diagnostic(did, did_next);
 
         } else {
             enum abi_lang abi = maybe_abi.value();

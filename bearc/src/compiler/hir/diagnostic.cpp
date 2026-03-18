@@ -411,7 +411,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                                str += "..";
                            }
                        }
-                       str += ansi_reset();
+                       str += ansi_bold_white();
                        str += '`';
                    },
                    [&](DiagnosticSymbolAfterMessage d) {
@@ -419,7 +419,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                        str += " `";
                        str += accent_color_for_type(type);
                        str += ctx.symbol_id_to_cstr(d.sid);
-                       str += ansi_reset();
+                       str += ansi_bold_white();
                        str += '`';
                    }};
     std::visit(vs, message_value);
