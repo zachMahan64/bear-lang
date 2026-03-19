@@ -1,9 +1,22 @@
 // tests/parser/50.br
 
 fn main() -> i32 {
+    mut i32 a = 12;
+    var b = a;
+    var c = &mut a;
     return 0;
 }
 
+static compt i32 MY_CONSTANT = 16;
+
 struct Foo {
     pub alignas(64) i32 foo;
+    mt do_work(i32 input) -> i32 {
+        var value <- input;
+        return match(value) {
+            0...64 => self.foo,
+            65...=127 => self.foo * 2,
+            else => self.foo * 4 + value,
+        }
+    }
 }
