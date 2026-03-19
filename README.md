@@ -1,6 +1,7 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png">
     <img alt="The Bear Programming Language"
          src="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png"
          width="50%">
