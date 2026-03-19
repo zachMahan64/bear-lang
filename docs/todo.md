@@ -1,6 +1,8 @@
 #### todos
 
-#### side quests
+side quests
+-----------
+
 ##### chores 
 - [ ] handle alignas accordingly during lowering too
 
@@ -18,7 +20,9 @@
 - [ ] add an Exec Stringifier (tedious)
 - [ ] add a Def Stringifier (tedious)  
 
-#### main quest
+main quest
+----------
+
 ##### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
 - [x] fix `tests/hir/10.br` falsely reported circular
@@ -50,7 +54,7 @@
     - parser implemented with tree-sitter for complex syntax highlighing 
 
 - [ ] VSCode
-    - At minimum, a regex-based syntax highlighter
-    - basic cave/bearc integration (run button)
+    - [x] At minimum, a regex-based syntax highlighter
+    - [ ] basic cave/bearc integration (run button)
 
-- [ ] Improve debugability 
+- [ ] Improve debugger compatibility 
