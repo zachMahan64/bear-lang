@@ -1,18 +1,24 @@
 #### todos
 
-#### chores 
-- [x] handle alignas accordingly during lowering too
+#### side quests
+##### chores 
+- [ ] handle alignas accordingly during lowering too
 
 ##### diagnostics
-- [ ] add trimming of cwd from file paths in diagnostics reporting
+- [ ] add trimming of cwd from file paths in diagnostics reporting?
 - [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings for it
-- [ ] using a scope iterator, use Levenshtein distance to make a did you mean... tip
+- [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
 
 ##### debugging 
 - [ ] make a scope iterator
 - [ ] debug logger to display context and scope contents
-- [ ] add a StringifyType seed for TypeTransformer
 
+##### advanced nice-to-haves
+- [ ] arbitraru source code codegen from hir::Context
+- [ ] add an Exec Stringifier (tedious)
+- [ ] add a Def Stringifier (tedious)  
+
+#### main quest
 ##### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
 - [x] fix `tests/hir/10.br` falsely reported circular
