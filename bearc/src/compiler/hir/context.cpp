@@ -281,13 +281,13 @@ void Context::try_print_info() {
     }
     // 2. print more info:
     if (has_flag(CLI_FLAG_LIST_FILES)) {
-        std::cout << ansi_bold_white() << "all files" << '(' << files.size() << ')' << ":"
+        std::cout << ansi_bold_reset() << "all files" << '(' << files.size() << ')' << ":"
                   << ansi_reset() << '\n';
         for (FileId curr = files.begin_id(); curr != files.end_id(); ++curr) {
 
             const FileAst& ast = file_asts.cat(files.cat(curr).ast_id);
 
-            std::cout << ansi_bold_white() << '[' << curr.val() << "] " << ast.file_name();
+            std::cout << ansi_bold_reset() << '[' << curr.val() << "] " << ast.file_name();
             const auto list = importer_to_importees.cat(
                 symbol_id_to_file_id_map.at(files.cat(curr).path).as_id());
 
@@ -357,7 +357,7 @@ void Context::try_print_info() {
     // std::cout << tables.files.size() << '\n';
     if (this->diagnostic_count() != 0) {
         if (!has_flag(CLI_FLAG_SILENT)) {
-            printf("compilation terminated: %s'%s'\n%s", ansi_bold_white(),
+            printf("compilation terminated: %s'%s'\n%s", ansi_bold_reset(),
                    symbol_id_to_cstr(files.cat(FileId{1}).path), ansi_reset());
         }
     }

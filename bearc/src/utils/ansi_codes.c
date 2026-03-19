@@ -49,6 +49,7 @@
 #define ANSI_BOLD_CYAN ANSI_BOLD ANSI_CYAN_FG
 #define ANSI_BOLD_BLUE ANSI_BOLD ANSI_BLUE_FG
 #define ANSI_BOLD_WHITE ANSI_BOLD ANSI_WHITE_FG
+#define ANSI_BOLD_RESET ANSI_BOLD ANSI_RESET
 
 static char* blank = "";
 static bool tty = false;
@@ -97,4 +98,4 @@ ANSI_FN(ansi_bold_red, ANSI_BOLD_RED)
 ANSI_FN(ansi_bold_yellow, ANSI_BOLD_YELLOW)
 ANSI_FN(ansi_bold_cyan, ANSI_BOLD_CYAN)
 ANSI_FN(ansi_bold_blue, ANSI_BOLD_BLUE)
-ANSI_FN(ansi_bold_white, ANSI_BOLD_WHITE)
+ANSI_FN(ansi_bold_reset, ANSI_BOLD_RESET)

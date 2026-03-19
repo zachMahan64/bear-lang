@@ -160,7 +160,7 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
         auto stream_trace = [&](FileId id, int idx) {
             const char* lore = (idx == 0) ? "[!]   cycle origin: " : "|--> which imports: ";
             const char* clr = (idx == 0) ? ansi_bold_cyan() : "";
-            return std::stringstream{} << clr << lore << ansi_bold_white() << context.file_name(id)
+            return std::stringstream{} << clr << lore << ansi_bold_reset() << context.file_name(id)
                                        << ansi_reset();
         };
         int idx = 0;
@@ -205,12 +205,12 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
         = has_complex_message() ? complex_message_str.c_str() : message_for_code(code);
     if (context.compact_diagnostics_enabled()) {
         if (print_file) {
-            printf("%s%s:%u:%u: ", ansi_bold_white(), file_name, adjusted_line, adjusted_col);
+            printf("%s%s:%u:%u: ", ansi_bold_reset(), file_name, adjusted_line, adjusted_col);
         }
-        printf("%s%s: %s%s%s\n", accent_color, name_for_type(type), ansi_bold_white(), message,
+        printf("%s%s: %s%s%s\n", accent_color, name_for_type(type), ansi_bold_reset(), message,
                ansi_reset());
     } else {
-        printf("%s%s: %s%s \n", accent_color, name_for_type(type), ansi_bold_white(), message);
+        printf("%s%s: %s%s \n", accent_color, name_for_type(type), ansi_bold_reset(), message);
         if (print_file) {
             printf(" --> %s:%u:%u %s\n", file_name, adjusted_line, adjusted_col, ansi_reset());
         }
@@ -409,7 +409,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                                str += "..";
                            }
                        }
-                       str += ansi_bold_white();
+                       str += ansi_bold_reset();
                        str += '`';
                    },
                    [&](DiagnosticSymbolAfterMessage d) {
@@ -417,7 +417,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                        str += " `";
                        str += accent_color_for_type(type);
                        str += ctx.symbol_id_to_cstr(d.sid);
-                       str += ansi_bold_white();
+                       str += ansi_bold_reset();
                        str += '`';
                    }};
     std::visit(vs, message_value);

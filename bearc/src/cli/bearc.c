@@ -105,14 +105,14 @@ int bearc_compile_from_args(int argc, char** argv) {
 
     // basic input file validation
     if (!args.input_file_name) {
-        printf("%s(bearc)%s no root file provided\n", ansi_bold_white(), ansi_reset());
+        printf("%s(bearc)%s no root file provided\n", ansi_bold_reset(), ansi_reset());
 
         err = true;
     }
 
     if (args.input_file_name != NULL
         && !file_exists_on_import_path(args.input_file_name, ".", &args)) {
-        printf("%s(bearc)%s error: %sfile does not exist: %s'%s'\n%s", ansi_bold_white(),
+        printf("%s(bearc)%s error: %sfile does not exist: %s'%s'\n%s", ansi_bold_reset(),
                ansi_bold_red(), ansi_reset(), ansi_bold(), args.input_file_name, ansi_reset());
         err = true;
     }

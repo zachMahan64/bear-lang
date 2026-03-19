@@ -48,7 +48,7 @@ const char* ansi_bold_red(void);
 const char* ansi_bold_yellow(void);
 const char* ansi_bold_cyan(void);
 const char* ansi_bold_blue(void);
-const char* ansi_bold_white(void);
+const char* ansi_bold_reset(void);
 
 #ifdef __cplusplus
 }

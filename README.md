@@ -5,7 +5,6 @@
 
 ## Documentation
 - [Grammar](docs/syntax.md)
-- [HIR Design](docs/hir_design.md)
 - [References](docs/references.md)
 
 ## Set up
@@ -32,6 +31,10 @@ cmake --build build
 ```
 bearc --help          # to see CLI usage
 ```
+#### Tooling 
+- [Syntax highlighting is availible for Neovim/Vim](/tools/nvim-vim-syntax-highlighting/README.md)
+- More to come in the future
+
 #### Preview
 - Heres a preview of my AST pretty-printer as of 20260122:
 
