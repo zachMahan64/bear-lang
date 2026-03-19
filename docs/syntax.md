@@ -88,5 +88,6 @@
 - *LoopBodyStatement*: 
     - BodyStatement
     - | BreakStatement: `break` `;`
+    - | ContinueStatement: `continue` `;`
 
 
