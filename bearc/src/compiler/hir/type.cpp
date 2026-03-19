@@ -30,7 +30,6 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             if (!t2.holds<TypeGenericStructure>()) {
                 return false;
             }
-            // TODO handle generic arg equality
             return t.definition == t2.as<TypeGenericStructure>().definition;
         },
         [&](const TypeArr& t) -> bool {
@@ -93,7 +92,6 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
             return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeGenericStructure& t) -> size_t {
-            // TODO handle generic args
             return mix(0x03ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeArr& t) -> size_t {
@@ -142,7 +140,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                    }
                },
                [&](const TypeGenericStructure& t) {
-                   // TODO properly handle
+                   // TODO properly handle internal values
                    str += context.symbol_id_to_cstr(context.def(t.definition).name);
                    str += "::<>";
                    if constexpr (considers_mut()) {

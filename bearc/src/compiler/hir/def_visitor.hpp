@@ -46,12 +46,14 @@ class TopLevelDefVisitor {
     /// visit when not all info is need (i.e. just validate existence for pointers/references)
     DefId visit_as_transparent(DefId def);
 };
+static_assert(IsDefVisitor<TopLevelDefVisitor>);
 
 struct InsideBodyDefVisitor {
     [[nodiscard]] static DefId visit_as_dependent(DefId def) noexcept { return def; }
     /// visit when not all info is need (i.e. just validate existence for pointers/references)
     [[nodiscard]] static DefId visit_as_transparent(DefId def) noexcept { return def; }
 };
+static_assert(IsDefVisitor<InsideBodyDefVisitor>);
 
 } // namespace hir
 
