@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/ast_visitor.hpp"
+#include "compiler/ast/expr.h"
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/context.hpp"
@@ -17,6 +18,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
+#include <cstdint>
 #include <variant>
 
 namespace hir {
@@ -45,17 +47,91 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     // TODO handle alignas
 
     bool compt = false;
-    if (stmt->type == AST_STMT_COMPT_MODIFIER) {
-        compt = true;
-        // take inner
-        stmt = stmt->stmt.compt_modifier.stmt;
-    }
-
     bool statik = false;
-    if (stmt->type == AST_STMT_STATIC_MODIFIER) {
-        statik = true;
-        // take inner
-        stmt = stmt->stmt.static_modifier.stmt;
+    uint8_t align_pref = 0;
+
+    while (stmt->type == AST_STMT_COMPT_MODIFIER || stmt->type == AST_STMT_STATIC_MODIFIER
+           || stmt->type == AST_STMT_ALIGNAS_MODIFIER) {
+        if (stmt->type == AST_STMT_COMPT_MODIFIER) {
+            if (compt) {
+                const token_t* prefix_tkn = stmt->first;
+                Span span = Span(file, context.ast(file).buffer(), prefix_tkn);
+                auto did0 = context.emplace_diagnostic(span, diag_code::redundant_compt_qualifier,
+                                                       diag_type::error);
+                auto did1 = context.emplace_diagnostic(
+                    span, diag_code::remove, diag_type::help,
+                    DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
+                context.set_next_diagnostic(did0, did1);
+            }
+            compt = true;
+            // take inner
+            stmt = stmt->stmt.compt_modifier.stmt;
+        }
+
+        if (stmt->type == AST_STMT_STATIC_MODIFIER) {
+            if (statik) {
+                const token_t* prefix_tkn = stmt->first;
+                Span span = Span(file, context.ast(file).buffer(), prefix_tkn);
+                auto did0 = context.emplace_diagnostic(span, diag_code::redundant_static_qualifier,
+                                                       diag_type::error);
+                auto did1 = context.emplace_diagnostic(
+                    span, diag_code::remove, diag_type::help,
+                    DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
+                context.set_next_diagnostic(did0, did1);
+            }
+            statik = true;
+            // take inner
+            stmt = stmt->stmt.static_modifier.stmt;
+        }
+
+        auto try_align_pref = [&](const ast_expr_t* expr) {
+            const auto* tkn = expr->expr.literal.tkn;
+            static constexpr auto MAX_ALIGN = 128u;
+            if (tkn->type == TOK_UINT_LIT && tkn->val.unsigned_integral <= MAX_ALIGN
+                && tkn->val.unsigned_integral > 0) {
+                return tkn->val.unsigned_integral;
+            }
+            return 0uz;
+        };
+
+        if (stmt->type == AST_STMT_ALIGNAS_MODIFIER) {
+            if (align_pref != 0) {
+                const token_t* prefix_tkn_first = stmt->first;
+                const token_t* prefix_tkn_last = stmt->stmt.alignaz.align_expr->last;
+                Span span
+                    = Span(file, context.ast(file).buffer(), prefix_tkn_first, prefix_tkn_last);
+                auto did0 = context.emplace_diagnostic(span, diag_code::multiple_alignas_on_one_def,
+                                                       diag_type::error);
+                auto did1 = context.emplace_diagnostic(
+                    span, diag_code::remove, diag_type::help,
+                    DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
+                context.set_next_diagnostic(did0, did1);
+            }
+            const ast_expr_t* expr = stmt->stmt.alignaz.align_expr;
+            if (expr->type == AST_EXPR_LITERAL) {
+                align_pref = try_align_pref(expr);
+            } else if (expr->type == AST_EXPR_GROUPING) {
+                while (expr->type == AST_EXPR_GROUPING) {
+                    expr = expr->expr.grouping.expr;
+                    // last case, this will try to get a valid value, else fails and align pref is
+                    // default
+                    if (expr->type == AST_EXPR_LITERAL) {
+                        align_pref = try_align_pref(expr);
+                    }
+                }
+            }
+            // meaning try_align_pref had to return the default value
+            if (align_pref == 0) {
+                auto did0 = context.emplace_diagnostic(
+                    Span(file, context.ast(file).buffer(), expr->first, expr->last),
+                    diag_code::invalid_alignas, diag_type::error);
+                auto did1 = context.emplace_diagnostic(
+                    Span(file, context.ast(file).buffer(), expr->first, expr->last),
+                    diag_code::alignas_expr_must_be_a_valid_uint_lit, diag_type::help);
+                context.set_next_diagnostic(did0, did1);
+            }
+            stmt = stmt->stmt.alignaz.inner;
+        }
     }
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -43,6 +43,7 @@ class Context {
     int error_count() const noexcept;
     int warning_count() const noexcept;
     int note_count() const noexcept;
+    int help_count() const noexcept;
     bool compact_diagnostics_enabled() const noexcept;
     bool has_flag(cli_flag_e flag) const noexcept;
     // ----- accessors / emplacers --------
@@ -257,6 +258,7 @@ class Context {
     IdVecMap<DiagnosticId, uint8_t> diagnostics_used;
     HirSize warning_cnt{};
     HirSize note_cnt{};
+    HirSize help_cnt{};
     HirSize normal_error_cnt{};
     HirSize fatal_error_cnt{};
 

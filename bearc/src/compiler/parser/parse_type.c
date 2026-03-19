@@ -103,6 +103,7 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
         // handle redundant leading muts
         while (parser_match_token(p, TOK_MUT)) {
             compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
+            compiler_error_list_emplace(p->error_list, parser_prev(p), HELP_REMOVE);
         }
         // parse base type
         base->type.base.id = parse_id_token_slice(p, TOK_SCOPE_RES);
@@ -122,6 +123,7 @@ static ast_type_t* parse_type_base_impl(parser_t* p, bool pre_mut, token_ptr_sli
         assert(pre_mut_tkn != NULL && "[parse_type_base] mut_tkn must not be NULL");
         base->first = pre_mut_tkn;
         compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
+        compiler_error_list_emplace(p->error_list, parser_prev(p), HELP_REMOVE);
     } else {
         base->first = pre_mut_tkn;
     }
@@ -429,6 +431,7 @@ ast_type_t* parse_type_fn_ptr(parser_t* p) {
     // shed redundant muts
     while (parser_match_token(p, TOK_MUT)) {
         compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_MUT);
+        compiler_error_list_emplace(p->error_list, parser_prev(p), HELP_REMOVE);
     }
 
     if (!parser_expect_token(p, TOK_LPAREN)) {

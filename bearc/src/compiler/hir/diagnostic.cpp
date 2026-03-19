@@ -89,6 +89,22 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "replace with";
     case diag_code::remove:
         return "remove";
+    case diag_code::invalid_alignas:
+        return "invalid alignas alignment width provided";
+    case diag_code::alignas_expr_must_be_a_valid_uint_lit:
+        return "alignment must be an unsigned integer literal that is a power of 2 and <= 128.\n"
+               "      Specified alignments incompatible with your system's architecture will "
+               "default\n"
+               "      to their standard values. Consult your architecture and LLVM documentation "
+               "for\n"
+               "      more details.";
+
+    case diag_code::multiple_alignas_on_one_def:
+        return "duplicate `alignas` modifiers on one declaration is malformed";
+    case diag_code::redundant_compt_qualifier:
+        return "redundant `compt` qualifier";
+    case diag_code::redundant_static_qualifier:
+        return "redundant `static` qualifier";
     }
     std::unreachable();
     return "";

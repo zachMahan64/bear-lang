@@ -45,6 +45,11 @@ enum class diag_code : uint8_t {
     not_declared_in_this_scope,
     replace_with,
     remove,
+    invalid_alignas,
+    alignas_expr_must_be_a_valid_uint_lit,
+    multiple_alignas_on_one_def,
+    redundant_compt_qualifier,
+    redundant_static_qualifier,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };

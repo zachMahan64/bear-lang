@@ -156,6 +156,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_YIELD:
     case AST_STMT_ALIGNAS_MODIFIER:
     case AST_STMT_INVALID:
+        break;
     }
     return did;
 }

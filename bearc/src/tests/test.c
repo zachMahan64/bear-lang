@@ -106,9 +106,12 @@ int main(int argc, char** argv) {
 br_test_result_t test_parser(void) {
     TEST_INIT("parser");
     char* parser_args[]
-        = {"bearc", "--parse-only",
-           "--pretty-print"}; // pretty-print to catch unexpectly null fields and other
-                              // malformation-related errors that could cause segfaults/crashes
+        = {"bearc",
+           "--parse-only",
+           /*"--pretty-print"*/}; // pretty-print to catch unexpectly null fields and other
+                                  // malformation-related errors that could cause segfaults/crashes
+                                  // this makes tests sustainally slower, so only enable when
+                                  // parsing updates are made to verify correctness
     TEST_SET_ARGS(parser_args);
     ASSERT_EQ_ERR("parser/00", 5);
     ASSERT_EQ_ERR("parser/01", 0);
@@ -128,16 +131,16 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/15", 0);
     ASSERT_EQ_ERR("parser/16", 0);
     ASSERT_EQ_ERR("parser/17", 0);
-    ASSERT_EQ_ERR("parser/18", 6);
-    ASSERT_EQ_ERR("parser/19", 4);
+    ASSERT_EQ_ERR("parser/18", 11);
+    ASSERT_EQ_ERR("parser/19", 5);
     ASSERT_EQ_ERR("parser/20", 0);
-    ASSERT_EQ_ERR("parser/21", 5);
+    ASSERT_EQ_ERR("parser/21", 10);
     ASSERT_EQ_ERR("parser/22", 1);
     ASSERT_EQ_ERR("parser/23", 1);
     ASSERT_EQ_ERR("parser/24", 1);
     ASSERT_EQ_ERR("parser/25", 3);
     ASSERT_EQ_ERR("parser/26", 1);
-    ASSERT_EQ_ERR("parser/27", 5);
+    ASSERT_EQ_ERR("parser/27", 10);
     ASSERT_EQ_ERR("parser/28", 0);
     ASSERT_EQ_ERR("parser/29", 0);
     ASSERT_EQ_ERR("parser/30", 0);
@@ -150,7 +153,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/37", 1);
     ASSERT_EQ_ERR("parser/38", 0);
     ASSERT_EQ_ERR("parser/39", 0);
-    ASSERT_EQ_ERR("parser/40", 3);
+    ASSERT_EQ_ERR("parser/40", 6);
     ASSERT_EQ_ERR("parser/41", 3);
     ASSERT_EQ_ERR("parser/42", 1);
     ASSERT_EQ_ERR("parser/43", 0);
@@ -201,7 +204,10 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args11, 3);
 
     char* args12[] = {"bearc", "tests/hir/06.br"};
-    ASSERT_EQ_ERR_FROM_ARGS(args12, 6);
+    ASSERT_EQ_ERR_FROM_ARGS(args12, 8);
+
+    char* args13[] = {"bearc", "tests/hir/13.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args13, 28);
 
     return TEST_RESULT;
 }

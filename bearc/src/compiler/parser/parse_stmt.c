@@ -236,7 +236,18 @@ ast_stmt_t* parse_stmt_block(parser_t* p) {
     return stmt;
 }
 
-ast_stmt_t* parse_var_decl(parser_t* p) { return parse_var_decl_from_id_or_mut(p, NULL, false); }
+ast_stmt_t* parse_var_decl(parser_t* p) {
+    if (parser_peek_match(p, TOK_STATIC)) {
+        return parse_stmt_static_modifier(p, &parse_var_decl);
+    }
+    if (parser_peek_match(p, TOK_COMPT)) {
+        return parse_stmt_compt_modifier(p, &parse_var_decl);
+    }
+    if (parser_peek_match(p, TOK_ALIGNAS)) {
+        return parse_stmt_alignas_modifier(p, &parse_var_decl);
+    }
+    return parse_var_decl_from_id_or_mut(p, NULL, false);
+}
 
 ast_stmt_t* parse_var_decl_from_id_or_mut(parser_t* p, token_ptr_slice_t* opt_id_slice,
                                           bool leading_mut) {
@@ -433,6 +444,7 @@ bool parser_shed_visibility_qualis_with_error(parser_t* p) {
     while (parser_match_token_call(p, &token_is_visibility_modifier)) {
         compiler_error_list_emplace(p->error_list, parser_prev(p),
                                     ERR_EXTRANEOUS_VISIBILITY_MODIFIER);
+        compiler_error_list_emplace(p->error_list, parser_prev(p), HELP_REMOVE);
         did_shed = true;
     }
     return did_shed;
@@ -456,6 +468,7 @@ bool parser_shed_compt_qualis_with_error(parser_t* p) {
     bool did_shed = false;
     while (parser_match_token(p, TOK_COMPT)) {
         compiler_error_list_emplace(p->error_list, parser_prev(p), ERR_REDUNDANT_COMPT_QUALIFIER);
+        compiler_error_list_emplace(p->error_list, parser_prev(p), HELP_REMOVE);
         did_shed = true;
     }
     return did_shed;
@@ -470,11 +483,17 @@ ast_stmt_t* parse_stmt_compt_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t*
         return parser_sync_stmt(p);
     }
     // shed redundant qualifiers
-    // this goto structure handles any kind of stupid compt pub compt hid ... input
-keep_shedding:
-    parser_shed_compt_qualis_with_error(p);
-    if (parser_shed_visibility_qualis_with_error(p)) {
-        goto keep_shedding;
+    // this dumb looking structure handles any abitrary nesting of compt|pub|hid, which is malformed
+    // past one compt
+    while (parser_shed_compt_qualis_with_error(p)) {
+        while (parser_shed_visibility_qualis_with_error(p)) {
+            ;
+        }
+    }
+    while (parser_shed_visibility_qualis_with_error(p)) {
+        while (parser_shed_compt_qualis_with_error(p)) {
+            ;
+        }
     }
     ast_stmt_t* stmt = call(p);
     vis->stmt.compt_modifier.stmt = stmt;
@@ -547,7 +566,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     }
 
     if (next_type == TOK_ALIGNAS) {
-        return parse_stmt_alignas_modifier(p);
+        return parse_stmt_alignas_modifier(p, &parse_var_decl);
     }
 
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1112,13 +1131,6 @@ ast_stmt_t* parse_stmt_static_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t
     if (!modif) {
         return parser_sync_stmt(p);
     }
-    // shed redundant qualifiers
-    // this goto structure handles any kind of stupid compt pub compt hid ... input
-keep_shedding:
-    parser_shed_compt_qualis_with_error(p);
-    if (parser_shed_visibility_qualis_with_error(p)) {
-        goto keep_shedding;
-    }
     ast_stmt_t* stmt = call(p);
     vis->stmt.static_modifier.stmt = stmt;
     vis->first = modif;
@@ -1218,7 +1230,7 @@ ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p) {
     return stmt;
 }
 
-ast_stmt_t* parse_stmt_alignas_modifier(parser_t* p) {
+ast_stmt_t* parse_stmt_alignas_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t*)) {
     ast_stmt_t* alignaz = parser_alloc_stmt(p);
     alignaz->type = AST_STMT_ALIGNAS_MODIFIER;
     token_t* modif = parser_expect_token(p, TOK_ALIGNAS);
@@ -1227,14 +1239,11 @@ ast_stmt_t* parse_stmt_alignas_modifier(parser_t* p) {
     }
     ast_expr_t* expr = parse_expr(p);
 
-    // shed redundant qualifiers
-    // this goto structure handles any kind of stupid compt pub compt hid ... input
-keep_shedding:
-    parser_shed_compt_qualis_with_error(p);
-    if (parser_shed_visibility_qualis_with_error(p)) {
-        goto keep_shedding;
+    while (parser_shed_visibility_qualis_with_error(p)) {
+        ;
     }
-    ast_stmt_t* stmt = parse_var_decl(p);
+
+    ast_stmt_t* stmt = call(p);
     alignaz->stmt.alignaz.align_expr = expr;
     alignaz->stmt.alignaz.inner = stmt;
     alignaz->first = modif;

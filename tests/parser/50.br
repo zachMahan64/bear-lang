@@ -17,11 +17,13 @@ struct Foo {
             0...64 => self.foo,
             65...=127 => self.foo * 2,
             else => self.foo * 4 + value + Worker..work(),
-        }
+        };
     }
 }
 
 struct Worker {
+    hid static compt alignas(64) u8 ABCDE = 0xFF;
+    hid alignas(64) i8 FGHIJK = 0xF;
     fn work() -> i32 {
         mut i32 a = 0;
         for var i in 0...0x100 {

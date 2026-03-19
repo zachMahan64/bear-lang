@@ -116,7 +116,7 @@ Context::Context(const bearc_args_t* args)
 }
 
 int Context::diagnostic_count() const noexcept {
-    return static_cast<int>(fatal_error_cnt + normal_error_cnt + note_cnt + warning_cnt);
+    return static_cast<int>(fatal_error_cnt + normal_error_cnt + note_cnt + warning_cnt + help_cnt);
 }
 
 int Context::error_count() const noexcept {
@@ -125,6 +125,7 @@ int Context::error_count() const noexcept {
 
 int Context::warning_count() const noexcept { return static_cast<int>(warning_cnt); }
 int Context::note_count() const noexcept { return static_cast<int>(note_cnt); }
+int Context::help_count() const noexcept { return static_cast<int>(help_cnt); }
 
 bool Context::compact_diagnostics_enabled() const noexcept { return compact_diagnostics; }
 
@@ -336,7 +337,7 @@ void Context::try_print_info() {
             }
         }
     }
-    if (has_flag(CLI_FLAG_SILENT)) {
+    if (!has_flag(CLI_FLAG_SILENT)) {
         auto errors = error_count();
         if (errors == 1) {
             puts("1 error generated.");
@@ -354,6 +355,12 @@ void Context::try_print_info() {
             puts("1 note generated.");
         } else if (notes != 0) {
             printf("%d notes generated.\n", notes);
+        }
+        auto helps = help_count();
+        if (helps == 1) {
+            puts("1 tip generated.");
+        } else if (helps != 0) {
+            printf("%d tips generated.\n", helps);
         }
     }
     // std::cout << tables.files.size() << '\n';
@@ -447,6 +454,8 @@ void Context::handle_bump_diag_counts(diag_code code, diag_type type) {
         note_cnt++;
     } else if (type == diag_type::warning) {
         warning_cnt++;
+    } else if (type == diag_type::help) {
+        help_cnt++;
     }
 }
 

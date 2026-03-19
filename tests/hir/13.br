@@ -1,0 +1,52 @@
+// tests/hir/13.br
+
+mod foo;
+
+struct Foo {
+    hid alignas(64) i32 bar_;
+
+    mt bar() -> i32 {
+        return self.bar_;
+    }
+    mt mut set_bar(i32 val) {
+        self.bar_ = val;
+    }
+    fn default() -> Foo {
+        return Foo {
+            .bar_ = 64, 
+        };
+    }
+}
+
+hid static alignas(64) Foo static_thingie;
+
+/// gets singleton
+fn Foo..get() -> mut Foo& {
+    return static_thingie;
+}
+
+fn main() -> i32 {
+    var my_foo = Foo..get();
+    mut Foo& my_foo2 = my_foo;
+    my_foo2.set_bar(42);
+    return my_foo.bar(); // 42
+}
+
+// some variable qualifier tests 
+
+struct Bar {
+    hid alignas(128) i32 bar1_; //fine
+    hid alignas(129) i32 bar2_; //bad, too big 
+    hid alignas(-200) i32 bar3_; // bad
+    hid alignas((((32)))) i32 bar4_; // fine
+
+    pub alignas(64) compt alignas(64) u64 bar5_; // bad
+
+    pub compt static compt static i32 ben; // bad
+    pub pub hid hid compt hid compt static static u64 oopsie; // quite bad
+    hid pub i32 oops; // bad
+
+    mut i32 mut a; // bad 
+    mut mut i32 b; // bad
+
+}

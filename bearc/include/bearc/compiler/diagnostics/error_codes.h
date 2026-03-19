@@ -18,7 +18,8 @@ extern "C" {
 typedef enum error_diag_type {
     DIAG_TYPE_ERROR = 0,
     DIAG_TYPE_NOTE,
-    DIAG_TYPE_WARNING
+    DIAG_TYPE_WARNING,
+    DIAG_TYPE_HELP,
 } error_diag_type_e;
 /**
  * predefined set of errors, these have associated diagnostics with
@@ -59,6 +60,7 @@ typedef enum error_code {
     ERR_QUALIFICATION_ON_NON_MT_FN_DECL,
     NOTE_DID_YOU_MEAN_MT,
     ERR_MULTILEVEL_REF,
+    HELP_REMOVE,
     ERR__COUNT
 } error_code_e;
 

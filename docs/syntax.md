@@ -37,6 +37,7 @@
     - | Preunary: `--` | `++` | `typeof` Expression
     - | SizeOf: `sizeof` `(` Type `)`
     - | AlignOf: `alignof` `(` Type `)`
+    - | AlignAs: `alignas` `(` IntegerLiteral `)`
     - | Postunary: Expression `++` | `--`
     - | Subscript: Expression `[` Expression `]`
     - | Grouping: `(` Expression `)`

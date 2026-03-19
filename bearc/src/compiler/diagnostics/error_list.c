@@ -17,6 +17,7 @@
 #include "utils/vector.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #define ERROR_LIST_ARENA_CHUNK_CAP 4096
 #define ERROR_LIST_VEC_RESERVE_CAP 128
@@ -154,7 +155,9 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i, bool 
     const char* accent_color = NULL;
     const char* error_word = NULL;
 
-    switch (error_diagnostic_type(error->error_code)) {
+    error_diag_type_e type = error_diagnostic_type(error->error_code);
+
+    switch (type) {
     case DIAG_TYPE_ERROR:
         accent_color = ansi_bold_red();
         error_word = "error";
@@ -167,11 +170,28 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i, bool 
         accent_color = ansi_bold_yellow();
         error_word = "warning";
         break;
+    case DIAG_TYPE_HELP:
+        accent_color = ansi_bold_green();
+        error_word = "help";
+        break;
     }
     const char* error_message = error_message_for_code(error->error_code);
     const char* context = error_message_context_for(error);
-    print_diagnostic(src_buffer, start, len, line, col, accent_color, error_word, error_message,
-                     context, compact);
+    // todo the help: ... structure
+    if (type == DIAG_TYPE_HELP) {
+        size_t context_len = strlen(context);
+        // set the context correctly
+        if (error->error_code == HELP_REMOVE) {
+            context = error->start_tkn->start;
+            context_len = error->start_tkn->len;
+        }
+        printf("%s%s%s: %s `%s%.*s%s%s`\n", accent_color, error_word, ansi_bold_reset(),
+               error_message, accent_color, (int)context_len, context, ansi_bold_reset(),
+               ansi_reset());
+    } else {
+        print_diagnostic(src_buffer, start, len, line, col, accent_color, error_word, error_message,
+                         context, compact);
+    }
 }
 
 void compiler_error_list_print_all(const compiler_error_list_t* list, bool compact) {

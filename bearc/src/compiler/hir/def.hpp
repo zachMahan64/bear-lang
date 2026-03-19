@@ -12,6 +12,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/variant_helpers.hpp"
+#include <cstdint>
 #include <utility>
 #include <variant>
 
@@ -169,12 +170,20 @@ struct Def : NodeWithVariantValue<Def> {
     const bool statik = false;
     /// indicates generic
     const bool generic = false;
+    /// indicates alignment preference, 0 = default alignment
+    const uint8_t alignment_preference = 0;
     /// indicates ABI
     const abi_lang abi = abi_lang::native;
+
     Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, bool generic, Span span,
         OptId<DefId> parent, enum abi_lang abi = abi_lang::native)
         : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
           statik{statik}, abi{abi}, generic{generic} {}
+
+    Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, bool generic, Span span,
+        OptId<DefId> parent, uint8_t alignment_preference, enum abi_lang abi = abi_lang::native)
+        : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
+          statik{statik}, generic{generic}, alignment_preference{alignment_preference}, abi{abi} {}
 
     Def(SymbolId name, bool pub, Span span)
         : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
