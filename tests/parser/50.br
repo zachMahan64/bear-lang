@@ -16,7 +16,17 @@ struct Foo {
         return match(value) {
             0...64 => self.foo,
             65...=127 => self.foo * 2,
-            else => self.foo * 4 + value,
+            else => self.foo * 4 + value + Worker..work(),
         }
+    }
+}
+
+struct Worker {
+    fn work() -> i32 {
+        mut i32 a = 0;
+        for var i in 0...0x100 {
+            a += u;
+        }
+        return a;
     }
 }
