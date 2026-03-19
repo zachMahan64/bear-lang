@@ -38,7 +38,7 @@ syntax keyword bearRepeat
       \ while for in
 
 syntax keyword bearMacro
-      \ sizeof alignof typeof
+      \ sizeof alignof typeof alignas
 
 syntax keyword bearKeyword
       \ mod use fn mt dt
