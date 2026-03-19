@@ -12,6 +12,8 @@
 - [Rust HIR](https://doc.rust-lang.org/beta/nightly-rustc/rustc_hir/index.html)
 #### Cross-compilation
 - [Calling C from Zig](https://mtlynch.io/notes/zig-call-c-simple/)
+#### Vim Syntax Highlighting
+- [Keith Smiley, Writing Vim Sybtax Plugins](https://thoughtbot.com/blog/writing-vim-syntax-plugins)
 #### Educational Resources
 - [*Crafting Interprets* by Robert Nystrom](https://github.com/munificent/craftinginterpreters/tree/master)
 - *Engineering a Compiler* by Keith D. Cooper and Linda Torczon
