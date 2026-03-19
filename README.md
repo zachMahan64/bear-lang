@@ -32,7 +32,8 @@ cmake --build build
 bearc --help          # to see CLI usage
 ```
 #### Tooling 
-- [Syntax highlighting is availible for Neovim/Vim](/tools/nvim-vim-syntax-highlighting/README.md)
+- [Syntax highlighting is availible for Neovim/Vim](/tools/nvim-vim-syntax-highlighting/README.md), which consists of two config files included in this repo.
+- [A VSCode extension is availible, which includes syntax highlighting](https://github.com/zachMahan64/bear-vscode). Right now, local install is required, directions are in the linked repo.
 - More to come in the future
 
 #### Preview
