@@ -1,4 +1,5 @@
 " see README.md for set-up
+
 if exists("b:current_syntax")
   finish
 endif
@@ -8,7 +9,7 @@ syntax case match
 " ------------------------
 " identifiers
 " ------------------------
-
+"
 " regular, only matches if it starts with lowercase or underscore
 syntax match bearIdentifier /\<[a-z_][A-Za-z0-9_]*\>/
 
@@ -18,15 +19,33 @@ syntax match bearScopedIdentifier /\<[A-Za-z_][A-Za-z0-9_]*\(\.\.[A-Za-z_][A-Za-
 " ------------------------
 " keywords (from token map)
 " ------------------------
-syntax keyword bearKeyword
-      \ import mod use fn mt dt
-      \ mut contract requires
-      \ var static extern compt hid pub has is
-      \ if else while for return yield break continue match
-      \ sizeof alignof typeof move as
+syntax keyword bearInclude
+      \ import
+
+syntax keyword bearStorageClass
+      \ mut var static extern compt hid pub
+
+syntax keyword bearStructure
       \ variant struct union deftype
+
+syntax keyword bearStatement
+      \ return yield break continue
+
+syntax keyword bearConditional
+      \ if else match
+
+syntax keyword bearRepeat
+      \ while for in
+
+syntax keyword bearMacro
+      \ sizeof alignof typeof
+
+syntax keyword bearKeyword
+      \ mod use fn mt dt
+      \ contract requires
+      \ has is move as
       \ self Self
-      \ in
+
 
 " ------------------------
 " types (primitive)
@@ -38,7 +57,7 @@ syntax keyword bearType
 " ------------------------
 " literals
 " ------------------------
-
+"
 " boolean + null
 syntax keyword bearBoolean true false null
 
@@ -109,33 +128,29 @@ syntax match bearComment /\/\/.*/ contains=bearTodo,@Spell
 " ------------------------
 " highlight links
 " ------------------------
-
-highlight default link bearKeyword Keyword
-highlight default link bearType Type
-highlight default link bearTypeDef Type
-highlight default link bearBoolean Boolean
-
-
-highlight default link bearConstant Constant
-highlight default link bearPascalType Type
-
-highlight default link bearIdentifier Identifier
+highlight default link bearInclude     Include
+highlight default link bearStorageClass StorageClass
+highlight default link bearStructure   Structure
+highlight default link bearStatement   Statement
+highlight default link bearConditional Conditional
+highlight default link bearRepeat      Repeat
+highlight default link bearMacro       Macro
+highlight default link bearKeyword     Keyword
+highlight default link bearType        Type
+highlight default link bearTypeDef     Type
+highlight default link bearBoolean     Boolean
+highlight default link bearConstant    Constant
+highlight default link bearPascalType  Type
+highlight default link bearIdentifier  Identifier
 highlight default link bearScopedIdentifier Identifier
-highlight default link bearFunction Function
-
-
-highlight default link bearOperator Operator
-highlight default link bearDelimiter Delimiter
-
-
-highlight default link bearNumber Number
-highlight default link bearFloat Float
-highlight default link bearString String
-highlight default link bearChar Character
-
-
-highlight default link bearTodo Todo
-highlight default link bearComment Comment
-
+highlight default link bearFunction    Function
+highlight default link bearOperator    Operator
+highlight default link bearDelimiter   Delimiter
+highlight default link bearNumber      Number
+highlight default link bearFloat       Float
+highlight default link bearString      String
+highlight default link bearChar        Character
+highlight default link bearTodo        Todo
+highlight default link bearComment     Comment
 let b:current_syntax = "bear"
 
