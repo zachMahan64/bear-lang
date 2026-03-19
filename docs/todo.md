@@ -1,4 +1,8 @@
 #### todos
+
+#### chores 
+- [ ] handle alignas parsing (struct fields, handle accordingly during lowering too)
+
 ##### diagnostics
 - [ ] add trimming of cwd from file paths in diagnostics reporting
 - [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings for it

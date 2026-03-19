@@ -132,6 +132,7 @@ static void string_to_token_map_init(void) {
     // more operators
     strimap_emplace(&string_to_token_map, "sizeof", TOK_SIZEOF);
     strimap_emplace(&string_to_token_map, "alignof", TOK_ALIGNOF);
+    strimap_emplace(&string_to_token_map, "alignas", TOK_ALIGNAS);
     strimap_emplace(&string_to_token_map, "typeof", TOK_TYPEOF);
     strimap_emplace(&string_to_token_map, "move", TOK_MOVE);
     strimap_emplace(&string_to_token_map, "as", TOK_AS);
@@ -290,6 +291,7 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     // more operators
     [TOK_SIZEOF] = "sizeof",
     [TOK_ALIGNOF] = "alignof",
+    [TOK_ALIGNAS] = "alignas",
     [TOK_TYPEOF] = "typeof",
     [TOK_MOVE] = "move",
     [TOK_AS] = "as",
