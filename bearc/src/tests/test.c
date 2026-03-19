@@ -105,7 +105,10 @@ int main(int argc, char** argv) {
 
 br_test_result_t test_parser(void) {
     TEST_INIT("parser");
-    char* parser_args[] = {"bearc", "--parse-only"};
+    char* parser_args[]
+        = {"bearc", "--parse-only",
+           "--pretty-print"}; // pretty-print to catch unexpectly null fields and other
+                              // malformation-related errors that could cause segfaults/crashes
     TEST_SET_ARGS(parser_args);
     ASSERT_EQ_ERR("parser/00", 5);
     ASSERT_EQ_ERR("parser/01", 0);
@@ -157,6 +160,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/47", 1);
     ASSERT_EQ_ERR("parser/48", 4);
     ASSERT_EQ_ERR("parser/49", 1);
+    ASSERT_EQ_ERR("parser/50", 0);
 
     return TEST_RESULT;
 }

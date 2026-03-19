@@ -106,8 +106,9 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
                adjusted_line, adjusted_col, accent_color, error_word, ansi_bold_reset(),
                error_message, context, ansi_reset());
     } else {
-        printf("%s%s: %s%s \n --> %s:%zu:%zu %s\n", accent_color, error_word, ansi_bold_reset(),
-               error_message, src_buffer->file_name, adjusted_line, adjusted_col, ansi_reset());
+        printf("%s%s: %s%s%s \n --> %s:%zu:%zu %s\n", accent_color, error_word, ansi_bold_reset(),
+               error_message, context, src_buffer->file_name, adjusted_line, adjusted_col,
+               ansi_reset());
     }
 
     string_view_t line_preview = get_line_string_view(src_buffer, start);
