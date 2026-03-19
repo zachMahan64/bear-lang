@@ -152,6 +152,8 @@ SymbolId Context::symbol_id_for_identifier_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
     return symbol_id(tkn->start, tkn->len);
 }
+
+SymbolId Context::symbol_id(Span span) { return symbol_id(span.as_sv(*this)); }
 SymbolId Context::symbol_id_for_str_lit_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_STR_LIT);
     return symbol_id(tkn->start + 1, tkn->len - 2); // trims outer quotes

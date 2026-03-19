@@ -33,15 +33,15 @@ int main(int argc, char** argv) {
     *((br_test_result_t*)vector_emplace_back(&results)) = test_hir();
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
-    printf(" |%s        test results       %s|\n", ansi_bold_blue(), ansi_bold_white());
-    printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
+    printf("%s -----------------------------%s\n", ansi_bold_reset(), ansi_reset());
+    printf(" |%s        test results       %s|\n", ansi_bold_blue(), ansi_bold_reset());
+    printf("%s -----------------------------%s\n", ansi_bold_reset(), ansi_reset());
     for (size_t i = 0; i < results.size; i++) {
         br_test_result_t* res = (br_test_result_t*)vector_at(&results, i);
         print_result(res);
         test_tally(&total, res);
     }
-    printf("%s -----------------------------%s\n", ansi_bold_white(), ansi_reset());
+    printf("%s -----------------------------%s\n", ansi_bold_reset(), ansi_reset());
     print_result(&total);
     vector_destroy(&results);
     token_maps_free(); // after all operations involving token lookups are done
@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
         printf("%s [!] %sTEST FAILED %s('"                                                         \
                "tests/" file_name ".br"                                                            \
                "'): expected %d errors, got %d %s\n\n",                                            \
-               ansi_bold_white(), ansi_bold_red(), ansi_bold_white(), err_cnt, true_cnt,           \
+               ansi_bold_reset(), ansi_bold_red(), ansi_bold_reset(), err_cnt, true_cnt,           \
                ansi_reset());                                                                      \
     }                                                                                              \
     br_test_result.cnt_total++;
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
             printf("%s [!] %sTEST FAILED %s('"                                                     \
                    "%s"                                                                            \
                    "'): expected %d errors, got %d %s\n\n",                                        \
-                   ansi_bold_white(), ansi_bold_red(), ansi_bold_white(), (args_)[1], err_cnt,     \
+                   ansi_bold_reset(), ansi_bold_red(), ansi_bold_reset(), (args_)[1], err_cnt,     \
                    true_cnt, ansi_reset());                                                        \
         }                                                                                          \
         br_test_result.cnt_total++;                                                                \
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
             printf("%s [!] %sTEST FAILED %s('"                                                     \
                    "%s"                                                                            \
                    "'): expected %d errors, got %d %s\n\n",                                        \
-                   ansi_bold_white(), ansi_bold_red(), ansi_bold_white(),                          \
+                   ansi_bold_reset(), ansi_bold_red(), ansi_bold_reset(),                          \
                    (args_)[arg_index_indicating_name], err_cnt, true_cnt, ansi_reset());           \
         }                                                                                          \
         br_test_result.cnt_total++;                                                                \
@@ -215,7 +215,7 @@ void test_tally(br_test_result_t* total, br_test_result_t* new_test) {
 void print_result(br_test_result_t* res) {
     size_t succ = res->cnt_success;
     size_t tot = res->cnt_total;
-    const char* color = ansi_bold_white();
+    const char* color = ansi_bold_reset();
     if (succ == tot) {
         color = ansi_bold_green();
     } else if (tot != 0 && ((double)succ / (double)tot >= .9)) {

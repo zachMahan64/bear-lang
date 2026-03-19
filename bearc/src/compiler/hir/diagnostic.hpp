@@ -44,6 +44,7 @@ enum class diag_code : uint8_t {
     use_of_undeclared_identifier,
     not_declared_in_this_scope,
     replace_with,
+    remove,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };

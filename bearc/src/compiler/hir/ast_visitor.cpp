@@ -103,18 +103,20 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         auto maybe_abi = abi_for_extern_stmt(stmt);
         // ensure valid specified abi
         if (!maybe_abi.has_value()) {
-            auto did = context.emplace_diagnostic(
-                Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
-                diag_code::invalid_extern_lang, diag_type::error,
-                DiagnosticSymbolAfterMessage{
-                    context.symbol_id(stmt->stmt.extern_block.extern_language)},
-                DiagnosticNoOtherInfo{});
-            auto did_next = context.emplace_diagnostic(
-                Span(file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language),
-                diag_code::replace_with, diag_type::help,
-                DiagnosticSymbolAfterMessage{context.symbol_id("extern C")},
-                DiagnosticNoOtherInfo{});
-            context.set_next_diagnostic(did, did_next);
+            Span span{file, context.ast(file).buffer(), stmt->stmt.extern_block.extern_language};
+            auto did0
+                = context.emplace_diagnostic(span, diag_code::invalid_extern_lang, diag_type::error,
+                                             DiagnosticSymbolAfterMessage{context.symbol_id(
+                                                 stmt->stmt.extern_block.extern_language)},
+                                             DiagnosticNoOtherInfo{});
+            auto did1 = context.emplace_diagnostic(
+                span, diag_code::replace_with, diag_type::help,
+                DiagnosticSymbolAfterMessage{context.symbol_id("C")}, DiagnosticNoOtherInfo{});
+            auto did2 = context.emplace_diagnostic(
+                span, diag_code::remove, diag_type::help,
+                DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
+            context.set_next_diagnostic(did0, did1);
+            context.set_next_diagnostic(did1, did2);
 
         } else {
             enum abi_lang abi = maybe_abi.value();

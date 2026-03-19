@@ -21,7 +21,7 @@ mod Oops {
 
 }
 
-struct bar {
+struct bar { // warn
 
 }
 

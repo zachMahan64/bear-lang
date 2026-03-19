@@ -50,6 +50,7 @@ class Context {
     [[nodiscard]] SymbolId symbol_id(const char* start, size_t len);
     [[nodiscard]] SymbolId symbol_id(std::string_view str);
     [[nodiscard]] SymbolId symbol_id_for_identifier_tkn(const token_t* tkn);
+    [[nodiscard]] SymbolId symbol_id(Span span);
     /// get a symbol, trimming the "" quotes on the outside when interning
     [[nodiscard]] SymbolId symbol_id_for_str_lit_tkn(const token_t* tkn);
     [[nodiscard]] FileId file(SymbolId path);

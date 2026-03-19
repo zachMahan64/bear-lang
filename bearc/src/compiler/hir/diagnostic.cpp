@@ -87,6 +87,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "not declared in this scope";
     case diag_code::replace_with:
         return "replace with";
+    case diag_code::remove:
+        return "remove";
     }
     std::unreachable();
     return "";
