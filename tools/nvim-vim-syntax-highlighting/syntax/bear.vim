@@ -1,5 +1,4 @@
-" syntax/bear.vim
-
+" see README.md for set-up
 if exists("b:current_syntax")
   finish
 endif
@@ -9,7 +8,11 @@ syntax case match
 " ------------------------
 " identifiers
 " ------------------------
-syntax match bearIdentifier /\<[A-Za-z_][A-Za-z0-9_]*\>/
+
+" regular, only matches if it starts with lowercase or underscore
+syntax match bearIdentifier /\<[a-z_][A-Za-z0-9_]*\>/
+
+" scoped
 syntax match bearScopedIdentifier /\<[A-Za-z_][A-Za-z0-9_]*\(\.\.[A-Za-z_][A-Za-z0-9_]*\)\+\>/
 
 " ------------------------
@@ -76,20 +79,22 @@ syntax match bearOperator /\v\+\+|--|\.\.\./
 syntax match bearDelimiter /[(){}\[\],;:#.]/
 
 " ------------------------
-" function / type names (heuristic)
+" function / type names
 " ------------------------
 
-" fn name(
-syntax match bearFunction /\<fn\s\+\zs[A-Za-z_][A-Za-z0-9_]*/
+" foo(...
+syntax match bearFunction /\<[a-z_][A-Za-z0-9_]*\ze\s*(/
 
-" dt name(
-syntax match bearFunction /\<dt\s\+\zs[A-Za-z_][A-Za-z0-9_]*/
+" ------------------------
+" special id styles
+" ------------------------
 
-" mt [mut] name(
-syntax match bearFunction /\<mt\s\+\(mut\s\+\)\?\zs[A-Za-z_][A-Za-z0-9_]*/
+" PascalCase: starts with A-Z, followed by any alphanumeric/underscore
+syntax match bearPascalType /\<[A-Z][A-Za-z0-9_]*\>/
 
-" struct / variant / union / contract names
-syntax match bearTypeDef /\<\(struct\|variant\|union\|contract\)\s\+\zs[A-Za-z_][A-Za-z0-9_]*/
+" CONSTANT_CASE: matches if the whole word is Uppercase/Numbers/Underscore
+syntax match bearConstant /\<[A-Z][A-Z0-9_]*\>/
+
 
 " ------------------------
 " todo & fixme 
@@ -110,19 +115,27 @@ highlight default link bearType Type
 highlight default link bearTypeDef Type
 highlight default link bearBoolean Boolean
 
+
+highlight default link bearConstant Constant
+highlight default link bearPascalType Type
+
 highlight default link bearIdentifier Identifier
 highlight default link bearScopedIdentifier Identifier
 highlight default link bearFunction Function
+
+
+highlight default link bearOperator Operator
+highlight default link bearDelimiter Delimiter
+
 
 highlight default link bearNumber Number
 highlight default link bearFloat Float
 highlight default link bearString String
 highlight default link bearChar Character
 
-highlight default link bearOperator Operator
-highlight default link bearDelimiter Delimiter
 
 highlight default link bearTodo Todo
 highlight default link bearComment Comment
 
 let b:current_syntax = "bear"
+
