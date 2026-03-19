@@ -1,7 +1,7 @@
 #### todos
 
 #### chores 
-- [ ] handle alignas parsing (struct fields, handle accordingly during lowering too)
+- [x] handle alignas accordingly during lowering too
 
 ##### diagnostics
 - [ ] add trimming of cwd from file paths in diagnostics reporting

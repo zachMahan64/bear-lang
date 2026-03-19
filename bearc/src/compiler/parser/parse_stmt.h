@@ -112,4 +112,6 @@ ast_stmt_t* parse_stmt_deftype(parser_t* p);
 
 ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p);
 
+ast_stmt_t* parse_stmt_alignas_modifier(parser_t* p);
+
 #endif

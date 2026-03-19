@@ -546,6 +546,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_stmt_static_modifier(p, &parse_var_decl);
     }
 
+    if (next_type == TOK_ALIGNAS) {
+        return parse_stmt_alignas_modifier(p);
+    }
+
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type)
           || (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN))) {
@@ -1212,4 +1216,28 @@ ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p) {
         compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
     }
     return stmt;
+}
+
+ast_stmt_t* parse_stmt_alignas_modifier(parser_t* p) {
+    ast_stmt_t* alignaz = parser_alloc_stmt(p);
+    alignaz->type = AST_STMT_ALIGNAS_MODIFIER;
+    token_t* modif = parser_expect_token(p, TOK_ALIGNAS);
+    if (!modif) {
+        return parser_sync_stmt(p);
+    }
+    ast_expr_t* expr = parse_expr(p);
+
+    // shed redundant qualifiers
+    // this goto structure handles any kind of stupid compt pub compt hid ... input
+keep_shedding:
+    parser_shed_compt_qualis_with_error(p);
+    if (parser_shed_visibility_qualis_with_error(p)) {
+        goto keep_shedding;
+    }
+    ast_stmt_t* stmt = parse_var_decl(p);
+    alignaz->stmt.alignaz.align_expr = expr;
+    alignaz->stmt.alignaz.inner = stmt;
+    alignaz->first = modif;
+    alignaz->last = stmt->last;
+    return alignaz;
 }

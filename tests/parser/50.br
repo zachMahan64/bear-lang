@@ -1,0 +1,9 @@
+// tests/parser/50.br
+
+fn main() -> i32 {
+    return 0;
+}
+
+struct Foo {
+    pub alignas(64) i32 foo;
+}

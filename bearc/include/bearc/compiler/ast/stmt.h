@@ -35,6 +35,7 @@ typedef enum ast_statement_type {
     AST_STMT_VISIBILITY_MODIFIER,
     AST_STMT_COMPT_MODIFIER,
     AST_STMT_STATIC_MODIFIER,
+    AST_STMT_ALIGNAS_MODIFIER,
 
     // structures
     AST_STMT_STRUCT_DEF,
@@ -282,6 +283,11 @@ typedef struct ast_stmt_deftype {
     ast_expr_t* aliased_type_expr;
 } ast_stmt_deftype_t;
 
+typedef struct ast_stmt_alignas {
+    ast_expr_t* align_expr;
+    ast_stmt_t* inner;
+} ast_stmt_alignas_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 /// union of all stmt types
@@ -314,6 +320,7 @@ typedef union ast_stmt_u {
     ast_stmt_wrapped_t static_modifier;
     ast_stmt_deftype_t deftype;
     ast_stmt_extern_block_t extern_block;
+    ast_stmt_alignas_t alignaz;
 } ast_stmt_u;
 
 typedef struct ast_stmt {

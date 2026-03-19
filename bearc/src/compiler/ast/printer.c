@@ -138,7 +138,7 @@ static void print_generic_type_arg(ast_generic_arg_t* arg) {
 }
 
 static void print_title(const char* title) {
-    printf("%s: %s{%s\n", title, ansi_bold_green(), ansi_reset());
+    printf("%s%s: %s{%s\n", ansi_bold_reset(), title, ansi_bold_green(), ansi_reset());
 }
 
 static void print_closing_green_brace(void) {
@@ -940,6 +940,14 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         print_op_from_type(TOK_CONTINUE);
         printer_deindent();
         print_delineator_from_type(TOK_SEMICOLON);
+        break;
+    case AST_STMT_ALIGNAS_MODIFIER:
+        print_title("explicitly aligned variable declaration");
+        print_delineator_from_type(TOK_ALIGNAS);
+        pretty_print_expr(stmt->stmt.alignaz.align_expr);
+        printer_do_indent();
+        pretty_print_stmt(stmt->stmt.alignaz.inner);
+        printer_deindent();
         break;
     }
     print_closing_green_brace();
