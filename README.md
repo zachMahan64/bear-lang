@@ -1,3 +1,13 @@
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png">
+    <img alt="The Bear Programming Language"
+         src="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png"
+         width="50%">
+  </picture>
+
+</div>
+
 # bear-lang (Work in Progress)
 - A modern, C-like language inspired by C++ and Rust.
 - Bear is statically-typed and compiled aiming for simplicity and clarity.
