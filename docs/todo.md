@@ -4,7 +4,10 @@ side quests
 -----------
 
 ##### chores 
-- [ ] handle alignas accordingly during lowering too
+- [x] handle alignas accordingly during ast lowering
+- [ ] arbitrary source code reconstruction from hir::Context
+- [ ] add an Exec Stringifier (tedious)
+- [ ] add a Def Stringifier (tedious)  
 
 ##### diagnostics
 - [ ] add trimming of cwd from file paths in diagnostics reporting?
@@ -14,11 +17,6 @@ side quests
 ##### debugging 
 - [ ] make a scope iterator
 - [ ] debug logger to display context and scope contents
-
-##### advanced nice-to-haves
-- [ ] arbitraru source code codegen from hir::Context
-- [ ] add an Exec Stringifier (tedious)
-- [ ] add a Def Stringifier (tedious)  
 
 main quest
 ----------
