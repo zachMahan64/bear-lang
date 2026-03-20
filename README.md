@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/bear-language/bear-vscode/blob/main/images/bear-logo-text-dark.png?raw=true">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/bear-language/bear-vscode/blob/main/images/bear-logo-text-light.png?raw=true">
     <img alt="The Bear Programming Language"
          src="https://raw.githubusercontent.com/zachMahan64/bear-vscode/refs/heads/main/images/bear-logo.png"
          width="50%">
@@ -9,10 +9,9 @@
 
 </div>
 
-# bear-lang (Work in Progress)
-- A modern, C-like language inspired by C++ and Rust.
-- Bear is statically-typed and compiled aiming for simplicity and clarity.
-- Uses LLVM for the backend.
+- A modern, powerful, C-like language with simple syntax.
+- Bear is statically-typed and compiled using LLVM as the backend.
+- Codegen is still a work-in-progress.
 
 ## Documentation
 - [Grammar](docs/syntax.md)
@@ -43,8 +42,8 @@ cmake --build build
 bearc --help          # to see CLI usage
 ```
 #### Tooling 
-- [Syntax highlighting is availible for Neovim/Vim](/tools/nvim-vim-syntax-highlighting/README.md), which consists of two config files included in this repo.
-- [A VSCode extension is availible, which includes syntax highlighting](https://github.com/zachMahan64/bear-vscode). Right now, local install is required, directions are in the linked repo.
+- [A Neovim plugin is availible](https://github.com/bear-language/bear.nvim), which easily be used in Vim as well.
+- [A VSCode extension is availible](https://github.com/bear-language/bear-vscode), which includes syntax highlighting. Right now, local install is required, directions are in the linked repo.
 - More to come in the future
 
 #### Preview
