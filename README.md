@@ -9,6 +9,7 @@
 
 </div>
 
+-------------
 - A modern, powerful, C-like language with simple syntax.
 - Bear is statically-typed and compiled using LLVM as the backend.
 - Codegen is still a work-in-progress.
