@@ -43,7 +43,7 @@ cmake --build build
 bearc --help          # to see CLI usage
 ```
 #### Tooling 
-- [A Neovim plugin is availible](https://github.com/bear-language/bear.nvim), which easily be used in Vim as well.
+- [A Neovim plugin is availible](https://github.com/bear-language/bear.nvim), which easily can be used in Vim as well.
 - [A VSCode extension is availible](https://github.com/bear-language/bear-vscode), which includes syntax highlighting. Right now, local install is required, directions are in the linked repo.
 - More to come in the future
 
