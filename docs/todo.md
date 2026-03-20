@@ -18,6 +18,9 @@ side quests
 - [ ] make a scope iterator
 - [ ] debug logger to display context and scope contents
 
+##### lsp-friendly features
+- [lsp compatibility plan here](docs/lsp-compat.md)
+
 main quest
 ----------
 

@@ -14,8 +14,8 @@
 - [Calling C from Zig](https://mtlynch.io/notes/zig-call-c-simple/)
 #### Vim Syntax Highlighting
 - [Keith Smiley, Writing Vim Sybtax Plugins](https://thoughtbot.com/blog/writing-vim-syntax-plugins)
-#### LSP Spec 
-- [Microsoft, Language Server Protocol Specification](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
+#### LSP reference 
+- [Microsoft, Language Server Protocol: Specifications](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
 #### Educational Resources
 - [*Crafting Interprets* by Robert Nystrom](https://github.com/munificent/craftinginterpreters/tree/master)
 - *Engineering a Compiler* by Keith D. Cooper and Linda Torczon
