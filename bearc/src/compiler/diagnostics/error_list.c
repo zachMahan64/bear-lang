@@ -115,7 +115,7 @@ void print_diagnostic(const src_buffer_t* src_buffer, const char* start, size_t 
     string_view_t line_preview = get_line_string_view(src_buffer, start);
 
     // ADJUST for beauty's sake
-    static const size_t LINE_LEN_CRIT_VAL = 80; // this is pretty long
+    static const size_t LINE_LEN_CRIT_VAL = 40; // this is pretty long
 
     size_t revised_col = col;
 
