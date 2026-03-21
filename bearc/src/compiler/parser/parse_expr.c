@@ -360,7 +360,7 @@ ast_expr_t* parse_expr_struct_member_init(parser_t* p) {
     }
     token_t* assign_op = parser_match_token_call(p, &token_is_assignment_init);
     if (!assign_op) {
-        compiler_error_list_emplace(p->error_list, assign_op, ERR_EXPECTED_ASSIGNMENT);
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_ASSIGNMENT);
         return parser_sync_expr(p);
     }
     s->expr.struct_member_init.id = name;

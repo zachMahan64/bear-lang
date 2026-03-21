@@ -11,6 +11,7 @@
 #include "compiler/diagnostics/src_view.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
+#include "utils/arena.h"
 #include "utils/file_io.h"
 #include "utils/string.h"
 #include "utils/string_view.h"
@@ -147,6 +148,14 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i, bool 
     compiler_error_t* error = vector_at(&list->list_vec, i);
 
     const src_buffer_t* src_buffer = &list->src_buffer;
+
+#ifdef DEBUG_BUILD
+    if (error->start_tkn == NULL) {
+        puts("bad diagnostic!");
+        puts(error_message_for_code(error->error_code));
+    }
+#endif
+
     const char* start = error->start_tkn->start;
     size_t len = error->start_tkn->len;
     size_t line = error->start_tkn->loc.line;

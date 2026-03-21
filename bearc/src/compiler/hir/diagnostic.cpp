@@ -105,6 +105,14 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "redundant `compt` qualifier";
     case diag_code::redundant_static_qualifier:
         return "redundant `static` qualifier";
+    case diag_code::compt_generic_structs_not_possible:
+        return "compt generic struct initialization is not yet availible";
+    case diag_code::this_feature_is_planned:
+        return "this feature is planned";
+    case diag_code::is_not_a_struct:
+        return "is not a struct";
+    case diag_code::declared_here:
+        return "declared here";
     }
     std::unreachable();
     return "";
@@ -202,6 +210,7 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
             std::cout << accent_color_for_type(type) << message_for_code(sc.sub_code)
                       << ansi_reset() << '\n';
         },
+        [](DiagnosticInfoNoPreview) {},
     };
     this->visit(vs);
     if (!holds<DiagnosticNoOtherInfo>() && !context.compact_diagnostics_enabled()) {
@@ -235,7 +244,7 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     }
 
     // if it's help, don't reshow the src buffer!
-    if (type == diag_type::help) {
+    if (type == diag_type::help || this->holds<DiagnosticInfoNoPreview>()) {
         return;
     }
 
@@ -430,6 +439,19 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                        str += ansi_bold_reset();
                        str += '`';
                    },
+                   [&](DiagnosticIdentifierBeforeMessage d) {
+                       str += '`';
+                       str += accent_color_for_type(type);
+                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                           if (sidx != d.sid_slice.last_elem()) {
+                               str += "..";
+                           }
+                       }
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += message_for_code(code);
+                   },
                    [&](DiagnosticSymbolAfterMessage d) {
                        str += message_for_code(code);
                        str += " `";
@@ -437,6 +459,11 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                        str += ctx.symbol_id_to_cstr(d.sid);
                        str += ansi_bold_reset();
                        str += '`';
+                   },
+                   [&](DiagnosticSymbolAfterMessageNoQuotes d) {
+                       str += message_for_code(code);
+                       str += ' ';
+                       str += ctx.symbol_id_to_cstr(d.sid);
                    }};
     std::visit(vs, message_value);
 }

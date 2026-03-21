@@ -106,7 +106,7 @@ template <IsDefVisitor V> class TypeResolver {
             return OptId<TypeId>{};
         }
 
-        auto maybe_size_exec = ComptExprSolver<V>{context, def_visitor}.solve_compt_expr(
+        auto maybe_size_exec = ComptExprSolver<V>{context, def_visitor}.solve_builtin_compt_expr(
             fid, scope, type->type.arr.size_expr, builtin_type::usize);
 
         if (!maybe_size_exec.has_value()) {

@@ -501,6 +501,9 @@ void Context::print_diagnostic(DiagnosticId diag_id, bool print_file) {
         // only print next's file if it differs
         bool print_next_file = diag.span.file_id != diagnostics.cat(diag.next.as_id()).span.file_id;
         print_diagnostic(diag.next.as_id(), print_next_file);
+    } else if (!compact_diagnostics_enabled()) {
+        std::cout << '\n'; // this makes it so there's a new line between the start and end of
+                           // none-contiguous diagnostics, which is more readable
     }
 }
 

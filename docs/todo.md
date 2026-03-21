@@ -1,26 +1,5 @@
 #### todos
 
-side quests
------------
-
-##### chores 
-- [x] handle alignas accordingly during ast lowering
-- [ ] arbitrary source code reconstruction from hir::Context
-- [ ] add an Exec Stringifier (tedious)
-- [ ] add a Def Stringifier (tedious)  
-
-##### diagnostics
-- [ ] add trimming of cwd from file paths in diagnostics reporting?
-- [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings for it
-- [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
-
-##### debugging 
-- [ ] make a scope iterator
-- [ ] debug logger to display context and scope contents
-
-##### lsp-friendly features
-- [lsp compatibility plan here](docs/lsp-compat.md)
-
 main quest
 ----------
 
@@ -59,3 +38,24 @@ main quest
     - [ ] basic cave/bearc integration (run button)
 
 - [ ] Improve debugger compatibility 
+
+side quests
+-----------
+
+##### chores 
+- [x] handle alignas accordingly during ast lowering
+- [ ] arbitrary source code reconstruction from hir::Context
+- [ ] add an Exec Stringifier (tedious)
+- [ ] add a Def Stringifier (tedious)  
+
+##### diagnostics
+- [ ] add trimming of cwd from file paths in diagnostics reporting?
+- [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings for it
+- [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
+
+##### debugging 
+- [ ] make a scope iterator
+- [ ] debug logger to display context and scope contents
+
+##### lsp-friendly features
+- [lsp compatibility plan here](docs/lsp-compat.md)

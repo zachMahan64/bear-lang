@@ -306,7 +306,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         }
     }
     // return the DefId since this is an orderable definition
-    if (info.is_orderable_var) {
+    if (info.is_orderable_var && !statik) {
         return def;
     }
     return OptId<DefId>{};
@@ -395,7 +395,9 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         is_generic = stmt->stmt.variant_decl.is_generic;
         break;
     }
-        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // !!! orderable fields ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     case AST_STMT_VARIANT_FIELD_DECL: {
         name_tkn = stmt->stmt.variant_field_decl.name;
         kind = scope_kind::type;
@@ -414,6 +416,8 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         is_orderable_field = true;
         break;
     }
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
     case AST_STMT_FN_DECL: {
         token_ptr_slice_t name_slice = stmt->stmt.fn_decl.name;
         // struct prefix name resolution deffered to later stages

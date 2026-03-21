@@ -1,0 +1,30 @@
+// tests/hir/14.br 
+
+variant Ben {
+    Benny(i32 age),
+
+
+
+
+
+
+
+
+
+
+
+
+    BenTheDog(i32 dogness),
+}
+
+struct Foo {
+    i32 a;
+    i32 b;
+    i32 c;
+}
+
+Foo foo = Ben{.Benny.age = thingie}; // malformed, completely
+
+fn main() -> i32 {
+    return foo.a;
+}

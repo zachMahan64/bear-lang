@@ -50,6 +50,10 @@ enum class diag_code : uint8_t {
     multiple_alignas_on_one_def,
     redundant_compt_qualifier,
     redundant_static_qualifier,
+    compt_generic_structs_not_possible,
+    this_feature_is_planned,
+    is_not_a_struct,
+    declared_here,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };
@@ -60,16 +64,27 @@ struct DiagnosticIdentifierAfterMessage {
     IdSlice<SymbolId> sid_slice;
 };
 
+struct DiagnosticIdentifierBeforeMessage {
+    IdSlice<SymbolId> sid_slice;
+};
+
 struct DiagnosticSymbolAfterMessage {
     SymbolId sid;
 };
 
-using DiagnosticMessageValue = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
-                                            DiagnosticSymbolAfterMessage>;
+struct DiagnosticSymbolAfterMessageNoQuotes {
+    SymbolId sid;
+};
+using DiagnosticMessageValue
+    = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
+                   DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
+                   DiagnosticIdentifierBeforeMessage>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
 };
+
+struct DiagnosticInfoNoPreview {};
 
 struct DiagnosticCannotConvertFromTypeToType {
     TypeId from;
@@ -81,7 +96,8 @@ struct DiagnosticSubCode {
 };
 
 using DiagnosticInfoValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack,
-                                         DiagnosticCannotConvertFromTypeToType, DiagnosticSubCode>;
+                                         DiagnosticCannotConvertFromTypeToType, DiagnosticSubCode,
+                                         DiagnosticInfoNoPreview>;
 
 struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 
