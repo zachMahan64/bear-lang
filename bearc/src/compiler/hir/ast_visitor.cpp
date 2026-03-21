@@ -84,14 +84,14 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             stmt = stmt->stmt.static_modifier.stmt;
         }
 
-        auto try_align_pref = [&](const ast_expr_t* expr) {
+        auto try_align_pref = [&](const ast_expr_t* expr) -> uint8_t {
             const auto* tkn = expr->expr.literal.tkn;
             static constexpr auto MAX_ALIGN = 128u;
             if (tkn->type == TOK_UINT_LIT && tkn->val.unsigned_integral <= MAX_ALIGN
                 && tkn->val.unsigned_integral > 0) {
                 return tkn->val.unsigned_integral;
             }
-            return 0uz;
+            return 0u;
         };
 
         if (stmt->type == AST_STMT_ALIGNAS_MODIFIER) {
