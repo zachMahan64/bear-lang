@@ -9,9 +9,10 @@ main quest
 - [x] multi-line and more complicated diagnostics handling
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
     - [ ] implement basic ast-lowering for exprs constant folder/compt resolver -> string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args, not just types
-    - [ ] struct compt handling (propagate constants thru member inits)
+    - [x] struct compt handling (propagate constants thru member inits)
     - [ ] implement kind of operator <--> type mapping system (just worry about builtin types for now)
     - [ ] debug and increase safety of particularly (large) integral literal parsing
+- [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
 - [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`? or just insert into scope and pass thru the scope

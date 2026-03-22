@@ -44,8 +44,6 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         stmt = stmt->stmt.vis_modifier.stmt;
     }
 
-    // TODO handle alignas
-
     bool compt = false;
     bool statik = false;
     uint8_t align_pref = 0;

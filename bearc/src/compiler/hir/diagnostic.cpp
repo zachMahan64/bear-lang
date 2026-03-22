@@ -191,7 +191,6 @@ int Diagnostic::width(HirSize line) {
     return w;
 }
 
-// TODO make this return a string for improved render flexibility
 void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
 
     auto import_stack_helper = [&](IdSlice<FileId> files) {

@@ -238,7 +238,7 @@ class Context {
     IdHashMap<DefId, OrderedDefSliceId> def_to_ordered_def_slice_id;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    // types, generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IdVector<TypeId> type_ids;
     NodeVector<Type> types;
 
@@ -248,14 +248,28 @@ class Context {
     DataArena canonical_type_table_arena;
     CanonicalTypeTable canonical_type_table;
 
+    // generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IdVector<GenericParamId> generic_param_ids;
     NodeVector<GenericParam> generic_params;
 
     IdVector<GenericArgId> generic_arg_ids;
     NodeVector<GenericArg> generic_args;
-    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    // error tracking
 
+    // generic arg canonicalization
+    DataArena generic_args_arena;
+    IdVecMap<CanonicalGenericArgsIdMapId, IdHashMap<CanonicalGenericArgsId, DefId>>
+        canonical_generic_args_id_to_def_id_map;
+
+    IdVecMap<GenericArgIdSliceId, IdSlice<GenericArgId>> generic_arg_id_slices;
+    IdVecMap<CanonicalGenericArgsId, IdSlice<GenericArgId>>
+        canonical_generic_args_to_first_instance;
+
+    DataArena canonical_generic_args_table_arena;
+    CanonicalGenericArgsTable
+        canonical_generic_args_table; // TODO, the logic for this isn't impl'd yet
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // error tracking ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NodeVector<Diagnostic> diagnostics;
     IdVecMap<DiagnosticId, uint8_t> diagnostics_used;
     HirSize warning_cnt{};

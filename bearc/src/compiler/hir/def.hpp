@@ -40,7 +40,8 @@ struct DefFunction {
 struct DefGenericFunction {
     IdSlice<GenericParamId> generic_params;
     SymbolId name;
-    DefId function_def;
+    /// maps canonical lists of generics args to concrete instatiations
+    CanonicalGenericArgsIdMapId generics_args_to_concrete_defs_map;
 };
 
 struct DefFunctionPrototype {
@@ -68,8 +69,8 @@ struct DefStruct {
 struct DefGenericStruct {
     IdSlice<GenericParamId> generic_params;
     SymbolId name;
-    // potentially problematic
-    DefId underlying_def;
+    /// maps canonical lists of generics args to concrete instatiations
+    CanonicalGenericArgsIdMapId generics_args_to_concrete_defs_map;
 };
 
 struct DefVariant {
@@ -82,7 +83,8 @@ struct DefVariant {
 struct DefGenericVariant {
     IdSlice<GenericParamId> generic_params;
     SymbolId name;
-    DefId variant_def;
+    /// maps canonical lists of generics args to concrete instatiations
+    CanonicalGenericArgsIdMapId generics_args_to_concrete_defs_map;
 };
 
 struct DefVariantField {

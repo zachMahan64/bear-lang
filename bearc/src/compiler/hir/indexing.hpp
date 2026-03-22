@@ -167,6 +167,14 @@ using OrderedDefSliceId = Id<IdSlice<DefId>>;
 // id points to first TypeId mention
 using CanonicalTypeId = Id<TypeId>;
 
+using GenericArgIdSliceId = Id<IdSlice<GenericArgId>>;
+
+/// for canonicalizing slices of generic args
+using CanonicalGenericArgsId = Id<IdSlice<GenericArgId>>;
+
+/// for indexing maps of GenericArgIds to DefIds
+using CanonicalGenericArgsIdMapId = Id<IdSlice<CanonicalGenericArgsId>>;
+
 } // namespace hir
 
 #endif
