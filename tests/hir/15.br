@@ -1,0 +1,32 @@
+// tests/hir/15.br 
+
+struct Bar {
+    Foo foo;
+    bool booley;
+}
+
+struct Foo {
+    i32 a;
+    i32 b;
+    i32 c;
+}
+
+compt Foo foo1 = 11;
+
+compt Foo foo2 = Foo{.a = 42};
+
+compt Foo foo3 = Foo{.a = 42, .bc = 33, .c = 4};
+
+compt Foo foo4 = Foo{.a = 1, .b = 2, .c = 3, .d = 12}; // oops too many
+
+compt Foo foo5 = Foo {.a = 1, .b = 2, .c = 3}; // fine
+
+compt Foo foo6 = Foo{.a = 1, .b = r, .c = 3, .d = 12}; // oops too many and undeclared
+
+compt Bar bar0 = Bar{.foo = foo6, .booley = true}; // err since foo6 is errored out
+
+compt Bar bar1 = Bar{.foo = foo5, .booley = true}; // fine since foo5 is fine
+
+Bar bar2 = Bar{.foo = Foo{.a=1,.b=2,.c=3}, .booley = false}; // fine
+
+Bar bar2 = Bar{.foo = Foo{.a="oopsie",.b=2,.c=3}, .booley = false}; // oops

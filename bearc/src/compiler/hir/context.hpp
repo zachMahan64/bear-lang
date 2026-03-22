@@ -128,6 +128,7 @@ class Context {
     template <typename... Args> [[nodiscard]] ExecId register_exec(Args&&... args) {
         return execs.emplace_and_get_id(std::forward<Args>(args)...);
     }
+    [[nodiscard]] ExecId emplace_exec(const ExecValue& value, Span span, bool should_be_compt);
 
     // ----- info viewing ------
     [[nodiscard]] const char* symbol_id_to_cstr(SymbolId id) const;
@@ -147,6 +148,7 @@ class Context {
     [[nodiscard]] const Type& type(TypeId id) const;
     [[nodiscard]] Type& type(TypeId id);
     [[nodiscard]] TypeId type_id(IdIdx<TypeId> tid) const;
+    [[nodiscard]] bool equivalent_type(TypeId tid1, TypeId tid2) const;
     [[nodiscard]] const Def& def(DefId id) const;
     [[nodiscard]] const Def& def(IdIdx<DefId> id) const;
     [[nodiscard]] DefId def_id(IdIdx<DefId> id) const;

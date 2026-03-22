@@ -25,6 +25,8 @@ struct Foo {
 
 Foo foo = Ben{.Benny.age = thingie}; // malformed, completely
 
+compt Foo foo2 = Foo{.a = 1, .b = 2};
+
 fn main() -> i32 {
     return foo.a;
 }

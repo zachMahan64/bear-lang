@@ -353,6 +353,7 @@ ast_expr_t* parse_expr_struct_member_init(parser_t* p) {
     if (!parser_expect_token(p, TOK_DOT)) {
         return parser_sync_expr(p);
     }
+    token_t* first = parser_prev(p);
     token_t* name = parser_match_token(p, TOK_IDENTIFIER);
     if (!name) {
         compiler_error_list_emplace(p->error_list, name, ERR_EXPECTED_IDENTIFER);
@@ -367,6 +368,8 @@ ast_expr_t* parse_expr_struct_member_init(parser_t* p) {
     s->expr.struct_member_init.assign_op = assign_op;
     s->expr.struct_member_init.value = parse_expr(p);
     // now we should be returning something in the form .foo = some_expr
+    s->first = first;
+    s->last = parser_prev(p);
     return s;
 }
 

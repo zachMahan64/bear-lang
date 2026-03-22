@@ -405,6 +405,9 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
     def_mention_states.bump(Def::mention_state::unmentioned);
     return def;
 }
+ExecId Context::emplace_exec(const ExecValue& value, Span span, bool should_be_compt) {
+    return execs.emplace_and_get_id(*this, value, span, should_be_compt);
+}
 
 FileAst& Context::ast(FileId file_id) { return file_asts.at(files.at(file_id).ast_id); }
 
@@ -708,4 +711,7 @@ NamedOrAnonScopeId Context::containing_scope(DefId did) const {
 
 SymbolId Context::symbol_id(IdIdx<SymbolId> sididx) const { return symbol_ids.cat(sididx); }
 
+[[nodiscard]] bool Context::equivalent_type(TypeId tid1, TypeId tid2) const {
+    return type(tid1).canonical == type(tid2).canonical;
+}
 } // namespace hir

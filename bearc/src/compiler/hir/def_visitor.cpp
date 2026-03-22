@@ -99,9 +99,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         if (!maybe_compt_exec.has_value()) {
             return did;
         }
-        def.set_value(DefVariable{.type = maybe_type.as_id(),
-                                  .name = context.symbol_id(stmt->stmt.var_init_decl.name),
-                                  .compt_value = maybe_compt_exec.as_id()});
+        auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
+        def.set_value(DefVariable{
+            .type = maybe_type.as_id(), .name = name_sid, .compt_value = maybe_compt_exec.as_id()});
         break;
     }
     case AST_STMT_STRUCT_DEF: {

@@ -14,10 +14,10 @@
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec.hpp"
+#include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
-#include <iostream>
 #include <optional>
 namespace hir {
 
@@ -143,7 +143,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
             OptId<ExecId> rhs
-                = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs, into_builtin);
+                = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs, into_builtin);
             if (!rhs.has_value()) {
                 return std::nullopt;
             }
@@ -186,6 +186,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (maybe_value.has_value()) {
             // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
             auto maybe_converted = maybe_value.value().try_implicit_convert_to(into_builtin);
+            if (maybe_value->holds<SymbolId>()) {
+            }
             if (!maybe_converted.has_value()) {
                 auto from_builtin = maybe_value.value().type_builtin();
                 TypeId from = context.emplace_type(TypeBuiltin{.type = from_builtin},
@@ -224,13 +226,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_ID: {
             auto maybe_def
                 = context.look_up_scoped_variable(scope, context.symbol_slice(expr->expr.id.slice));
-            if (maybe_def.has_value()) {
-            }
-            // happy path, canonicalize compt value
-            DefId did = maybe_def.as_id();
-            const Def& def = visit_def(did);
-            const auto& def_variable = def.as<DefVariable>();
-            if (def.holds<DefVariable>()) {
+            if (!maybe_def.has_value()) {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
                 context.emplace_diagnostic(
                     expr_span, diag_code::use_of_undeclared_identifier, diag_type::error,
@@ -238,6 +234,17 @@ template <IsDefVisitor V> class ComptExprSolver {
                     DiagnosticSubCode{.sub_code = diag_code::not_declared_in_this_scope});
                 return std::nullopt;
             }
+            // happy path, canonicalize compt value
+            DefId did = maybe_def.as_id();
+            const Def& def = visit_def(did);
+            if (!def.holds<DefVariable>()) {
+                auto sid_slice = context.symbol_slice(expr->expr.id.slice);
+                context.emplace_diagnostic(
+                    expr_span, diag_code::cannot_convert_expression_to_type, diag_type::error,
+                    DiagnosticCannotConvertToType{.tid = into_tid}, DiagnosticNoOtherInfo{});
+                return std::nullopt;
+            }
+            const auto& def_variable = def.as<DefVariable>();
             if (!def.compt) {
                 auto diag_id = context.emplace_diagnostic(
                     expr_span, diag_code::cannot_init_with_non_compt_value, diag_type::error,
@@ -252,7 +259,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 // reported, so just return a nullopt
                 return std::nullopt;
             }
-            if (def_variable.type == into_tid) {
+            if (context.equivalent_type(def_variable.type, into_tid)) {
                 // since it's compt (immutable, it's perfectly fine to just share the
                 // original exec value here)
                 return def_variable.compt_value;
@@ -267,9 +274,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto id_slice = expr->expr.struct_init.id;
             auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
 
-            OptId<DefId> maybe_def = context.look_up_scoped_type(scope, sid_slice);
+            OptId<DefId> maybe_def_of_struct = context.look_up_scoped_type(scope, sid_slice);
 
-            if (!maybe_def.has_value()) {
+            if (!maybe_def_of_struct.has_value()) {
                 context.emplace_diagnostic(
                     expr_span, diag_code::use_of_undeclared_identifier, diag_type::error,
                     DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice},
@@ -277,7 +284,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
 
-            const auto did = maybe_def.as_id();
+            const auto did = maybe_def_of_struct.as_id();
             const Def& def = context.def(did);
 
             if (context.type(into_tid).template holds<TypeGenericStructure>()) {
@@ -313,11 +320,20 @@ template <IsDefVisitor V> class ComptExprSolver {
             const DefStruct& def_as_struct = def.as<DefStruct>();
             const auto defs = context.ordered_defs_for(did);
 
-            ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
+            const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
 
-            llvm::SmallVector<ExecId> member_inits;
+            enum class relative_artity : uint8_t { too_few, same, too_many };
+
+            relative_artity rel_arity = relative_artity::same;
+            if (init_slice.len < defs.len()) {
+                rel_arity = relative_artity::too_few;
+            } else if (init_slice.len > defs.len()) {
+                rel_arity = relative_artity::too_many;
+            }
+
+            llvm::SmallVector<ExecId> member_init_execs;
+            bool cooked = false;
             for (auto i = 0u; i < defs.len(); i++) {
-
                 auto didx = defs.get(i);
                 const auto member_did = context.def_id(didx);
                 const Def& member = context.def(didx);
@@ -325,31 +341,91 @@ template <IsDefVisitor V> class ComptExprSolver {
                 assert(member.holds<DefVariable>());
                 const auto& member_as_var = member.as<DefVariable>();
 
-                TypeId type = member_as_var.type;
-                OptId<ExecId> default_val = member_as_var.compt_value;
-                SymbolId member_name = member.name;
-                ScopeId struct_scope = context.scope_for_top_level_def(did);
+                const TypeId member_type = member_as_var.type;
+                const OptId<ExecId> default_val = member_as_var.compt_value;
+                const SymbolId member_name = member.name;
+                const ScopeId struct_scope = context.scope_for_top_level_def(did);
 
-                // get default value for the member field
+                // handle too few
                 if (i >= init_slice.len) {
+                    // get default value for the member field
                     if (default_val.has_value()) {
                         ExecExprStructMemberInit init{
                             .field_def = did, .value = default_val.as_id(), .move = false};
-                        member_inits.emplace_back(
+                        member_init_execs.emplace_back(
                             context.register_exec(context, init, Span::generated(), true));
+                    } else {
+                        cooked = true;
+                        auto did0 = context.emplace_diagnostic(
+                            Span(fid, context.ast(fid).buffer(), expr->last),
+                            diag_code::struct_field_not_initialized, diag_type::error,
+                            DiagnosticSymbolAfterMessage{.sid = context.def(defs.get(i)).name},
+                            DiagnosticNoOtherInfo{});
                     }
-                } else {
-                    if (expr->type != AST_EXPR_STRUCT_MEMBER_INIT) {
-                        return std::nullopt; // malformed, so was already reported by parser
-                    }
-                    const token_t* member_name = expr->expr.struct_member_init.id;
-                    const token_t* assign_op = expr->expr.struct_member_init.id;
-                    const ast_expr_t* val = expr->expr.struct_member_init.value;
-                    // TODO
-                    // remember to validate that the name of the field matches (same order too)
-                    // then recurse
+                    continue; // guard overflow
                 }
+                assert(i < init_slice.len);
+                const ast_expr_t* member_init_expr = init_slice.start[i];
+
+                if (member_init_expr->type != AST_EXPR_STRUCT_MEMBER_INIT) {
+                    return std::nullopt; // malformed, so was already reported by parser
+                }
+                const token_t* proposed_member_name_tkn
+                    = member_init_expr->expr.struct_member_init.id;
+                const token_t* assign_op = member_init_expr->expr.struct_member_init.id;
+
+                if (assign_op->type == TOK_ASSIGN_MOVE) {
+                    context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), assign_op),
+                                               diag_code::compt_values_cannot_be_moved,
+                                               diag_type::error);
+                }
+                const ast_expr_t* proposed_val = member_init_expr->expr.struct_member_init.value;
+                const Span proposed_member_span
+                    = Span(fid, context.ast(fid).buffer(), member_init_expr->first,
+                           member_init_expr->last);
+
+                const SymbolId true_name = member_as_var.name;
+                if (context.symbol_id(proposed_member_name_tkn) != true_name) {
+                    cooked = true;
+                    context.emplace_diagnostic(
+                        proposed_member_span, diag_code::field_initializer_does_not_match_field,
+                        diag_type::error, DiagnosticSymbolAfterMessage{member_as_var.name},
+                        DiagnosticNoOtherInfo{});
+                    continue;
+                }
+                OptId<ExecId> hopefully_exec
+                    = solve_compt_expr(fid, scope, proposed_val, member_type);
+                if (!hopefully_exec.has_value()) {
+                    cooked = true;
+                    // just continue, caused by other so must have already been reported
+                    continue;
+                }
+                // emplace the init execs
+                member_init_execs.emplace_back(context.emplace_exec(
+                    ExecExprStructMemberInit{
+                        .field_def = member_did, .value = hopefully_exec.as_id(), .move = false},
+                    proposed_member_span, true));
             }
+            if (rel_arity == relative_artity::too_many) {
+                cooked = true;
+                const token_t* first = init_slice.start[defs.len()]->first;
+                const token_t* last = init_slice.start[init_slice.len - 1]->last;
+                context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), first, last),
+                                           diag_code::too_many_initializers_given_for_struct_init,
+                                           diag_type::error);
+            }
+            if (cooked) {
+                context.emplace_diagnostic(
+                    def.span, diag_code::declared_here, diag_type::note,
+                    DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice},
+                    DiagnosticNoOtherInfo{});
+                return std::nullopt;
+            }
+            // all good, return the exec
+            return context.emplace_exec(
+                ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
+                                   .struct_def = did},
+                expr_span, true);
         }
 
         // these are all invalid
@@ -373,14 +449,11 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_INVALID:
             break;
         }
-        context.emplace_diagnostic(expr_span, diag_code::cannot_resolve_at_compt, diag_type::error);
+        context.emplace_diagnostic(expr_span, diag_code::cannot_convert_expression_to_type,
+                                   diag_type::error, DiagnosticCannotConvertToType{into_tid},
+                                   DiagnosticNoOtherInfo{});
         return std::nullopt;
     }
-
-    [[nodiscard]] OptId<ExecId> solve_compt_struct_member_init_expr(FileId fid,
-                                                                    NamedOrAnonScopeId scope,
-                                                                    const ast_expr_t* expr,
-                                                                    TypeId into_tid) {}
 };
 } // namespace hir
 #endif

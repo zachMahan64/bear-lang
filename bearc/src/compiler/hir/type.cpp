@@ -132,11 +132,20 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
     val.str.reserve(64); // decently sized
     std::string& str = val.str;
     auto vs
-        = Ovld{[&](const TypeBuiltin& t) { str += builtin_type_to_cstr(t.type); },
+        = Ovld{[&](const TypeBuiltin& t) {
+                   str += builtin_type_to_cstr(t.type);
+                   if constexpr (considers_mut()) {
+                       if (t1.mut) {
+                           str += " mut";
+                       }
+                   }
+               },
                [&](const TypeStructure& t) {
                    str += context.symbol_id_to_cstr(context.def(t.definition).name);
                    if constexpr (considers_mut()) {
-                       str += "mut";
+                       if (t1.mut) {
+                           str += " mut";
+                       }
                    }
                },
                [&](const TypeGenericStructure& t) {
@@ -144,7 +153,9 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                    str += context.symbol_id_to_cstr(context.def(t.definition).name);
                    str += "::<>";
                    if constexpr (considers_mut()) {
-                       str += "mut";
+                       if (t1.mut) {
+                           str += "mut";
+                       }
                    }
                },
                [&](const TypeArr& t) {
@@ -157,7 +168,9 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                    str += '[';
                    str += '&';
                    if constexpr (considers_mut()) {
-                       str += "mut";
+                       if (t1.mut) {
+                           str += "mut";
+                       }
                    }
                    str += ']';
                    val.inner_goes_right = true;
@@ -165,19 +178,25 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                [&](const TypeRef&) {
                    str += '&';
                    if constexpr (considers_mut()) {
-                       str += "mut";
+                       if (t1.mut) {
+                           str += "mut";
+                       }
                    }
                },
                [&](const TypePtr&) {
                    str += '*';
                    if constexpr (considers_mut()) {
-                       str += "mut";
+                       if (t1.mut) {
+                           str += "mut";
+                       }
                    }
                },
                [&](const TypeFnPtr& t) {
                    str += "*fn";
                    if constexpr (considers_mut()) {
-                       str += " mut";
+                       if (t1.mut) {
+                           str += " mut";
+                       }
                    }
                    str += '(';
                    for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {

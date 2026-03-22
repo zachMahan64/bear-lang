@@ -6,6 +6,7 @@
 
 # build dirs
 build*/
+cmake-build-debug*/
 docs-build/
 
 # caches

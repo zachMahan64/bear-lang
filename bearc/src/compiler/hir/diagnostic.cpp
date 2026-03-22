@@ -113,6 +113,18 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "is not a struct";
     case diag_code::declared_here:
         return "declared here";
+    case diag_code::struct_field_not_initialized:
+        return "struct field not initialized";
+    case diag_code::struct_fields_not_initialized:
+        return "struct fields not initialized";
+    case diag_code::cannot_convert_expression_to_type:
+        return "cannot convert expression to type";
+    case diag_code::field_initializer_does_not_match_field:
+        return "field initializer does not match field";
+    case diag_code::too_many_initializers_given_for_struct_init:
+        return "too many fields provided in initializer for struct";
+    case diag_code::compt_values_cannot_be_moved:
+        return "compile-time values cannot be moved";
     }
     std::unreachable();
     return "";
@@ -439,6 +451,14 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                        str += ansi_bold_reset();
                        str += '`';
                    },
+                   [&](DiagnosticCannotConvertToType d) {
+                       str += message_for_code(code);
+                       str += " `";
+                       str += accent_color_for_type(type);
+                       str += type_to_string(ctx, d.tid);
+                       str += ansi_bold_reset();
+                       str += '`';
+                   },
                    [&](DiagnosticIdentifierBeforeMessage d) {
                        str += '`';
                        str += accent_color_for_type(type);
@@ -459,6 +479,14 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
                        str += ctx.symbol_id_to_cstr(d.sid);
                        str += ansi_bold_reset();
                        str += '`';
+                   },
+                   [&](DiagnosticSymbolBeforeMessage d) {
+                       str += '`';
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol_id_to_cstr(d.sid);
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += message_for_code(code);
                    },
                    [&](DiagnosticSymbolAfterMessageNoQuotes d) {
                        str += message_for_code(code);

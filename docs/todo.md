@@ -15,8 +15,10 @@ main quest
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
 - [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`? or just insert into scope and pass thru the scope
+    - properly handle default field values in structs   
     - some method of handling generic params -> concrete args forwarding inside the entire generic scope 
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
+
 
 #### long term (compiler)
 - [ ] MIR? (compile-time ctrl flow and better optimizations)

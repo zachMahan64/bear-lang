@@ -54,6 +54,12 @@ enum class diag_code : uint8_t {
     this_feature_is_planned,
     is_not_a_struct,
     declared_here,
+    struct_field_not_initialized,
+    struct_fields_not_initialized,
+    cannot_convert_expression_to_type,
+    field_initializer_does_not_match_field,
+    too_many_initializers_given_for_struct_init,
+    compt_values_cannot_be_moved,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };
@@ -68,6 +74,10 @@ struct DiagnosticIdentifierBeforeMessage {
     IdSlice<SymbolId> sid_slice;
 };
 
+struct DiagnosticSymbolBeforeMessage {
+    SymbolId sid;
+};
+
 struct DiagnosticSymbolAfterMessage {
     SymbolId sid;
 };
@@ -75,10 +85,16 @@ struct DiagnosticSymbolAfterMessage {
 struct DiagnosticSymbolAfterMessageNoQuotes {
     SymbolId sid;
 };
+
+struct DiagnosticCannotConvertToType {
+    TypeId tid;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
-                   DiagnosticIdentifierBeforeMessage>;
+                   DiagnosticIdentifierBeforeMessage, DiagnosticCannotConvertToType,
+                   DiagnosticSymbolBeforeMessage>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
