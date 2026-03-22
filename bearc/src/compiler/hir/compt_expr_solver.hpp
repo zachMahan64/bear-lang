@@ -337,7 +337,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                     if (default_val.has_value()) {
                         ExecExprStructMemberInit init{
                             .field_def = did, .value = default_val.as_id(), .move = false};
-                        member_inits.emplace_back(default_val);
+                        member_inits.emplace_back(
+                            context.register_exec(context, init, Span::generated(), true));
                     }
                 } else {
                     if (expr->type != AST_EXPR_STRUCT_MEMBER_INIT) {

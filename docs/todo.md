@@ -49,6 +49,7 @@ side quests
 - [ ] add a Def Stringifier (tedious)  
 
 ##### diagnostics
+- [ ] elipse out diagnostics after like 16 lines
 - [ ] add trimming of cwd from file paths in diagnostics reporting?
 - [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings for it
 - [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
