@@ -46,9 +46,10 @@ side quests
 
 ##### chores 
 - [x] handle alignas accordingly during ast lowering
-- [ ] arbitrary source code reconstruction from hir::Context
+- [ ] allow arbitrarily ordered struct members inits, will require mini symbol hashmaps
 - [ ] add an Exec Stringifier (tedious)
 - [ ] add a Def Stringifier (tedious)  
+- [ ] arbitrary source code reconstruction from hir::Context
 
 ##### diagnostics
 - [ ] elipse out diagnostics after like 16 lines
