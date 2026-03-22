@@ -269,8 +269,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             OptId<DefId> maybe_def = context.look_up_scoped_type(scope, sid_slice);
 
-            std::cout << "YAHOOIE: " << maybe_def.val() << '\n';
-
             if (!maybe_def.has_value()) {
                 context.emplace_diagnostic(
                     expr_span, diag_code::use_of_undeclared_identifier, diag_type::error,
