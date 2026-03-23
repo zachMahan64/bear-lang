@@ -18,7 +18,11 @@ main quest
 - [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`? or just insert into scope and pass thru the scope
     - properly handle default field values in structs   
     - some method of handling generic params -> concrete args forwarding inside the entire generic scope 
+- [ ] [lsp-compt](/docs/lsp-compat.md), mostly thru building span -> scope search trees
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
+##### hir phase 2.b:
+- [ ] function body resolution
+- [ ] improve `use` functionality for any arbitrary definitio functionality for any arbitrary definitionn
 
 
 #### long term (compiler)
