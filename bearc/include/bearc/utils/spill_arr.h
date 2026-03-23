@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SPILL_ARR_SIZE_8_T_ARR_CAP 512
+#define SPILL_ARR_SIZE_8_T_ARR_CAP 128
 
 #ifdef __cplusplus
 extern "C" {

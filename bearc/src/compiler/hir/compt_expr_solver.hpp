@@ -322,13 +322,13 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
 
-            enum class relative_artity : uint8_t { too_few, same, too_many };
+            enum class relative_arity : uint8_t { too_few, same, too_many };
 
-            relative_artity rel_arity = relative_artity::same;
+            relative_arity rel_arity = relative_arity::same;
             if (init_slice.len < defs.len()) {
-                rel_arity = relative_artity::too_few;
+                rel_arity = relative_arity::too_few;
             } else if (init_slice.len > defs.len()) {
-                rel_arity = relative_artity::too_many;
+                rel_arity = relative_arity::too_many;
             }
 
             llvm::SmallVector<ExecId> member_init_execs;
@@ -406,7 +406,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                         .field_def = member_did, .value = hopefully_exec.as_id(), .move = false},
                     proposed_member_span, true));
             }
-            if (rel_arity == relative_artity::too_many) {
+            if (rel_arity == relative_arity::too_many) {
                 cooked = true;
                 const token_t* first = init_slice.start[defs.len()]->first;
                 const token_t* last = init_slice.start[init_slice.len - 1]->last;
