@@ -16,8 +16,8 @@ main quest
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
 - [ ] allow for passing insertion of `ast_generic_args_t*` -> into scope (variables and types)
-    - properly handle default field values in structs   
-    - see the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
+- [ ] properly handle default field values in structs   
+- [ ] see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
     1. map to an already instatiated specialized, concrete instance of the def, or:
     2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
 - [ ] [lsp-compt](/docs/lsp-compat.md), mostly thru building span -> scope search trees
