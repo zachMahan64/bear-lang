@@ -15,9 +15,11 @@ main quest
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
-- [ ] allow for passing of `ast_generic_args_t*` for recursive generic instatiations in `hir::TopLevelVisitor`? or just insert into scope and pass thru the scope
+- [ ] allow for passing insertion of `ast_generic_args_t*` -> into scope (variables and types)
     - properly handle default field values in structs   
-    - some method of handling generic params -> concrete args forwarding inside the entire generic scope 
+    - see the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
+    1. map to an already instatiated specialized, concrete instance of the def, or:
+    2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
 - [ ] [lsp-compt](/docs/lsp-compat.md), mostly thru building span -> scope search trees
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
 ##### hir phase 2.b:
