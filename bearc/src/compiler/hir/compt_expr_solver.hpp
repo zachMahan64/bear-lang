@@ -115,7 +115,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 maybe_value = ExecExprComptConstant{tkn->val.unsigned_integral};
                 break;
             case TOK_FLOAT_LIT:
-                maybe_value = ExecExprComptConstant{static_cast<float>(tkn->val.floating)};
+                maybe_value = ExecExprComptConstant{tkn->val.floating};
                 break;
             case TOK_STR_LIT:
                 maybe_value = ExecExprComptConstant{context.symbol_id_for_str_lit_tkn(tkn)};

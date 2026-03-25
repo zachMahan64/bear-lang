@@ -61,6 +61,7 @@ struct TypeStructure {
 struct TypeGenericStructure {
     DefId definition;
     IdSlice<GenericArgId> slice;
+    CanonicalGenericArgsId canonical_generic_args_id;
 };
 
 struct TypeArr {

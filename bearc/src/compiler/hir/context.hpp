@@ -257,14 +257,23 @@ class Context {
 
     // generic arg canonicalization
     DataArena generic_args_arena;
+
+    // for getting the concrete defs from generic args (routed thru an unspecialized generic defs
+    // that has a map to it's child concrete defs)
     IdVecMap<CanonicalGenericArgsIdMapId, IdHashMap<CanonicalGenericArgsId, DefId>>
         canonical_generic_args_id_to_def_id_map;
 
-    IdVecMap<GenericArgIdSliceId, IdSlice<GenericArgId>> generic_arg_id_slices;
+    // for structurally reverse engineering canonical args
     IdVecMap<CanonicalGenericArgsId, IdSlice<GenericArgId>>
         canonical_generic_args_to_first_instance;
 
+    // for keys in the generic arg map
+    IdVecMap<GenericArgIdSliceId, IdSlice<GenericArgId>> generic_arg_id_slices;
+
+    // storage for the generic args table
     DataArena canonical_generic_args_table_arena;
+
+    // main table for mapping a GenericArgIdSliceId to a CanonicalGenericArgsId
     CanonicalGenericArgsTable
         canonical_generic_args_table; // TODO, the logic for this isn't impl'd yet
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
