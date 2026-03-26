@@ -49,6 +49,8 @@ enum class builtin_type : uint8_t {
 const char* builtin_type_to_cstr(builtin_type t);
 std::optional<builtin_type> id_tkn_slice_to_maybe_builtin(token_ptr_slice_t tkn_slice);
 
+struct TypeVar {};
+
 struct TypeBuiltin {
     builtin_type type;
 };
@@ -95,7 +97,7 @@ struct TypeVariadic {
 
 /// main exec union
 using TypeValue = std::variant<TypeBuiltin, TypeStructure, TypeGenericStructure, TypeArr, TypeSlice,
-                               TypeRef, TypePtr, TypeFnPtr, TypeVariadic>;
+                               TypeRef, TypePtr, TypeFnPtr, TypeVariadic, TypeVar>;
 
 template <class F>
 concept TypeTransformerFunctor = requires(F f, const Context& context, const Type& t1,
@@ -158,6 +160,21 @@ class TypeContainsMut {
     bool operator()(const Type& t1, const Type& t2) const {
         assert(false
                && "double invocation should not be called when checking if a type contains mut");
+        return 0;
+    }
+    bool operator()(const Type& t1) const;
+    static bool transform(bool res1, bool res2) { return res1 || res2; }
+};
+
+class TypeContainsVar {
+    const Context& context;
+
+  public:
+    using value_type = bool;
+    TypeContainsVar(const Context& context) : context(context) {}
+    bool operator()(const Type& t1, const Type& t2) const {
+        assert(false
+               && "double invocation should not be called when checking if a type contains var");
         return 0;
     }
     bool operator()(const Type& t1) const;

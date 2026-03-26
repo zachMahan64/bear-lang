@@ -1,0 +1,34 @@
+// tests/hir/16.br 
+
+compt var benny = Ben{ // err
+    .a = 12,
+    .b = 32,
+    .c = 12,
+};
+
+struct Ben {
+    u64 a;
+    u64 b = 2048;
+    u64 c;
+}
+
+struct Foo {
+    i32 a;
+}
+
+compt Ben ben = Foo{.a = 12}; // bad
+
+compt Foo foo = Ben{}; // bad for multiple reasons
+
+compt var A = 12 as i8; // err 
+
+compt var B = 13; // err
+
+compt var S = "ABCEF"; // err
+
+struct Bear {
+    i32 a;
+    str& b;
+}
+
+compt var..i32 fooey = 12; // err

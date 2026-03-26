@@ -61,6 +61,18 @@ template <IsDefVisitor V> class TypeResolver {
                                         type->type.base.mut);
         }
 
+        if (type->type.base.id.len == 1 && type->type.base.id.start[0]->type == TOK_VAR) {
+            return context.emplace_type(TypeVar{}, Span(context, fid, type->first, type->last),
+                                        type->type.base.mut);
+        }
+
+        if (type->type.base.id.len > 1 && type->type.base.id.start[0]->type == TOK_VAR) {
+            context.emplace_diagnostic(Span(context, fid, type->first, type->last),
+                                       diag_code::var_cannot_be_part_of_a_scoped_identifier,
+                                       diag_type::error);
+            return std::nullopt;
+        }
+
         OptId<DefId> maybe_structure
             = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id));
 

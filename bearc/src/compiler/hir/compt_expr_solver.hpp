@@ -421,8 +421,23 @@ template <IsDefVisitor V> class ComptExprSolver {
                     DiagnosticNoOtherInfo{});
                 return std::nullopt;
             }
+            // type check before returning here!
+            auto into_did = context.type(into_tid).template as<TypeStructure>().definition;
+            if (did != into_did) {
+                context.emplace_diagnostic(
+                    expr_span, diag_code::cannot_convert_type, diag_type::error,
+                    DiagnosticCannotConvertFromTypeToType{
+                        .from = context.emplace_type(
+                            TypeStructure{.definition = did},
+                            Span(
+                                fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
+                                expr->expr.struct_init.id.start[expr->expr.struct_init.id.len - 1]),
+                            false),
+                        .to = into_tid});
+                return std::nullopt;
+            }
+
             // all good, return the exec
-            // TODO type check before returning here!
             return context.emplace_exec(
                 ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
                                    .struct_def = did},
@@ -453,6 +468,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         context.emplace_diagnostic(expr_span, diag_code::cannot_convert_expression_to_type,
                                    diag_type::error, DiagnosticCannotConvertToType{into_tid},
                                    DiagnosticNoOtherInfo{});
+    ret:
         return std::nullopt;
     }
 };

@@ -11,10 +11,6 @@ main quest
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
     - [x] struct compt handling (propagate constants thru member inits)
     
-    - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
-    1. A `TypeContainsVar` functor could be useful
-    2. A `TypeIsInferable` functor could be useful (this would allow decorated `var`s)
-
     - [ ] compt operators: string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
 
     - [ ] implement kind of operator <--> type mapping system for at least builtins
@@ -24,6 +20,8 @@ main quest
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
+        - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
+    - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s)
 
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
 

@@ -66,6 +66,7 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             return true;
         },
         [&](const TypeVariadic& t) -> bool { return t2.holds<TypeVariadic>(); },
+        [&](const TypeVar& t) -> bool { return t2.holds<TypeVar>(); },
 
     };
     if constexpr (considers_mut()) {
@@ -75,6 +76,8 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
     }
     return t1.visit(vs);
 }
+
+bool TypeContainsVar::operator()(const Type& t1) const { return t1.holds<TypeVar>(); };
 
 template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const {
     // https://xorshift.di.unimi.it/splitmix64.c
@@ -109,7 +112,8 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
             }
             return mix(h);
         },
-        [&](const TypeVariadic&) -> size_t { return mix(0x09ULL); }};
+        [&](const TypeVariadic&) -> size_t { return mix(0x09ULL); },
+        [&](const TypeVar&) -> size_t { return mix(0x10ULL); }};
 
     size_t h = t1.visit(vs);
 
@@ -131,85 +135,95 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
     TypeToStringValue val{.str = std::string{}};
     val.str.reserve(64); // decently sized
     std::string& str = val.str;
-    auto vs
-        = Ovld{[&](const TypeBuiltin& t) {
-                   str += builtin_type_to_cstr(t.type);
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += " mut";
-                       }
-                   }
-               },
-               [&](const TypeStructure& t) {
-                   str += context.symbol_id_to_cstr(context.def(t.definition).name);
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += " mut";
-                       }
-                   }
-               },
-               [&](const TypeGenericStructure& t) {
-                   // TODO properly handle internal values
-                   str += context.symbol_id_to_cstr(context.def(t.definition).name);
-                   str += "::<>";
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += "mut";
-                       }
-                   }
-               },
-               [&](const TypeArr& t) {
-                   str += '[';
-                   str += std::to_string(t.canonical_size);
-                   str += ']';
-                   val.inner_goes_right = true;
-               },
-               [&](const TypeSlice&) {
-                   str += '[';
-                   str += '&';
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += "mut";
-                       }
-                   }
-                   str += ']';
-                   val.inner_goes_right = true;
-               },
-               [&](const TypeRef&) {
-                   str += '&';
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += "mut";
-                       }
-                   }
-               },
-               [&](const TypePtr&) {
-                   str += '*';
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += "mut";
-                       }
-                   }
-               },
-               [&](const TypeFnPtr& t) {
-                   str += "*fn";
-                   if constexpr (considers_mut()) {
-                       if (t1.mut) {
-                           str += " mut";
-                       }
-                   }
-                   str += '(';
-                   for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
-                       auto tid = context.type_id(tidx);
-                       TypeToStringValue s = TypeTransformer<TypeToString>{context}(tid);
-                       str += s.str;
-                       if (tidx != t.param_types.last_elem()) {
-                           str += ", ";
-                       }
-                   }
-                   str += ')';
-               },
-               [&](const TypeVariadic&) { str += "..."; }};
+    auto vs = Ovld{
+        [&](const TypeBuiltin& t) {
+            str += builtin_type_to_cstr(t.type);
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+        },
+        [&](const TypeStructure& t) {
+            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+        },
+        [&](const TypeGenericStructure& t) {
+            // TODO properly handle internal values
+            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            str += "::<>";
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += "mut";
+                }
+            }
+        },
+        [&](const TypeArr& t) {
+            str += '[';
+            str += std::to_string(t.canonical_size);
+            str += ']';
+            val.inner_goes_right = true;
+        },
+        [&](const TypeSlice&) {
+            str += '[';
+            str += '&';
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += "mut";
+                }
+            }
+            str += ']';
+            val.inner_goes_right = true;
+        },
+        [&](const TypeRef&) {
+            str += '&';
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += "mut";
+                }
+            }
+        },
+        [&](const TypePtr&) {
+            str += '*';
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += "mut";
+                }
+            }
+        },
+        [&](const TypeFnPtr& t) {
+            str += "*fn";
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+            str += '(';
+            for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
+                auto tid = context.type_id(tidx);
+                TypeToStringValue s = TypeTransformer<TypeToString>{context}(tid);
+                str += s.str;
+                if (tidx != t.param_types.last_elem()) {
+                    str += ", ";
+                }
+            }
+            str += ')';
+        },
+        [&](const TypeVariadic&) { str += "..."; },
+        [&](const TypeVar&) {
+            str += "var";
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+        },
+
+    };
 
     t1.visit(vs);
 
@@ -236,6 +250,7 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
         [&](const TypePtr& t) -> OTid { return t.inner; },
         [&](const TypeFnPtr& t) -> OTid { return OTid{}; },
         [&](const TypeVariadic& t) -> OTid { return t.inner; },
+        [&](const TypeVar& t) -> OTid { return OTid{}; },
     };
     return type.visit(vs);
 }
@@ -309,6 +324,7 @@ template class TypeTransformer<TypeComparator<DoConsiderMut>>;
 template class TypeTransformer<TypeComparator<DoNotConsiderMut>>;
 template class TypeTransformer<TypeToString<DoConsiderMut>>;
 template class TypeTransformer<TypeToString<DoNotConsiderMut>>;
+template class TypeTransformer<TypeContainsVar>;
 
 CanonicalTypeTable::CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
     : context(context), arena(arena), count{0} {

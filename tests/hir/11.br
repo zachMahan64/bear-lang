@@ -28,12 +28,6 @@ compt i32 ben = Ben{ // err
     .c = 12,
 };
 
-compt var benny = Ben{ // fine
-    .a = 12,
-    .b = 32,
-    .c = 12,
-};
-
 compt u64 a = 2000000000000000000000000000000000000000000000000; // too big (floating pt literal), long lineeeeeeeeeeeee
 compt i32 b = 20.0; // floating to integer no good 
 compt u64 c = 2000000000000000000; // fine

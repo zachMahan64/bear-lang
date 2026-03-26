@@ -60,6 +60,8 @@ enum class diag_code : uint8_t {
     field_initializer_does_not_match_field,
     too_many_initializers_given_for_struct_init,
     compt_values_cannot_be_moved,
+    var_cannot_be_part_of_a_scoped_identifier,
+    compt_variable_should_have_an_explicit_type,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };

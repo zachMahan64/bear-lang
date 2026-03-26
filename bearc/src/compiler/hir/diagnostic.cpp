@@ -125,6 +125,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "too many fields provided in initializer for struct";
     case diag_code::compt_values_cannot_be_moved:
         return "compile-time values cannot be moved";
+    case diag_code::var_cannot_be_part_of_a_scoped_identifier:
+        return "`var` cannot be part of a scoped identifier";
+    case diag_code::compt_variable_should_have_an_explicit_type:
+        return "`compt` variables should have an explicit type";
     }
     std::unreachable();
     return "";
