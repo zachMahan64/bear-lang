@@ -22,7 +22,13 @@ struct Ben {
     u64 c;
 }
 
-compt Ben ben = Ben{
+compt i32 ben = Ben{ // err
+    .a = 12,
+    .b = 32,
+    .c = 12,
+};
+
+compt var benny = Ben{ // fine
     .a = 12,
     .b = 32,
     .c = 12,

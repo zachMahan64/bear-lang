@@ -422,6 +422,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
             // all good, return the exec
+            // TODO type check before returning here!
             return context.emplace_exec(
                 ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
                                    .struct_def = did},
