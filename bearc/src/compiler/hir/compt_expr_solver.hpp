@@ -19,7 +19,6 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
-#include <iostream>
 #include <optional>
 namespace hir {
 
@@ -226,8 +225,11 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (into_builtin == builtin_type::voidd) {
                 return emplace_e(maybe_value.value());
             }
+
             // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
+
             auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin);
+
             // TODO give str cast hints here!
 
             if (!maybe_converted.has_value()) {
