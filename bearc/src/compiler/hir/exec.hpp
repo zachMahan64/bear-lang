@@ -135,11 +135,15 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
             return builtin_type::voidd;
         }
     }
+
+    // basically a string converter but fancy
+    SymbolId to_symbol_id(Context& ctx) const;
+
     // returns none if conversion fails, diagnostics must be reported outside of this method
-    [[nodiscard]] std::optional<ExecExprComptConstant> try_implicit_convert_to(builtin_type type);
+    [[nodiscard]] std::optional<ExecExprComptConstant> try_safe_convert_to(builtin_type type) const;
     ExecExprComptConstant(ConstantValue constval) : value{constval} {}
-    [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type);
-    [[nodiscard]] std::optional<ExecExprComptConstant> try_down_convert_to(builtin_type type);
+    [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type) const;
+    [[nodiscard]] std::optional<ExecExprComptConstant> try_down_convert_to(builtin_type type) const;
 };
 
 struct ExecExprListLiteral {

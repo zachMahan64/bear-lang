@@ -14,10 +14,12 @@
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec.hpp"
+#include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
+#include <iostream>
 #include <optional>
 namespace hir {
 
@@ -137,17 +139,51 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_BINARY: {
             // TODO operator and type handlers
-            OptId<ExecId> lhs
-                = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs, into_builtin);
-            if (!lhs.has_value()) {
+            bool cooked = false;
+            ComptBinaryOp maybe_bin_op{expr->expr.binary.op};
+            if (maybe_bin_op.holds<InvalidOp>()) {
+                cooked = true;
+            } else if (maybe_bin_op.holds<assign_op>()) {
+                context.emplace_diagnostic(
+                    Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
+                    diag_code::assignment_not_permitted_in_compt_expr, diag_type::error);
+                cooked = true;
+            } else if (maybe_bin_op.holds<is_as_op>()) {
+                OptId<ExecId> lhs = solve_builtin_compt_expr(
+                    fid, scope, expr->expr.binary.lhs,
+                    builtin_type::voidd); // void since we don't care about the type yet
+                if (!lhs.has_value()) {
+                    cooked = true;
+                }
+                if (maybe_bin_op.as<is_as_op>() == is_as_op::is) {
+                    context.emplace_diagnostic(
+                        Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
+                        diag_code::is_operator_requires_run_time_values, diag_type::error);
+                    cooked = true;
+                } else if (lhs.has_value()) {
+                    assert(maybe_bin_op.as<is_as_op>() == is_as_op::as);
+                    return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
+                }
+            } else if (!cooked) {
+                OptId<ExecId> lhs = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs,
+                                                             builtin_type::voidd);
+                if (!lhs.has_value()) {
+                    break;
+                }
+                OptId<ExecId> rhs = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs,
+                                                             builtin_type::voidd);
+                if (!rhs.has_value()) {
+                    break;
+                }
+                assert(maybe_bin_op.holds<binary_op>());
+                // get res of binary op like +, -, etc.
+                return solve_binary_compt_exec(fid, scope, lhs.as_id(),
+                                               maybe_bin_op.as<binary_op>(), rhs.as_id(),
+                                               into_builtin);
+            }
+            if (cooked) {
                 return std::nullopt;
             }
-            OptId<ExecId> rhs
-                = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs, into_builtin);
-            if (!rhs.has_value()) {
-                return std::nullopt;
-            }
-            auto maybe_bin_op = token_to_binary_op(expr->expr.binary.op);
             break;
         }
         case AST_EXPR_GROUPING: {
@@ -186,10 +222,14 @@ template <IsDefVisitor V> class ComptExprSolver {
             goto ret_without_diag;
         }
         if (maybe_value.has_value()) {
-            // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
-            auto maybe_converted = maybe_value.value().try_implicit_convert_to(into_builtin);
-            if (maybe_value->holds<SymbolId>()) {
+            // voidd means we don't care (yet)
+            if (into_builtin == builtin_type::voidd) {
+                return emplace_e(maybe_value.value());
             }
+            // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
+            auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin);
+            // TODO give str cast hints here!
+
             if (!maybe_converted.has_value()) {
                 auto from_builtin = maybe_value.value().type_builtin();
                 TypeId from = context.emplace_type(TypeBuiltin{.type = from_builtin},
@@ -199,8 +239,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                     diag_code::cannot_convert_value_of_type, diag_type::error,
-                    DiagnosticCannotConvertFromTypeToType{.from = from, .to = to},
-                    DiagnosticNoOtherInfo{});
+                    DiagnosticTypeToType{.from = from, .to = to}, DiagnosticNoOtherInfo{});
+
                 return OptId<ExecId>{};
             }
             // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
@@ -244,7 +284,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
                 context.emplace_diagnostic(
                     expr_span, diag_code::cannot_convert_expression_to_type, diag_type::error,
-                    DiagnosticCannotConvertToType{.tid = into_tid}, DiagnosticNoOtherInfo{});
+                    DiagnosticTypeAfterMessage{.tid = into_tid}, DiagnosticNoOtherInfo{});
                 return std::nullopt;
             }
             const auto& def_variable = def.as<DefVariable>();
@@ -269,7 +309,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             context.emplace_diagnostic(
                 expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
-                DiagnosticCannotConvertFromTypeToType{.from = def_variable.type, .to = into_tid},
+                DiagnosticTypeToType{.from = def_variable.type, .to = into_tid},
                 DiagnosticNoOtherInfo{});
             return std::nullopt;
         }
@@ -430,7 +470,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (did != into_did) {
                 context.emplace_diagnostic(
                     expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
-                    DiagnosticCannotConvertFromTypeToType{
+                    DiagnosticTypeToType{
                         .from = context.emplace_type(
                             TypeStructure{.definition = did},
                             Span(
@@ -471,11 +511,56 @@ template <IsDefVisitor V> class ComptExprSolver {
             break;
         }
         context.emplace_diagnostic(expr_span, diag_code::cannot_convert_expression_to_type,
-                                   diag_type::error, DiagnosticCannotConvertToType{into_tid},
+                                   diag_type::error, DiagnosticTypeAfterMessage{into_tid},
                                    DiagnosticNoOtherInfo{});
     ret:
         return std::nullopt;
     }
+    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, NamedOrAnonScopeId scope,
+                                                        ExecId lhs_eid, binary_op op,
+                                                        ExecId rhs_eid, builtin_type into_builtin) {
+        // TODO
+    }
+    [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, NamedOrAnonScopeId scope, ExecId eid,
+                                                 const ast_expr_t* into_expr) {
+        assert(into_expr->type == AST_EXPR_TYPE);
+        const ast_type_t* ast_type = into_expr->expr.type_expr.type;
+        auto maybe_tid = resolve_type(fid, scope, ast_type);
+        if (!maybe_tid.has_value()) {
+            // error already report in type resolution, so just return none
+            return std::nullopt;
+        }
+        TypeId tid = maybe_tid.as_id();
+        const Exec& exec = context.exec(eid);
+        const Type& type = context.type(tid);
+        if (!exec.holds<ExecExprComptConstant>() || !type.holds<TypeBuiltin>()) {
+            context.emplace_diagnostic_with_message_value(
+                exec.span, diag_code::cannot_convert_expression_to_type, diag_type::error,
+                DiagnosticTypeAfterMessage{.tid = tid});
+            return std::nullopt;
+        }
+        auto into_builtin = type.as<TypeBuiltin>().type;
+        auto from_constant = exec.as<ExecExprComptConstant>();
+
+        // allow string casts by converting to symbol id
+        std::optional<ExecExprComptConstant> maybe_converted
+            = (into_builtin == builtin_type::str)
+                  ? ExecExprComptConstant{from_constant.to_symbol_id(context)}
+                  : from_constant.try_safe_convert_to(into_builtin);
+        if (!maybe_converted.has_value()) {
+            context.emplace_diagnostic_with_message_value(
+                exec.span, diag_code::cannot_convert_expression_to_type, diag_type::error,
+                DiagnosticTypeAfterMessage{.tid = tid});
+            ExecExprComptConstant eecc = exec.as<ExecExprComptConstant>();
+            context.emplace_diagnostic_with_message_value(
+                exec.span, diag_code::guranteed_narrowing_of_compt_value, diag_type::note,
+                DiagnosticSymbolAfterMessage(eecc.to_symbol_id(context)));
+            return std::nullopt;
+        }
+        return context.emplace_exec(maybe_converted.value(), exec.span, /*compt*/ true);
+    }
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
+                                             const ast_type_t* type);
 };
 } // namespace hir
 #endif

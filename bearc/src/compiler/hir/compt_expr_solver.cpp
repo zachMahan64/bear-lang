@@ -8,10 +8,17 @@
 
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/def_visitor.hpp"
+#include "compiler/hir/type_resolver.hpp"
 
 namespace hir {
 
 // explicit instants., these should be the only ones necessary
 template class ComptExprSolver<InsideBodyDefVisitor>;
 template class ComptExprSolver<TopLevelDefVisitor>;
+
+template <IsDefVisitor V>
+OptId<TypeId> ComptExprSolver<V>::resolve_type(FileId fid, NamedOrAnonScopeId scope,
+                                               const ast_type_t* type) {
+    return TypeResolver<V>{context, this->def_visitor}.resolve_type(fid, scope, type);
+}
 } // namespace hir

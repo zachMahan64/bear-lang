@@ -66,6 +66,7 @@ set(SRC
     src/compiler/hir/type.cpp
     src/compiler/hir/exec.cpp
     src/compiler/hir/def_visitor.cpp
+    src/compiler/hir/compt_expr_solver.cpp
 
 )
 

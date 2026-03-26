@@ -16,12 +16,13 @@
 namespace hir {
 
 std::optional<ExecExprComptConstant>
-ExecExprComptConstant::try_implicit_convert_to(builtin_type type) {
+ExecExprComptConstant::try_safe_convert_to(builtin_type type) const {
     auto maybe_up = try_up_convert_to(type);
     return maybe_up.has_value() ? maybe_up : try_down_convert_to(type);
 }
 
-std::optional<ExecExprComptConstant> ExecExprComptConstant::try_up_convert_to(builtin_type type) {
+std::optional<ExecExprComptConstant>
+ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
     using OptConst = std::optional<ExecExprComptConstant>;
     auto to_optconst = +[](ConstantValue constval) -> OptConst {
         return OptConst{ExecExprComptConstant{constval}};
@@ -472,7 +473,8 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::try_up_convert_to(bu
     }
     return OptConst{};
 }
-std::optional<ExecExprComptConstant> ExecExprComptConstant::try_down_convert_to(builtin_type type) {
+std::optional<ExecExprComptConstant>
+ExecExprComptConstant::try_down_convert_to(builtin_type type) const {
 
     using OptConst = std::optional<ExecExprComptConstant>;
 
@@ -488,8 +490,269 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::try_down_convert_to(
     auto fits_float_int = [](double v) { return std::floor(v) == v; };
 
     switch (value.index()) {
+        // i8
+    case 1: {
+        int8_t v = as<int8_t>();
 
-    // i64
+        switch (type) {
+        case builtin_type::i8:
+            return *this;
+        case builtin_type::u8:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint8_t>(v)});
+            }
+            return none();
+        case builtin_type::i16:
+            return to_optconst(ConstantValue{static_cast<int16_t>(v)});
+        case builtin_type::u16:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint16_t>(v)});
+            }
+            return none();
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(v)});
+        case builtin_type::u32:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint32_t>(v)});
+            }
+            return none();
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(v)});
+        case builtin_type::u64:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+            }
+            return none();
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(v)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(v)});
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(v)});
+        default:
+            return none();
+        }
+    }
+
+    // u8
+    case 2: {
+        uint8_t v = as<uint8_t>();
+
+        switch (type) {
+        case builtin_type::i8:
+            if (v <= INT8_MAX) {
+                return to_optconst(ConstantValue{static_cast<int8_t>(v)});
+            }
+            return none();
+        case builtin_type::u8:
+            return *this;
+        case builtin_type::i16:
+            return to_optconst(ConstantValue{static_cast<int16_t>(v)});
+        case builtin_type::u16:
+            return to_optconst(ConstantValue{static_cast<uint16_t>(v)});
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(v)});
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(v)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(v)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(v)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(v)});
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(v)});
+        default:
+            return none();
+        }
+    }
+
+    // i16
+    case 3: {
+        int16_t v = as<int16_t>();
+
+        switch (type) {
+        case builtin_type::i8:
+            if (fits_signed(v, INT8_MIN, INT8_MAX)) {
+                return to_optconst(ConstantValue{static_cast<int8_t>(v)});
+            }
+            return none();
+        case builtin_type::u8:
+            if (fits_signed(v, 0, UINT8_MAX)) {
+                return to_optconst(ConstantValue{static_cast<uint8_t>(v)});
+            }
+            return none();
+        case builtin_type::i16:
+            return *this;
+        case builtin_type::u16:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint16_t>(v)});
+            }
+            return none();
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(v)});
+        case builtin_type::u32:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint32_t>(v)});
+            }
+            return none();
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(v)});
+        case builtin_type::u64:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+            }
+            return none();
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(v)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(v)});
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(v)});
+        default:
+            return none();
+        }
+    }
+
+    // u16
+    case 4: {
+        uint16_t v = as<uint16_t>();
+
+        switch (type) {
+        case builtin_type::i8:
+            if (v <= INT8_MAX) {
+                return to_optconst(ConstantValue{static_cast<int8_t>(v)});
+            }
+            return none();
+        case builtin_type::u8:
+            if (fits_unsigned(v, UINT8_MAX)) {
+                return to_optconst(ConstantValue{static_cast<uint8_t>(v)});
+            }
+            return none();
+        case builtin_type::i16:
+            if (v <= INT16_MAX) {
+                return to_optconst(ConstantValue{static_cast<int16_t>(v)});
+            }
+            return none();
+        case builtin_type::u16:
+            return *this;
+        case builtin_type::i32:
+            return to_optconst(ConstantValue{static_cast<int32_t>(v)});
+        case builtin_type::u32:
+            return to_optconst(ConstantValue{static_cast<uint32_t>(v)});
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(v)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(v)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(v)});
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(v)});
+        default:
+            return none();
+        }
+    }
+
+    // i32
+    case 5: {
+        int32_t v = as<int32_t>();
+
+        switch (type) {
+        case builtin_type::i8:
+            if (fits_signed(v, INT8_MIN, INT8_MAX)) {
+                return to_optconst(ConstantValue{static_cast<int8_t>(v)});
+            }
+            return none();
+        case builtin_type::u8:
+            if (fits_signed(v, 0, UINT8_MAX)) {
+                return to_optconst(ConstantValue{static_cast<uint8_t>(v)});
+            }
+            return none();
+        case builtin_type::i16:
+            if (fits_signed(v, INT16_MIN, INT16_MAX)) {
+                return to_optconst(ConstantValue{static_cast<int16_t>(v)});
+            }
+            return none();
+        case builtin_type::u16:
+            if (fits_signed(v, 0, UINT16_MAX)) {
+                return to_optconst(ConstantValue{static_cast<uint16_t>(v)});
+            }
+            return none();
+        case builtin_type::i32:
+            return *this;
+        case builtin_type::u32:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint32_t>(v)});
+            }
+            return none();
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(v)});
+        case builtin_type::u64:
+            if (v >= 0) {
+                return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+            }
+            return none();
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(v)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(v)});
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(v)});
+        default:
+            return none();
+        }
+    }
+
+    // u32
+    case 6: {
+        uint32_t v = as<uint32_t>();
+
+        switch (type) {
+        case builtin_type::i8:
+            if (v <= INT8_MAX) {
+                return to_optconst(ConstantValue{static_cast<int8_t>(v)});
+            }
+            return none();
+        case builtin_type::u8:
+            if (fits_unsigned(v, UINT8_MAX)) {
+                return to_optconst(ConstantValue{static_cast<uint8_t>(v)});
+            }
+            return none();
+        case builtin_type::i16:
+            if (v <= INT16_MAX) {
+                return to_optconst(ConstantValue{static_cast<int16_t>(v)});
+            }
+            return none();
+        case builtin_type::u16:
+            if (fits_unsigned(v, UINT16_MAX)) {
+                return to_optconst(ConstantValue{static_cast<uint16_t>(v)});
+            }
+            return none();
+        case builtin_type::i32:
+            if (v <= INT32_MAX) {
+                return to_optconst(ConstantValue{static_cast<int32_t>(v)});
+            }
+            return none();
+        case builtin_type::u32:
+            return *this;
+        case builtin_type::i64:
+            return to_optconst(ConstantValue{static_cast<int64_t>(v)});
+        case builtin_type::u64:
+            return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+        case builtin_type::f32:
+            return to_optconst(ConstantValue{static_cast<float>(v)});
+        case builtin_type::f64:
+            return to_optconst(ConstantValue{static_cast<double>(v)});
+        case builtin_type::boolean:
+            return to_optconst(ConstantValue{static_cast<bool>(v)});
+        default:
+            return none();
+        }
+    } // i64
     case 7: {
         int64_t v = as<int64_t>();
 
@@ -765,4 +1028,82 @@ bool Exec::can_be_compt(const Context& ctx) {
     return visit(vs);
 }
 
+SymbolId ExecExprComptConstant::to_symbol_id(Context& ctx) const {
+    std::string str;
+    str.reserve(64); // pretty beeg
+    switch (value.index()) {
+        // str
+    case 0:
+        return as<SymbolId>();
+    // i8
+    case 1: {
+        str += std::to_string(static_cast<int>(as<int8_t>()));
+        break;
+    }
+        // u8
+    case 2: {
+        str += std::to_string(static_cast<int>(as<uint8_t>()));
+        break;
+    }
+        // i16
+    case 3: {
+        str += std::to_string(static_cast<int>(as<int16_t>()));
+        break;
+    }
+    // u16
+    case 4: {
+        str += std::to_string(static_cast<unsigned>(as<uint16_t>()));
+        break;
+    }
+    // i32
+    case 5: {
+        str += std::to_string(as<int32_t>());
+        break;
+    }
+    // u32
+    case 6: {
+        str += std::to_string(as<uint32_t>());
+        break;
+    }
+    // i64
+    case 7: {
+        str += std::to_string(as<int64_t>());
+        break;
+    }
+    // u64
+    case 8: {
+        str += std::to_string(as<uint64_t>());
+        break;
+    }
+    // char
+    case 9: {
+        str += as<char>();
+        break;
+    }
+    // f32
+    case 10: {
+        str += std::to_string(as<float>());
+        break;
+    }
+    // f64
+    case 11: {
+        str += std::to_string(as<double>());
+        break;
+    }
+    // nullptr
+    case 12: {
+        str += "null";
+        break;
+    }
+    // bool
+    case 13: {
+        str += as<bool>() ? "true" : "false";
+        break;
+    }
+    default:
+        assert(false && "unconsidered constant type");
+        return {};
+    }
+    return ctx.symbol_id(str);
+}
 } // namespace hir

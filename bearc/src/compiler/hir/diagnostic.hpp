@@ -63,7 +63,13 @@ enum class diag_code : uint8_t {
     var_cannot_be_part_of_a_scoped_identifier,
     compt_variable_should_have_an_explicit_type,
     cannot_convert_value_of_type,
+    assignment_not_permitted_in_compt_expr,
+    is_operator_requires_run_time_values,
+    cannot_cast_expr_to_type,
+    guranteed_narrowing_of_compt_value,
+
     count, // this must be last,
+
 };
 enum class diag_type : uint8_t { error, warning, note, help };
 
@@ -89,11 +95,11 @@ struct DiagnosticSymbolAfterMessageNoQuotes {
     SymbolId sid;
 };
 
-struct DiagnosticCannotConvertToType {
+struct DiagnosticTypeAfterMessage {
     TypeId tid;
 };
 
-struct DiagnosticCannotConvertFromTypeToType {
+struct DiagnosticTypeToType {
     TypeId from;
     TypeId to;
 };
@@ -101,8 +107,8 @@ struct DiagnosticCannotConvertFromTypeToType {
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
-                   DiagnosticIdentifierBeforeMessage, DiagnosticCannotConvertToType,
-                   DiagnosticSymbolBeforeMessage, DiagnosticCannotConvertFromTypeToType>;
+                   DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
+                   DiagnosticSymbolBeforeMessage, DiagnosticTypeToType>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
@@ -114,9 +120,9 @@ struct DiagnosticSubCode {
     diag_code sub_code;
 };
 
-using DiagnosticInfoValue = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack,
-                                         DiagnosticCannotConvertFromTypeToType, DiagnosticSubCode,
-                                         DiagnosticInfoNoPreview>;
+using DiagnosticInfoValue
+    = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack, DiagnosticTypeToType,
+                   DiagnosticSubCode, DiagnosticInfoNoPreview>;
 
 struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 

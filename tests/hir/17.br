@@ -1,0 +1,26 @@
+// tests/hir/17.br
+
+variant Number {
+   Float(f32 flt),
+   Integral(i32 int),
+}
+
+compt bool a = Number..Integral(12) is Integral; // bad, this is run-time only!
+
+compt i32 b = 132 as i32;
+
+compt u32 c = b as u32;
+
+compt u32 BIG = 0x10000;
+
+compt u32 NOT_SO_BIG = 0x10;
+
+compt u8 SMALL = BIG as u8; // bad, we know this is narrowing so we report it!
+
+compt u8 SMALLIE = NOT_SO_BIG as u8; // fine, it's not so fine 
+
+compt str my_str0 = SMALLIE; // err, non-legit conversion
+
+compt str my_str1 = SMALLIE as str; // fine!
+
+compt str& my_str2 = SMALLIE as str; // fine!

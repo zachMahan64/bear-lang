@@ -98,7 +98,6 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
                "      to their standard values. Consult your architecture and LLVM documentation "
                "for\n"
                "      more details.";
-
     case diag_code::multiple_alignas_on_one_def:
         return "duplicate `alignas` modifiers on one declaration is malformed";
     case diag_code::redundant_compt_qualifier:
@@ -131,6 +130,14 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "`compt` variables should have an explicit type";
     case diag_code::cannot_convert_value_of_type:
         return "cannot convert value of type";
+    case diag_code::assignment_not_permitted_in_compt_expr:
+        return "assignment not permitted in compile-time expression";
+    case diag_code::is_operator_requires_run_time_values:
+        return "`is` operator requires run-time values";
+    case diag_code::cannot_cast_expr_to_type:
+        return "cannot cast expression to type";
+    case diag_code::guranteed_narrowing_of_compt_value:
+        return "guranteed narrowing of compile-time expression with value";
     }
 
     std::unreachable();
@@ -218,7 +225,7 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
 
     const auto vs = Ovld{
         [&](DiagnosticNoOtherInfo) { std::cout << '\n'; },
-        [&](DiagnosticCannotConvertFromTypeToType t) {
+        [&](DiagnosticTypeToType t) {
             std::cout << accent_color_for_type(type) << "cannot convert value of type `"
                       << type_to_string(context, t.from) << "` to `"
                       << type_to_string(context, t.to) << '`' << ansi_reset() << '\n';
@@ -458,7 +465,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += ansi_bold_reset();
             str += '`';
         },
-        [&](DiagnosticCannotConvertToType d) {
+        [&](DiagnosticTypeAfterMessage d) {
             str += message_for_code(code);
             str += " `";
             str += accent_color_for_type(type);
@@ -500,7 +507,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += ' ';
             str += ctx.symbol_id_to_cstr(d.sid);
         },
-        [&](DiagnosticCannotConvertFromTypeToType t) {
+        [&](DiagnosticTypeToType t) {
             str += message_for_code(code);
             str += " `";
             str += accent_color_for_type(type);
