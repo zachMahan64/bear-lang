@@ -196,8 +196,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                                                  Span::generated(), false);
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
-                    diag_code::cannot_convert_type, diag_type::error,
-                    DiagnosticCannotConvertFromTypeToType{.from = from, .to = to});
+                    diag_code::cannot_convert_value_of_type, diag_type::error,
+                    DiagnosticCannotConvertFromTypeToType{.from = from, .to = to},
+                    DiagnosticNoOtherInfo{});
                 return OptId<ExecId>{};
             }
             // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
@@ -265,8 +266,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return def_variable.compt_value;
             }
             context.emplace_diagnostic(
-                expr_span, diag_code::cannot_convert_type, diag_type::error,
-                DiagnosticCannotConvertFromTypeToType{.from = def_variable.type, .to = into_tid});
+                expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
+                DiagnosticCannotConvertFromTypeToType{.from = def_variable.type, .to = into_tid},
+                DiagnosticNoOtherInfo{});
             return std::nullopt;
         }
         case AST_EXPR_STRUCT_INIT: {
@@ -425,7 +427,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto into_did = context.type(into_tid).template as<TypeStructure>().definition;
             if (did != into_did) {
                 context.emplace_diagnostic(
-                    expr_span, diag_code::cannot_convert_type, diag_type::error,
+                    expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
                     DiagnosticCannotConvertFromTypeToType{
                         .from = context.emplace_type(
                             TypeStructure{.definition = did},
@@ -433,7 +435,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                                 fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
                                 expr->expr.struct_init.id.start[expr->expr.struct_init.id.len - 1]),
                             false),
-                        .to = into_tid});
+                        .to = into_tid},
+                    DiagnosticNoOtherInfo{});
                 return std::nullopt;
             }
 

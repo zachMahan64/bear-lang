@@ -62,6 +62,7 @@ enum class diag_code : uint8_t {
     compt_values_cannot_be_moved,
     var_cannot_be_part_of_a_scoped_identifier,
     compt_variable_should_have_an_explicit_type,
+    cannot_convert_value_of_type,
     count, // this must be last,
 };
 enum class diag_type : uint8_t { error, warning, note, help };
@@ -92,22 +93,22 @@ struct DiagnosticCannotConvertToType {
     TypeId tid;
 };
 
+struct DiagnosticCannotConvertFromTypeToType {
+    TypeId from;
+    TypeId to;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticCannotConvertToType,
-                   DiagnosticSymbolBeforeMessage>;
+                   DiagnosticSymbolBeforeMessage, DiagnosticCannotConvertFromTypeToType>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
 };
 
 struct DiagnosticInfoNoPreview {};
-
-struct DiagnosticCannotConvertFromTypeToType {
-    TypeId from;
-    TypeId to;
-};
 
 struct DiagnosticSubCode {
     diag_code sub_code;

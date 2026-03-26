@@ -499,6 +499,18 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
     return id;
 }
 
+DiagnosticId Context::emplace_diagnostic_with_message_value(Span span, diag_code code,
+                                                            diag_type type,
+                                                            DiagnosticMessageValue message_value,
+                                                            OptId<DiagnosticId> next) {
+    DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, message_value,
+                                                     DiagnosticNoOtherInfo{}, next);
+    diagnostics_used.bump();
+    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    handle_bump_diag_counts(code, type);
+    return id;
+}
+
 void Context::print_diagnostic(DiagnosticId diag_id, bool print_file) {
     // as to not re-report
     if (diagnostics_used.cat(diag_id)) {

@@ -129,7 +129,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "`var` cannot be part of a scoped identifier";
     case diag_code::compt_variable_should_have_an_explicit_type:
         return "`compt` variables should have an explicit type";
+    case diag_code::cannot_convert_value_of_type:
+        return "cannot convert value of type";
     }
+
     std::unreachable();
     return "";
 }
@@ -440,62 +443,79 @@ bool Diagnostic::has_complex_message() const {
 
 void Diagnostic::build_complex_message(const Context& ctx, std::string& str) const {
     str.reserve(64); // decent size
-    auto vs = Ovld{[](DiagnosticNoOtherInfo) {},
-                   [&](DiagnosticIdentifierAfterMessage d) {
-                       str += message_for_code(code);
-                       str += " `";
-                       str += accent_color_for_type(type);
-                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
-                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
-                           if (sidx != d.sid_slice.last_elem()) {
-                               str += "..";
-                           }
-                       }
-                       str += ansi_bold_reset();
-                       str += '`';
-                   },
-                   [&](DiagnosticCannotConvertToType d) {
-                       str += message_for_code(code);
-                       str += " `";
-                       str += accent_color_for_type(type);
-                       str += type_to_string(ctx, d.tid);
-                       str += ansi_bold_reset();
-                       str += '`';
-                   },
-                   [&](DiagnosticIdentifierBeforeMessage d) {
-                       str += '`';
-                       str += accent_color_for_type(type);
-                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
-                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
-                           if (sidx != d.sid_slice.last_elem()) {
-                               str += "..";
-                           }
-                       }
-                       str += ansi_bold_reset();
-                       str += "` ";
-                       str += message_for_code(code);
-                   },
-                   [&](DiagnosticSymbolAfterMessage d) {
-                       str += message_for_code(code);
-                       str += " `";
-                       str += accent_color_for_type(type);
-                       str += ctx.symbol_id_to_cstr(d.sid);
-                       str += ansi_bold_reset();
-                       str += '`';
-                   },
-                   [&](DiagnosticSymbolBeforeMessage d) {
-                       str += '`';
-                       str += accent_color_for_type(type);
-                       str += ctx.symbol_id_to_cstr(d.sid);
-                       str += ansi_bold_reset();
-                       str += "` ";
-                       str += message_for_code(code);
-                   },
-                   [&](DiagnosticSymbolAfterMessageNoQuotes d) {
-                       str += message_for_code(code);
-                       str += ' ';
-                       str += ctx.symbol_id_to_cstr(d.sid);
-                   }};
+    auto vs = Ovld{
+        [](DiagnosticNoOtherInfo) {},
+        [&](DiagnosticIdentifierAfterMessage d) {
+            str += message_for_code(code);
+            str += " `";
+            str += accent_color_for_type(type);
+            for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                if (sidx != d.sid_slice.last_elem()) {
+                    str += "..";
+                }
+            }
+            str += ansi_bold_reset();
+            str += '`';
+        },
+        [&](DiagnosticCannotConvertToType d) {
+            str += message_for_code(code);
+            str += " `";
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, d.tid);
+            str += ansi_bold_reset();
+            str += '`';
+        },
+        [&](DiagnosticIdentifierBeforeMessage d) {
+            str += '`';
+            str += accent_color_for_type(type);
+            for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                if (sidx != d.sid_slice.last_elem()) {
+                    str += "..";
+                }
+            }
+            str += ansi_bold_reset();
+            str += "` ";
+            str += message_for_code(code);
+        },
+        [&](DiagnosticSymbolAfterMessage d) {
+            str += message_for_code(code);
+            str += " `";
+            str += accent_color_for_type(type);
+            str += ctx.symbol_id_to_cstr(d.sid);
+            str += ansi_bold_reset();
+            str += '`';
+        },
+        [&](DiagnosticSymbolBeforeMessage d) {
+            str += '`';
+            str += accent_color_for_type(type);
+            str += ctx.symbol_id_to_cstr(d.sid);
+            str += ansi_bold_reset();
+            str += "` ";
+            str += message_for_code(code);
+        },
+        [&](DiagnosticSymbolAfterMessageNoQuotes d) {
+            str += message_for_code(code);
+            str += ' ';
+            str += ctx.symbol_id_to_cstr(d.sid);
+        },
+        [&](DiagnosticCannotConvertFromTypeToType t) {
+            str += message_for_code(code);
+            str += " `";
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, t.from);
+            str += ansi_bold_reset();
+            str += '`';
+            str += " to ";
+            str += '`';
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, t.to);
+            str += ansi_bold_reset();
+            str += '`';
+            str += ansi_reset();
+        },
+    };
     std::visit(vs, message_value);
 }
 

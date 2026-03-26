@@ -100,6 +100,10 @@ class Context {
     DiagnosticId emplace_diagnostic(Span span, diag_code code, diag_type type,
                                     DiagnosticMessageValue message_value, DiagnosticInfoValue value,
                                     OptId<DiagnosticId> next = OptId<DiagnosticId>{});
+    DiagnosticId emplace_diagnostic_with_message_value(Span span, diag_code code, diag_type type,
+                                                       DiagnosticMessageValue message_value,
+                                                       OptId<DiagnosticId> next
+                                                       = OptId<DiagnosticId>{});
     void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag, bool print_file = true);
     // type emplacer
