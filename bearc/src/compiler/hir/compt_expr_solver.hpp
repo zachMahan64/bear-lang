@@ -147,6 +147,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (!rhs.has_value()) {
                 return std::nullopt;
             }
+            auto maybe_bin_op = token_to_binary_op(expr->expr.binary.op);
             break;
         }
         case AST_EXPR_GROUPING: {
@@ -156,7 +157,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_PRE_UNARY: {
             // eventually allow sizeof, allignof
-            if (expr->expr.unary.op->type == TOK_BOOL_NOT) {
+            if (expr->expr.unary.op->type == TOK_BOOL_NOT || expr->expr.unary.op->type == TOK_PLUS
+                || expr->expr.unary.op->type == TOK_MINUS) {
                 auto inner
                     = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr, into_builtin);
             }

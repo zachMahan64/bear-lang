@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_EXEC_OPS_HPP
 #define COMPILER_HIR_EXEC_OPS_HPP
 #include <cstdint>
+#include <optional>
 
 typedef struct token token_t;
 
@@ -37,8 +38,11 @@ enum class binary_op : uint8_t {
 };
 enum class unary_op : uint8_t { INC, DEC, PLUS, MINUS, BOOL_NOT };
 
-binary_op token_to_binary_op(token_t* tkn);
-unary_op token_to_unary_op(token_t* tkn);
+// converts a token to standard binary ops (arithmetic and comparison only)
+std::optional<binary_op> token_to_binary_op(token_t* tkn);
+
+// converts a token to stand unary ops, boolean and arithmetic ops
+std::optional<unary_op> token_to_unary_op(token_t* tkn);
 
 } // namespace hir
 

@@ -9,10 +9,11 @@
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/token.h"
 #include <assert.h>
-#include <utility>
+#include <optional>
 
 namespace hir {
-binary_op token_to_binary_op(token_t* tkn) {
+
+std::optional<binary_op> token_to_binary_op(token_t* tkn) {
     switch (tkn->type) {
     case TOK_PLUS:
         return binary_op::PLUS;
@@ -48,14 +49,13 @@ binary_op token_to_binary_op(token_t* tkn) {
         return binary_op::BOOL_EQ;
     case TOK_NE:
         return binary_op::BOOL_NE;
-
     default:
-        assert(false && "invalid binary op token\n");
         break;
     }
-    std::unreachable();
+    return std::nullopt;
 }
-unary_op token_to_unary_op(token_t* tkn) {
+
+std::optional<unary_op> token_to_unary_op(token_t* tkn) {
     switch (tkn->type) {
     case TOK_INC:
         return unary_op::INC;
@@ -68,9 +68,8 @@ unary_op token_to_unary_op(token_t* tkn) {
     case TOK_BOOL_NOT:
         return unary_op::BOOL_NOT;
     default:
-        assert(false && "invalid unary op token\n");
         break;
     }
-    std::unreachable();
+    return std::nullopt;
 }
 } // namespace hir

@@ -46,8 +46,6 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_AS] = 3,
     [TOK_IS] = 3,
 
-    [TOK_ASSIGN_EQ] = 16,
-
     [TOK_PLUS] = 6,
     [TOK_MINUS] = 6,
 
@@ -77,6 +75,7 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_BOOL_EQ] = 10,
     [TOK_NE] = 10,
 
+    [TOK_ASSIGN_EQ] = 16,
     [TOK_ASSIGN_MOVE] = 16,
 
     [TOK_ASSIGN_PLUS_EQ] = 16,
