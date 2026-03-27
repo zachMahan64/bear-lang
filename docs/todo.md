@@ -20,13 +20,13 @@ main quest
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
-- [ ] handle `pub` / `hid` statements properly
-
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
         - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s)
 
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
+    - [ ] handle `pub` / `hid` statements properly
+    - [ ] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
 
 - [ ] allow for passing insertion of `ast_generic_args_t*` -> into scope (variables and types)
 
