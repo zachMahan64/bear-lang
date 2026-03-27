@@ -20,6 +20,8 @@ main quest
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
+- [ ] handle `pub` / `hid` statements properly
+
 - [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
         - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s)
