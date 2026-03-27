@@ -1,0 +1,16 @@
+// tests/hir/18.br
+
+compt i32 dog = 12;
+
+compt i32& doug = &dog; // oops, should be just i32
+
+compt Foo& foo_0 = Foo{.a = 42}; // oops, should just be foo
+
+compt Foo foo_1 = Foo{.a = 42}; // all god 
+
+compt Foo& foo_2 = &foo_1; // oops
+
+
+struct Foo {
+    u64 a;
+}

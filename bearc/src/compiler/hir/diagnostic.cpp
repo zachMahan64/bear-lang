@@ -140,6 +140,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "guranteed narrowing of compile-time expression with value";
     case diag_code::invalid_operand_for_binary_expression:
         return "invalid operand for binary expression";
+    case diag_code::type_is_not_resolvable_at_compt:
+        return "type is not resolvable at compile-time";
     }
 
     std::unreachable();

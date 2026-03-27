@@ -35,20 +35,29 @@ template <IsDefVisitor V> class ComptExprSolver {
         const Type& into_type = context.type(into_tid);
         // try to solve str& at comptime
         if (into_type.holds<TypeRef>()) {
-            auto inner = context.type(into_type.as<TypeRef>().inner);
-            return (inner.template holds<TypeBuiltin>()
-                    && inner.template as<TypeBuiltin>().type == builtin_type::str)
-                       ? solve_builtin_compt_expr(fid, scope, expr, builtin_type::str)
-                       : std::nullopt;
+            auto inner_tid = into_type.as<TypeRef>().inner;
+            auto inner = context.type(inner_tid);
+            if (inner.template holds<TypeBuiltin>()
+                && inner.template as<TypeBuiltin>().type == builtin_type::str) {
+                return solve_builtin_compt_expr(fid, scope, expr, builtin_type::str);
+            }
+            auto did0 = context.emplace_diagnostic(
+                into_type.span, diag_code::type_is_not_resolvable_at_compt, diag_type::error);
+            if (inner.template holds_any_of<TypeStructure, TypeBuiltin>()) {
+                auto did1 = context.emplace_diagnostic_with_message_value(
+                    into_type.span, diag_code::replace_with, diag_type::help,
+                    DiagnosticTypeAfterMessage{.tid = inner_tid});
+                context.set_next_diagnostic(did0, did1);
+            }
+            return std::nullopt;
         }
         if (into_type.holds<TypeStructure>()) {
             return solve_struct_compt_expr(fid, scope, expr, into_tid);
         }
         // guard against non-builtins
         if (!into_type.holds<TypeBuiltin>()) {
-            context.emplace_diagnostic(
-                Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
-                diag_code::cannot_resolve_at_compt, diag_type::error);
+            context.emplace_diagnostic(into_type.span, diag_code::type_is_not_resolvable_at_compt,
+                                       diag_type::error);
             return OptId<ExecId>{};
         }
         builtin_type into_builtin_type = into_type.as<TypeBuiltin>().type;
@@ -65,7 +74,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         auto visit_def
             = [&](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
-        // TODO, finish handling based on builtin_type and the strucuture of the expr (recurse)
         std::optional<ExecExprComptConstant> maybe_value;
         switch (expr->type) {
         case AST_EXPR_ID: {
@@ -604,6 +612,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::bool_not_equal:
             break;
         }
+        return std::nullopt;
     }
 
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,

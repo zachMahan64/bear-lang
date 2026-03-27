@@ -12,8 +12,9 @@ main quest
     - [x] struct compt handling (propagate constants thru member inits)
     
     - [ ] compt operators: string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
+        - [ ] implement kind of operator <--> type mapping system for at least builtins
 
-    - [ ] implement kind of operator <--> type mapping system for at least builtins
+        - [ ] compt list literals
 
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 
