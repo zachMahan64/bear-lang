@@ -42,8 +42,6 @@ main quest
 
 ##### hir phase 2.b:
 - [ ] function body resolution
-- [ ] improve `use` functionality for any arbitrary definitio functionality for any arbitrary definitionn
-
 
 #### long term (compiler)
 - [ ] MIR? (compile-time ctrl flow and better optimizations)
