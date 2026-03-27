@@ -1,0 +1,23 @@
+// hir 
+
+struct Foo {}
+
+struct Foo {} // err 
+
+variant Foo {} // err 
+
+i32 foo = 11;
+
+i32 foo = 12; //err 
+
+struct Bar {
+    i32 bar = 12;
+    i32 bar = 13; // err
+    fn bar() -> i32 {} // err
+}
+
+mt Bar..bar() -> i32 { //err
+    return self.bar;
+}
+
+fn foo() {} // err

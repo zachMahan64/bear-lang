@@ -220,7 +220,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                                      context.symbol_id_for_identifier_tkn(info.scope_prefix_tkn));
         bool no_struct = false;
         if (r.status == scope_look_up_status::okay) {
-            if (auto s = context.try_scope_for_top_level_def(r.def_id); s.has_value()) {
+            if (auto s = context.defs_to_scopes_for_types().at(r.def_id); s.has_value()) {
                 scope = s.as_id();
             } else {
                 no_struct = true;
