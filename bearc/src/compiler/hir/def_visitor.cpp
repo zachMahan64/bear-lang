@@ -21,8 +21,8 @@ namespace hir {
 void TopLevelDefVisitor::resolve_top_level_definitions() {
     assert(!this->began_resolution && "already began resolving top level declarations");
     this->began_resolution = true;
-    auto last_top_level = context.defs.end_id();
-    for (auto d = context.defs.begin_id(); d != last_top_level; d++) {
+    auto last_top_level = context.end_def_id();
+    for (auto d = context.begin_def_id(); d != last_top_level; d++) {
         visit_as_dependent(d);
     }
 }
@@ -63,7 +63,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
     };
 
-    const ast_stmt* stmt = context.def_ast_nodes.cat(did);
+    const ast_stmt* stmt = context.def_ast_node(did);
     auto scope = context.containing_scope(did);
     Def& def = context.def(did);
     Span span = def.span;

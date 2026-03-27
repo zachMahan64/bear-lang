@@ -46,7 +46,7 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
         return ScopeLookUpResult{DefId{}, scope_look_up_status::searched};
     }
     // init curr scope local scope
-    const Scope* local_scope = &context.scopes.cat(local_scope_id);
+    const Scope* local_scope = &context.scope(local_scope_id);
     const Scope* curr_scope = local_scope;
     ScopeId curr_scope_id = local_scope_id;
     // begin search logic
@@ -55,7 +55,7 @@ ScopeLookUpResult Scope::look_up_impl(const Context& context, ScopeId local_scop
 
     // start walking scopes from local thru parents
     while (!def.val()) {
-        curr_scope = &context.scopes.cat(curr_scope_id);
+        curr_scope = &context.scope(curr_scope_id);
         switch (kind) {
         case scope_kind::namespacee:
             def = curr_scope->namespaces.at(symbol).as_id();
@@ -104,7 +104,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
         return ScopeLookUpResult{DefId{}, scope_look_up_status::searched};
     }
     // init curr scope local scope
-    const ScopeAnon* local_scope_anon = &context.scope_anons.cat(local_scope_id);
+    const ScopeAnon* local_scope_anon = &context.scope_anon(local_scope_id);
     const ScopeAnon* curr_scope_anon = local_scope_anon;
     const Scope* curr_scope_named = NULL;
     ScopeAnonId curr_scope_anon_id = local_scope_id;
@@ -144,7 +144,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
         assert(!(curr_scope_anon_id.val() && curr_scope_named_id.val()));
 
         if (curr_scope_anon_id.val()) {
-            curr_scope_anon = &context.scope_anons.cat(curr_scope_anon_id);
+            curr_scope_anon = &context.scope_anon(curr_scope_anon_id);
             switch (kind) {
             case scope_kind::namespacee:
                 assert(false && "namespace lookup in anonymous scope");
@@ -176,7 +176,7 @@ ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId lo
             curr_scope_named_id = parent_scope_named_id;
         } else {
             assert(curr_scope_named_id.val());
-            curr_scope_named = &context.scopes.cat(curr_scope_named_id);
+            curr_scope_named = &context.scope(curr_scope_named_id);
             switch (kind) {
             case scope_kind::namespacee:
                 result_def = curr_scope_named->namespaces.at(symbol).as_id();
@@ -242,7 +242,7 @@ ScopeLookUpResult ScopeAnon::look_up_type(const Context& context, ScopeAnonId lo
 
 ScopeLookUpResult ScopeAnon::look_up_namespace(const Context& context, ScopeAnonId local_scope,
                                                SymbolId symbol) {
-    NamedOrAnonScopeId parent = context.scope_anons.cat(local_scope).parent;
+    NamedOrAnonScopeId parent = context.scope_anon(local_scope).parent;
     // base case is hit a named scope! (guranteed to hit since root scope is always named)
     if (std::holds_alternative<ScopeId>(parent)) {
         return Scope::look_up_namespace(context, std::get<ScopeId>(parent), symbol);
@@ -323,6 +323,6 @@ OptId<DefId> ScopeAnon::already_defines_variable(SymbolId symbol) const {
 OptId<DefId> ScopeAnon::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
 OptId<DefId> Scope::look_up_local_namespace(const Context& context, ScopeId local_scope,
                                             SymbolId symbol) {
-    return context.scopes.cat(local_scope).namespaces.at(symbol);
+    return context.scope(local_scope).namespaces.at(symbol);
 }
 } // namespace hir

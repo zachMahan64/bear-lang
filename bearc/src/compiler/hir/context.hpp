@@ -129,6 +129,10 @@ class Context {
     /// for registering definitions at the top level before resolution
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
                                  Span span, ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
+
+    // should only be used for types
+    [[nodiscard]] IdHashMap<DefId, ScopeId>& defs_to_scopes_for_types();
+
     template <typename... Args> [[nodiscard]] ExecId register_exec(Args&&... args) {
         return execs.emplace_and_get_id(std::forward<Args>(args)...);
     }
@@ -158,11 +162,11 @@ class Context {
     [[nodiscard]] DefId def_id(IdIdx<DefId> id) const;
     [[nodiscard]] const Exec& exec(ExecId id) const;
     [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
-
-    friend class Scope;
-    friend class ScopeAnon;
-    friend class FileAstVisitor;
-    friend class TopLevelDefVisitor;
+    [[nodiscard]] const Scope& scope(ScopeId sid) const;
+    [[nodiscard]] const ScopeAnon& scope_anon(ScopeAnonId sid) const;
+    [[nodiscard]] const ast_stmt_t* def_ast_node(DefId def_id) const;
+    [[nodiscard]] DefId begin_def_id() const;
+    [[nodiscard]] DefId end_def_id() const;
 
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
     template <IsId I>

@@ -152,7 +152,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
 
         bool existing_module
             = existing.has_value()
-              && std::holds_alternative<DefModule>(context.defs.cat(existing.as_id()).value);
+              && std::holds_alternative<DefModule>(context.def(existing.as_id()).value);
 
         DefId mod_def = existing_module
                             ? existing.as_id()
@@ -161,14 +161,14 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                                   Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
                                   stmt, parent);
         ScopeId mod_scope = existing_module
-                                ? get<DefModule>(context.defs.cat(existing.as_id()).value).scope
+                                ? get<DefModule>(context.def(existing.as_id()).value).scope
                                 : context.make_named_scope(scope);
         // warn capitalized_mod if the mod is new and capitalized
         if (!existing_module && is_capital(name_tkn)) {
             context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
                                        diag_code::capitalized_mod, diag_type::warning);
         }
-        context.defs.at(mod_def).set_value(DefModule{.scope = mod_scope, .name = name});
+        context.def(mod_def).set_value(DefModule{.scope = mod_scope, .name = name});
         context.scope(scope).insert_namespace(name, mod_def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls, mod_def,
                                  abi); // pass in this module def as parent
@@ -220,7 +220,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                                      context.symbol_id_for_identifier_tkn(info.scope_prefix_tkn));
         bool no_struct = false;
         if (r.status == scope_look_up_status::okay) {
-            if (auto s = context.def_to_scope_for_types.at(r.def_id); s.has_value()) {
+            if (auto s = context.try_scope_for_top_level_def(r.def_id); s.has_value()) {
                 scope = s.as_id();
             } else {
                 no_struct = true;
@@ -256,8 +256,8 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         // do diagnostics for the redefinition
         auto d1 = context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
                                              diag_code::redefinition, diag_type::error);
-        auto orig_file = context.defs.cat(already_defined.as_id()).span.file_id;
-        auto* t = top_level_info_for(context.def_ast_nodes.at(already_defined.as_id())).name_tkn;
+        auto orig_file = context.def(already_defined.as_id()).span.file_id;
+        auto* t = top_level_info_for(context.def_ast_node(already_defined.as_id())).name_tkn;
         auto d2 = context.emplace_diagnostic(Span(orig_file, context.ast(orig_file).buffer(), t),
                                              diag_code::previous_def_here, diag_type::note);
         context.set_next_diagnostic(d1, d2);
@@ -285,7 +285,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             const bool is_small_scope = !stmts.has_value();
             ScopeId types_scope = (is_small_scope) ? context.make_small_named_scope(scope)
                                                    : context.make_named_scope(scope);
-            context.def_to_scope_for_types.insert(def, types_scope);
+            context.defs_to_scopes_for_types().insert(def, types_scope);
             // warn on lowercase structure definition
             if (is_lower(name_tkn)) {
                 context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
@@ -329,7 +329,7 @@ void FileAstVisitor::register_top_level_stmts_registering_ordered_members(
 
     // handle no members
     if (def_vec.empty()) {
-        const ast_stmt_t* st = context.def_ast_nodes.cat(parent_def);
+        const ast_stmt_t* st = context.def_ast_node(parent_def);
         const ast_stmt_type_e statement_type = st->type;
         const Span span{file, context.ast(file).buffer(), top_level_info_for(st).name_tkn};
         diag_code code = diag_code::empty_variant;

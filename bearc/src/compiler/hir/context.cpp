@@ -414,6 +414,14 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
     def_mention_states.bump(Def::mention_state::unmentioned);
     return def;
 }
+
+[[nodiscard]] IdHashMap<DefId, ScopeId>& Context::defs_to_scopes_for_types() {
+    return def_to_scope_for_types;
+}
+
+[[nodiscard]] DefId Context::begin_def_id() const { return defs.begin_id(); }
+[[nodiscard]] DefId Context::end_def_id() const { return defs.end_id(); }
+
 ExecId Context::emplace_exec(const ExecValue& value, Span span, bool should_be_compt) {
     return execs.emplace_and_get_id(*this, value, span, should_be_compt);
 }
@@ -574,6 +582,10 @@ ScopeId Context::scope_for_top_level_def(DefId def_id) const {
     return root_scope();
 }
 
+[[nodiscard]] const ast_stmt_t* Context::def_ast_node(DefId def_id) const {
+    return def_ast_nodes.cat(def_id);
+}
+
 OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {
     const auto& def_node = defs.cat(def_id);
     // no parent means parent scope is root scope
@@ -635,6 +647,12 @@ TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
 [[nodiscard]] const Exec& Context::exec(IdIdx<ExecId> id) const {
     return execs.cat(exec_ids.cat(id));
 }
+
+[[nodiscard]] const Scope& Context::scope(ScopeId sid) const { return scopes.cat(sid); }
+[[nodiscard]] const ScopeAnon& Context::scope_anon(ScopeAnonId sid) const {
+    return scope_anons.cat(sid);
+}
+
 [[nodiscard]] const Def& Context::def(IdIdx<DefId> id) const { return defs.cat(def_ids.cat(id)); }
 
 [[nodiscard]] DefId Context::def_id(IdIdx<DefId> id) const { return def_ids.cat(id); }
