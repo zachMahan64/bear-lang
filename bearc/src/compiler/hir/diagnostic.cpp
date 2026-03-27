@@ -138,6 +138,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "cannot cast expression to type";
     case diag_code::guranteed_narrowing_of_compt_value:
         return "guranteed narrowing of compile-time expression with value";
+    case diag_code::invalid_operand_for_binary_expression:
+        return "invalid operand for binary expression";
     }
 
     std::unreachable();

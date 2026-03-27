@@ -67,6 +67,7 @@ enum class diag_code : uint8_t {
     is_operator_requires_run_time_values,
     cannot_cast_expr_to_type,
     guranteed_narrowing_of_compt_value,
+    invalid_operand_for_binary_expression,
 
     count, // this must be last,
 

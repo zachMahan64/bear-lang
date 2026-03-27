@@ -518,11 +518,6 @@ template <IsDefVisitor V> class ComptExprSolver {
     ret:
         return std::nullopt;
     }
-    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, NamedOrAnonScopeId scope,
-                                                        ExecId lhs_eid, binary_op op,
-                                                        ExecId rhs_eid, builtin_type into_builtin) {
-        // TODO
-    }
     [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, NamedOrAnonScopeId scope, ExecId eid,
                                                  const ast_expr_t* into_expr) {
         assert(into_expr->type == AST_EXPR_TYPE);
@@ -561,6 +556,56 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         return context.emplace_exec(maybe_converted.value(), exec.span, /*compt*/ true);
     }
+
+    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, NamedOrAnonScopeId scope,
+                                                        ExecId lhs_eid, binary_op op,
+                                                        ExecId rhs_eid, builtin_type into_builtin) {
+        const Exec& lhs_exec = context.exec(lhs_eid);
+        const Exec& rhs_exec = context.exec(rhs_eid);
+
+        auto handle_invalid_operand = [&](const Exec& exec) {
+            context.emplace_diagnostic(exec.span, diag_code::invalid_operand_for_binary_expression,
+                                       diag_type::error);
+        };
+
+        bool cooked = false;
+        if (!lhs_exec.holds<ExecExprComptConstant>()) {
+            handle_invalid_operand(lhs_exec);
+            cooked = true;
+        }
+        if (!lhs_exec.holds<ExecExprComptConstant>()) {
+            handle_invalid_operand(rhs_exec);
+            cooked = true;
+        }
+        if (cooked) {
+            return std::nullopt;
+        }
+        // TODO handle these
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_not:
+        case binary_op::bit_xor:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            break;
+        }
+    }
+
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type);
 };
