@@ -1,0 +1,18 @@
+// tests/hir/21.br 
+
+mod ben {
+    pub mod ny {
+        hid compt i32 boy = 12;
+        hid struct Thingy {
+
+        }
+        struct Fooey {
+            hid struct Gooey {
+
+            }
+            compt ben..ny..Fooey..Gooey goo1 = ben..ny..Fooey..Gooey{}; // fine, TODO not working
+
+            compt Gooey goo2 = Gooey{}; // fine, TODO not working
+        }
+    }
+}
