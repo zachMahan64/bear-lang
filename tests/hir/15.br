@@ -27,6 +27,6 @@ compt Bar bar0 = Bar{.foo = foo6, .booley = true}; // err since foo6 is errored 
 
 compt Bar bar1 = Bar{.foo = foo5, .booley = true}; // fine since foo5 is fine
 
-Bar bar2 = Bar{.foo = Foo{.a=1,.b=2,.c=3}, .booley = false}; // fine
+compt Bar bar2 = Bar{.foo = Foo{.a=1,.b=2,.c=3}, .booley = false}; // fine
 
-Bar bar3 = Bar{.foo = Foo{.a="oopsie",.b=2,.c=3}, .booley = false}; // oops
+compt Bar bar3 = Bar{.foo = Foo{.a="oopsie",.b=2,.c=3}, .booley = false}; // oops

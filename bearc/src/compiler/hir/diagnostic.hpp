@@ -71,6 +71,7 @@ enum class diag_code : uint8_t {
     type_is_not_resolvable_at_compt,
     is_declared_hid,
     a_compt_variable_should_be_explicitly_initialized,
+    even_non_compt_top_levels_need_compt_init,
 
     count, // this must be last,
 

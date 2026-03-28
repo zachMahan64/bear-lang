@@ -17,13 +17,17 @@ mod ben {
 
 }
 
-compt i32 foo = ben..bar; // oops
+compt i32 foo = ben..bar; // oops, hid
 
 compt u64 fooey = 45; // fine
 
-compt var fooey_dooey = fooey; // oops
+compt var fooey_dooey = fooey; // oops, hid
 
-compt i32 thingy = ben..foo..thingy; // oops
+compt i32 thingy = ben..foo..thingy; // oops, hid
 
-compt i32 benny = ben..ny..boy; // oops
+compt i32 benny = ben..ny..boy; // oops, hid
+
+i32 A;
+
+i32 B = A; // oops, should be compt-init
 

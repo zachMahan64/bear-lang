@@ -76,7 +76,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::compt_variable_should_be_immutable:
         return "compt variables must be immutable";
     case diag_code::cannot_init_with_non_compt_value:
-        return "initializer for 'compt' value must be a compile-time constant";
+        return "initializer must be a compile-time constant";
     case diag_code::declared_here_without_compt:
         return "declared here without 'compt' specifier";
     case diag_code::not_a_compile_time_constant:
@@ -146,6 +146,9 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "is declared `hid`";
     case diag_code::a_compt_variable_should_be_explicitly_initialized:
         return "should be explicitly initialized since it is a `compt` variable";
+    case diag_code::even_non_compt_top_levels_need_compt_init:
+        return "all run-time global and member variable initializers must be compile-time "
+               "constants";
     }
 
     std::unreachable();
@@ -263,6 +266,8 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     }
     const char* message
         = has_complex_message() ? complex_message_str.c_str() : message_for_code(code);
+    print_file
+        |= this->holds<DiagnosticInfoNoPreview>(); // no preview means file location is irrelvant
     if (context.compact_diagnostics_enabled()) {
         if (print_file) {
             printf("%s%s:%u:%u: ", ansi_bold_reset(), file_name, adjusted_line, adjusted_col);

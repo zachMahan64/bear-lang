@@ -2,9 +2,9 @@
 
 i32 A = 12;
 
-compt i32 B = A;
+compt i32 B = A; // oops A isn't compt
 
-i32 C = D;
+compt i32 C = D; // oops D DNE
 
 fn main() -> i32 {
     return 0;

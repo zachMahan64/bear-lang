@@ -70,8 +70,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     Span span = def.span;
     //  TODO write handlers
     switch (stmt->type) {
-    case AST_STMT_FILE:
-    case AST_STMT_EXTERN_BLOCK:
     case AST_STMT_VAR_DECL: {
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
             span.file_id, scope, stmt->stmt.var_decl.type);
@@ -88,6 +86,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         def.set_value(DefVariable{.type = maybe_type.as_id(),
                                   .name = context.symbol_id(stmt->stmt.var_decl.name)});
         // TODO handle invalid non-initialized statements
+        // search for default value/ddefault method
         break;
     }
     case AST_STMT_VAR_INIT_DECL: {
@@ -106,11 +105,15 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
 
         auto maybe_compt_exec
-            = def.compt ? ComptExprSolver(context, *this)
-                              .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
-                                                maybe_type.as_id())
-                        : std::nullopt;
-        if (def.compt && !maybe_compt_exec.has_value()) {
+            = ComptExprSolver(context, *this)
+                  .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
+                                    maybe_type.as_id());
+        if (!maybe_compt_exec.has_value()) {
+            if (!def.compt) {
+                context.emplace_diagnostic(def.span,
+                                           diag_code::even_non_compt_top_levels_need_compt_init,
+                                           diag_type::note, DiagnosticInfoNoPreview{});
+            }
             return did;
         }
         auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
@@ -150,6 +153,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         break;
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level
+    case AST_STMT_FILE:
+    case AST_STMT_EXTERN_BLOCK:
     case AST_STMT_MODULE:
     case AST_STMT_VISIBILITY_MODIFIER:
     case AST_STMT_COMPT_MODIFIER:

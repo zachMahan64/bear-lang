@@ -23,7 +23,7 @@ struct Foo {
     i32 c;
 }
 
-Foo foo = Ben{.Benny.age = thingie}; // malformed, completely
+compt Foo foo = Ben{.Benny.age = thingie}; // malformed, completely
 
 compt Foo foo2 = Foo{.a = 1, .b = 2};
 
