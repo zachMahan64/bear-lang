@@ -142,6 +142,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "invalid operand for binary expression";
     case diag_code::type_is_not_resolvable_at_compt:
         return "type is not resolvable at compile-time";
+    case diag_code::is_declared_hid:
+        return "is declared `hid`";
+    case diag_code::a_compt_variable_should_be_explicitly_initialized:
+        return "should be explicitly initialized since it is a `compt` variable";
     }
 
     std::unreachable();

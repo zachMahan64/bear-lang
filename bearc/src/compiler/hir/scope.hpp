@@ -82,9 +82,13 @@ struct Scope {
 
     OptId<DefId> already_defines_variable(SymbolId symbol) const;
     OptId<DefId> already_defines_type(SymbolId symbol) const;
-    // looks up a namespace with checking parent scopes for any definitons
+    // looks up a namespace without checking parent scopes for any definitons
     static OptId<DefId> look_up_local_namespace(const Context& context, ScopeId local_scope,
                                                 SymbolId symbol);
+    static OptId<DefId> look_up_local_type(const Context& context, ScopeId local_scope,
+                                           SymbolId symbol);
+    static OptId<DefId> look_up_local_variable(const Context& context, ScopeId local_scope,
+                                               SymbolId symbol);
 
     friend class ScopeAnon;
 };

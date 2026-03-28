@@ -682,14 +682,17 @@ OptId<DefId> Context::look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) 
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
 
-OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope,
-                                              IdSlice<SymbolId> id_slice) {
+OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice,
+                                              Span id_span) {
     NamedOrAnonScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
         // base case, last elem should be the variable
         if (sidx == id_slice.last_elem()) {
-            return look_up_variable(curr_scope, sid);
+            OptId<DefId> maybe_variable = look_up_variable(curr_scope, sid);
+            return maybe_variable.has_value()
+                       ? guard_hid_variable(scope, maybe_variable.as_id(), id_slice, id_span)
+                       : maybe_variable;
         }
         if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
             curr_scope = def(maybe_mod.as_id()).as<DefModule>().scope;
@@ -701,13 +704,17 @@ OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope,
     return OptId<DefId>{};
 }
 
-OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice) {
+OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice,
+                                          Span id_span) {
     NamedOrAnonScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
         // base case, last elem should be the variable
         if (sidx == id_slice.last_elem()) {
-            return look_up_type(curr_scope, sid);
+            OptId<DefId> maybe_type = look_up_type(curr_scope, sid);
+            return maybe_type.has_value()
+                       ? guard_hid_type(scope, maybe_type.as_id(), id_slice, id_span)
+                       : maybe_type;
         }
         if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
             curr_scope = def(maybe_mod.as_id()).as<DefModule>().scope;
@@ -719,6 +726,44 @@ OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<Symb
     }
     // never entered the loop, so not found
     return OptId<DefId>{};
+}
+
+DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                              Span id_span) {
+    const Def& defin = this->def(did);
+    const bool hid = !defin.pub;
+    const OptId<DefId> maybe_locally_availible = look_up_type(scope, defin.name);
+    if (!maybe_locally_availible.has_value()) {
+        auto d0 = emplace_diagnostic_with_message_value(
+            id_span, diag_code::is_declared_hid, diag_type::error,
+            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
+
+        auto d1 = emplace_diagnostic_with_message_value(
+            defin.span, diag_code::declared_here, diag_type::note,
+            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
+
+        set_next_diagnostic(d0, d1);
+    }
+    return did;
+}
+
+DefId Context::guard_hid_variable(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                                  Span id_span) {
+    const Def& defin = this->def(did);
+    const bool hid = !defin.pub;
+    const OptId<DefId> maybe_locally_availible = look_up_variable(scope, defin.name);
+    if (!maybe_locally_availible.has_value()) {
+        auto d0 = emplace_diagnostic_with_message_value(
+            id_span, diag_code::is_declared_hid, diag_type::error,
+            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
+
+        auto d1 = emplace_diagnostic_with_message_value(
+            defin.span, diag_code::declared_here, diag_type::note,
+            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
+
+        set_next_diagnostic(d0, d1);
+    }
+    return did;
 }
 
 IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {

@@ -1,0 +1,11 @@
+// hir/tests/20.br 
+
+mod ben {
+    struct Ben {
+        hid compt i32 ben; // oops
+    }
+    compt i32 benny = Ben..ben; // oops 
+    hid compt i32 bar = 42; // fime
+}
+
+compt i32 foo = ben..bar; // oops, TODO, ben should be found

@@ -79,6 +79,11 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         // compt =/= mut guard
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
+        if (def.compt) {
+            context.emplace_diagnostic_with_message_value(
+                def.span, diag_code::a_compt_variable_should_be_explicitly_initialized,
+                diag_type::error, DiagnosticSymbolBeforeMessage{.sid = def.name});
+        }
         def.set_value(DefVariable{.type = maybe_type.as_id(),
                                   .name = context.symbol_id(stmt->stmt.var_decl.name)});
         // TODO handle invalid non-initialized statements

@@ -36,10 +36,14 @@ void FileAstVisitor::register_top_level_declarations() {
 
 OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* stmt,
                                                      OptId<DefId> parent, abi_lang abi) {
+    // get first and last token before adjustments so we get the true full span
+    const token_t* first_tkn = stmt->first;
+    const token_t* last_tkn = stmt->last;
+
     // handle prefix wrappers --------
-    bool pub = false;
+    bool pub = true;
     if (stmt->type == AST_STMT_VISIBILITY_MODIFIER) {
-        pub = stmt->stmt.vis_modifier.modifier->type == TOK_PUB;
+        pub = stmt->stmt.vis_modifier.modifier->type == TOK_PUB; // false when hid
         // make stmt equal to inner
         stmt = stmt->stmt.vis_modifier.stmt;
     }
@@ -154,12 +158,12 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             = existing.has_value()
               && std::holds_alternative<DefModule>(context.def(existing.as_id()).value);
 
-        DefId mod_def = existing_module
-                            ? existing.as_id()
-                            : context.register_top_level_def(
-                                  name, pub, compt, /*not generic*/ false, statik,
-                                  Span(file, context.ast(file).buffer(), stmt->first, stmt->last),
-                                  stmt, parent);
+        DefId mod_def
+            = existing_module
+                  ? existing.as_id()
+                  : context.register_top_level_def(
+                        name, pub, compt, /*not generic*/ false, statik,
+                        Span(file, context.ast(file).buffer(), first_tkn, last_tkn), stmt, parent);
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.def(existing.as_id()).value).scope
                                 : context.make_named_scope(scope);
@@ -267,7 +271,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     // no issues, so register definition
     DefId def = context.register_top_level_def(
         name, pub, compt, statik, is_generic,
-        Span(file, context.ast(file).buffer(), stmt->first, stmt->last), stmt, parent);
+        Span(file, context.ast(file).buffer(), first_tkn, last_tkn), stmt, parent);
     // register into a scope
     if (!info.do_not_insert_in_scope) {
         switch (kind) {

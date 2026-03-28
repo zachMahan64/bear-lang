@@ -77,8 +77,10 @@ template <IsDefVisitor V> class ComptExprSolver {
         std::optional<ExecExprComptConstant> maybe_value;
         switch (expr->type) {
         case AST_EXPR_ID: {
-            auto maybe_def
-                = context.look_up_scoped_variable(scope, context.symbol_slice(expr->expr.id.slice));
+            Span id_span{fid, context.ast(fid).buffer(), expr->expr.id.slice.start[0],
+                         expr->expr.id.slice.start[expr->expr.id.slice.len - 1]};
+            auto maybe_def = context.look_up_scoped_variable(
+                scope, context.symbol_slice(expr->expr.id.slice), id_span);
             if (maybe_def.has_value()) {
                 // happy path, canonicalize compt value
                 DefId did = maybe_def.as_id();
@@ -97,8 +99,12 @@ template <IsDefVisitor V> class ComptExprSolver {
                         context.set_next_diagnostic(diag_id, sub_diag_id);
                         return std::nullopt;
                     }
-                    maybe_value = context.exec(def.as<DefVariable>().compt_value.as_id())
-                                      .template as<ExecExprComptConstant>();
+                    if (!def.as<DefVariable>().compt_value.has_value()) {
+                        return std::nullopt; // this is already malformed (already been reported, so
+                                             // just return none)
+                    }
+                    auto exec = context.exec(def.as<DefVariable>().compt_value.as_id());
+                    maybe_value = exec.template as<ExecExprComptConstant>();
                 }
             } else {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
@@ -277,8 +283,10 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         switch (expr->type) {
         case AST_EXPR_ID: {
-            auto maybe_def
-                = context.look_up_scoped_variable(scope, context.symbol_slice(expr->expr.id.slice));
+            Span id_span{fid, context.ast(fid).buffer(), expr->expr.id.slice.start[0],
+                         expr->expr.id.slice.start[expr->expr.id.slice.len - 1]};
+            auto maybe_def = context.look_up_scoped_variable(
+                scope, context.symbol_slice(expr->expr.id.slice), id_span);
             if (!maybe_def.has_value()) {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
                 context.emplace_diagnostic(
@@ -327,8 +335,10 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             auto id_slice = expr->expr.struct_init.id;
             auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
-
-            OptId<DefId> maybe_def_of_struct = context.look_up_scoped_type(scope, sid_slice);
+            Span id_span{fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
+                         expr->expr.struct_init.id.start[expr->expr.id.slice.len - 1]};
+            OptId<DefId> maybe_def_of_struct
+                = context.look_up_scoped_type(scope, sid_slice, id_span);
 
             if (!maybe_def_of_struct.has_value()) {
                 context.emplace_diagnostic(

@@ -73,8 +73,10 @@ template <IsDefVisitor V> class TypeResolver {
             return std::nullopt;
         }
 
+        Span id_span{fid, context.ast(fid).buffer(), type->type.base.id.start[0],
+                     type->type.base.id.start[type->type.base.id.len - 1]};
         OptId<DefId> maybe_structure
-            = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id));
+            = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id), id_span);
 
         if (maybe_structure.has_value()) {
             auto def = need_layout_info ? maybe_structure.as_id()

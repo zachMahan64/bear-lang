@@ -16,6 +16,9 @@ main quest
 
         - [ ] compt list literals
 
+        - [ ] handle `pub` / `hid` statements properly when looking up modules and member variables 
+            - note: already working for scoped types and variables
+
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
@@ -25,7 +28,6 @@ main quest
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s)
 
 - [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
-    - [ ] handle `pub` / `hid` statements properly
     - [ ] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
 
 - [ ] allow for passing insertion of `ast_generic_args_t*` -> into scope (variables and types)
