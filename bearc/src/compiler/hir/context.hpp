@@ -76,10 +76,12 @@ class Context {
     /// finds a type and attempts to resolve definitions on the way to it
     [[nodiscard]] OptId<DefId> look_up_scoped_type(NamedOrAnonScopeId scope,
                                                    IdSlice<SymbolId> id_slice, Span id_span);
-    [[nodiscard]] DefId guard_hid_type(NamedOrAnonScopeId scope, DefId did,
-                                       IdSlice<SymbolId> id_slice, Span id_span);
+    [[nodiscard]] [[nodiscard]] DefId guard_hid_type(NamedOrAnonScopeId scope, DefId did,
+                                                     IdSlice<SymbolId> id_slice, Span id_span);
     [[nodiscard]] DefId guard_hid_variable(NamedOrAnonScopeId scope, DefId did,
                                            IdSlice<SymbolId> id_slice, Span id_span);
+    [[nodiscard]] DefId guard_hid_namespace(NamedOrAnonScopeId scope, DefId did,
+                                            IdSlice<SymbolId> id_slice, Span id_span);
 
     /// finds the scope containing a definition
     /// TODO needs to handle non-top level stmts too

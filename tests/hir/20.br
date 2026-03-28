@@ -6,6 +6,15 @@ mod ben {
     }
     compt i32 benny = Ben..ben; // oops 
     hid compt i32 bar = 42; // fine
+    
+    hid mod foo {
+        compt i32 thingy = 3;
+    }
+
+    mod ny {
+        hid compt i32 boy = 12;
+    }
+
 }
 
 compt i32 foo = ben..bar; // oops
@@ -13,3 +22,8 @@ compt i32 foo = ben..bar; // oops
 compt u64 fooey = 45; // fine
 
 compt var fooey_dooey = fooey; // oops
+
+compt i32 thingy = ben..foo..thingy; // oops
+
+compt i32 benny = ben..ny..boy; // oops
+

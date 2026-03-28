@@ -164,7 +164,9 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                   ? existing.as_id()
                   : context.register_top_level_def(
                         name, pub, compt, /*not generic*/ false, statik,
-                        Span(file, context.ast(file).buffer(), first_tkn, last_tkn), stmt, parent);
+                        Span(file, context.ast(file).buffer(), /* just name token! */ name_tkn),
+                        stmt,
+                        parent); // just make span with name token otherwise it will be too long
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.def(existing.as_id()).value).scope
                                 : context.make_named_scope(scope);

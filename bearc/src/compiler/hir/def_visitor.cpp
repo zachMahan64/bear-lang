@@ -15,6 +15,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
 #include <cassert>
+#include <optional>
 
 namespace hir {
 
@@ -95,7 +96,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         if (!maybe_type.has_value()) {
             return did; // maybe set a special value to indicate error differently
         }
-        if (TypeTransformer<TypeContainsVar>{context}(maybe_type.as_id())) {
+        if (def.compt && TypeTransformer<TypeContainsVar>{context}(maybe_type.as_id())) {
             context.emplace_diagnostic(context.type(maybe_type.as_id()).span,
                                        diag_code::compt_variable_should_have_an_explicit_type,
                                        diag_type::error);
@@ -103,11 +104,13 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         // compt =/= mut guard
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
+
         auto maybe_compt_exec
-            = ComptExprSolver(context, *this)
-                  .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
-                                    maybe_type.as_id());
-        if (!maybe_compt_exec.has_value()) {
+            = def.compt ? ComptExprSolver(context, *this)
+                              .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
+                                                maybe_type.as_id())
+                        : std::nullopt;
+        if (def.compt && !maybe_compt_exec.has_value()) {
             return did;
         }
         auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
