@@ -39,6 +39,6 @@ i32 A;
 
 i32 B = A; // oops, should be compt-init
 
-compt ben..ny..Thingy t = ben..ny..Thingy{};
+compt ben..ny..Thingy t = ben..ny..Thingy{}; // oops, hid
 
-compt ben..ny..Fooey..Gooey fooey_gooey = ben..ny..Fooey..Gooey{};
+compt ben..ny..Fooey..Gooey fooey_gooey = ben..ny..Fooey..Gooey{}; //oops, hid
