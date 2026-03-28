@@ -71,6 +71,7 @@ side quests
 
 ##### chores 
 - [x] handle alignas accordingly during ast lowering
+- [ ] fix the `HashMap<i32, HashMap<i32, i32>>` parsing case by packing count tracking into `>>` and `>>>` tokens until they hit a value of 0. Will be a bit a tricky but it's doable. Needed in just generic args parsing
 - [ ] allow arbitrarily ordered struct members inits, will require mini symbol hashmaps
 - [ ] add an Exec Stringifier (tedious)
 - [ ] add a Def Stringifier (tedious)  

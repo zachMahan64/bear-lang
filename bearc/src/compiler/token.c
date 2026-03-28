@@ -431,6 +431,7 @@ token_t token_build(const char* start, size_t length, src_loc_t* loc) {
     tkn.start = start;
     tkn.len = length;
     tkn.loc = *loc;
+    tkn.val.unsigned_integral = 0; // zero-init value
     // now determine most compilcated fields:
     // keywords and reserved symbols
 

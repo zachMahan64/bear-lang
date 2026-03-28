@@ -1,0 +1,5 @@
+// tests/parser/51.br 
+
+HashMap<String, HashMap<i32, String> > map_map; // this is fine
+
+HashMap<String, HashMap<i32, String>> map_map_tricky; // this should be fine, but it's not
