@@ -678,7 +678,7 @@ OptId<DefId> Context::look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) 
         auto res = hir::ScopeAnon::look_up_namespace(*this, std::get<ScopeAnonId>(scope), sid);
         return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
     }
-    auto res = hir::Scope::look_up_variable(*this, std::get<ScopeId>(scope), sid);
+    auto res = hir::Scope::look_up_namespace(*this, std::get<ScopeId>(scope), sid);
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
 

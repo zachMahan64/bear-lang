@@ -5,7 +5,11 @@ mod ben {
         hid compt i32 ben; // oops
     }
     compt i32 benny = Ben..ben; // oops 
-    hid compt i32 bar = 42; // fime
+    hid compt i32 bar = 42; // fine
 }
 
-compt i32 foo = ben..bar; // oops, TODO, ben should be found
+compt i32 foo = ben..bar; // oops
+
+compt u64 fooey = 45; // fine
+
+compt var fooey_dooey = fooey; // oops

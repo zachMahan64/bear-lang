@@ -19,6 +19,7 @@
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
+#include <iostream>
 #include <variant>
 
 namespace hir {
