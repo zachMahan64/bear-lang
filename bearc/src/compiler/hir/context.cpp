@@ -695,17 +695,17 @@ OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope, IdSlice<
                        : maybe_variable;
         }
         if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
-            curr_scope
-                = def(guard_hid_namespace(
-                          scope, maybe_mod.as_id(),
-                          IdSlice<SymbolId>{id_slice.begin(), sidx.val() - id_slice.begin().val()},
-                          def(maybe_mod.as_id()).span))
-                      .as<DefModule>()
-                      .scope;
+            curr_scope = def(guard_hid_namespace(
+                                 scope, maybe_mod.as_id(),
+                                 IdSlice<SymbolId>{id_slice.begin(),
+                                                   sidx.val() + 1 - id_slice.begin().val()},
+                                 def(maybe_mod.as_id()).span))
+                             .as<DefModule>()
+                             .scope;
         } else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
             curr_scope = scope_for_top_level_def(guard_hid_type(
                 scope, maybe_type.as_id(),
-                IdSlice<SymbolId>{id_slice.begin(), sidx.val() - id_slice.begin().val()},
+                IdSlice<SymbolId>{id_slice.begin(), sidx.val() + 1 - id_slice.begin().val()},
                 def(maybe_type.as_id()).span));
         }
     }
@@ -726,20 +726,20 @@ OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<Symb
                        : maybe_type;
         }
         if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
-            curr_scope
-                = def(guard_hid_namespace(
-                          scope, maybe_mod.as_id(),
-                          IdSlice<SymbolId>{id_slice.begin(), sidx.val() - id_slice.begin().val()},
-                          def(maybe_mod.as_id()).span))
-                      .as<DefModule>()
-                      .scope;
+            curr_scope = def(guard_hid_namespace(
+                                 scope, maybe_mod.as_id(),
+                                 IdSlice<SymbolId>{id_slice.begin(),
+                                                   sidx.val() + 1 - id_slice.begin().val()},
+                                 def(maybe_mod.as_id()).span))
+                             .as<DefModule>()
+                             .scope;
 
         }
         // yes, since nested structs are allowed
         else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
             curr_scope = scope_for_top_level_def(guard_hid_type(
                 scope, maybe_type.as_id(),
-                IdSlice<SymbolId>{id_slice.begin(), sidx.val() - id_slice.begin().val()},
+                IdSlice<SymbolId>{id_slice.begin(), sidx.val() + 1 - id_slice.begin().val()},
                 def(maybe_type.as_id()).span));
         }
     }
@@ -750,7 +750,10 @@ OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<Symb
 DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                               Span id_span) {
     const Def& defin = this->def(did);
-    const bool hid = !defin.pub;
+    if (defin.pub) {
+        return did;
+    }
+
     const OptId<DefId> maybe_locally_availible = look_up_type(scope, defin.name);
     if (!maybe_locally_availible.has_value()) {
         auto d0 = emplace_diagnostic_with_message_value(
@@ -769,7 +772,9 @@ DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<Symbo
 DefId Context::guard_hid_variable(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                   Span id_span) {
     const Def& defin = this->def(did);
-    const bool hid = !defin.pub;
+    if (defin.pub) {
+        return did;
+    }
     const OptId<DefId> maybe_locally_availible = look_up_variable(scope, defin.name);
     if (!maybe_locally_availible.has_value()) {
         auto d0 = emplace_diagnostic_with_message_value(
@@ -788,7 +793,9 @@ DefId Context::guard_hid_variable(NamedOrAnonScopeId scope, DefId did, IdSlice<S
 DefId Context::guard_hid_namespace(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                    Span id_span) {
     const Def& defin = this->def(did);
-    const bool hid = !defin.pub;
+    if (defin.pub) {
+        return did;
+    }
     const OptId<DefId> maybe_locally_availible = look_up_namespace(scope, defin.name);
     if (!maybe_locally_availible.has_value()) {
         auto d0 = emplace_diagnostic_with_message_value(

@@ -11,8 +11,16 @@ mod ben {
         compt i32 thingy = 3;
     }
 
-    mod ny {
+    pub mod ny {
         hid compt i32 boy = 12;
+        hid struct Thingy {
+
+        }
+        struct Fooey {
+            hid struct Gooey {
+
+            }
+        }
     }
 
 }
@@ -31,3 +39,6 @@ i32 A;
 
 i32 B = A; // oops, should be compt-init
 
+compt ben..ny..Thingy t = ben..ny..Thingy{};
+
+compt ben..ny..Fooey..Gooey fooey_gooey = ben..ny..Fooey..Gooey{};
