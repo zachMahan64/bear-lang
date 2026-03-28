@@ -695,9 +695,18 @@ OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope, IdSlice<
                        : maybe_variable;
         }
         if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
-            curr_scope = def(maybe_mod.as_id()).as<DefModule>().scope;
+            curr_scope
+                = def(guard_hid_namespace(
+                          scope, maybe_mod.as_id(),
+                          IdSlice<SymbolId>{id_slice.begin(), sidx.val() - id_slice.begin().val()},
+                          def(maybe_mod.as_id()).span))
+                      .as<DefModule>()
+                      .scope;
         } else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
-            curr_scope = scope_for_top_level_def(maybe_type.as_id());
+            curr_scope = scope_for_top_level_def(guard_hid_type(
+                scope, maybe_type.as_id(),
+                IdSlice<SymbolId>{id_slice.begin(), sidx.val() - id_slice.begin().val()},
+                def(maybe_type.as_id()).span));
         }
     }
     // never entered the loop, so not found
