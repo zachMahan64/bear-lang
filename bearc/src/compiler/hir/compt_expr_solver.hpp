@@ -160,7 +160,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             break;
         }
         case AST_EXPR_BINARY: {
-            // TODO operator and type handlers
             bool cooked = false;
             ComptBinaryOp maybe_bin_op{expr->expr.binary.op};
             if (maybe_bin_op.holds<InvalidOp>()) {
@@ -220,6 +219,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto inner
                     = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr, into_builtin);
             }
+            // TODO, handle bool not, plus, and minus here
+            break;
         }
         case AST_EXPR_POST_UNARY:
             // not supported (-- or ++ require mutable lvalues)
@@ -609,7 +610,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             handle_invalid_operand(lhs_exec);
             cooked = true;
         }
-        if (!lhs_exec.holds<ExecExprComptConstant>()) {
+        if (!rhs_exec.holds<ExecExprComptConstant>()) {
             handle_invalid_operand(rhs_exec);
             cooked = true;
         }
