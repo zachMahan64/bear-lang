@@ -19,6 +19,7 @@
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
+#include <iostream>
 #include <variant>
 
 namespace hir {
@@ -178,6 +179,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         context.scope(scope).insert_namespace(name, mod_def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls, mod_def,
                                  abi); // pass in this module def as parent
+
         return OptId<DefId>{};
     }
     // handle extern block
@@ -310,7 +312,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         }
     }
     // return the DefId since this is an orderable definition
-    if (info.is_orderable_var && !statik) {
+    if (info.is_orderable_var && !statik && !compt) {
         return def;
     }
     return OptId<DefId>{};

@@ -54,6 +54,14 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (into_type.holds<TypeStructure>()) {
             return solve_struct_compt_expr(fid, scope, expr, into_tid);
         }
+
+        if (into_type.holds<TypeVar>()) {
+            if (expr->type == AST_EXPR_STRUCT_INIT) {
+                return solve_struct_compt_expr(fid, scope, expr, into_tid);
+            }
+            return solve_builtin_compt_expr(fid, scope, expr, builtin_type::voidd);
+        }
+
         // guard against non-builtins
         if (!into_type.holds<TypeBuiltin>()) {
             context.emplace_diagnostic(into_type.span, diag_code::type_is_not_resolvable_at_compt,
@@ -402,6 +410,10 @@ template <IsDefVisitor V> class ComptExprSolver {
                 const auto member_did = context.def_id(didx);
                 const Def& member = context.def(didx);
 
+                if (member.holds<DefUnevaluated>()) {
+                    continue; // must be poisoned
+                }
+
                 assert(member.holds<DefVariable>());
                 const auto& member_as_var = member.as<DefVariable>();
 
@@ -485,21 +497,24 @@ template <IsDefVisitor V> class ComptExprSolver {
                     DiagnosticNoOtherInfo{});
                 return std::nullopt;
             }
-            // type check before returning here!
-            auto into_did = context.type(into_tid).template as<TypeStructure>().definition;
-            if (did != into_did) {
-                context.emplace_diagnostic(
-                    expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
-                    DiagnosticTypeToType{
-                        .from = context.emplace_type(
-                            TypeStructure{.definition = did},
-                            Span(
-                                fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
-                                expr->expr.struct_init.id.start[expr->expr.struct_init.id.len - 1]),
-                            false),
-                        .to = into_tid},
-                    DiagnosticNoOtherInfo{});
-                return std::nullopt;
+            // type check before returning here! but only if the into type isn't var!
+            if (!context.type(into_tid).template holds<TypeVar>()) {
+                if (auto into_did = context.type(into_tid).template as<TypeStructure>().definition;
+                    did != into_did) {
+                    context.emplace_diagnostic(
+                        expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
+                        DiagnosticTypeToType{
+                            .from = context.emplace_type(
+                                TypeStructure{.definition = did},
+                                Span(fid, context.ast(fid).buffer(),
+                                     expr->expr.struct_init.id.start[0],
+                                     expr->expr.struct_init.id
+                                         .start[expr->expr.struct_init.id.len - 1]),
+                                false),
+                            .to = into_tid},
+                        DiagnosticNoOtherInfo{});
+                    return std::nullopt;
+                }
             }
 
             // all good, return the exec

@@ -15,7 +15,6 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
 #include <cassert>
-#include <optional>
 
 namespace hir {
 
@@ -65,7 +64,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     };
 
     const ast_stmt* stmt = context.def_ast_node(did);
-    auto scope = context.containing_scope(did);
+    NamedOrAnonScopeId scope = context.containing_scope(did);
     Def& def = context.def(did);
     Span span = def.span;
     //  TODO write handlers

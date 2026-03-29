@@ -595,13 +595,8 @@ OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {
     if (def_node.holds<DefModule>()) {
         return def_node.as<DefModule>().scope;
     }
-    if (is_top_level_def_with_associated_scope(def_id)) {
-        OptId<Id<Scope>> hopefully_scope = def_to_scope_for_types.at(def_id);
-        if (hopefully_scope.has_value()) {
-            return hopefully_scope.as_id();
-        }
-    }
-    return OptId<ScopeId>{};
+    // hopefully found
+    return def_to_scope_for_types.at(def_id);
 }
 
 bool Context::is_top_level_def_with_associated_scope(DefId def_id) const {
@@ -746,16 +741,15 @@ OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<Symb
     // never entered the loop, so not found
     return OptId<DefId>{};
 }
-
-DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
-                              Span id_span) {
+DefId Context::guard_hid(auto F, NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                         Span id_span) {
     const Def& defin = this->def(did);
     if (defin.pub) {
         return did;
     }
 
-    const OptId<DefId> maybe_locally_availible = look_up_type(scope, defin.name);
-    if (!maybe_locally_availible.has_value()) {
+    const OptId<DefId> maybe_locally_availible = F(scope, defin.name);
+    if (!maybe_locally_availible.has_value() || maybe_locally_availible.as_id() != did) {
         auto d0 = emplace_diagnostic_with_message_value(
             id_span, diag_code::is_declared_hid, diag_type::error,
             DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
@@ -767,48 +761,26 @@ DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<Symbo
         set_next_diagnostic(d0, d1);
     }
     return did;
+}
+DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                              Span id_span) {
+    return guard_hid(
+        [this](NamedOrAnonScopeId scope, SymbolId sid) { return look_up_type(scope, sid); }, scope,
+        did, id_slice, id_span);
 }
 
 DefId Context::guard_hid_variable(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                   Span id_span) {
-    const Def& defin = this->def(did);
-    if (defin.pub) {
-        return did;
-    }
-    const OptId<DefId> maybe_locally_availible = look_up_variable(scope, defin.name);
-    if (!maybe_locally_availible.has_value()) {
-        auto d0 = emplace_diagnostic_with_message_value(
-            id_span, diag_code::is_declared_hid, diag_type::error,
-            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
-
-        auto d1 = emplace_diagnostic_with_message_value(
-            defin.span, diag_code::declared_here, diag_type::note,
-            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
-
-        set_next_diagnostic(d0, d1);
-    }
-    return did;
+    return guard_hid(
+        [this](NamedOrAnonScopeId scope, SymbolId sid) { return look_up_variable(scope, sid); },
+        scope, did, id_slice, id_span);
 }
 
 DefId Context::guard_hid_namespace(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                    Span id_span) {
-    const Def& defin = this->def(did);
-    if (defin.pub) {
-        return did;
-    }
-    const OptId<DefId> maybe_locally_availible = look_up_namespace(scope, defin.name);
-    if (!maybe_locally_availible.has_value()) {
-        auto d0 = emplace_diagnostic_with_message_value(
-            id_span, diag_code::is_declared_hid, diag_type::error,
-            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
-
-        auto d1 = emplace_diagnostic_with_message_value(
-            defin.span, diag_code::declared_here, diag_type::note,
-            DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
-
-        set_next_diagnostic(d0, d1);
-    }
-    return did;
+    return guard_hid(
+        [this](NamedOrAnonScopeId scope, SymbolId sid) { return look_up_namespace(scope, sid); },
+        scope, did, id_slice, id_span);
 }
 
 IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
@@ -826,20 +798,18 @@ NamedOrAnonScopeId Context::containing_scope(DefId did) const {
     if (!maybe_parent.has_value()) {
         return root_scope();
     }
-    const Def& defi = def(maybe_parent.as_id());
+    DefId parent_id = maybe_parent.as_id();
+    const Def& defi = def(parent_id);
     if (defi.holds<DefModule>()) {
         return defi.as<DefModule>().scope;
     }
-    if (defi.holds<DefModule>()) {
-        return defi.as<DefModule>().scope;
-    }
-    auto maybe_structure = try_scope_for_top_level_def(did);
+    auto maybe_structure = try_scope_for_top_level_def(parent_id);
     if (maybe_structure.has_value()) {
         return maybe_structure.as_id();
     }
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     // recursive up to find parent's parent scope, etc.
-    return containing_scope(maybe_parent.as_id());
+    return containing_scope(parent_id);
 }
 
 SymbolId Context::symbol_id(IdIdx<SymbolId> sididx) const { return symbol_ids.cat(sididx); }

@@ -1,18 +1,28 @@
 // tests/hir/21.br 
 
 mod ben {
-    pub mod ny {
+    hid mod ny {
         hid compt i32 boy = 12;
-        hid struct Thingy {
+        
+        hid struct Thingy {}
 
+        pub struct Thingamabob {}
+
+        hid struct Fooey {
+            hid struct Gooey {}
+
+            compt ben..ny..Fooey..Gooey goo1 = ben..ny..Fooey..Gooey{}; // fine
+
+            compt Gooey goo2 = Gooey{}; // fine
         }
-        struct Fooey {
-            hid struct Gooey {
 
-            }
-            compt ben..ny..Fooey..Gooey goo1 = ben..ny..Fooey..Gooey{}; // fine, TODO not working
-
-            compt Gooey goo2 = Gooey{}; // fine, TODO not working
-        }
+        compt Fooey fooey = Fooey{}; // fine
+        compt ben..ny..Fooey fooey_again = Fooey{}; // fine
     }
+
+    ny..Thingy thy = ny..Thingy{}; // oops, thingie is hid
+
+    var thmd = ny..Thingamabob{};
+
+    var a = 12;
 }
