@@ -75,13 +75,13 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                          const ast_expr_t* expr,
                                                          std::optional<builtin_type> into_builtin) {
-        auto emplace_e = [&](ExecValue val) {
+        auto emplace_e = [this, fid, expr](ExecValue val) {
             return context.register_exec(
                 context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
         };
 
         auto visit_def
-            = [&](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
+            = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
         std::optional<ExecExprComptConstant> maybe_value;
         switch (expr->type) {
         case AST_EXPR_ID: {
@@ -278,13 +278,13 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
     [[nodiscard]] OptId<ExecId> solve_struct_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                         const ast_expr_t* expr, TypeId into_tid) {
-        auto emplace_e = [&](ExecValue val) {
+        auto emplace_e = [this, fid, expr](ExecValue val) {
             return context.register_exec(
                 context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
         };
 
         auto visit_def
-            = [&](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
+            = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
 
         auto expr_span = Span(fid, context.ast(fid).buffer(), expr->first, expr->last);
 
@@ -596,7 +596,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         const Exec& lhs_exec = context.exec(lhs_eid);
         const Exec& rhs_exec = context.exec(rhs_eid);
 
-        auto handle_invalid_operand = [&](const Exec& exec) {
+        auto handle_invalid_operand = [this](const Exec& exec) {
             context.emplace_diagnostic(exec.span, diag_code::invalid_operand_for_binary_expression,
                                        diag_type::error);
         };
