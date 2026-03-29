@@ -14,10 +14,7 @@ main quest
     - [ ] compt operators: string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
         - [ ] implement kind of operator <--> type mapping system for at least builtins
 
-        - [ ] compt list literals
-
-        - [ ] handle `pub` / `hid` statements properly when looking up modules and member variables 
-            - note: already working for scoped types and variables
+    - [ ] compt list literals
 
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 
@@ -43,7 +40,9 @@ main quest
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
 
 ##### hir phase 2.b:
-- [ ] function body resolution
+- [ ] function body resolution 
+- [ ] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
+    - note: already working for arbitrarily scoped modules, types, and variables
 
 #### long term (compiler)
 - [ ] MIR? (compile-time ctrl flow and better optimizations)

@@ -16,13 +16,30 @@ mod ben {
             compt Gooey goo2 = Gooey{}; // fine
         }
 
+        hid struct Booey {
+            Fooey& fooey; // fine
+        }
+
+        hid struct Hoeey {
+            Booey& booey; // fine
+        }
+
+        compt ben..ny..Fooey big_foo = Fooey{}; // fine
+
+
         compt Fooey fooey = Fooey{}; // fine
         compt ben..ny..Fooey fooey_again = Fooey{}; // fine
     }
 
     ny..Thingy thy = ny..Thingy{}; // oops, thingie is hid
 
-    var thmd = ny..Thingamabob{};
+    var thmd = ny..Thingamabob{}; // fine, ny is hid but local!
 
-    var a = 12;
+    var a = 12; // fine
+
+    var b = "123456"; // fine 
+
+    var c = 12.0012; // fine
+
+    compt var d = 32; // oops, missing explicit type since it's compt
 }

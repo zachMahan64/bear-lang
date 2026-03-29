@@ -59,7 +59,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (expr->type == AST_EXPR_STRUCT_INIT) {
                 return solve_struct_compt_expr(fid, scope, expr, into_tid);
             }
-            return solve_builtin_compt_expr(fid, scope, expr, builtin_type::voidd);
+            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt);
         }
 
         // guard against non-builtins
@@ -74,7 +74,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                          const ast_expr_t* expr,
-                                                         builtin_type into_builtin) {
+                                                         std::optional<builtin_type> into_builtin) {
         auto emplace_e = [&](ExecValue val) {
             return context.register_exec(
                 context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
@@ -172,7 +172,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             } else if (maybe_bin_op.holds<is_as_op>()) {
                 OptId<ExecId> lhs = solve_builtin_compt_expr(
                     fid, scope, expr->expr.binary.lhs,
-                    builtin_type::voidd); // void since we don't care about the type yet
+                    std::nullopt); // since we don't care about the type yet
                 if (!lhs.has_value()) {
                     cooked = true;
                 }
@@ -186,13 +186,13 @@ template <IsDefVisitor V> class ComptExprSolver {
                     return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
                 }
             } else if (!cooked) {
-                OptId<ExecId> lhs = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs,
-                                                             builtin_type::voidd);
+                OptId<ExecId> lhs
+                    = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
                 if (!lhs.has_value()) {
                     break;
                 }
-                OptId<ExecId> rhs = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs,
-                                                             builtin_type::voidd);
+                OptId<ExecId> rhs
+                    = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
                 if (!rhs.has_value()) {
                     break;
                 }
@@ -243,14 +243,13 @@ template <IsDefVisitor V> class ComptExprSolver {
             goto ret_without_diag;
         }
         if (maybe_value.has_value()) {
-            // voidd means we don't care (yet)
-            if (into_builtin == builtin_type::voidd) {
+            if (!into_builtin.has_value()) {
                 return emplace_e(maybe_value.value());
             }
 
             // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
 
-            auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin);
+            auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin.value());
 
             // TODO give str cast hints here!
 
@@ -258,7 +257,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto from_builtin = maybe_value.value().type_builtin();
                 TypeId from = context.emplace_type(TypeBuiltin{.type = from_builtin},
                                                    Span::generated(), false);
-                TypeId to = context.emplace_type(TypeBuiltin{.type = into_builtin},
+                TypeId to = context.emplace_type(TypeBuiltin{.type = into_builtin.value()},
                                                  Span::generated(), false);
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
@@ -268,7 +267,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return OptId<ExecId>{};
             }
             // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
-            assert(maybe_converted.value().matches_type(into_builtin));
+            assert(maybe_converted.value().matches_type(into_builtin.value()));
             return emplace_e(maybe_converted.value());
         }
         context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
@@ -592,7 +591,8 @@ template <IsDefVisitor V> class ComptExprSolver {
 
     [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, NamedOrAnonScopeId scope,
                                                         ExecId lhs_eid, binary_op op,
-                                                        ExecId rhs_eid, builtin_type into_builtin) {
+                                                        ExecId rhs_eid,
+                                                        std::optional<builtin_type> into_builtin) {
         const Exec& lhs_exec = context.exec(lhs_eid);
         const Exec& rhs_exec = context.exec(rhs_eid);
 
