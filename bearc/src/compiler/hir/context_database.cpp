@@ -16,5 +16,5 @@ std::optional<hir::Def> ContextDatabase::query_definition(std::span<const char*>
         sid_vec.push_back(ctx->symbol_id(s));
     }
     IdSlice<hir::Id<hir::Symbol>> sid_slice = ctx->freeze_id_vec(sid_vec);
-    return std::nullopt;
+    return std::nullopt; // TODO
 }
