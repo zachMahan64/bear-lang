@@ -43,6 +43,7 @@ main quest
 - [ ] function body resolution 
 - [ ] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
     - note: already working for arbitrarily scoped modules, types, and variables
+- [ ] move checker
 
 #### long term (compiler)
 - [ ] MIR? (compile-time ctrl flow and better optimizations)
