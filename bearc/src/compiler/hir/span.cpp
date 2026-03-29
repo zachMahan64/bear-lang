@@ -32,4 +32,10 @@ std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
 Span::Span(const Context& ctx, FileId file_id, const token_t* first, const token_t* last)
     : Span(file_id, ctx.ast(file_id).buffer(), first, last) {}
 Span Span::generated() { return Span{0, 0, FileId{HIR_ID_NONE}, 0, 0}; }
+
+Span Span::combine(Span span1, Span span2) {
+    return Span(span1.start, span2.start - span1.start + span2.len, span1.file_id, span1.line,
+                span1.col);
+}
+
 } // namespace hir

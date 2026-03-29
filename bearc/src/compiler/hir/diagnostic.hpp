@@ -66,12 +66,13 @@ enum class diag_code : uint8_t {
     assignment_not_permitted_in_compt_expr,
     is_operator_requires_run_time_values,
     cannot_cast_expr_to_type,
-    guranteed_narrowing_of_compt_value,
+    guaranteed_narrowing_of_compt_value,
     invalid_operand_for_binary_expression,
     type_is_not_resolvable_at_compt,
     is_declared_hid,
     a_compt_variable_should_be_explicitly_initialized,
     even_non_compt_top_levels_need_compt_init,
+    incompatible_types_for_binary_expression,
 
     count, // this must be last,
 
@@ -109,11 +110,16 @@ struct DiagnosticTypeToType {
     TypeId to;
 };
 
+struct DiagnosticTypeAndType {
+    TypeId lhs_tid;
+    TypeId rhs_tid;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
-                   DiagnosticSymbolBeforeMessage, DiagnosticTypeToType>;
+                   DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;

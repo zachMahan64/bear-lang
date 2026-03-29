@@ -888,6 +888,18 @@ ExecExprComptConstant::try_down_convert_to(builtin_type type) const {
 
         switch (type) {
 
+        case builtin_type::u32:
+            if (fits_float_int(v) && v >= 0 && v <= UINT32_MAX) {
+                return to_optconst(ConstantValue{static_cast<uint32_t>(v)});
+            }
+            return none();
+
+        case builtin_type::u64:
+            if (fits_float_int(v) && v >= 0 && v <= UINT64_MAX) {
+                return to_optconst(ConstantValue{static_cast<uint64_t>(v)});
+            }
+            return none();
+
         case builtin_type::i32:
             if (fits_float_int(v) && v >= INT32_MIN && v <= INT32_MAX) {
                 return to_optconst(ConstantValue{static_cast<int32_t>(v)});

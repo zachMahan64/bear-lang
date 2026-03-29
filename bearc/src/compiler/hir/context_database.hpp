@@ -12,6 +12,7 @@
 #include "cli/args.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
+#include <span>
 
 class ContextDatabase {
   public:

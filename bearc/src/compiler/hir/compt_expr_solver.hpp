@@ -20,6 +20,7 @@
 #include "compiler/token.h"
 #include "def_visitor.hpp"
 #include <optional>
+#include <utility>
 namespace hir {
 
 template <IsDefVisitor V> class ComptExprSolver {
@@ -584,7 +585,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 DiagnosticTypeAfterMessage{.tid = tid});
             ExecExprComptConstant eecc = exec.as<ExecExprComptConstant>();
             context.emplace_diagnostic_with_message_value(
-                exec.span, diag_code::guranteed_narrowing_of_compt_value, diag_type::note,
+                exec.span, diag_code::guaranteed_narrowing_of_compt_value, diag_type::note,
                 DiagnosticSymbolAfterMessage(eecc.to_symbol_id(context)));
             return std::nullopt;
         }
@@ -621,26 +622,26 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::multiply:
         case binary_op::divide:
         case binary_op::modulo:
-            return handle_binary_arithmetic(fid, lhs_eid, op, rhs_eid);
+            return handle_binary_arithmetic(fid, lhs_exec, op, rhs_exec);
         case binary_op::bit_or:
         case binary_op::bit_and:
         case binary_op::bit_not:
         case binary_op::bit_xor:
-            return handle_binary_bitwise(fid, lhs_eid, op, rhs_eid);
+            return handle_binary_bitwise(fid, lhs_exec, op, rhs_exec);
         case binary_op::greater_than:
         case binary_op::less_than:
         case binary_op::greater_than_or_equal:
         case binary_op::less_than_or_equal:
         case binary_op::bool_equal:
         case binary_op::bool_not_equal:
-            return handle_binary_comparision(fid, lhs_eid, op, rhs_eid);
+            return handle_binary_comparision(fid, lhs_exec, op, rhs_exec);
         case binary_op::left_bitshift:
         case binary_op::right_shift_logical:
         case binary_op::right_shift_arithmetic:
-            return handle_binary_shift(fid, lhs_eid, op, rhs_eid);
+            return handle_binary_shift(fid, lhs_exec, op, rhs_exec);
         case binary_op::bool_or:
         case binary_op::bool_and:
-            return handle_binary_bool_conj_disj(fid, lhs_eid, op, rhs_eid);
+            return handle_binary_bool_conj_disj(fid, lhs_exec, op, rhs_exec);
         }
         return std::nullopt;
     }
@@ -648,31 +649,83 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type);
 
-    [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, ExecId lhs_eid, binary_op op,
-                                                         ExecId rhs_eid) {
+    [[nodiscard]] bool guard_incompatible_types(FileId fid, const Exec& lhs, const Exec& rhs,
+                                                ExecExprComptConstant lhs_val,
+                                                ExecExprComptConstant rhs_val) {
+
+        if (!lhs_val.holds_same_variant_type(rhs_val)) {
+            auto lhs_tid = context.emplace_type(TypeBuiltin{.type = lhs_val.type_builtin()},
+                                                lhs.span, false);
+            auto rhs_tid = context.emplace_type(TypeBuiltin{.type = rhs_val.type_builtin()},
+                                                rhs.span, false);
+            context.emplace_diagnostic_with_message_value(
+                Span::combine(lhs.span, rhs.span),
+                diag_code::incompatible_types_for_binary_expression, diag_type::error,
+                DiagnosticTypeAndType{.lhs_tid = lhs_tid, .rhs_tid = rhs_tid});
+            return true;
+        }
+        return false;
+    }
+
+    [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, const Exec& lhs, binary_op op,
+                                                         const Exec& rhs) {
+
+        auto lhs_val = lhs.as<ExecExprComptConstant>();
+        auto rhs_val = rhs.as<ExecExprComptConstant>();
+
+        // try to safely convert (more ergonomic for literals and guranteed safe conversions)
+        if (!lhs_val.holds_same_variant_type(rhs_val)) {
+            auto maybe_converted_rhs = rhs_val.try_up_convert_to(lhs_val.type_builtin());
+            if (maybe_converted_rhs.has_value()) {
+                rhs_val = maybe_converted_rhs.value();
+            } else {
+                auto maybe_converted_lhs = lhs_val.try_up_convert_to(rhs_val.type_builtin());
+                rhs_val = (maybe_converted_lhs.has_value()) ? maybe_converted_lhs.value() : rhs_val;
+            }
+        }
+
+        if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
+            return std::nullopt;
+        }
+
+        // TODO
+        switch (op) {
+        case binary_op::plus:
+            break;
+        case binary_op::minus:
+            break;
+        case binary_op::multiply:
+            break;
+        case binary_op::divide:
+            break;
+        case binary_op::modulo:
+            break;
+        default:
+            std::unreachable();
+            break;
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]] OptId<ExecId> handle_binary_bitwise(FileId fid, const Exec& lhs, binary_op op,
+                                                      const Exec& rhs) {
         // TODO
         return std::nullopt;
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_bitwise(FileId fid, ExecId lhs_eid, binary_op op,
-                                                      ExecId rhs_eid) {
+    [[nodiscard]] OptId<ExecId> handle_binary_comparision(FileId fid, const Exec& lhs, binary_op op,
+                                                          const Exec& rhs) {
         // TODO
         return std::nullopt;
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_comparision(FileId fid, ExecId lhs_eid, binary_op op,
-                                                          ExecId rhs_eid) {
+    [[nodiscard]] OptId<ExecId> handle_binary_shift(FileId fid, const Exec& lhs, binary_op op,
+                                                    const Exec& rhs) {
         // TODO
         return std::nullopt;
     }
-
-    [[nodiscard]] OptId<ExecId> handle_binary_shift(FileId fid, ExecId lhs_eid, binary_op op,
-                                                    ExecId rhs_eid) {
-        // TODO
-        return std::nullopt;
-    }
-    [[nodiscard]] OptId<ExecId> handle_binary_bool_conj_disj(FileId fid, ExecId lhs_eid,
-                                                             binary_op op, ExecId rhs_eid) {
+    [[nodiscard]] OptId<ExecId> handle_binary_bool_conj_disj(FileId fid, const Exec& lhs,
+                                                             binary_op op, const Exec& rhs) {
         // TODO
         return std::nullopt;
     }

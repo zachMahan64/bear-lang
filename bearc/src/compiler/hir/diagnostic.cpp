@@ -136,8 +136,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "`is` operator requires run-time values";
     case diag_code::cannot_cast_expr_to_type:
         return "cannot cast expression to type";
-    case diag_code::guranteed_narrowing_of_compt_value:
-        return "guranteed narrowing of compile-time expression with value";
+    case diag_code::guaranteed_narrowing_of_compt_value:
+        return "guaranteed narrowing of compile-time expression with value";
     case diag_code::invalid_operand_for_binary_expression:
         return "invalid operand for binary expression";
     case diag_code::type_is_not_resolvable_at_compt:
@@ -149,6 +149,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::even_non_compt_top_levels_need_compt_init:
         return "all run-time global and member variable initializers must be compile-time "
                "constants";
+    case diag_code::incompatible_types_for_binary_expression:
+        return "incompatible types for binary expression:";
     }
 
     std::unreachable();
@@ -531,6 +533,21 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += '`';
             str += accent_color_for_type(type);
             str += type_to_string(ctx, t.to);
+            str += ansi_bold_reset();
+            str += '`';
+            str += ansi_reset();
+        },
+        [&](DiagnosticTypeAndType t) {
+            str += message_for_code(code);
+            str += " `";
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, t.lhs_tid);
+            str += ansi_bold_reset();
+            str += '`';
+            str += " and ";
+            str += '`';
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, t.rhs_tid);
             str += ansi_bold_reset();
             str += '`';
             str += ansi_reset();

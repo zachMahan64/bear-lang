@@ -69,6 +69,9 @@ template <typename V> struct NodeWithVariantValue {
     template <typename T> bool holds_same(const V& other) const noexcept {
         return holds<T>() && other.template holds<T>();
     }
+    bool holds_same_variant_type(const V& other) const noexcept {
+        return self().value.index() == other.value.index();
+    }
     template <typename... Ts> bool hold_same_any_of(const V& other) const noexcept {
         return holds_any_of<Ts...>() && other.template holds_any_of<Ts...>();
     }

@@ -8,8 +8,8 @@
 
 #include "compiler/debug.h"
 #include "compiler/token.h"
-#include "stdio.h"
 #include "utils/file_io.h"
+#include <stdio.h>
 
 void print_out_tkn_table(const vector_t* tkn_vec) {
     const char* const* tkn_map = token_to_string_map();
