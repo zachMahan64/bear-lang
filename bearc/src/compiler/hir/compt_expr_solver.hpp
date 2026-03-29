@@ -72,6 +72,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type);
     }
 
+  private:
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                          const ast_expr_t* expr,
                                                          std::optional<builtin_type> into_builtin) {
@@ -613,35 +614,62 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (cooked) {
             return std::nullopt;
         }
-        // TODO handle these
         switch (op) {
         case binary_op::plus:
         case binary_op::minus:
         case binary_op::multiply:
         case binary_op::divide:
         case binary_op::modulo:
+            return handle_binary_arithmetic(fid, lhs_eid, op, rhs_eid);
         case binary_op::bit_or:
         case binary_op::bit_and:
         case binary_op::bit_not:
         case binary_op::bit_xor:
+            return handle_binary_bitwise(fid, lhs_eid, op, rhs_eid);
         case binary_op::greater_than:
         case binary_op::less_than:
         case binary_op::greater_than_or_equal:
         case binary_op::less_than_or_equal:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return handle_binary_comparision(fid, lhs_eid, op, rhs_eid);
         case binary_op::left_bitshift:
         case binary_op::right_shift_logical:
         case binary_op::right_shift_arithmetic:
+            return handle_binary_shift(fid, lhs_eid, op, rhs_eid);
         case binary_op::bool_or:
         case binary_op::bool_and:
-        case binary_op::bool_equal:
-        case binary_op::bool_not_equal:
-            break;
+            return handle_binary_bool_conj_disj(fid, lhs_eid, op, rhs_eid);
         }
         return std::nullopt;
     }
 
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type);
+
+    [[nodiscard]] OptId<TypeId> handle_binary_arithmetic(FileId fid, ExecId lhs_eid, binary_op op,
+                                                         ExecId rhs_eid) {
+        // TODO
+    }
+
+    [[nodiscard]] OptId<TypeId> handle_binary_bitwise(FileId fid, ExecId lhs_eid, binary_op op,
+                                                      ExecId rhs_eid) {
+        // TODO
+    }
+
+    [[nodiscard]] OptId<TypeId> handle_binary_comparision(FileId fid, ExecId lhs_eid, binary_op op,
+                                                          ExecId rhs_eid) {
+        // TODO
+    }
+
+    [[nodiscard]] OptId<TypeId> handle_binary_shift(FileId fid, ExecId lhs_eid, binary_op op,
+                                                    ExecId rhs_eid) {
+        // TODO
+    }
+    [[nodiscard]] OptId<TypeId> handle_binary_bool_conj_disj(FileId fid, ExecId lhs_eid,
+                                                             binary_op op, ExecId rhs_eid) {
+        // TODO
+    }
 };
 } // namespace hir
 #endif
