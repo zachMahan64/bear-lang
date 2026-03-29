@@ -1,0 +1,3 @@
+// tests/hir/22.br
+
+compt i32 a = 1 + 1;

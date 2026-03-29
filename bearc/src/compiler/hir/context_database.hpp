@@ -1,0 +1,33 @@
+//     /                              /
+//    /                              /
+//   /_____  _____  _____  _____    /  _____   _  _  _____
+//  /     / /____  /____/ /____/   /  /____/  /\  / /  __
+// /_____/ /____  /    / /   \    /  /    /  /  \/ /____/
+// Copyright (C) 2025-2026 Zachary Mahan
+// Licensed under the GNU GPL v3. See LICENSE for details.
+
+#ifndef COMPILER_HIR_CONTEXT_DATABASE_HPP
+#define COMPILER_HIR_CONTEXT_DATABASE_HPP
+
+#include "cli/args.h"
+#include "compiler/hir/context.hpp"
+#include "compiler/hir/def.hpp"
+
+class ContextDatabase {
+  public:
+    ContextDatabase(int arg_count, const char** args)
+        : args{std::make_unique<bearc_args>(parse_cli_args(arg_count, const_cast<char**>(args)))},
+          ctx{std::make_unique<hir::Context>(this->args.get())} {}
+    ContextDatabase(std::vector<const char*> args_vec)
+        : args{std::make_unique<bearc_args>(parse_cli_args(static_cast<int>(args_vec.size()),
+                                                           const_cast<char**>(args_vec.data())))},
+          ctx{std::make_unique<hir::Context>(this->args.get())} {}
+
+    std::optional<hir::Def> query_definition(std::span<const char*> def_path);
+
+  private:
+    std::unique_ptr<const bearc_args> args;
+    std::unique_ptr<hir::Context> ctx;
+};
+
+#endif // !COMPILER_HIR_CONTEXT_DATA_BASE_HPP

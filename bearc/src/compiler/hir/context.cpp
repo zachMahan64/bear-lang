@@ -140,6 +140,8 @@ bool Context::compact_diagnostics_enabled() const noexcept { return compact_diag
 
 bool Context::has_flag(cli_flag_e flag) const noexcept { return args->flags[flag]; }
 
+const bearc_args_t* Context::get_args() const noexcept { return this->args; }
+
 SymbolId Context::symbol_id(std::string_view str) { return symbol_id(str.data(), str.length()); }
 SymbolId Context::symbol_id(const token_t* tkn) { return symbol_id(tkn->start, tkn->len); }
 SymbolId Context::symbol_id(const char* start, size_t len) {

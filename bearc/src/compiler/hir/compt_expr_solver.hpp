@@ -72,7 +72,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type);
     }
 
-  private:
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                          const ast_expr_t* expr,
                                                          std::optional<builtin_type> into_builtin) {
@@ -551,6 +550,8 @@ template <IsDefVisitor V> class ComptExprSolver {
     ret:
         return std::nullopt;
     }
+
+  private:
     [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, NamedOrAnonScopeId scope, ExecId eid,
                                                  const ast_expr_t* into_expr) {
         assert(into_expr->type == AST_EXPR_TYPE);
@@ -647,28 +648,33 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                              const ast_type_t* type);
 
-    [[nodiscard]] OptId<TypeId> handle_binary_arithmetic(FileId fid, ExecId lhs_eid, binary_op op,
+    [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, ExecId lhs_eid, binary_op op,
                                                          ExecId rhs_eid) {
         // TODO
+        return std::nullopt;
     }
 
-    [[nodiscard]] OptId<TypeId> handle_binary_bitwise(FileId fid, ExecId lhs_eid, binary_op op,
+    [[nodiscard]] OptId<ExecId> handle_binary_bitwise(FileId fid, ExecId lhs_eid, binary_op op,
                                                       ExecId rhs_eid) {
         // TODO
+        return std::nullopt;
     }
 
-    [[nodiscard]] OptId<TypeId> handle_binary_comparision(FileId fid, ExecId lhs_eid, binary_op op,
+    [[nodiscard]] OptId<ExecId> handle_binary_comparision(FileId fid, ExecId lhs_eid, binary_op op,
                                                           ExecId rhs_eid) {
         // TODO
+        return std::nullopt;
     }
 
-    [[nodiscard]] OptId<TypeId> handle_binary_shift(FileId fid, ExecId lhs_eid, binary_op op,
+    [[nodiscard]] OptId<ExecId> handle_binary_shift(FileId fid, ExecId lhs_eid, binary_op op,
                                                     ExecId rhs_eid) {
         // TODO
+        return std::nullopt;
     }
-    [[nodiscard]] OptId<TypeId> handle_binary_bool_conj_disj(FileId fid, ExecId lhs_eid,
+    [[nodiscard]] OptId<ExecId> handle_binary_bool_conj_disj(FileId fid, ExecId lhs_eid,
                                                              binary_op op, ExecId rhs_eid) {
         // TODO
+        return std::nullopt;
     }
 };
 } // namespace hir

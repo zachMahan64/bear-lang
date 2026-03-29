@@ -60,6 +60,7 @@ set(SRC
     src/compiler/hir/exec_ops.cpp
     src/compiler/hir/file.cpp
     src/compiler/hir/context.cpp
+    src/compiler/hir/context_database.cpp
     src/compiler/hir/scope.cpp
     src/compiler/hir/ast_visitor.cpp
     src/compiler/hir/diagnostic.cpp
