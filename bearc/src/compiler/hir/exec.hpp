@@ -144,6 +144,19 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     ExecExprComptConstant(ConstantValue constval) : value{constval} {}
     [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type) const;
     [[nodiscard]] std::optional<ExecExprComptConstant> try_down_convert_to(builtin_type type) const;
+    [[nodiscard]] bool has_binary_op(binary_op op) const;
+    [[nodiscard]] bool has_unary_op(unary_op op) const;
+    [[nodiscard]] static std::optional<ExecExprComptConstant> plus(ExecExprComptConstant lhs,
+                                                                   ExecExprComptConstant rhs);
+    [[nodiscard]] static std::optional<ExecExprComptConstant> minus(ExecExprComptConstant lhs,
+                                                                    ExecExprComptConstant rhs);
+    [[nodiscard]] static std::optional<ExecExprComptConstant> multiply(ExecExprComptConstant lhs,
+                                                                       ExecExprComptConstant rhs);
+    [[nodiscard]] static std::optional<ExecExprComptConstant> divide(ExecExprComptConstant lhs,
+                                                                     ExecExprComptConstant rhs);
+    [[nodiscard]] static std::optional<ExecExprComptConstant> mod(ExecExprComptConstant lhs,
+                                                                  ExecExprComptConstant rhs);
+    [[nodiscard]] bool equals_zero() const;
 };
 
 struct ExecExprListLiteral {

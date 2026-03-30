@@ -626,7 +626,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             return handle_binary_arithmetic(fid, lhs_exec, op, rhs_exec);
         case binary_op::bit_or:
         case binary_op::bit_and:
-        case binary_op::bit_not:
         case binary_op::bit_xor:
             return handle_binary_bitwise(fid, lhs_exec, op, rhs_exec);
         case binary_op::greater_than:
@@ -668,6 +667,23 @@ template <IsDefVisitor V> class ComptExprSolver {
         return false;
     }
 
+    [[nodiscard]] bool guard_op_not_viable_for_types(FileId fid, const Exec& lhs, const Exec& rhs,
+                                                     ExecExprComptConstant lhs_val, binary_op op,
+                                                     ExecExprComptConstant rhs_val) {
+        if (!lhs_val.has_binary_op(op) || !rhs_val.has_binary_op(op)) {
+            auto lhs_tid = context.emplace_type(TypeBuiltin{.type = lhs_val.type_builtin()},
+                                                lhs.span, false);
+            auto rhs_tid = context.emplace_type(TypeBuiltin{.type = rhs_val.type_builtin()},
+                                                rhs.span, false);
+            context.emplace_diagnostic_with_message_value(
+                Span::combine(lhs.span, rhs.span),
+                diag_code::incompatible_types_for_binary_operator, diag_type::error,
+                DiagnosticTypeAndTypeForBinaryOp{.lhs_tid = lhs_tid, .rhs_tid = rhs_tid, .op = op});
+            return true;
+        }
+        return false;
+    }
+
     [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, const Exec& lhs, binary_op op,
                                                          const Exec& rhs) {
 
@@ -676,12 +692,15 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         // try to safely convert (more ergonomic for literals and guranteed safe conversions)
         if (!lhs_val.holds_same_variant_type(rhs_val)) {
-            auto maybe_converted_rhs = rhs_val.try_up_convert_to(lhs_val.type_builtin());
-            if (maybe_converted_rhs.has_value()) {
-                rhs_val = maybe_converted_rhs.value();
-            } else {
+            const bool use_lhs_type = lhs_val.has_binary_op(op);
+            const bool use_rhs_type = rhs_val.has_binary_op(op);
+            // prefer lhs
+            if (use_lhs_type) {
+                auto maybe_converted_rhs = rhs_val.try_up_convert_to(lhs_val.type_builtin());
+                rhs_val = (maybe_converted_rhs.has_value()) ? maybe_converted_rhs.value() : rhs_val;
+            } else if (use_rhs_type) {
                 auto maybe_converted_lhs = lhs_val.try_up_convert_to(rhs_val.type_builtin());
-                rhs_val = (maybe_converted_lhs.has_value()) ? maybe_converted_lhs.value() : rhs_val;
+                lhs_val = (maybe_converted_lhs.has_value()) ? maybe_converted_lhs.value() : lhs_val;
             }
         }
 
@@ -689,23 +708,50 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
 
-        // TODO
+        if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
+            return std::nullopt;
+        }
+
+        std::optional<ExecExprComptConstant> maybe_value{};
+
+        auto guard_div_by_zero = [&]() -> bool {
+            if (rhs_val.equals_zero()) {
+                return true;
+                context.emplace_diagnostic(
+                    rhs.span, diag_code::dividing_by_zero_at_compt_is_illegal, diag_type::error);
+            }
+            return false;
+        };
+
         switch (op) {
         case binary_op::plus:
-            break;
+            maybe_value = ExecExprComptConstant::plus(lhs_val, rhs_val);
         case binary_op::minus:
+            maybe_value = ExecExprComptConstant::minus(lhs_val, rhs_val);
             break;
         case binary_op::multiply:
+            maybe_value = ExecExprComptConstant::multiply(lhs_val, rhs_val);
             break;
+
+            // for div and mod guard div by zero so we don't crash the interpreter
         case binary_op::divide:
+            maybe_value = (guard_div_by_zero()) ? std::nullopt
+                                                : ExecExprComptConstant::divide(lhs_val, rhs_val);
             break;
         case binary_op::modulo:
+            maybe_value
+                = guard_div_by_zero() ? std::nullopt : ExecExprComptConstant::mod(lhs_val, rhs_val);
             break;
         default:
             std::unreachable();
             break;
         }
-        return std::nullopt;
+        if (!maybe_value.has_value()) {
+            return std::nullopt;
+        }
+        // all good so exec up
+        return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
+                                    /*compt*/ true);
     }
 
     [[nodiscard]] OptId<ExecId> handle_binary_bitwise(FileId fid, const Exec& lhs, binary_op op,

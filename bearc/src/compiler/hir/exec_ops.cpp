@@ -25,6 +25,8 @@ std::optional<binary_op> token_to_binary_op(const token_t* tkn) {
         return binary_op::modulo;
     case TOK_BAR:
         return binary_op::bit_or;
+    case TOK_BIT_XOR:
+        return binary_op::bit_xor;
     case TOK_AMPER:
         return binary_op::bit_and;
     case TOK_GT:
@@ -72,4 +74,73 @@ std::optional<unary_op> token_to_unary_op(const token_t* tkn) {
     }
     return std::nullopt;
 }
+const char* binary_op_to_cstr(binary_op op) {
+    switch (op) {
+    case binary_op::plus:
+        return "+";
+    case binary_op::minus:
+        return "-";
+    case binary_op::multiply:
+        return "*";
+    case binary_op::divide:
+        return "/";
+    case binary_op::modulo:
+        return "%";
+    case binary_op::bit_or:
+        return "|";
+    case binary_op::bit_and:
+        return "&";
+    case binary_op::bit_xor:
+        return "^";
+    case binary_op::greater_than:
+        return ">";
+    case binary_op::less_than:
+        return "<";
+    case binary_op::greater_than_or_equal:
+        return ">=";
+    case binary_op::less_than_or_equal:
+        return "<=";
+    case binary_op::left_bitshift:
+        return "<<";
+    case binary_op::right_shift_logical:
+        return ">>";
+    case binary_op::right_shift_arithmetic:
+        return ">>>";
+    case binary_op::bool_or:
+        return "||";
+    case binary_op::bool_and:
+        return "&&";
+    case binary_op::bool_equal:
+        return "==";
+    case binary_op::bool_not_equal:
+        return "!=";
+    }
+}
+
+const char* binary_op_to_cstr(unary_op op) {
+    switch (op) {
+    case unary_op::inc:
+        return "++";
+    case unary_op::dec:
+        return "--";
+    case unary_op::plus:
+        return "+";
+    case unary_op::minus:
+        return "-";
+    case unary_op::bool_not:
+        return "!";
+    case unary_op::bit_not:
+        return "~";
+    }
+}
+
+const char* is_as_op_to_cstr(is_as_op op) {
+    switch (op) {
+    case is_as_op::is:
+        return "is";
+    case is_as_op::as:
+        return "as";
+    }
+}
+
 } // namespace hir

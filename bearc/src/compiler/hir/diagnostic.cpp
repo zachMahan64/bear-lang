@@ -151,6 +151,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
                "constants";
     case diag_code::incompatible_types_for_binary_expression:
         return "incompatible types for binary expression:";
+    case diag_code::incompatible_types_for_binary_operator:
+        return "incompatible types for binary operator";
+    case diag_code::dividing_by_zero_at_compt_is_illegal:
+        return "dividing by zero at compile-time is illegal";
     }
 
     std::unreachable();
@@ -548,6 +552,26 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += '`';
             str += accent_color_for_type(type);
             str += type_to_string(ctx, t.rhs_tid);
+            str += ansi_bold_reset();
+            str += '`';
+            str += ansi_reset();
+        },
+        [&](DiagnosticTypeAndTypeForBinaryOp t) {
+            str += message_for_code(code);
+            str += " `";
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, t.lhs_tid);
+            str += ansi_bold_reset();
+            str += '`';
+            str += " and ";
+            str += '`';
+            str += accent_color_for_type(type);
+            str += type_to_string(ctx, t.rhs_tid);
+            str += ansi_bold_reset();
+            str += "` for binary operator ";
+            str += '`';
+            str += accent_color_for_type(type);
+            str += binary_op_to_cstr(t.op);
             str += ansi_bold_reset();
             str += '`';
             str += ansi_reset();

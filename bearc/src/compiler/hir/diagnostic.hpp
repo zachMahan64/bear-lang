@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_DIAGNOSTIC_HPP
 #define COMPILER_HIR_DIAGNOSTIC_HPP
 
+#include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/type.hpp"
@@ -73,6 +74,8 @@ enum class diag_code : uint8_t {
     a_compt_variable_should_be_explicitly_initialized,
     even_non_compt_top_levels_need_compt_init,
     incompatible_types_for_binary_expression,
+    incompatible_types_for_binary_operator,
+    dividing_by_zero_at_compt_is_illegal,
 
     count, // this must be last,
 
@@ -115,11 +118,18 @@ struct DiagnosticTypeAndType {
     TypeId rhs_tid;
 };
 
+struct DiagnosticTypeAndTypeForBinaryOp {
+    TypeId lhs_tid;
+    TypeId rhs_tid;
+    binary_op op;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
-                   DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType>;
+                   DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
+                   DiagnosticTypeAndTypeForBinaryOp>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;

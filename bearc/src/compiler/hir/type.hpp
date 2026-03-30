@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_TYPE_HPP
 #define COMPILER_HIR_TYPE_HPP
 
+#include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/variant_helpers.hpp"
@@ -273,6 +274,11 @@ bool contains_mut(const Context& ctx, TypeId tid);
 std::string type_to_string(const Context& ctx, TypeId tid);
 // converts a TypeId to a string without any muts
 std::string type_to_string_without_muts(const Context& ctx, TypeId tid);
+
+bool builtin_type_has_binary_op(builtin_type type, binary_op op);
+
+bool builtin_type_has_unary_op(builtin_type type, unary_op op);
+
 } // namespace hir
 
 #endif

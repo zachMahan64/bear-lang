@@ -8,6 +8,7 @@
 
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/context.hpp"
+#include "compiler/hir/exec_ops.hpp"
 #include <utility>
 
 namespace hir {
@@ -502,6 +503,285 @@ std::string type_to_string(const Context& ctx, TypeId tid) {
 
 std::string type_to_string_without_muts(const Context& ctx, TypeId tid) {
     return TypeTransformer<TypeToString<DoNotConsiderMut>>{ctx}(tid).str;
+}
+
+bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
+    switch (type) {
+    case builtin_type::str:
+        switch (op) {
+        case binary_op::plus:
+            return true;
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return false;
+        }
+        break;
+    // i8
+    case builtin_type::i8:
+    // u8
+    case builtin_type::u8:
+    // i16
+    case builtin_type::i16:
+    // u16
+    case builtin_type::u16:
+    // i32
+    case builtin_type::i32:
+    // u32
+    case builtin_type::u32:
+    // i64
+    case builtin_type::i64:
+    // u64
+    case builtin_type::usize:
+    case builtin_type::u64: {
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return true;
+        }
+        break;
+    }
+    // char
+    case builtin_type::charr: {
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+            return false;
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return true;
+        }
+
+        break;
+    }
+    // f32
+    case builtin_type::f32: {
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return true;
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+            return false;
+        }
+
+        break;
+    }
+    // f64
+    case builtin_type::f64: {
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return true;
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+            return false;
+        }
+    }
+    // nullptr
+    case builtin_type::nullpointer: {
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+            return false;
+        }
+    }
+    // bool
+    case builtin_type::boolean: {
+        switch (op) {
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return true;
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
+            return false;
+        }
+        break;
+    }
+    case builtin_type::voidd:
+        return false;
+    }
+    return false;
+}
+
+bool builtin_type_has_unary_op(builtin_type type, unary_op op) {
+    switch (type) {
+    // str
+    case builtin_type::str:
+        return false;
+    case builtin_type::i8:
+        return true;
+
+    case builtin_type::u8:
+        return op != unary_op::minus;
+
+    // i16
+    case builtin_type::i16:
+        return true;
+
+    // u16
+    case builtin_type::u16:
+        return op != unary_op::minus;
+
+    // i32
+    case builtin_type::i32:
+        return true;
+
+    // u32
+    case builtin_type::u32:
+
+        return op != unary_op::minus;
+
+    // i64
+    case builtin_type::i64:
+        return true;
+
+    // u64
+    case builtin_type::u64:
+        return op != unary_op::minus;
+    // char
+    case builtin_type::charr:
+        return false;
+    // f32
+    case builtin_type::f32:
+    // f64
+    case builtin_type::f64: {
+        switch (op) {
+        case unary_op::plus:
+        case unary_op::minus:
+            return true;
+        case unary_op::inc:
+        case unary_op::dec:
+        case unary_op::bool_not:
+        case unary_op::bit_not:
+            return false;
+        }
+        break;
+    }
+    // nullptr
+    case builtin_type::nullpointer: {
+        return false;
+        break;
+    }
+    // bool
+    case builtin_type::boolean: {
+        return op == unary_op::bool_not;
+        break;
+    }
+    case builtin_type::usize:
+    case builtin_type::voidd:
+        return false;
+    }
+    return false;
 }
 
 } // namespace hir

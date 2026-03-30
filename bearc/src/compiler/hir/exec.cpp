@@ -9,10 +9,13 @@
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/diagnostic.hpp"
+#include "compiler/hir/exec_ops.hpp"
+#include "compiler/hir/type.hpp"
 #include <cfloat>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 namespace hir {
 
 std::optional<ExecExprComptConstant>
@@ -1118,4 +1121,261 @@ SymbolId ExecExprComptConstant::to_symbol_id(Context& ctx) const {
     }
     return ctx.symbol_id(str);
 }
+
+[[nodiscard]] bool ExecExprComptConstant::has_binary_op(binary_op op) const {
+    return builtin_type_has_binary_op(type_builtin(), op);
+}
+[[nodiscard]] bool ExecExprComptConstant::has_unary_op(unary_op op) const {
+    return builtin_type_has_unary_op(type_builtin(), op);
+}
+
+using i8 = int8_t;
+using u8 = uint8_t;
+using i16 = int16_t;
+using u16 = uint16_t;
+using i32 = int32_t;
+using u32 = uint32_t;
+using i64 = int64_t;
+using u64 = uint64_t;
+using usize = uint64_t;
+using f32 = float;
+using f64 = double;
+using EConst = ExecExprComptConstant;
+
+template <typename T> EConst e_plus(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() + r.as<T>())};
+}
+
+template <typename T> EConst e_minus(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() - r.as<T>())};
+}
+
+template <typename T> EConst e_multiply(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() * r.as<T>())};
+}
+
+template <typename T> EConst e_divide(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() / r.as<T>())};
+}
+
+template <typename T> EConst e_mod(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() / r.as<T>())};
+}
+
+std::optional<ExecExprComptConstant> ExecExprComptConstant::plus(ExecExprComptConstant lhs,
+                                                                 ExecExprComptConstant rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_plus<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_plus<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_plus<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_plus<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_plus<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_plus<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_plus<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_plus<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_plus<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_plus<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_plus<f64>(lhs, rhs);
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecExprComptConstant> ExecExprComptConstant::minus(ExecExprComptConstant lhs,
+                                                                  ExecExprComptConstant rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_minus<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_minus<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_minus<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_minus<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_minus<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_minus<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_minus<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_minus<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_minus<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_minus<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_minus<f64>(lhs, rhs);
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecExprComptConstant> ExecExprComptConstant::multiply(ExecExprComptConstant lhs,
+                                                                     ExecExprComptConstant rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_multiply<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_multiply<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_multiply<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_multiply<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_multiply<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_multiply<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_multiply<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_multiply<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_multiply<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_multiply<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_multiply<f64>(lhs, rhs);
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecExprComptConstant> ExecExprComptConstant::divide(ExecExprComptConstant lhs,
+                                                                   ExecExprComptConstant rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_divide<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_divide<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_divide<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_divide<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_divide<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_divide<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_divide<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_divide<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_divide<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_divide<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_divide<f64>(lhs, rhs);
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecExprComptConstant> ExecExprComptConstant::mod(ExecExprComptConstant lhs,
+                                                                ExecExprComptConstant rhs) {
+
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_mod<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_mod<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_mod<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_mod<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_mod<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_mod<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_mod<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_mod<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_mod<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_mod<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_mod<f64>(lhs, rhs);
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+
+bool ExecExprComptConstant::equals_zero() const {
+    switch (type_builtin()) {
+    case builtin_type::u8:
+        return as<u8>() == 0;
+    case builtin_type::i8:
+        return as<i8>() == 0;
+    case builtin_type::u16:
+        return as<u16>() == 0;
+    case builtin_type::i16:
+        return as<i16>() == 0;
+    case builtin_type::u32:
+        return as<u32>() == 0;
+    case builtin_type::i32:
+        return as<i32>() == 0;
+    case builtin_type::u64:
+        return as<u64>() == 0;
+    case builtin_type::i64:
+        return as<i64>() == 0;
+    case builtin_type::usize:
+        return as<usize>() == 0;
+    case builtin_type::charr:
+        return as<char>() == '\0';
+    case builtin_type::f32:
+        return as<f32>() == 0.0f;
+    case builtin_type::f64:
+        return as<f64>() == 0.0f;
+    case builtin_type::voidd:
+    case builtin_type::str:
+        return false;
+    case builtin_type::nullpointer:
+        return true;
+    case builtin_type::boolean:
+        return !as<bool>();
+    }
+}
+
 } // namespace hir

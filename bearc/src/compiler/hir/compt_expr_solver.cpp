@@ -12,13 +12,14 @@
 
 namespace hir {
 
-// explicit instants., these should be the only ones necessary
-template class ComptExprSolver<InsideBodyDefVisitor>;
-template class ComptExprSolver<TopLevelDefVisitor>;
-
 template <IsDefVisitor V>
 OptId<TypeId> ComptExprSolver<V>::resolve_type(FileId fid, NamedOrAnonScopeId scope,
                                                const ast_type_t* type) {
     return TypeResolver<V>{context, this->def_visitor}.resolve_type(fid, scope, type);
 }
+
+// explicit instants., these should be the only ones necessary
+template class ComptExprSolver<InsideBodyDefVisitor>;
+template class ComptExprSolver<TopLevelDefVisitor>;
+
 } // namespace hir

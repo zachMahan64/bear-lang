@@ -23,7 +23,6 @@ enum class binary_op : uint8_t {
     modulo,
     bit_or,
     bit_and,
-    bit_not,
     bit_xor,
     greater_than,
     less_than,
@@ -37,13 +36,19 @@ enum class binary_op : uint8_t {
     bool_equal,
     bool_not_equal,
 };
-enum class unary_op : uint8_t { inc, dec, plus, minus, bool_not };
+enum class unary_op : uint8_t { inc, dec, plus, minus, bool_not, bit_not };
 
 enum class assign_op : uint8_t { assign_eq, assign_move };
 
 enum class is_as_op : uint8_t { is, as };
 
 class InvalidOp {};
+
+const char* binary_op_to_cstr(binary_op op);
+
+const char* binary_op_to_cstr(unary_op op);
+
+const char* is_as_op_to_cstr(is_as_op op);
 
 // converts a token to standard binary ops (arithmetic and comparison only)
 std::optional<binary_op> token_to_binary_op(const token_t* tkn);

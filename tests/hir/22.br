@@ -10,8 +10,14 @@ compt i32 d = 'a' + 1 as i32; // fine
 
 compt i32 e = 'a' as i32 + 1 as i32; // fine
 
-compt char f = 'a' + 1000; // oops, TODO
-
 compt f32 g = 1.0; // fine
 
-compt f32 z = 1.000 * 1.123123123123123 * 12123123.123 + 1231.12 - 12123.12 as f32; // fine, TODO
+compt f32 z = 1.000 * 1.123123123123123 * 12123123.123 + 1231.12 - 12123.12 as f32; // fine
+
+compt char za = 'z'; // fine
+
+compt char zb = 'a' * za; // oops  
+
+compt str zc = "asdasd" - "asdasd"; // oops
+
+compt u8 zd = 1123123; // oops
