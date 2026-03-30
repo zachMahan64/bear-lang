@@ -21,6 +21,8 @@ std::optional<binary_op> token_to_binary_op(const token_t* tkn) {
         return binary_op::minus;
     case TOK_STAR:
         return binary_op::multiply;
+    case TOK_DIVIDE:
+        return binary_op::divide;
     case TOK_MODULO:
         return binary_op::modulo;
     case TOK_BAR:

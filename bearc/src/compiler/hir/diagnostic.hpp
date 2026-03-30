@@ -76,6 +76,8 @@ enum class diag_code : uint8_t {
     incompatible_types_for_binary_expression,
     incompatible_types_for_binary_operator,
     dividing_by_zero_at_compt_is_illegal,
+    invalid_cast,
+    parentheses_should_be_used_for_chained_casts,
 
     count, // this must be last,
 

@@ -155,6 +155,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "incompatible types for binary operator";
     case diag_code::dividing_by_zero_at_compt_is_illegal:
         return "dividing by zero at compile-time is illegal";
+    case diag_code::invalid_cast:
+        return "invalid cast";
+    case diag_code::parentheses_should_be_used_for_chained_casts:
+        return "parentheses should be used for chained casts";
     }
 
     std::unreachable();

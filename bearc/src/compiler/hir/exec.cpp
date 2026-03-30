@@ -15,7 +15,9 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <optional>
+#include <utility>
 namespace hir {
 
 std::optional<ExecExprComptConstant>
@@ -133,6 +135,7 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
         switch (type) {
         case builtin_type::u8:
         case builtin_type::i8:
+        case builtin_type::charr:
             return none();
         case builtin_type::u16:
             return to_optconst(ConstantValue{static_cast<uint16_t>(val)});
@@ -148,8 +151,6 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{static_cast<int64_t>(val)});
         case builtin_type::usize:
             return to_optconst(ConstantValue{static_cast<size_t>(val)});
-        case builtin_type::charr:
-            return to_optconst(ConstantValue{static_cast<char>(val)});
         case builtin_type::f32:
             return to_optconst(ConstantValue{static_cast<float>(val)});
         case builtin_type::f64:
@@ -168,6 +169,7 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
         switch (type) {
         case builtin_type::u8:
         case builtin_type::i8:
+        case builtin_type::charr:
             return none();
         case builtin_type::u16:
             return *this;
@@ -183,8 +185,6 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{static_cast<int64_t>(val)});
         case builtin_type::usize:
             return to_optconst(ConstantValue{static_cast<size_t>(val)});
-        case builtin_type::charr:
-            return to_optconst(ConstantValue{static_cast<char>(val)});
         case builtin_type::f32:
             return to_optconst(ConstantValue{static_cast<float>(val)});
         case builtin_type::f64:
@@ -205,6 +205,7 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
         case builtin_type::i8:
         case builtin_type::u16:
         case builtin_type::i16:
+        case builtin_type::charr:
             return none();
         case builtin_type::u32:
             return to_optconst(ConstantValue{static_cast<uint32_t>(val)});
@@ -216,8 +217,6 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{static_cast<int64_t>(val)});
         case builtin_type::usize:
             return to_optconst(ConstantValue{static_cast<size_t>(val)});
-        case builtin_type::charr:
-            return to_optconst(ConstantValue{static_cast<char>(val)});
         case builtin_type::f32:
             return to_optconst(ConstantValue{static_cast<float>(val)});
         case builtin_type::f64:
@@ -238,6 +237,7 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
         case builtin_type::i8:
         case builtin_type::u16:
         case builtin_type::i16:
+        case builtin_type::charr:
             return none();
         case builtin_type::u32:
             return *this;
@@ -249,8 +249,6 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{static_cast<int64_t>(val)});
         case builtin_type::usize:
             return to_optconst(ConstantValue{static_cast<size_t>(val)});
-        case builtin_type::charr:
-            return to_optconst(ConstantValue{static_cast<char>(val)});
         case builtin_type::f32:
             return to_optconst(ConstantValue{static_cast<float>(val)});
         case builtin_type::f64:
@@ -273,6 +271,7 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
         case builtin_type::i16:
         case builtin_type::u32:
         case builtin_type::i32:
+        case builtin_type::charr:
             return none();
         case builtin_type::u64:
             return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
@@ -280,8 +279,6 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
             return *this;
         case builtin_type::usize:
             return to_optconst(ConstantValue{static_cast<size_t>(val)});
-        case builtin_type::charr:
-            return to_optconst(ConstantValue{static_cast<char>(val)});
         case builtin_type::f32:
             return to_optconst(ConstantValue{static_cast<float>(val)});
         case builtin_type::f64:
@@ -304,15 +301,14 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
         case builtin_type::i16:
         case builtin_type::u32:
         case builtin_type::i32:
+        case builtin_type::charr:
             return none();
         case builtin_type::u64:
             return *this;
         case builtin_type::i64:
-            return to_optconst(ConstantValue{static_cast<uint64_t>(val)});
+            return to_optconst(ConstantValue{static_cast<int64_t>(val)});
         case builtin_type::usize:
             return to_optconst(ConstantValue{static_cast<size_t>(val)});
-        case builtin_type::charr:
-            return to_optconst(ConstantValue{static_cast<char>(val)});
         case builtin_type::f32:
             return to_optconst(ConstantValue{static_cast<float>(val)});
         case builtin_type::f64:
@@ -848,6 +844,7 @@ ExecExprComptConstant::try_down_convert_to(builtin_type type) const {
             if (v <= INT16_MAX) {
                 return to_optconst(ConstantValue{static_cast<int16_t>(v)});
             }
+            std::cout << "VAL:" << v << '\n'; // TODO
             return none();
 
         case builtin_type::u32:
@@ -1120,6 +1117,45 @@ SymbolId ExecExprComptConstant::to_symbol_id(Context& ctx) const {
         return {};
     }
     return ctx.symbol_id(str);
+}
+
+std::string ExecExprComptConstant::to_string(Context& context) {
+    switch (type_builtin()) {
+    case builtin_type::u8:
+        return std::to_string(static_cast<int>(as<uint8_t>()));
+    case builtin_type::i8:
+        return std::to_string(static_cast<int>(as<int8_t>()));
+    case builtin_type::u16:
+        return std::to_string(static_cast<int>(as<uint16_t>()));
+    case builtin_type::i16:
+        return std::to_string(static_cast<int>(as<int16_t>()));
+    case builtin_type::u32:
+        return std::to_string(as<uint32_t>());
+    case builtin_type::i32:
+        return std::to_string(as<int32_t>());
+    case builtin_type::u64:
+        return std::to_string(as<uint64_t>());
+    case builtin_type::i64:
+        return std::to_string(as<int64_t>());
+    case builtin_type::usize:
+        return std::to_string(as<uint64_t>());
+    case builtin_type::charr:
+        return std::to_string(as<char>());
+    case builtin_type::f32:
+        return std::to_string(as<float>());
+    case builtin_type::f64:
+        return std::to_string(as<double>());
+    case builtin_type::voidd:
+        return "void";
+    case builtin_type::str:
+        return context.symbol_id_to_cstr(as<SymbolId>());
+    case builtin_type::nullpointer:
+        return "null";
+    case builtin_type::boolean:
+        return (as<bool>()) ? "true" : "false";
+    }
+    std::unreachable();
+    return "";
 }
 
 [[nodiscard]] bool ExecExprComptConstant::has_binary_op(binary_op op) const {

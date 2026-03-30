@@ -16,6 +16,7 @@
 #include "compiler/hir/variant_helpers.hpp"
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <variant>
 
 namespace hir {
@@ -136,16 +137,25 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
         }
     }
 
+    // straight up string converter, use this mostly just for debugging
+    std::string to_string(Context& context);
+
     // basically a string converter but fancy
     SymbolId to_symbol_id(Context& ctx) const;
 
     // returns none if conversion fails, diagnostics must be reported outside of this method
     [[nodiscard]] std::optional<ExecExprComptConstant> try_safe_convert_to(builtin_type type) const;
+
     ExecExprComptConstant(ConstantValue constval) : value{constval} {}
+
     [[nodiscard]] std::optional<ExecExprComptConstant> try_up_convert_to(builtin_type type) const;
     [[nodiscard]] std::optional<ExecExprComptConstant> try_down_convert_to(builtin_type type) const;
+
     [[nodiscard]] bool has_binary_op(binary_op op) const;
     [[nodiscard]] bool has_unary_op(unary_op op) const;
+
+    [[nodiscard]] bool equals_zero() const;
+
     [[nodiscard]] static std::optional<ExecExprComptConstant> plus(ExecExprComptConstant lhs,
                                                                    ExecExprComptConstant rhs);
     [[nodiscard]] static std::optional<ExecExprComptConstant> minus(ExecExprComptConstant lhs,
@@ -156,7 +166,6 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
                                                                      ExecExprComptConstant rhs);
     [[nodiscard]] static std::optional<ExecExprComptConstant> mod(ExecExprComptConstant lhs,
                                                                   ExecExprComptConstant rhs);
-    [[nodiscard]] bool equals_zero() const;
 };
 
 struct ExecExprListLiteral {

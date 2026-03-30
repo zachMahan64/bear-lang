@@ -107,6 +107,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             = ComptExprSolver(context, *this)
                   .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
                                     maybe_type.as_id());
+
         if (!maybe_compt_exec.has_value()) {
             if (!def.compt) {
                 context.emplace_diagnostic(def.span,

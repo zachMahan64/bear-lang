@@ -1,2 +1,14 @@
 // tests/hir/23.br
-compt char f = 'a' + 1000.0 as f64; // oops, TODO
+compt char a = 1000.0; // oops
+
+compt u8 b = 100; // fine
+
+compt void c = 12; // oops
+
+compt i32 letter_c = 'a' + 2; // fine  
+
+compt char letter_c_as_char_0 = letter_c as u8 as char; // oops
+
+compt char letter_c_as_char_1 = (letter_c as u8) as char; // fine
+
+compt char letter_c_again_2 = 'a' as u8 + 2 as u8; // fine

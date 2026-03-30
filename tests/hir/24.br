@@ -1,0 +1,11 @@
+//tests/hir/24.br
+
+compt u8 a8 = 12 + 12 + 12;
+compt u16 a16 = 12 + 12 + 12;
+compt u32 a32 = 12 + 12;
+compt u64 a64 = 12 + 12;
+
+compt i8 b8 = 3 + 2 + 2;
+compt i16 b16 = 12 + 2 + 2;
+compt i32 b32 = 12 + 2 + 2;
+compt i64 b64 = 12 + 2 * 6;

@@ -19,6 +19,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
+#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -198,12 +199,26 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
                 assert(maybe_bin_op.holds<binary_op>());
                 // get res of binary op like +, -, etc.
-                return solve_binary_compt_exec(fid, scope, lhs.as_id(),
-                                               maybe_bin_op.as<binary_op>(), rhs.as_id(),
-                                               into_builtin);
+                auto maybe_eid
+                    = solve_binary_compt_exec(fid, scope, lhs.as_id(), maybe_bin_op.as<binary_op>(),
+                                              rhs.as_id(), into_builtin);
+
+                if (maybe_eid.has_value()) {
+                    auto exec = context.exec(maybe_eid.as_id());
+                    if (!exec.template holds<ExecExprComptConstant>()) {
+                        cooked = true;
+                    } else {
+                        std::cout << exec.template as<ExecExprComptConstant>().to_string(context)
+                                  << '\n';
+                        maybe_value = exec.template as<ExecExprComptConstant>();
+                    }
+                } else {
+                    cooked = true;
+                }
             }
             if (cooked) {
-                return std::nullopt;
+                return std::nullopt; // cooked / poisoned already, so just return since error
+                                     // should've already been reported
             }
             break;
         }
@@ -249,9 +264,16 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return emplace_e(maybe_value.value());
             }
 
-            // std::cout << builtin_type_to_cstr(maybe_value.value().type()) << '\n'; // debug
-
             auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin.value());
+
+            if (!maybe_converted.has_value()) {
+
+                std::cout << "failed to convert from "
+                          << builtin_type_to_cstr(maybe_value.value().type_builtin()) << " into "
+                          << builtin_type_to_cstr(into_builtin.value())
+                          << " with failed value: " << maybe_value.value().to_string(context)
+                          << '\n';
+            }
 
             // TODO give str cast hints here!
 
@@ -268,7 +290,13 @@ template <IsDefVisitor V> class ComptExprSolver {
 
                 return OptId<ExecId>{};
             }
-            // std::cout << builtin_type_to_cstr(maybe_converted.value().type()) << '\n'; // debug
+#ifdef DEBUG_BUILD
+            if (!maybe_converted.value().matches_type(into_builtin.value())) {
+                std::cout << builtin_type_to_cstr(maybe_converted.value().type_builtin())
+                          << '\n';                                               // debug
+                std::cout << builtin_type_to_cstr(into_builtin.value()) << '\n'; // debug
+            }
+#endif
             assert(maybe_converted.value().matches_type(into_builtin.value()));
             return emplace_e(maybe_converted.value());
         }
@@ -278,6 +306,11 @@ template <IsDefVisitor V> class ComptExprSolver {
     ret_without_diag:
         return OptId<ExecId>{};
     }
+
+    /**
+     * solve a struct's value at compile-time, this essentially attempts a canonicalization down to
+     * a struct-init eexpression where each field is evaluatable at compile-time
+     */
     [[nodiscard]] OptId<ExecId> solve_struct_compt_expr(FileId fid, NamedOrAnonScopeId scope,
                                                         const ast_expr_t* expr, TypeId into_tid) {
         auto emplace_e = [this, fid, expr](ExecValue val) {
@@ -371,6 +404,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                                                  DiagnosticSymbolAfterMessageNoQuotes{
                                                      context.symbol_id("the struct initializer")},
                                                  DiagnosticNoOtherInfo{});
+
                 context.set_next_diagnostic(did0, did1);
                 context.set_next_diagnostic(did1, did2);
                 return std::nullopt;
@@ -556,7 +590,15 @@ template <IsDefVisitor V> class ComptExprSolver {
   private:
     [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, NamedOrAnonScopeId scope, ExecId eid,
                                                  const ast_expr_t* into_expr) {
-        assert(into_expr->type == AST_EXPR_TYPE);
+        if (into_expr->type != AST_EXPR_TYPE) {
+            auto span = Span{fid, context.ast(fid).buffer(), into_expr->first, into_expr->last};
+            auto d0 = context.emplace_diagnostic(span, diag_code::invalid_cast, diag_type::error);
+            auto d1 = context.emplace_diagnostic(
+                span, diag_code::parentheses_should_be_used_for_chained_casts, diag_type::note,
+                DiagnosticNoOtherInfo{});
+            context.set_next_diagnostic(d0, d1);
+            return std::nullopt;
+        }
         const ast_type_t* ast_type = into_expr->expr.type_expr.type;
         auto maybe_tid = resolve_type(fid, scope, ast_type);
         if (!maybe_tid.has_value()) {
@@ -696,10 +738,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             const bool use_rhs_type = rhs_val.has_binary_op(op);
             // prefer lhs
             if (use_lhs_type) {
-                auto maybe_converted_rhs = rhs_val.try_up_convert_to(lhs_val.type_builtin());
+                auto maybe_converted_rhs = rhs_val.try_safe_convert_to(lhs_val.type_builtin());
                 rhs_val = (maybe_converted_rhs.has_value()) ? maybe_converted_rhs.value() : rhs_val;
             } else if (use_rhs_type) {
-                auto maybe_converted_lhs = lhs_val.try_up_convert_to(rhs_val.type_builtin());
+                auto maybe_converted_lhs = lhs_val.try_safe_convert_to(rhs_val.type_builtin());
                 lhs_val = (maybe_converted_lhs.has_value()) ? maybe_converted_lhs.value() : lhs_val;
             }
         }
