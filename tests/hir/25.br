@@ -1,0 +1,17 @@
+// tests/hir/25.br
+
+compt u64 ohno1 = (1+1) / 0; // oops
+
+compt u32 ohno2 = (36 * 1000 / 2 * 1.0 as u32) / (0 + 0); // oops
+
+compt f32 ohno3 = ((12.0 + 12312312) + 4) / (0.0 - 0); // oops 
+
+compt i8 ohno4 = (12) / (0 + 2 - (2 * 2) + 2); // oops 
+
+compt i8 ohno5 = (12) / ((0 + 2 - 2) * (2 + 2)); // oops
+
+compt i8 ohno6 = (12) / (0 + 1 - 1 * 1 + 1 - 1); // oops
+
+compt i8 tricky = (0 + 2 - 2 + (2*2) - (2*2)) as i8; // fine
+
+compt i8 ohno7 = (12) / tricky; // oops

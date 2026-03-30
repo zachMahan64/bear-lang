@@ -1119,7 +1119,7 @@ SymbolId ExecExprComptConstant::to_symbol_id(Context& ctx) const {
     return ctx.symbol_id(str);
 }
 
-std::string ExecExprComptConstant::to_string(Context& context) {
+std::string ExecExprComptConstant::to_string() {
     switch (type_builtin()) {
     case builtin_type::u8:
         return std::to_string(static_cast<int>(as<uint8_t>()));
@@ -1148,7 +1148,7 @@ std::string ExecExprComptConstant::to_string(Context& context) {
     case builtin_type::voidd:
         return "void";
     case builtin_type::str:
-        return context.symbol_id_to_cstr(as<SymbolId>());
+        return "<string>";
     case builtin_type::nullpointer:
         return "null";
     case builtin_type::boolean:
@@ -1195,12 +1195,13 @@ template <typename T> EConst e_divide(EConst l, EConst r) {
 }
 
 template <typename T> EConst e_mod(EConst l, EConst r) {
-    return EConst{static_cast<T>(l.as<T>() / r.as<T>())};
+    return EConst{static_cast<T>(l.as<T>() % r.as<T>())};
 }
 
 std::optional<ExecExprComptConstant> ExecExprComptConstant::plus(ExecExprComptConstant lhs,
                                                                  ExecExprComptConstant rhs) {
     assert(lhs.holds_same_variant_type(rhs));
+    // std::cout << lhs.to_string() << " + " << rhs.to_string() << '\n'; // debug
     switch (lhs.type_builtin()) {
     case builtin_type::u8:
         return e_plus<u8>(lhs, rhs);
@@ -1365,9 +1366,7 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::mod(ExecExprComptCon
     case builtin_type::usize:
         return e_mod<usize>(lhs, rhs);
     case builtin_type::f32:
-        return e_mod<f32>(lhs, rhs);
     case builtin_type::f64:
-        return e_mod<f64>(lhs, rhs);
     case builtin_type::charr:
     case builtin_type::voidd:
     case builtin_type::str:

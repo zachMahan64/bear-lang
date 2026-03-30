@@ -138,7 +138,7 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     }
 
     // straight up string converter, use this mostly just for debugging
-    std::string to_string(Context& context);
+    std::string to_string();
 
     // basically a string converter but fancy
     SymbolId to_symbol_id(Context& ctx) const;

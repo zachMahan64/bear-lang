@@ -133,12 +133,17 @@ template <IsDefVisitor V> class ComptExprSolver {
             case TOK_CHAR_LIT:
                 maybe_value = ExecExprComptConstant{tkn->val.character};
                 break;
-            case TOK_INT_LIT:
+            case TOK_INT_LIT: {
                 maybe_value = ExecExprComptConstant{tkn->val.signed_integral};
-                break;
-            case TOK_UINT_LIT:
+            } break;
+            case TOK_UINT_LIT: {
                 maybe_value = ExecExprComptConstant{tkn->val.unsigned_integral};
+                auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i32);
+                if (maybe_signed.has_value()) {
+                    maybe_value = maybe_signed;
+                }
                 break;
+            }
             case TOK_FLOAT_LIT:
                 maybe_value = ExecExprComptConstant{tkn->val.floating};
                 break;
@@ -190,12 +195,15 @@ template <IsDefVisitor V> class ComptExprSolver {
                 OptId<ExecId> lhs
                     = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
                 if (!lhs.has_value()) {
-                    break;
+                    cooked = true;
                 }
                 OptId<ExecId> rhs
                     = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
                 if (!rhs.has_value()) {
-                    break;
+                    cooked = true;
+                }
+                if (cooked) {
+                    return std::nullopt; // already poisoned
                 }
                 assert(maybe_bin_op.holds<binary_op>());
                 // get res of binary op like +, -, etc.
@@ -208,9 +216,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                     if (!exec.template holds<ExecExprComptConstant>()) {
                         cooked = true;
                     } else {
-                        std::cout << exec.template as<ExecExprComptConstant>().to_string(context)
-                                  << '\n';
                         maybe_value = exec.template as<ExecExprComptConstant>();
+                        // std::cout << "result of binary op: " << maybe_value.value().to_string()
+                        //          << '\n'; // debug
                     }
                 } else {
                     cooked = true;
@@ -220,6 +228,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt; // cooked / poisoned already, so just return since error
                                      // should've already been reported
             }
+
             break;
         }
         case AST_EXPR_GROUPING: {
@@ -257,7 +266,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             context.emplace_diagnostic(
                 Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                 diag_code::cannot_resolve_at_compt, diag_type::error);
-            goto ret_without_diag;
+            return std::nullopt;
         }
         if (maybe_value.has_value()) {
             if (!into_builtin.has_value()) {
@@ -266,15 +275,16 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin.value());
 
+#ifdef DEBUG_BUILD
+
             if (!maybe_converted.has_value()) {
 
                 std::cout << "failed to convert from "
                           << builtin_type_to_cstr(maybe_value.value().type_builtin()) << " into "
                           << builtin_type_to_cstr(into_builtin.value())
-                          << " with failed value: " << maybe_value.value().to_string(context)
-                          << '\n';
+                          << " with failed value: " << maybe_value.value().to_string() << '\n';
             }
-
+#endif
             // TODO give str cast hints here!
 
             if (!maybe_converted.has_value()) {
@@ -302,9 +312,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                                    diag_code::cannot_resolve_at_compt, diag_type::error);
-    // as to not duplicate compt errors from bubbling up
-    ret_without_diag:
-        return OptId<ExecId>{};
+        // as to not duplicate compt errors from bubbling up
+        return std::nullopt;
     }
 
     /**
@@ -583,7 +592,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         context.emplace_diagnostic(expr_span, diag_code::cannot_convert_expression_to_type,
                                    diag_type::error, DiagnosticTypeAfterMessage{into_tid},
                                    DiagnosticNoOtherInfo{});
-    ret:
         return std::nullopt;
     }
 
@@ -758,9 +766,9 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         auto guard_div_by_zero = [&]() -> bool {
             if (rhs_val.equals_zero()) {
-                return true;
                 context.emplace_diagnostic(
                     rhs.span, diag_code::dividing_by_zero_at_compt_is_illegal, diag_type::error);
+                return true;
             }
             return false;
         };
@@ -768,6 +776,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         switch (op) {
         case binary_op::plus:
             maybe_value = ExecExprComptConstant::plus(lhs_val, rhs_val);
+            break;
         case binary_op::minus:
             maybe_value = ExecExprComptConstant::minus(lhs_val, rhs_val);
             break;
@@ -779,6 +788,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::divide:
             maybe_value = (guard_div_by_zero()) ? std::nullopt
                                                 : ExecExprComptConstant::divide(lhs_val, rhs_val);
+
             break;
         case binary_op::modulo:
             maybe_value
