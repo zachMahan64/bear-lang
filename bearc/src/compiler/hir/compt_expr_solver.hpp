@@ -734,12 +734,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return false;
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, const Exec& lhs, binary_op op,
-                                                         const Exec& rhs) {
-
-        auto lhs_val = lhs.as<ExecExprComptConstant>();
-        auto rhs_val = rhs.as<ExecExprComptConstant>();
-
+    void guard_try_converge_types(ExecExprComptConstant& lhs_val, binary_op op,
+                                  ExecExprComptConstant& rhs_val) {
         // try to safely convert (more ergonomic for literals and guranteed safe conversions)
         if (!lhs_val.holds_same_variant_type(rhs_val)) {
             const bool use_lhs_type = lhs_val.has_binary_op(op);
@@ -753,6 +749,16 @@ template <IsDefVisitor V> class ComptExprSolver {
                 lhs_val = (maybe_converted_lhs.has_value()) ? maybe_converted_lhs.value() : lhs_val;
             }
         }
+    }
+
+    [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, const Exec& lhs, binary_op op,
+                                                         const Exec& rhs) {
+
+        auto lhs_val = lhs.as<ExecExprComptConstant>();
+        auto rhs_val = rhs.as<ExecExprComptConstant>();
+
+        // converge types, if possible
+        guard_try_converge_types(/* & */ lhs_val, op, /* & */ rhs_val);
 
         if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
             return std::nullopt;
@@ -788,7 +794,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::divide:
             maybe_value = (guard_div_by_zero()) ? std::nullopt
                                                 : ExecExprComptConstant::divide(lhs_val, rhs_val);
-
             break;
         case binary_op::modulo:
             maybe_value
