@@ -781,7 +781,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         switch (op) {
         case binary_op::plus:
-            maybe_value = ExecExprComptConstant::plus(lhs_val, rhs_val);
+            maybe_value = ExecExprComptConstant::plus(context, lhs_val, rhs_val);
             break;
         case binary_op::minus:
             maybe_value = ExecExprComptConstant::minus(lhs_val, rhs_val);

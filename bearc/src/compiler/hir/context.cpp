@@ -160,6 +160,13 @@ SymbolId Context::symbol_id(const char* start, size_t len) {
     // give sym_id now that it's fully interned
     return sym_id;
 }
+SymbolId Context::concat_symbols(SymbolId sid1, SymbolId sid2) {
+    std::string buf{};
+    buf.reserve(1024); // decently large
+    buf += symbol_id_to_cstr(sid1);
+    buf += symbol_id_to_cstr(sid2);
+    return symbol_id(buf);
+}
 SymbolId Context::symbol_id_for_identifier_tkn(const token_t* tkn) {
     assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
     return symbol_id(tkn->start, tkn->len);

@@ -156,8 +156,8 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
 
     [[nodiscard]] bool equals_zero() const;
 
-    [[nodiscard]] static std::optional<ExecExprComptConstant> plus(ExecExprComptConstant lhs,
-                                                                   ExecExprComptConstant rhs);
+    [[nodiscard]] static std::optional<ExecExprComptConstant>
+    plus(Context& ctx, ExecExprComptConstant lhs, ExecExprComptConstant rhs);
     [[nodiscard]] static std::optional<ExecExprComptConstant> minus(ExecExprComptConstant lhs,
                                                                     ExecExprComptConstant rhs);
     [[nodiscard]] static std::optional<ExecExprComptConstant> multiply(ExecExprComptConstant lhs,

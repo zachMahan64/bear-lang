@@ -1198,8 +1198,8 @@ template <typename T> EConst e_mod(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() % r.as<T>())};
 }
 
-std::optional<ExecExprComptConstant> ExecExprComptConstant::plus(ExecExprComptConstant lhs,
-                                                                 ExecExprComptConstant rhs) {
+std::optional<ExecExprComptConstant>
+ExecExprComptConstant::plus(Context& ctx, ExecExprComptConstant lhs, ExecExprComptConstant rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     // std::cout << lhs.to_string() << " + " << rhs.to_string() << '\n'; // debug
     switch (lhs.type_builtin()) {
@@ -1225,9 +1225,10 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::plus(ExecExprComptCo
         return e_plus<f32>(lhs, rhs);
     case builtin_type::f64:
         return e_plus<f64>(lhs, rhs);
+    case builtin_type::str:
+        return ExecExprComptConstant{ctx.concat_symbols(lhs.as<SymbolId>(), rhs.as<SymbolId>())};
     case builtin_type::charr:
     case builtin_type::voidd:
-    case builtin_type::str:
     case builtin_type::nullpointer:
     case builtin_type::boolean:
         break;

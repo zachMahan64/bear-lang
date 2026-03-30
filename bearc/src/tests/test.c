@@ -244,7 +244,7 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args24, 2);
 
     char* args25[] = {"bearc", "tests/hir/25.br"};
-    ASSERT_EQ_ERR_FROM_ARGS(args25, 7);
+    ASSERT_EQ_ERR_FROM_ARGS(args25, 8);
 
     return TEST_RESULT;
 }
