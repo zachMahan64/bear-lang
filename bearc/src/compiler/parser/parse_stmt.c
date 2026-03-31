@@ -651,13 +651,11 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
     if (parser_peek_match(p, TOK_ELSE)) {
         if_stmt->stmt.if_stmt.has_else = true;
         if_stmt->stmt.if_stmt.else_stmt = parse_stmt_else(p);
-        // handle last
-        if_stmt->last = if_stmt->stmt.if_stmt.else_stmt->last;
     } else {
         if_stmt->stmt.if_stmt.has_else = false;
-        if_stmt->last = if_stmt->stmt.if_stmt.body_stmt->last;
     }
     if_stmt->first = if_tkn;
+    if_stmt->last = parser_prev(p);
     return if_stmt;
 }
 
