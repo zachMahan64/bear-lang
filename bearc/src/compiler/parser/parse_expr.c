@@ -8,6 +8,7 @@
 
 #include "compiler/parser/parse_expr.h"
 #include "compiler/ast/expr.h"
+#include "compiler/ast/type.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_stmt.h"
@@ -119,6 +120,9 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
     }
     if (is_legal_binary_op(p, parser_peek(p)->type)) {
         return parse_binary(p, lhs, prec);
+    }
+    if (parser_peek_match(p, TOK_IF)) {
+        return parse_ternary_if(p, lhs);
     }
     if (!lhs) {
         return parse_expr(p);
@@ -607,4 +611,28 @@ ast_slice_of_exprs_t parse_has_contracts_clause(parser_t* p) {
     }
     parser_expect_token(p, TOK_RPAREN);
     return parser_freeze_expr_spill_arr(p, &ids);
+}
+
+ast_expr_t* parse_ternary_if(parser_t* p, ast_expr_t* lhs) {
+    // we're looking for <expr> if compt? <condition> else <expr>
+    ast_expr_t* tif = parser_alloc_expr(p);
+    tif->type = AST_EXPR_TERNARY_IF;
+    token_t* first = lhs->first;
+    tif->expr.ternary_if.happy_expr = lhs;
+    if (!parser_expect_token(p, TOK_IF)) {
+        return parser_sync_expr(p);
+    }
+    tif->expr.ternary_if.compt = parser_match_token(p, TOK_COMPT);
+    ast_expr_t* cond = parse_expr(p);
+    if (cond->type == AST_EXPR_INVALID) {
+        return parser_sync_expr(p);
+    }
+    tif->expr.ternary_if.condition = cond;
+    if (!parser_expect_token(p, TOK_ELSE)) {
+        return parser_sync_expr(p);
+    }
+    tif->expr.ternary_if.else_expr = parse_expr(p);
+    tif->first = first;
+    tif->last = parser_prev(p);
+    return tif;
 }

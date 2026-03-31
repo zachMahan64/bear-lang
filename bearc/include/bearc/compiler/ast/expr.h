@@ -45,6 +45,9 @@ typedef enum ast_expr_type {
     // closure
     AST_EXPR_CLOSURE,
 
+    // ternary
+    AST_EXPR_TERNARY_IF,
+
     // variants
     AST_EXPR_VARIANT_DECOMP,
 
@@ -182,6 +185,13 @@ typedef struct ast_expr_closure {
     bool is_move;
 } ast_expr_closure_t;
 
+typedef struct ast_expr_ternary_if {
+    ast_expr_t* happy_expr;
+    ast_expr_t* condition;
+    ast_expr_t* else_expr;
+    bool compt;
+} ast_expr_ternary_if_t;
+
 typedef struct ast_expr_list_literal {
     ast_slice_of_exprs_t slice;
 } ast_expr_list_literal_t;
@@ -206,6 +216,7 @@ typedef union ast_expr_u {
     ast_expr_match_t match_expr;
     ast_expr_closure_t closure;
     ast_expr_list_literal_t list_literal;
+    ast_expr_ternary_if_t ternary_if;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

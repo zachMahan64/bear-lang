@@ -29,7 +29,7 @@ main quest
     - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
 - [x] if compt (in parser/syntax doc, hir impl will come later in body resolution)
-- [ ] expr `if` `compt`? condition `else` expr (in parser/syntax doc)
+- [x] ternary if: expr `if` `compt`? condition `else` expr (in parser/syntax doc)
 - [ ] top level use (in parser/syntax doc, hir logic)
 - [ ] static_assert (make it a builtin in hir)
 

@@ -33,7 +33,16 @@ template <IsDefVisitor V> class ComptExprSolver {
     // solves a top level compt expr (this is primarily for array sizing & builtin types for top
     // level generic instantiation with compt parameterizations)
     [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
-                                                 const ast_expr_t* expr, TypeId into_tid) {
+                                                 const ast_expr_t* expr,
+                                                 OptId<TypeId> maybe_into_tid) {
+        if (!maybe_into_tid.has_value()) {
+            if (expr->type == AST_EXPR_STRUCT_INIT) {
+                return solve_struct_compt_expr(
+                    fid, scope, expr, context.emplace_type(TypeVar{}, Span::generated(), false));
+            }
+            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt);
+        }
+        auto into_tid = maybe_into_tid.as_id();
         const Type& into_type = context.type(into_tid);
         // try to solve str& at comptime
         if (into_type.holds<TypeRef>()) {
@@ -176,9 +185,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                     diag_code::assignment_not_permitted_in_compt_expr, diag_type::error);
                 cooked = true;
             } else if (maybe_bin_op.holds<is_as_op>()) {
-                OptId<ExecId> lhs = solve_builtin_compt_expr(
-                    fid, scope, expr->expr.binary.lhs,
-                    std::nullopt); // since we don't care about the type yet
+                OptId<ExecId> lhs
+                    = solve_compt_expr(fid, scope, expr->expr.binary.lhs,
+                                       std::nullopt); // since we don't care about the type yet
                 if (!lhs.has_value()) {
                     cooked = true;
                 }
@@ -193,12 +202,12 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
             } else if (!cooked) {
                 OptId<ExecId> lhs
-                    = solve_builtin_compt_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
+                    = solve_compt_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
                 if (!lhs.has_value()) {
                     cooked = true;
                 }
                 OptId<ExecId> rhs
-                    = solve_builtin_compt_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
+                    = solve_compt_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
                 if (!rhs.has_value()) {
                     cooked = true;
                 }
@@ -249,6 +258,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_POST_UNARY:
             // not supported (-- or ++ require mutable lvalues)
         case AST_EXPR_SUBSCRIPT:
+        case AST_EXPR_TERNARY_IF:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
@@ -268,6 +278,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 diag_code::cannot_resolve_at_compt, diag_type::error);
             return std::nullopt;
         }
+
         if (maybe_value.has_value()) {
             if (!into_builtin.has_value()) {
                 return emplace_e(maybe_value.value());
@@ -586,6 +597,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_MATCH_BRANCH:
         case AST_EXPR_MATCH:
         case AST_EXPR_ELSE_MATCH_BRANCH:
+        case AST_EXPR_TERNARY_IF:
         case AST_EXPR_INVALID:
             break;
         }

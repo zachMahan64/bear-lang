@@ -11,7 +11,6 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
 #include "utils/ansi_codes.h"
-#include "utils/file_io.h"
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -21,16 +20,7 @@
 namespace hir {
 
 void Diagnostic::print(Context& context, bool print_file) const {
-    const src_buffer_t* buf = context.ast(span.file_id).src();
-    auto s = Span::retrieve_from_buffer(buf->data, span);
     print_multiline(context, print_file);
-    /*
-    else {
-        print_diagnostic(buf, (char*)s.data(), span.len, span.line, span.col,
-                         accent_color_for_type(type), name_for_type(type), message_for_code(code),
-                         "", context.compact_diagnostics_enabled());
-    }
-    */
 }
 
 const char* Diagnostic::message_for_code(enum diag_code c) {
@@ -291,8 +281,9 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
         }
     }
 
-    // if it's help, don't reshow the src buffer!
-    if (type == diag_type::help || this->holds<DiagnosticInfoNoPreview>()) {
+    // if it's help, don't reshow the src buffer!, also if it's generated or NoInfo don't show!
+    if (type == diag_type::help || this->holds<DiagnosticInfoNoPreview>()
+        || this->span.is_generated()) {
         return;
     }
 

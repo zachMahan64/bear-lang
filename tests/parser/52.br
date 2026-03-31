@@ -1,0 +1,26 @@
+// tests/parser/52.br 
+
+compt i32 foo = 5;
+
+fn main() -> i32 {
+    if compt foo == 5 {
+        return foo;
+    }
+    compt bool flag = true; 
+
+
+    compt i32 value_whatever = 0 if compt flag else foo;
+
+    compt i32 oopsie1 = if compt flag else foo; // oops
+    
+    compt i32 oopsie2 = compt flag else foo; // oops 
+
+    compt i32 oopsie3 = flag else foo; // oops 
+
+    compt i32 oopsie4 = flag if compt flag else; // oops
+
+    compt i32 oopsie4 = flag if compt flag; // oops
+
+    var value = 0 if flag else foo;
+    return value;
+}

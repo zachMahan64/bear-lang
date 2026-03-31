@@ -50,6 +50,7 @@
     - | Closure: `move`? `|` Parameter(s) `|` \[`->` Expression] | BlockExpression 
     - | VariantDecomposition: Identifier `(` Parameter(s) `)`
     - | Match: `match` `(` Expression `)` `{` MatchBranch(s) `}`
+    - | TernaryIf: Expression `if` `compt`? Expression `else` Expression
     - | MatchBranch: VariantDecomposition | Expression `=>` Expression | BlockExpression
        - BlockExpression: `{` Statement(s) | YieldStatement(s) `}` 
             - YieldStatement: `yield` Expression

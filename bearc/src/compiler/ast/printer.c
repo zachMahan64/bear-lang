@@ -560,6 +560,18 @@ void pretty_print_expr(const ast_expr_t* expression) {
         print_closing_green_brace();
         break;
     }
+    case AST_EXPR_TERNARY_IF:
+        print_title("ternary if");
+        pretty_print_expr(expr.expr.ternary_if.happy_expr);
+        print_delineator_from_type(TOK_IF);
+        if (expr.expr.ternary_if.compt) {
+            print_delineator_from_type(TOK_COMPT);
+        }
+        pretty_print_expr(expr.expr.ternary_if.condition);
+        print_delineator_from_type(TOK_ELSE);
+        pretty_print_expr(expr.expr.ternary_if.else_expr);
+        print_closing_green_brace();
+        break;
     }
     puts(",");
     printer_deindent();
@@ -669,7 +681,9 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         print_title("if statement");
         printer_do_indent();
         print_op_from_type(TOK_IF);
-        print_op_from_type(TOK_COMPT);
+        if (stmt->stmt.if_stmt.compt) {
+            print_op_from_type(TOK_COMPT);
+        }
         printer_deindent();
         pretty_print_expr(stmt->stmt.if_stmt.condition);
         printer_do_indent();
