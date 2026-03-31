@@ -143,7 +143,7 @@ void cli_help(void) {
           "        [--silent]        suppress all compiler messages\n"
           "        [--token-table]   print a list of lexed tokens\n"
           "        [--pretty-print]  print a syntax tree diagram\n"
-          "        [--list-files]    list all compile files with their dependencies\n"
+          "        [--file-graph]    list all compiled files with their dependencies\n"
           "        [--parse-only]    stop compilation after parsing\n"
           "        [--compact-diags] print diagnostics that are vertically compact\n"
           "flags with arguments:\n"
@@ -167,11 +167,11 @@ cli_error_status cli_compile(const bearc_args_t* args) {
 
 void cli_no_args(void) {
     printf("run '%sbearc --help%s' to see available operations.\n\n", ansi_bold(), ansi_reset());
-    printf("  Bear Compiler Copyright (C) 2025-2026 Zachary Mahan \n"
-           "  This program comes with ABSOLUTELY NO WARRANTY.\n"
-           "  This is free software, and you are welcome to redistribute it under certain "
+    printf("Bear Compiler Copyright (C) 2025-2026 Zachary Mahan \n"
+           "This program comes with ABSOLUTELY NO WARRANTY.\n"
+           "This is free software, and you are welcome to redistribute it under certain "
            "conditions.\n"
-           "  For more information, visit: "
+           "For more information, visit: "
            "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text\n");
 }
 void cli_announce_unknown_flag(void) {

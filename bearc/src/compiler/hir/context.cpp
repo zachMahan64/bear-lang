@@ -301,7 +301,7 @@ void Context::try_print_info() {
         ast(fid).try_print_info(args);
     }
     // 2. print more info:
-    if (has_flag(CLI_FLAG_LIST_FILES)) {
+    if (has_flag(CLI_FLAG_FILE_GRAPH)) {
         std::cout << ansi_bold_reset() << "all files" << '(' << files.size() << ')' << ":"
                   << ansi_reset() << '\n';
         for (FileId curr = files.begin_id(); curr != files.end_id(); ++curr) {
