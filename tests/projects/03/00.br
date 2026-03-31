@@ -1,0 +1,24 @@
+//tests/projects/03/00.br
+
+import "01.br";
+
+mod foo {
+
+import "01.br"; // oops
+
+compt i32 thingie = 42;
+
+use bar..Bar; // fine, inside mod
+
+}
+
+use bar..Bar; // warn, global use
+
+use bar..Fooey; // oops hid
+
+compt Bar bar = Bar{.bar = 12}; // fine
+compt Fooey f = Fooey{.f = 42}; // oops
+
+fn main() -> i32 {
+    return 0;
+}

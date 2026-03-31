@@ -1,0 +1,16 @@
+// tests/projects/03/01.br
+
+struct Foo {
+    import "00.br";
+    Foo* foo;
+}
+
+mod bar {
+    struct Bar {
+        i32 bar;
+    }
+
+    hid struct Fooey {
+        i32 f;
+    }
+}

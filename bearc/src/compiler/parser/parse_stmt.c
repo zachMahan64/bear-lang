@@ -25,7 +25,7 @@ ast_stmt_t* parse_file(parser_t* p, const char* file_name) {
     ast_stmt_t* file = parser_alloc_stmt(p);
     file->type = AST_STMT_FILE;
     file->stmt.file.file_name = file_name;
-    file->stmt.file.stmts = parse_slice_of_decls(p, TOK_EOF);
+    file->stmt.file.stmts = parse_slice_of_stmts_call(p, TOK_EOF, parse_stmt_top_level_decl);
     if (file->stmt.file.stmts.len != 0) {
         file->first = file->stmt.file.stmts.start[0]->first;
         file->last = file->stmt.file.stmts.start[file->stmt.file.stmts.len - 1]->last;
@@ -502,6 +502,17 @@ ast_stmt_t* parse_stmt_compt_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t*
     return vis;
 }
 
+ast_stmt_t* parse_stmt_top_level_decl(parser_t* p) {
+    if (parser_peek_match(p, TOK_IMPORT)) {
+        return parse_stmt_import(p);
+    }
+    if (parser_peek_match(p, TOK_USE)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    WARN_TOP_LEVEL_USE_CAN_POLLUTE_THE_GLOBAL_NAMESPACE);
+    }
+    return parse_stmt_decl(p);
+}
+
 ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     token_type_e next_type = parser_peek(p)->type;
@@ -524,8 +535,8 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parse_module(p);
     }
 
-    if (next_type == TOK_IMPORT) {
-        return parse_stmt_import(p);
+    if (next_type == TOK_USE) {
+        return parse_stmt_use(p);
     }
 
     if (next_type == TOK_STRUCT) {
@@ -567,6 +578,12 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
 
     if (next_type == TOK_ALIGNAS) {
         return parse_stmt_alignas_modifier(p, &parse_var_decl);
+    }
+
+    if (next_type == TOK_IMPORT) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p),
+                                    ERR_NON_TOP_LEVEL_IMPORT_STATEMENT);
+        return parser_sync_stmt(p);
     }
 
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -768,6 +785,7 @@ ast_stmt_t* parse_stmt_use(parser_t* p) {
     if (!use_tkn) {
         return parser_sync_stmt(p);
     }
+    use_stmt->stmt.use.mod = parser_match_token(p, TOK_MODULE);
     token_ptr_slice_t id = parse_id_token_slice(p, TOK_SCOPE_RES);
     if (id.len == 0) {
         return parser_sync_stmt(p);

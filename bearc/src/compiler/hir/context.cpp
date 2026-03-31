@@ -750,6 +750,39 @@ OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<Symb
     // never entered the loop, so not found
     return OptId<DefId>{};
 }
+OptId<DefId> Context::look_up_scoped_namespace(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice,
+                                               Span id_span) {
+    NamedOrAnonScopeId curr_scope = scope;
+    for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
+        SymbolId sid = symbol_ids.cat(sidx);
+        // base case, last elem should be the variable
+        if (sidx == id_slice.last_elem()) {
+            OptId<DefId> maybe_type = look_up_namespace(curr_scope, sid);
+            return maybe_type.has_value()
+                       ? guard_hid_type(scope, maybe_type.as_id(), id_slice, id_span)
+                       : maybe_type;
+        }
+        if (auto maybe_mod = look_up_namespace(curr_scope, sid); maybe_mod.has_value()) {
+            curr_scope = def(guard_hid_namespace(
+                                 scope, maybe_mod.as_id(),
+                                 IdSlice<SymbolId>{id_slice.begin(),
+                                                   sidx.val() + 1 - id_slice.begin().val()},
+                                 def(maybe_mod.as_id()).span))
+                             .as<DefModule>()
+                             .scope;
+
+        }
+        // yes, since nested structs are allowed
+        else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
+            curr_scope = scope_for_top_level_def(guard_hid_type(
+                scope, maybe_type.as_id(),
+                IdSlice<SymbolId>{id_slice.begin(), sidx.val() + 1 - id_slice.begin().val()},
+                def(maybe_type.as_id()).span));
+        }
+    }
+    // never entered the loop, so not found
+    return OptId<DefId>{};
+}
 DefId Context::guard_hid(auto F, NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                          Span id_span) {
     const Def& defin = this->def(did);

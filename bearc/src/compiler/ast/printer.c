@@ -796,6 +796,9 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         print_title("use statement");
         printer_do_indent();
         print_op_from_type(TOK_USE);
+        if (stmt->stmt.use.mod) {
+            print_op_from_type(TOK_MODULE);
+        }
         print_indent();
         printf("identifier: ");
         print_id_slice(stmt->stmt.use.id);

@@ -9,9 +9,11 @@
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/token.h"
 
-static const uint8_t diag_types[ERR__COUNT] = {[NOTE_DID_YOU_MEAN_MT] = DIAG_TYPE_NOTE,
-                                               [NOTE_EXTRANEOUS_SEMICOLON] = DIAG_TYPE_WARNING,
-                                               [HELP_REMOVE] = DIAG_TYPE_HELP};
+static const uint8_t diag_types[ERR__COUNT]
+    = {[NOTE_DID_YOU_MEAN_MT] = DIAG_TYPE_NOTE,
+       [NOTE_EXTRANEOUS_SEMICOLON] = DIAG_TYPE_WARNING,
+       [HELP_REMOVE] = DIAG_TYPE_HELP,
+       [WARN_TOP_LEVEL_USE_CAN_POLLUTE_THE_GLOBAL_NAMESPACE] = DIAG_TYPE_WARNING};
 bool is_non_error_diagnostic(error_code_e error_code) { return diag_types[error_code]; }
 static const char* error_messages[ERR__COUNT] = {
     [ERR_EXPECTED_IDENTIFER] = "expected identifier",
@@ -53,6 +55,10 @@ static const char* error_messages[ERR__COUNT] = {
     = "multi-level reference type is malformed; did you mean to declare a multi-level pointer?",
     [ERR_CONTINUE_STMT_OUTSIDE_OF_LOOP] = "continue statement outside of loop",
     [HELP_REMOVE] = "remove",
+    [ERR_NON_TOP_LEVEL_IMPORT_STATEMENT] = "import statement is not a top-level statement",
+    [WARN_TOP_LEVEL_USE_CAN_POLLUTE_THE_GLOBAL_NAMESPACE]
+    = "top level `use` statement can pollute the global namespace",
+
 };
 const char* error_message_for_code(error_code_e error_code) { return error_messages[error_code]; }
 

@@ -158,6 +158,7 @@ typedef struct ast_stmt_import {
 /// bring a module into current scope
 typedef struct ast_stmt_use {
     token_ptr_slice_t id;
+    bool mod;
 } ast_stmt_use_t;
 
 /// a statement expr, like `foo();`

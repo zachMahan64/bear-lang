@@ -68,6 +68,8 @@ bool parser_shed_visibility_qualis_with_error(parser_t* p);
 /// parse next statement expected a variable or function declaration
 ast_stmt_t* parse_stmt_decl(parser_t* p);
 
+ast_stmt_t* parse_stmt_top_level_decl(parser_t* p);
+
 ast_stmt_t* parse_module(parser_t* p);
 
 ast_stmt_t* parse_stmt_if(parser_t* p);

@@ -19,7 +19,6 @@
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
-#include <iostream>
 #include <variant>
 
 namespace hir {
@@ -450,7 +449,36 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         do_not_insert_in_scope = true; // since we want this tkn to forward directly to another
                                        // type, so this will have to be handled in resolution later
         break;
-    default:
+    case AST_STMT_USE: {
+        token_ptr_slice_t id_slice = stmt->stmt.use.id;
+        name_tkn = id_slice.start[id_slice.len - 1];
+        kind = (stmt->stmt.use.mod) ? scope_kind::namespacee : scope_kind::type;
+        do_not_insert_in_scope = true; // should be deffered
+        break;
+    }
+        // handled by special case ~~~~~~~~~~
+    case AST_STMT_FILE:
+    case AST_STMT_EXTERN_BLOCK:
+    case AST_STMT_MODULE:
+    case AST_STMT_VISIBILITY_MODIFIER:
+    case AST_STMT_COMPT_MODIFIER:
+    case AST_STMT_STATIC_MODIFIER:
+    case AST_STMT_ALIGNAS_MODIFIER:
+    case AST_STMT_IMPORT:
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    case AST_STMT_BLOCK:
+    case AST_STMT_EXPR:
+    case AST_STMT_EMPTY:
+    case AST_STMT_BREAK:
+    case AST_STMT_IF:
+    case AST_STMT_ELSE:
+    case AST_STMT_WHILE:
+    case AST_STMT_FOR:
+    case AST_STMT_FOR_IN:
+    case AST_STMT_RETURN:
+    case AST_STMT_YIELD:
+    case AST_STMT_CONTINUE:
+    case AST_STMT_INVALID:
         break;
     }
     return TopLevelInfo{.scope_prefix_tkn = scope_prefix_tkn,

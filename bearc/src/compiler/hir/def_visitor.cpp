@@ -143,14 +143,41 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         });
         break;
     }
+    case AST_STMT_USE: {
+        auto use = stmt->stmt.use;
+        auto sid_slice = context.symbol_slice(use.id);
+        // to be used as the name
+        const token_t* last_symbol = use.id.start[use.id.len - 1];
+        Span id_span{span.file_id, context.ast(span.file_id).buffer(), use.id.start[0],
+                     last_symbol};
+        auto used_did = (use.mod) ? context.look_up_scoped_namespace(scope, sid_slice, id_span)
+                                  : context.look_up_scoped_type(scope, sid_slice, id_span);
+        if (!used_did.has_value()) {
+            context.emplace_diagnostic_with_message_value(
+                id_span, diag_code::use_of_undeclared_identifier, diag_type::error,
+                DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice});
+        }
+        auto scope_into_which_to_insert = context.containing_scope(did);
+        auto scope_id = std::get<ScopeId>(scope_into_which_to_insert);
+        // insert base name into containing scope
+        if (use.mod) {
+            context.scope(scope_id).insert_namespace(context.symbol_id(last_symbol),
+                                                     used_did.as_id());
+        } else {
+            context.scope(scope_id).insert_type(context.symbol_id(last_symbol), used_did.as_id());
+        }
+        break;
+    }
     case AST_STMT_CONTRACT_DEF:
     case AST_STMT_UNION_DEF:
     case AST_STMT_VARIANT_DEF:
     case AST_STMT_VARIANT_FIELD_DECL:
     case AST_STMT_FN_DECL:
     case AST_STMT_FN_PROTOTYPE:
-    case AST_STMT_DEFTYPE:
         break;
+    case AST_STMT_DEFTYPE: {
+        break;
+    }
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level
     case AST_STMT_FILE:
@@ -160,7 +187,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_COMPT_MODIFIER:
     case AST_STMT_STATIC_MODIFIER:
     case AST_STMT_IMPORT:
-    case AST_STMT_USE:
     case AST_STMT_BLOCK:
     case AST_STMT_EXPR:
     case AST_STMT_EMPTY:

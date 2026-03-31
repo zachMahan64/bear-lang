@@ -79,6 +79,8 @@ class Context {
     /// finds a type and attempts to resolve definitions on the way to it
     [[nodiscard]] OptId<DefId> look_up_scoped_type(NamedOrAnonScopeId scope,
                                                    IdSlice<SymbolId> id_slice, Span id_span);
+    [[nodiscard]] OptId<DefId> look_up_scoped_namespace(NamedOrAnonScopeId scope,
+                                                        IdSlice<SymbolId> id_slice, Span id_span);
     [[nodiscard]] DefId guard_hid(auto F, NamedOrAnonScopeId scope, DefId did,
                                   IdSlice<SymbolId> id_slice, Span id_span);
     [[nodiscard]] DefId guard_hid_type(NamedOrAnonScopeId scope, DefId did,

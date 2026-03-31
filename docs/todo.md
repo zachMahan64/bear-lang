@@ -23,14 +23,17 @@ main quest
     
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 
+- [x] if compt (in parser/syntax doc, hir impl will come later in body resolution)
+- [x] ternary if: expr `if` `compt`? condition `else` expr (in parser/syntax doc)
+- [x] top level use (in parser/syntax doc, hir logic)
+
+- [ ] **substantial refactor**: remove ScopeAnon, just make anonymous scopes have smaller default capacities (doing this since anon scopes should have their own namespace storage for used defs and i'm scrapping the old style anon uses)
+
 - [ ] implement Def::mention state in `hir::DefVisitor` thru:
     - `visit_as_independent(DefId)` -> `unmentioned` (add this method)
     - `visit_as_dependent(DefId)` & `visit_as_transparent(DefId)` -> `mentioned` (update these methods)
     - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
-- [x] if compt (in parser/syntax doc, hir impl will come later in body resolution)
-- [x] ternary if: expr `if` `compt`? condition `else` expr (in parser/syntax doc)
-- [ ] top level use (in parser/syntax doc, hir logic)
 - [ ] static_assert (make it a builtin in hir)
 
 
