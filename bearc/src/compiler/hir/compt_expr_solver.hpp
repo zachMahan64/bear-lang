@@ -138,7 +138,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             } break;
             case TOK_UINT_LIT: {
                 maybe_value = ExecExprComptConstant{tkn->val.unsigned_integral};
-                auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i32);
+                auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i64);
                 if (maybe_signed.has_value()) {
                     maybe_value = maybe_signed;
                 }

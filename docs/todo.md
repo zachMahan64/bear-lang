@@ -11,12 +11,22 @@ main quest
 - [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
     - [x] struct compt handling (propagate constants thru member inits)
     
-    - [ ] compt operators: string literal concat?, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
-        - [ ] implement kind of operator <--> type mapping system for at least builtins
+    - [ ] compt operators: string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
+        - [x] implement kind of operator <--> type mapping system for at least builtins
+        - [x] arithmetic
+        - [x] string literal concat 
+        - [ ] bitwise
+        - [ ] boolean
+        - [ ] unary ops
 
     - [ ] compt list literals
 
     - [ ] debug and increase safety of particularly (large) integral literal parsing
+
+- [ ] implement Def::mention state in `hir::DefVisitor` thru:
+    - `visit_as_independent(DefId)` -> `unmentioned` (add this method)
+    - `visit_as_dependent(DefId)` & `visit_as_transparent(DefId)` -> `mentioned` (update these methods)
+    - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
