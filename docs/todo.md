@@ -27,7 +27,7 @@ main quest
 - [x] ternary if: expr `if` `compt`? condition `else` expr (in parser/syntax doc)
 - [x] top level use (in parser/syntax doc, hir logic)
 
-- [ ] **substantial refactor**: remove ScopeAnon, just make anonymous scopes have smaller default capacities (doing this since anon scopes should have their own namespace storage for used defs and i'm scrapping the old style anon uses)
+- [x] **substantial refactor**: remove ScopeAnon, just make anonymous scopes have smaller default capacities (doing this since anon scopes should have their own namespace storage for used defs and i'm scrapping the old style anon uses)
 
 - [ ] implement Def::mention state in `hir::DefVisitor` thru:
     - `visit_as_independent(DefId)` -> `unmentioned` (add this method)

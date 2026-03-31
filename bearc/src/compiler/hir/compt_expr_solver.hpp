@@ -32,8 +32,7 @@ template <IsDefVisitor V> class ComptExprSolver {
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
     // solves a top level compt expr (this is primarily for array sizing & builtin types for top
     // level generic instantiation with compt parameterizations)
-    [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, NamedOrAnonScopeId scope,
-                                                 const ast_expr_t* expr,
+    [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                                  OptId<TypeId> maybe_into_tid) {
         if (!maybe_into_tid.has_value()) {
             if (expr->type == AST_EXPR_STRUCT_INIT) {
@@ -83,7 +82,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type);
     }
 
-    [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, NamedOrAnonScopeId scope,
+    [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, ScopeId scope,
                                                          const ast_expr_t* expr,
                                                          std::optional<builtin_type> into_builtin) {
         auto emplace_e = [this, fid, expr](ExecValue val) {
@@ -331,7 +330,7 @@ template <IsDefVisitor V> class ComptExprSolver {
      * solve a struct's value at compile-time, this essentially attempts a canonicalization down to
      * a struct-init eexpression where each field is evaluatable at compile-time
      */
-    [[nodiscard]] OptId<ExecId> solve_struct_compt_expr(FileId fid, NamedOrAnonScopeId scope,
+    [[nodiscard]] OptId<ExecId> solve_struct_compt_expr(FileId fid, ScopeId scope,
                                                         const ast_expr_t* expr, TypeId into_tid) {
         auto emplace_e = [this, fid, expr](ExecValue val) {
             return context.register_exec(
@@ -608,7 +607,7 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
 
   private:
-    [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, NamedOrAnonScopeId scope, ExecId eid,
+    [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, ScopeId scope, ExecId eid,
                                                  const ast_expr_t* into_expr) {
         if (into_expr->type != AST_EXPR_TYPE) {
             auto span = Span{fid, context.ast(fid).buffer(), into_expr->first, into_expr->last};
@@ -655,9 +654,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return context.emplace_exec(maybe_converted.value(), exec.span, /*compt*/ true);
     }
 
-    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, NamedOrAnonScopeId scope,
-                                                        ExecId lhs_eid, binary_op op,
-                                                        ExecId rhs_eid,
+    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, ScopeId scope, ExecId lhs_eid,
+                                                        binary_op op, ExecId rhs_eid,
                                                         std::optional<builtin_type> into_builtin) {
         const Exec& lhs_exec = context.exec(lhs_eid);
         const Exec& rhs_exec = context.exec(rhs_eid);
@@ -708,8 +706,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         return std::nullopt;
     }
 
-    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
-                                             const ast_type_t* type);
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type);
 
     [[nodiscard]] bool guard_incompatible_types(FileId fid, const Exec& lhs, const Exec& rhs,
                                                 ExecExprComptConstant lhs_val,

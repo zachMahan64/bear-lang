@@ -19,8 +19,8 @@ template <IsDefVisitor V> class TypeResolver {
     V& def_visitor;
     Context& context;
 
-    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
-                                             const ast_type_t* type, bool need_layout_info) {
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type,
+                                             bool need_layout_info) {
         switch (type->tag) {
         case AST_TYPE_BASE:
             return type_base(fid, scope, type, need_layout_info);
@@ -51,8 +51,8 @@ template <IsDefVisitor V> class TypeResolver {
         return OptId<TypeId>{};
     }
 
-    [[nodiscard]] OptId<TypeId> type_base(FileId fid, NamedOrAnonScopeId scope,
-                                          const ast_type_t* type, bool need_layout_info) {
+    [[nodiscard]] OptId<TypeId> type_base(FileId fid, ScopeId scope, const ast_type_t* type,
+                                          bool need_layout_info) {
         auto maybe_builtin = id_tkn_slice_to_maybe_builtin(type->type.base.id);
 
         if (maybe_builtin.has_value()) {
@@ -93,7 +93,7 @@ template <IsDefVisitor V> class TypeResolver {
         return OptId<TypeId>{};
     }
 
-    OptId<TypeId> type_ptr_ref(FileId fid, NamedOrAnonScopeId scope, const ast_type_t* type,
+    OptId<TypeId> type_ptr_ref(FileId fid, ScopeId scope, const ast_type_t* type,
                                bool need_layout_info) {
         auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner, true);
 
@@ -112,7 +112,7 @@ template <IsDefVisitor V> class TypeResolver {
                                     type->type.ptr_ref.mut);
     }
 
-    OptId<TypeId> type_arr(FileId fid, NamedOrAnonScopeId scope, const ast_type_t* type,
+    OptId<TypeId> type_arr(FileId fid, ScopeId scope, const ast_type_t* type,
                            bool need_layout_info) {
         auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner, need_layout_info);
 
@@ -137,7 +137,7 @@ template <IsDefVisitor V> class TypeResolver {
                                     Span(context, fid, type->first, type->last), false);
     }
 
-    OptId<TypeId> type_slice(FileId fid, NamedOrAnonScopeId scope, const ast_type_t* type,
+    OptId<TypeId> type_slice(FileId fid, ScopeId scope, const ast_type_t* type,
                              bool need_layout_info) {
         auto maybe_inner = resolve_type(fid, scope, type->type.slice.inner, true);
 
@@ -150,7 +150,7 @@ template <IsDefVisitor V> class TypeResolver {
                                     type->type.slice.mut);
     }
 
-    OptId<TypeId> type_fn_ptr(FileId fid, NamedOrAnonScopeId scope, const ast_type_t* type,
+    OptId<TypeId> type_fn_ptr(FileId fid, ScopeId scope, const ast_type_t* type,
                               bool need_layout_info) {
         auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type, true);
 
@@ -180,7 +180,7 @@ template <IsDefVisitor V> class TypeResolver {
             Span(context, fid, type->first, type->last), type->type.slice.mut);
     }
 
-    OptId<TypeId> type_variadic(FileId fid, NamedOrAnonScopeId scope, const ast_type_t* type,
+    OptId<TypeId> type_variadic(FileId fid, ScopeId scope, const ast_type_t* type,
                                 bool need_layout_info) {
         auto maybe_inner = resolve_type(fid, scope, type->type.variadic.inner, true);
 
@@ -195,8 +195,7 @@ template <IsDefVisitor V> class TypeResolver {
   public:
     explicit TypeResolver(Context& ctx, V& def_visitor) : def_visitor{def_visitor}, context{ctx} {}
 
-    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, NamedOrAnonScopeId scope,
-                                             const ast_type_t* type) {
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type) {
         return resolve_type(fid, scope, type, false);
     }
 };

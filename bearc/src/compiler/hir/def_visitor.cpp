@@ -64,7 +64,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     };
 
     const ast_stmt* stmt = context.def_ast_node(did);
-    NamedOrAnonScopeId scope = context.containing_scope(did);
+    ScopeId scope = context.containing_scope(did);
     Def& def = context.def(did);
     Span span = def.span;
     //  TODO write handlers
@@ -157,14 +157,14 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 id_span, diag_code::use_of_undeclared_identifier, diag_type::error,
                 DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice});
         }
-        auto scope_into_which_to_insert = context.containing_scope(did);
-        auto scope_id = std::get<ScopeId>(scope_into_which_to_insert);
+        ScopeId scope_into_which_to_insert = context.containing_scope(did);
         // insert base name into containing scope
         if (use.mod) {
-            context.scope(scope_id).insert_namespace(context.symbol_id(last_symbol),
-                                                     used_did.as_id());
+            context.scope(scope_into_which_to_insert)
+                .insert_namespace(context.symbol_id(last_symbol), used_did.as_id());
         } else {
-            context.scope(scope_id).insert_type(context.symbol_id(last_symbol), used_did.as_id());
+            context.scope(scope_into_which_to_insert)
+                .insert_type(context.symbol_id(last_symbol), used_did.as_id());
         }
         break;
     }

@@ -50,7 +50,6 @@ struct Symbol;
 struct File;
 struct FileAst;
 struct Scope;
-struct ScopeAnon;
 struct Exec;
 struct Def;
 struct Type;
@@ -69,9 +68,6 @@ using FileAstId = Id<FileAst>;
 
 /// for addressing named scopes
 using ScopeId = Id<Scope>;
-
-/// for addressing anonymous scopes
-using ScopeAnonId = Id<ScopeAnon>;
 
 /// for addressing exec nodes
 using ExecId = Id<Exec>;

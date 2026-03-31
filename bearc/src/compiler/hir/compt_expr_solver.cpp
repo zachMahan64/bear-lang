@@ -13,8 +13,7 @@
 namespace hir {
 
 template <IsDefVisitor V>
-OptId<TypeId> ComptExprSolver<V>::resolve_type(FileId fid, NamedOrAnonScopeId scope,
-                                               const ast_type_t* type) {
+OptId<TypeId> ComptExprSolver<V>::resolve_type(FileId fid, ScopeId scope, const ast_type_t* type) {
     return TypeResolver<V>{context, this->def_visitor}.resolve_type(fid, scope, type);
 }
 

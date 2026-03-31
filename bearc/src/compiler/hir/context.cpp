@@ -31,7 +31,6 @@
 #include <iso646.h>
 #include <stddef.h>
 #include <string_view>
-#include <variant>
 namespace hir {
 
 static constexpr size_t DEFAULT_SYMBOL_ARENA_CAP = 0x10000;
@@ -45,7 +44,6 @@ static constexpr size_t DEFAULT_SCOPE_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_FILE_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_FILE_AST_VEC_CAP = DEFAULT_FILE_VEC_CAP;
 static constexpr size_t DEFAULT_FILE_ID_VEC_CAP = 0x200;
-static constexpr size_t DEFAULT_SCOPE_ANON_VEC_CAP = 0x100;
 static constexpr size_t DEFAULT_SYMBOL_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_EXEC_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_DEF_CAP = 0x800;
@@ -63,12 +61,12 @@ Context::Context(const bearc_args_t* args)
     : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
-      file_asts{DEFAULT_FILE_AST_VEC_CAP}, scope_anons{DEFAULT_SCOPE_ANON_VEC_CAP},
-      symbols{DEFAULT_SYMBOL_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_CAP},
-      file_ids{DEFAULT_FILE_ID_VEC_CAP}, importer_to_importees{DEFAULT_FILE_VEC_CAP},
-      importee_to_importers{DEFAULT_FILE_VEC_CAP}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
-      exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_CAP}, def_resol_states{DEFAULT_DEF_CAP},
-      def_mention_states{DEFAULT_DEF_CAP}, types{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_CAP},
+      file_asts{DEFAULT_FILE_AST_VEC_CAP}, symbols{DEFAULT_SYMBOL_VEC_CAP},
+      execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_CAP}, file_ids{DEFAULT_FILE_ID_VEC_CAP},
+      importer_to_importees{DEFAULT_FILE_VEC_CAP}, importee_to_importers{DEFAULT_FILE_VEC_CAP},
+      symbol_ids{DEFAULT_SYMBOL_VEC_CAP}, exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_CAP},
+      def_resol_states{DEFAULT_DEF_CAP}, def_mention_states{DEFAULT_DEF_CAP},
+      types{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_CAP},
       generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
       generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
@@ -653,42 +651,27 @@ TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
 }
 
 [[nodiscard]] const Scope& Context::scope(ScopeId sid) const { return scopes.cat(sid); }
-[[nodiscard]] const ScopeAnon& Context::scope_anon(ScopeAnonId sid) const {
-    return scope_anons.cat(sid);
-}
 
 [[nodiscard]] const Def& Context::def(IdIdx<DefId> id) const { return defs.cat(def_ids.cat(id)); }
 
 [[nodiscard]] DefId Context::def_id(IdIdx<DefId> id) const { return def_ids.cat(id); }
 
-OptId<DefId> Context::look_up_variable(NamedOrAnonScopeId scope, SymbolId sid) const {
-    if (std::holds_alternative<ScopeAnonId>(scope)) {
-        auto res = hir::ScopeAnon::look_up_variable(*this, std::get<ScopeAnonId>(scope), sid);
-        return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
-    }
-    auto res = hir::Scope::look_up_variable(*this, std::get<ScopeId>(scope), sid);
+OptId<DefId> Context::look_up_variable(ScopeId scope, SymbolId sid) const {
+    auto res = hir::Scope::look_up_variable(*this, scope, sid);
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
-OptId<DefId> Context::look_up_type(NamedOrAnonScopeId scope, SymbolId sid) const {
-    if (std::holds_alternative<ScopeAnonId>(scope)) {
-        auto res = hir::ScopeAnon::look_up_type(*this, std::get<ScopeAnonId>(scope), sid);
-        return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
-    }
-    auto res = hir::Scope::look_up_type(*this, std::get<ScopeId>(scope), sid);
+OptId<DefId> Context::look_up_type(ScopeId scope, SymbolId sid) const {
+    auto res = hir::Scope::look_up_type(*this, scope, sid);
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
-OptId<DefId> Context::look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) const {
-    if (std::holds_alternative<ScopeAnonId>(scope)) {
-        auto res = hir::ScopeAnon::look_up_namespace(*this, std::get<ScopeAnonId>(scope), sid);
-        return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
-    }
-    auto res = hir::Scope::look_up_namespace(*this, std::get<ScopeId>(scope), sid);
+OptId<DefId> Context::look_up_namespace(ScopeId scope, SymbolId sid) const {
+    auto res = hir::Scope::look_up_namespace(*this, scope, sid);
     return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
 }
 
-OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice,
+OptId<DefId> Context::look_up_scoped_variable(ScopeId scope, IdSlice<SymbolId> id_slice,
                                               Span id_span) {
-    NamedOrAnonScopeId curr_scope = scope;
+    ScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
         // base case, last elem should be the variable
@@ -717,9 +700,8 @@ OptId<DefId> Context::look_up_scoped_variable(NamedOrAnonScopeId scope, IdSlice<
     return OptId<DefId>{};
 }
 
-OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice,
-                                          Span id_span) {
-    NamedOrAnonScopeId curr_scope = scope;
+OptId<DefId> Context::look_up_scoped_type(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span) {
+    ScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
         // base case, last elem should be the variable
@@ -750,9 +732,9 @@ OptId<DefId> Context::look_up_scoped_type(NamedOrAnonScopeId scope, IdSlice<Symb
     // never entered the loop, so not found
     return OptId<DefId>{};
 }
-OptId<DefId> Context::look_up_scoped_namespace(NamedOrAnonScopeId scope, IdSlice<SymbolId> id_slice,
+OptId<DefId> Context::look_up_scoped_namespace(ScopeId scope, IdSlice<SymbolId> id_slice,
                                                Span id_span) {
-    NamedOrAnonScopeId curr_scope = scope;
+    ScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
         // base case, last elem should be the variable
@@ -783,7 +765,7 @@ OptId<DefId> Context::look_up_scoped_namespace(NamedOrAnonScopeId scope, IdSlice
     // never entered the loop, so not found
     return OptId<DefId>{};
 }
-DefId Context::guard_hid(auto F, NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+DefId Context::guard_hid(auto F, ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                          Span id_span) {
     const Def& defin = this->def(did);
     if (defin.pub) {
@@ -804,25 +786,21 @@ DefId Context::guard_hid(auto F, NamedOrAnonScopeId scope, DefId did, IdSlice<Sy
     }
     return did;
 }
-DefId Context::guard_hid_type(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
-                              Span id_span) {
-    return guard_hid(
-        [this](NamedOrAnonScopeId scope, SymbolId sid) { return look_up_type(scope, sid); }, scope,
-        did, id_slice, id_span);
+DefId Context::guard_hid_type(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice, Span id_span) {
+    return guard_hid([this](ScopeId scope, SymbolId sid) { return look_up_type(scope, sid); },
+                     scope, did, id_slice, id_span);
 }
 
-DefId Context::guard_hid_variable(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+DefId Context::guard_hid_variable(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                   Span id_span) {
-    return guard_hid(
-        [this](NamedOrAnonScopeId scope, SymbolId sid) { return look_up_variable(scope, sid); },
-        scope, did, id_slice, id_span);
+    return guard_hid([this](ScopeId scope, SymbolId sid) { return look_up_variable(scope, sid); },
+                     scope, did, id_slice, id_span);
 }
 
-DefId Context::guard_hid_namespace(NamedOrAnonScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+DefId Context::guard_hid_namespace(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                    Span id_span) {
-    return guard_hid(
-        [this](NamedOrAnonScopeId scope, SymbolId sid) { return look_up_namespace(scope, sid); },
-        scope, did, id_slice, id_span);
+    return guard_hid([this](ScopeId scope, SymbolId sid) { return look_up_namespace(scope, sid); },
+                     scope, did, id_slice, id_span);
 }
 
 IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
@@ -834,7 +812,7 @@ IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
     return freeze_id_vec(vec);
 }
 
-NamedOrAnonScopeId Context::containing_scope(DefId did) const {
+ScopeId Context::containing_scope(DefId did) const {
     auto maybe_parent = defs.cat(did).parent;
     // ----- base cases (parent w/ scope)---------
     if (!maybe_parent.has_value()) {

@@ -24,7 +24,7 @@ namespace hir {
 // ------ struct impls -------
 
 struct ExecBlock {
-    ScopeAnonId scope;
+    ScopeId scope;
     IdSlice<ExecId> execs;
 };
 

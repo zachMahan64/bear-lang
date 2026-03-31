@@ -8,12 +8,10 @@
 
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/context.hpp"
-#include "compiler/hir/def.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "utils/data_arena.hpp"
 #include <assert.h>
 #include <stddef.h>
-#include <variant>
 // this may need to be tuned for a balance between cache locality and limited rehashing
 static constexpr size_t HIR_SCOPE_MAP_DEFAULT_SIZE = 0x100;
 static constexpr size_t HirScopeOP_LEVEL_SCALE_FACTOR = 4;
@@ -96,161 +94,6 @@ ScopeLookUpResult Scope::look_up_type(const Context& context, ScopeId local_scop
     return look_up_impl(context, local_scope, symbol, scope_kind::type);
 }
 
-// ------------------ ANON SCOPE IMPL ----------------------
-
-ScopeLookUpResult ScopeAnon::look_up_impl(const Context& context, ScopeAnonId local_scope_id,
-                                          SymbolId symbol, scope_kind kind) {
-    if (!local_scope_id.val()) {
-        return ScopeLookUpResult{DefId{}, scope_look_up_status::searched};
-    }
-    // init curr scope local scope
-    const ScopeAnon* local_scope_anon = &context.scope_anon(local_scope_id);
-    const ScopeAnon* curr_scope_anon = local_scope_anon;
-    const Scope* curr_scope_named = NULL;
-    ScopeAnonId curr_scope_anon_id = local_scope_id;
-    ScopeId curr_scope_named_id{};
-    // begin search logic
-    DefId result_def{};
-    scope_look_up_status status = scope_look_up_status::okay;
-
-    // search used modules first to allow local shadowing!
-    DefId def_from_used_modules{};
-    bool collision = false;
-    if (local_scope_anon->has_used_defs) {
-
-        const auto& vec = local_scope_anon->used_defs;
-
-        for (HirSize i = 0; i < vec.size(); i++) {
-
-            const DefId def_id = vec[i];
-
-            const Def& used_def = context.def(def_id);
-            const ScopeLookUpResult used_res = Scope::look_up_impl(
-                context, std::get<DefModule>(used_def.value).scope, symbol, kind);
-
-            if (used_res.status == scope_look_up_status::okay) {
-                if (def_from_used_modules.val()) {
-                    collision = true;
-                }
-                def_from_used_modules = used_res.def_id;
-            }
-        }
-    }
-
-    // start walking scopes from local thru parents
-    // exactly one of (curr_scope_anon_id.val, curr_scope_named_id.val) must be nonzero at every
-    // step
-    while (!result_def.val()) {
-        assert(!(curr_scope_anon_id.val() && curr_scope_named_id.val()));
-
-        if (curr_scope_anon_id.val()) {
-            curr_scope_anon = &context.scope_anon(curr_scope_anon_id);
-            switch (kind) {
-            case scope_kind::namespacee:
-                assert(false && "namespace lookup in anonymous scope");
-                break;
-            case scope_kind::variable:
-                result_def = curr_scope_anon->variables.at(symbol).as_id();
-                break;
-            case scope_kind::type:
-                result_def = curr_scope_anon->types.at(symbol).as_id();
-                break;
-            }
-            if (result_def.val()) {
-                break; // hit, stop now since we allow shadowing
-            }
-            const ScopeAnonId parent_scope_anon_id
-                = std::holds_alternative<ScopeAnonId>(curr_scope_anon->parent)
-                      ? std::get<ScopeAnonId>(curr_scope_anon->parent)
-                      : ScopeAnonId{};
-            assert((parent_scope_anon_id.val() != curr_scope_anon_id.val())
-                   && "self-referential scope\n");
-            curr_scope_anon_id = parent_scope_anon_id;
-
-            const ScopeId parent_scope_named_id
-                = std::holds_alternative<ScopeId>(curr_scope_anon->parent)
-                      ? std::get<ScopeId>(curr_scope_anon->parent)
-                      : ScopeId{};
-            assert((parent_scope_named_id.val() != curr_scope_named_id.val())
-                   && "self-referential scope\n");
-            curr_scope_named_id = parent_scope_named_id;
-        } else {
-            assert(curr_scope_named_id.val());
-            curr_scope_named = &context.scope(curr_scope_named_id);
-            switch (kind) {
-            case scope_kind::namespacee:
-                result_def = curr_scope_named->namespaces.at(symbol).as_id();
-                break;
-            case scope_kind::variable:
-                result_def = curr_scope_named->variables.at(symbol).as_id();
-                break;
-            case scope_kind::type:
-                result_def = curr_scope_named->types.at(symbol).as_id();
-                break;
-            }
-            if (result_def.val()) {
-                break; // hit, stop now since we allow shadowing
-            }
-
-            const ScopeId parent_scope_named_id = curr_scope_named->named_parent.as_id();
-            assert((parent_scope_named_id.val() != curr_scope_named_id.val())
-                   && "self-referential scope\n");
-            curr_scope_named_id = parent_scope_named_id;
-            curr_scope_anon_id = ScopeAnonId{};
-        }
-        if (!curr_scope_anon_id.val() && !curr_scope_named_id.val()) {
-            break; // no more parents, stop traversing
-        }
-    }
-    if (!result_def.val()) {
-        // didn't find a local symbol -> now check the imports
-        if (collision) {
-            status = scope_look_up_status::collision;
-        } else if (def_from_used_modules.val() != HIR_ID_NONE) {
-            result_def = def_from_used_modules;
-            status = scope_look_up_status::okay;
-        } else {
-            status = scope_look_up_status::not_found;
-        }
-    }
-    return ScopeLookUpResult{result_def, status};
-}
-
-ScopeLookUpResult hir_scope_anon_look_up_variable(Context& context, ScopeAnonId local_scope,
-                                                  SymbolId symbol) {
-
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::variable);
-}
-
-ScopeLookUpResult hir_scope_anon_look_up_type(Context& context, ScopeAnonId local_scope,
-                                              SymbolId symbol) {
-
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::type);
-}
-
-ScopeLookUpResult ScopeAnon::look_up_variable(const Context& context, ScopeAnonId local_scope,
-                                              SymbolId symbol) {
-
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::variable);
-}
-
-ScopeLookUpResult ScopeAnon::look_up_type(const Context& context, ScopeAnonId local_scope,
-                                          SymbolId symbol) {
-
-    return ScopeAnon::look_up_impl(context, local_scope, symbol, scope_kind::type);
-}
-
-ScopeLookUpResult ScopeAnon::look_up_namespace(const Context& context, ScopeAnonId local_scope,
-                                               SymbolId symbol) {
-    NamedOrAnonScopeId parent = context.scope_anon(local_scope).parent;
-    // base case is hit a named scope! (guranteed to hit since root scope is always named)
-    if (std::holds_alternative<ScopeId>(parent)) {
-        return Scope::look_up_namespace(context, std::get<ScopeId>(parent), symbol);
-    }
-    // standard case, keep traversing scopes in reverse till we hit a named scope
-    return ScopeAnon::look_up_namespace(context, std::get<ScopeAnonId>(parent), symbol);
-}
-
 // ------------------ insert helpers ----------------------
 
 /// insert symbol -> def into a named hir_scope
@@ -268,37 +111,6 @@ void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
     }
 }
 
-/// insert symbol -> def into an anonymous hir_scope_anon
-void ScopeAnon::insert(SymbolId symbol, DefId def, scope_kind kind) {
-    switch (kind) {
-    case scope_kind::namespacee:
-        assert(false && "namespace insertion in anonymous scope");
-        break;
-    case scope_kind::variable:
-        this->variables.insert(symbol, def);
-        break;
-    case scope_kind::type:
-        this->types.insert(symbol, def);
-        break;
-    }
-}
-
-void ScopeAnon::add_used_module(DefId def_id) {
-    // lazy init
-    if (!this->has_used_defs) {
-        const size_t hir_use_def_cap = 0x10;
-        this->used_defs.reserve(hir_use_def_cap);
-        this->has_used_defs = true;
-    }
-    this->used_defs.push_back(def_id);
-}
-ScopeAnon::ScopeAnon(ScopeId named_parent, DataArena& arena)
-    : parent(named_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
-ScopeAnon::ScopeAnon(ScopeAnonId anon_parent, DataArena& arena)
-    : parent(anon_parent), arena(arena), variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), has_used_defs(false) {}
-
 // ------------------------- named scope inserters -------------------------------
 void Scope::insert_namespace(SymbolId symbol, DefId def) {
     insert(symbol, def, scope_kind::namespacee);
@@ -309,18 +121,9 @@ void Scope::insert_variable(SymbolId symbol, DefId def) {
 void Scope::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::type); }
 
 // -------------------------------------- anonymous scope inserters ----------------
-void ScopeAnon::insert_variable(SymbolId symbol, DefId def) {
-    insert(symbol, def, scope_kind::variable);
-}
-void ScopeAnon::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::type); }
 
 OptId<DefId> Scope::already_defines_variable(SymbolId symbol) const { return variables.at(symbol); }
 OptId<DefId> Scope::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
-
-OptId<DefId> ScopeAnon::already_defines_variable(SymbolId symbol) const {
-    return variables.at(symbol);
-}
-OptId<DefId> ScopeAnon::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
 OptId<DefId> Scope::look_up_local_namespace(const Context& context, ScopeId local_scope,
                                             SymbolId symbol) {
     return context.scope(local_scope).namespaces.at(symbol);
@@ -328,9 +131,9 @@ OptId<DefId> Scope::look_up_local_namespace(const Context& context, ScopeId loca
 
 static OptId<DefId> look_up_local_type(const Context& context, ScopeId local_scope,
                                        SymbolId symbol) {
-
     return context.scope(local_scope).types.at(symbol);
 }
+
 static OptId<DefId> look_up_local_variable(const Context& context, ScopeId local_scope,
                                            SymbolId symbol) {
     return context.scope(local_scope).variables.at(symbol);

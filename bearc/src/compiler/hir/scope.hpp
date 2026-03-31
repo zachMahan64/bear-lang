@@ -14,7 +14,6 @@
 #include "utils/data_arena.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
-#include <variant>
 
 namespace hir {
 
@@ -91,51 +90,6 @@ struct Scope {
                                                SymbolId symbol);
 
     friend class ScopeAnon;
-};
-
-using NamedOrAnonScopeId = std::variant<ScopeId, ScopeAnonId>;
-
-/**
- * maps SymbolId -> hir_def_id
- * models anonymous blocks, such as function bodies or ctrl flow blocks
- */
-struct ScopeAnon {
-    using id_type = ScopeAnonId;
-    NamedOrAnonScopeId parent;
-    /// structs, variants, unions, deftypes
-    ScopeIdMap types;
-    /// var foo;
-    ScopeIdMap variables;
-    static constexpr size_t NUM_HIGH_USED_DEFS = 16;
-    /// modules, struct, and variant defs brought in
-    llvm::SmallVector<DefId, NUM_HIGH_USED_DEFS> used_defs;
-    /// for shared flat map storage
-    DataArena& arena;
-    // so that we can lazily init the used_defs_hir_def_id vector
-    bool has_used_defs;
-
-    void insert(SymbolId symbol, DefId def, scope_kind kind);
-    static ScopeLookUpResult look_up_impl(const Context& context, ScopeAnonId local_scope_id,
-                                          SymbolId symbol, scope_kind kind);
-    friend class Scope;
-
-  public:
-    ScopeAnon(ScopeId named_parent, DataArena& arena);
-    ScopeAnon(ScopeAnonId anon_parent, DataArena& arena);
-    static ScopeLookUpResult look_up_variable(const Context& context, ScopeAnonId local_scope,
-                                              SymbolId symbol);
-    static ScopeLookUpResult look_up_type(const Context& context, ScopeAnonId local_scope,
-                                          SymbolId symbol);
-    static ScopeLookUpResult look_up_namespace(const Context& context, ScopeAnonId local_scope,
-                                               SymbolId symbol);
-
-    /// adds a used module to non-top-level anonymous scope
-    void add_used_module(DefId def_id);
-    void insert_variable(SymbolId symbol, DefId def);
-    void insert_type(SymbolId symbol, DefId def);
-
-    OptId<DefId> already_defines_variable(SymbolId symbol) const;
-    OptId<DefId> already_defines_type(SymbolId symbol) const;
 };
 
 } // namespace hir

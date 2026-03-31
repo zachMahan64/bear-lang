@@ -70,29 +70,29 @@ class Context {
     // makes a named scope with a small capacity
     [[nodiscard]] ScopeId make_small_named_scope(OptId<ScopeId> parent_scope);
     [[nodiscard]] Scope& scope(ScopeId scope);
-    [[nodiscard]] OptId<DefId> look_up_variable(NamedOrAnonScopeId scope, SymbolId sid) const;
-    [[nodiscard]] OptId<DefId> look_up_type(NamedOrAnonScopeId scope, SymbolId sid) const;
-    [[nodiscard]] OptId<DefId> look_up_namespace(NamedOrAnonScopeId scope, SymbolId sid) const;
+    [[nodiscard]] OptId<DefId> look_up_variable(ScopeId scope, SymbolId sid) const;
+    [[nodiscard]] OptId<DefId> look_up_type(ScopeId scope, SymbolId sid) const;
+    [[nodiscard]] OptId<DefId> look_up_namespace(ScopeId scope, SymbolId sid) const;
     /// finds a variable and attempts to resolve definitions on the way to it
-    [[nodiscard]] OptId<DefId> look_up_scoped_variable(NamedOrAnonScopeId scope,
-                                                       IdSlice<SymbolId> id_slice, Span id_span);
+    [[nodiscard]] OptId<DefId> look_up_scoped_variable(ScopeId scope, IdSlice<SymbolId> id_slice,
+                                                       Span id_span);
     /// finds a type and attempts to resolve definitions on the way to it
-    [[nodiscard]] OptId<DefId> look_up_scoped_type(NamedOrAnonScopeId scope,
-                                                   IdSlice<SymbolId> id_slice, Span id_span);
-    [[nodiscard]] OptId<DefId> look_up_scoped_namespace(NamedOrAnonScopeId scope,
-                                                        IdSlice<SymbolId> id_slice, Span id_span);
-    [[nodiscard]] DefId guard_hid(auto F, NamedOrAnonScopeId scope, DefId did,
-                                  IdSlice<SymbolId> id_slice, Span id_span);
-    [[nodiscard]] DefId guard_hid_type(NamedOrAnonScopeId scope, DefId did,
-                                       IdSlice<SymbolId> id_slice, Span id_span);
-    [[nodiscard]] DefId guard_hid_variable(NamedOrAnonScopeId scope, DefId did,
-                                           IdSlice<SymbolId> id_slice, Span id_span);
-    [[nodiscard]] DefId guard_hid_namespace(NamedOrAnonScopeId scope, DefId did,
-                                            IdSlice<SymbolId> id_slice, Span id_span);
+    [[nodiscard]] OptId<DefId> look_up_scoped_type(ScopeId scope, IdSlice<SymbolId> id_slice,
+                                                   Span id_span);
+    [[nodiscard]] OptId<DefId> look_up_scoped_namespace(ScopeId scope, IdSlice<SymbolId> id_slice,
+                                                        Span id_span);
+    [[nodiscard]] DefId guard_hid(auto F, ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                                  Span id_span);
+    [[nodiscard]] DefId guard_hid_type(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                                       Span id_span);
+    [[nodiscard]] DefId guard_hid_variable(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                                           Span id_span);
+    [[nodiscard]] DefId guard_hid_namespace(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
+                                            Span id_span);
 
     /// finds the scope containing a definition
     /// TODO needs to handle non-top level stmts too
-    [[nodiscard]] NamedOrAnonScopeId containing_scope(DefId did) const;
+    [[nodiscard]] ScopeId containing_scope(DefId did) const;
 
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
@@ -177,7 +177,6 @@ class Context {
     [[nodiscard]] const Exec& exec(ExecId id) const;
     [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
     [[nodiscard]] const Scope& scope(ScopeId sid) const;
-    [[nodiscard]] const ScopeAnon& scope_anon(ScopeAnonId sid) const;
     [[nodiscard]] const ast_stmt_t* def_ast_node(DefId def_id) const;
     [[nodiscard]] DefId begin_def_id() const;
     [[nodiscard]] DefId end_def_id() const;
@@ -227,7 +226,6 @@ class Context {
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
     DataArena scope_arena;
     NodeVector<Scope> scopes;
-    NodeVector<ScopeAnon> scope_anons;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     /// const char* -> hir::SymbolId
     DataArena symbol_storage_arena;

@@ -26,7 +26,7 @@ inside `hir::Context`
 
 incoming `{line, character}` request handling
 ---------------------------------------------
-- [ ] add tracking of `hir::FileId` -> `BinaryTree<{Span, NamedOrAnonScopeId}, Comparator>` **arena-backed** where each source file tracks an ordered mapping of spans to scopes 
+- [ ] add tracking of `hir::FileId` -> `BinaryTree<{Span, ScopeId}, Comparator>` **arena-backed** where each source file tracks an ordered mapping of spans to scopes 
     - just do this tracking every time a scope (named or unnamed) is made, DNE assumes top level
     - this tracking should probably be toggled off during normal compilation 
 
