@@ -28,10 +28,10 @@ main quest
     - `visit_as_dependent(DefId)` & `visit_as_transparent(DefId)` -> `mentioned` (update these methods)
     - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
-- [ ] if compt (in parser/syntax doc, hir impl will come later in body resolution)
+- [x] if compt (in parser/syntax doc, hir impl will come later in body resolution)
+- [ ] expr `if` `compt`? condition `else` expr (in parser/syntax doc)
 - [ ] top level use (in parser/syntax doc, hir logic)
 - [ ] static_assert (make it a builtin in hir)
-- [ ] expr `if` `compt`? condition `else` expr (in parser/syntax doc)
 
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 

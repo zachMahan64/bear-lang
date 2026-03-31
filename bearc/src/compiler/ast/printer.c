@@ -669,6 +669,7 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         print_title("if statement");
         printer_do_indent();
         print_op_from_type(TOK_IF);
+        print_op_from_type(TOK_COMPT);
         printer_deindent();
         pretty_print_expr(stmt->stmt.if_stmt.condition);
         printer_do_indent();

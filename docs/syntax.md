@@ -78,7 +78,7 @@
     - | VariableDeclaration: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
     - | *UseStatement*: `use` Identifier `;`
     - | BlockStatement: `{` BodyStatement(s) `}`
-    - | IfStatement: `if` Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
+    - | IfStatement: `if` `compt`? Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
     - | WhileStatement: `while` Expression `{` LoopBodyStatement(s) `}`
     - | ForLoopStatement: `for` `(` BodyStatement `;` Expression `;` Expression `)` `{` LoopBodyStatement(s) `}`
     - | ForInLoopStatement: `for` `var` Identifier `in` Expression `{` LoopBodyStatement(s) `}`

@@ -197,6 +197,7 @@ typedef struct ast_stmt_if {
     /// NULLable if there's no else
     ast_stmt_t* else_stmt;
     bool has_else;
+    bool compt;
 } ast_stmt_if_t;
 
 typedef struct ast_stmt_else {

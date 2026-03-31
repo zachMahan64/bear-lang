@@ -638,6 +638,7 @@ ast_stmt_t* parse_stmt_if(parser_t* p) {
     if (!if_tkn) {
         return parser_sync_stmt(p);
     }
+    if_stmt->stmt.if_stmt.compt = parser_match_token(p, TOK_COMPT);
     ast_expr_t* cond_expr = parse_expr_before_opening_brace(p);
     if_stmt->stmt.if_stmt.condition = cond_expr;
     // make sure a block will succeed the conditional expression
