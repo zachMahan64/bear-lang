@@ -29,13 +29,18 @@ main quest
 
 - [x] **substantial refactor**: remove ScopeAnon, just make anonymous scopes have smaller default capacities (doing this since anon scopes should have their own namespace storage for used defs and i'm scrapping the old style anon uses)
 
-- [ ] implement Def::mention state in `hir::DefVisitor` thru:
+- [x] implement Def::mention state in `hir::DefVisitor` thru:
     - `visit_as_independent(DefId)` -> `unmentioned` (add this method)
     - `visit_as_dependent(DefId)` & `visit_as_transparent(DefId)` -> `mentioned` (update these methods)
     - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
-- [ ] static_assert (make it a builtin in hir)
+- [ ] fix/impl deftypes by having a direct def -> type forward mechanism (will be needed for generic params too)
 
+- some reflection/compt stuff
+- [ ] `@type(...)` for getting type-exprs
+- [ ] `same_type(expr, expr)` where the exprs could be say `typeof(foo)` and `type(Foo)`
+- [ ] static_assert (make it a builtin in hir)
+    - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `__static_assert(bool cond)` 
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
