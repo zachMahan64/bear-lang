@@ -13,8 +13,12 @@
 #include "compiler/token.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// consume a token
 token_t* parser_eat(parser_t* parser);
 
@@ -107,5 +111,9 @@ bool token_is_generic_opener(token_type_e t);
 bool token_is_preunary_op_expecting_type(token_type_e t);
 
 bool token_is_visibility_modifier(token_type_e t);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

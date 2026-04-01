@@ -12,7 +12,6 @@
 #include "compiler/hir/id_hash_map.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "utils/data_arena.hpp"
-#include "llvm/ADT/SmallVector.h"
 #include <cstdint>
 
 namespace hir {
@@ -21,19 +20,6 @@ struct Context;
 
 using ScopeIdMap = IdHashMap<SymbolId, DefId>;
 
-enum class scope_look_up_status : uint8_t {
-    okay = 0,
-    searched,
-    collision,
-    not_found,
-};
-
-struct ScopeLookUpResult {
-    DefId def_id;
-    scope_look_up_status status;
-    constexpr ScopeLookUpResult(DefId def_id, scope_look_up_status status) noexcept
-        : def_id(def_id), status(status) {}
-};
 enum class scope_kind : uint8_t {
     namespacee,
     variable,
@@ -45,7 +31,7 @@ enum class scope_kind : uint8_t {
  */
 struct Scope {
     using id_type = ScopeId;
-    OptId<ScopeId> named_parent;
+    OptId<ScopeId> parent;
     /// module, struct, and variant names
     ScopeIdMap namespaces;
     /// var foo;
@@ -55,8 +41,8 @@ struct Scope {
     DataArena& arena;
     const bool top_level;
     void insert(SymbolId symbol, DefId def, scope_kind kind);
-    static ScopeLookUpResult look_up_impl(const Context& context, ScopeId local_scope_id,
-                                          SymbolId symbol, scope_kind kind);
+    static OptId<DefId> look_up_impl(const Context& context, ScopeId local_scope_id,
+                                     SymbolId symbol, scope_kind kind);
 
   public:
     bool is_top_level() const { return top_level; };
@@ -68,12 +54,11 @@ struct Scope {
     Scope(ScopeId parent, size_t capacity, DataArena& arena);
     // constructs a top level scope with a given capacity
     Scope(size_t capacity, DataArena& arena);
-    static ScopeLookUpResult look_up_namespace(const Context& context, ScopeId local_scope,
-                                               SymbolId symbol);
-    static ScopeLookUpResult look_up_variable(const Context& context, ScopeId local_scope,
-                                              SymbolId symbol);
-    static ScopeLookUpResult look_up_type(const Context& context, ScopeId local_scope,
+    static OptId<DefId> look_up_namespace(const Context& context, ScopeId local_scope,
                                           SymbolId symbol);
+    static OptId<DefId> look_up_variable(const Context& context, ScopeId local_scope,
+                                         SymbolId symbol);
+    static OptId<DefId> look_up_type(const Context& context, ScopeId local_scope, SymbolId symbol);
 
     void insert_namespace(SymbolId symbol, DefId def);
     void insert_variable(SymbolId symbol, DefId def);

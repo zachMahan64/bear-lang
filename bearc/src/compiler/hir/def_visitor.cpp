@@ -171,16 +171,31 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         const token_t* last_symbol = use.id.start[use.id.len - 1];
         Span id_span{span.file_id, context.ast(span.file_id).buffer(), use.id.start[0],
                      last_symbol};
-        auto used_did = (use.mod) ? context.look_up_scoped_namespace(scope, sid_slice, id_span)
-                                  : context.look_up_scoped_type(scope, sid_slice, id_span);
-        if (!used_did.has_value()) {
+
+        // by default, look up a mod (a namespace). If `use mod` was NOT explicitly specified, then
+        // look for a type only if a mod was NOT found. This statys in line with the "favor modules"
+        // philosophy
+        const bool only_look_for_mod = use.mod;
+        bool used_mod = true;
+        OptId<DefId> used_did = context.look_up_scoped_namespace(scope, sid_slice, id_span);
+        if (!only_look_for_mod && used_did.empty()) {
+            used_did = context.look_up_scoped_type(scope, sid_slice, id_span);
+            used_mod = false;
+        }
+
+        if (used_did.empty()) {
+            auto code = only_look_for_mod ? diag_code::use_of_undeclared_mod
+                                          : diag_code::use_of_undeclared_identifier;
+
             context.emplace_diagnostic_with_message_value(
-                id_span, diag_code::use_of_undeclared_identifier, diag_type::error,
+                id_span, code, diag_type::error,
                 DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice});
+
+            break; // don't insert!
         }
         ScopeId scope_into_which_to_insert = context.containing_scope(did);
         // insert base name into containing scope
-        if (use.mod) {
+        if (used_mod) {
             context.scope(scope_into_which_to_insert)
                 .insert_namespace(context.symbol_id(last_symbol), used_did.as_id());
         } else {

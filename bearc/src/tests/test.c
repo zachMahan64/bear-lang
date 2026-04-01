@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     print_result(&total);
     vector_destroy(&results);
     token_maps_free(); // after all operations involving token lookups are done
-    return !(total.cnt_total == total.cnt_success);
+    return (int)(total.cnt_total - total.cnt_success);
 }
 /*
  * macros to easily test tests in the form tests/00.br
@@ -174,81 +174,58 @@ br_test_result_t test_hir(void) {
     TEST_INIT("hir");
     char* args1[] = {"bearc", "07.br", "-i", "tests/hir"};
     ASSERT_EQ_ERR_FROM_ARGS(args1, 0);
-
     char* args2[] = {"bearc", "tests/hir/07.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args2, 2);
-
     char* args3[] = {"bearc", "tests/hir/04.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args3, 10);
-
     char* args4[] = {"bearc", "tests/hir/00.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
-
     char* args5[] = {"bearc", "-i", "tests/projects/00", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args5, 3, 2);
-
     char* args6[] = {"bearc", "-i", "tests/projects/01", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args6, 4, 2);
-
     char* args7[] = {"bearc", "00.br", "-i", "tests/projects/02"};
     ASSERT_EQ_ERR_FROM_ARGSN(args7, 4, 3);
-
     char* args8[] = {"bearc", "tests/hir/09.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args8, 2);
-
     char* args9[] = {"bearc", "tests/hir/10.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args9, 2);
-
     char* args10[] = {"bearc", "tests/hir/11.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args10, 8);
-
     char* args11[] = {"bearc", "tests/hir/12.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args11, 3);
-
     char* args12[] = {"bearc", "tests/hir/06.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args12, 8);
-
     char* args13[] = {"bearc", "tests/hir/13.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args13, 31);
-
     char* args14[] = {"bearc", "tests/hir/14.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args14, 5);
-
     char* args15[] = {"bearc", "tests/hir/15.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args15, 16);
-
     char* args16[] = {"bearc", "tests/hir/16.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args16, 9);
-
     char* args17[] = {"bearc", "tests/hir/17.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args17, 5);
-
     char* args18[] = {"bearc", "tests/hir/18.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args18, 6);
-
     char* args19[] = {"bearc", "tests/hir/19.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args19, 14);
-
     char* args20[] = {"bearc", "tests/hir/20.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args20, 21);
-
     char* args21[] = {"bearc", "tests/hir/21.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args21, 5);
-
     char* args22[] = {"bearc", "tests/hir/22.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args22, 5);
-
     char* args23[] = {"bearc", "tests/hir/23.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args23, 4);
-
     char* args24[] = {"bearc", "tests/hir/24.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args24, 2);
-
     char* args25[] = {"bearc", "tests/hir/25.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args25, 8);
-
     char* args26[] = {"bearc", "00.br", "-i", "tests/projects/03"};
-    ASSERT_EQ_ERR_FROM_ARGS(args26, 6);
+    ASSERT_EQ_ERR_FROM_ARGSN(args26, 9, 3);
+    char* args27[] = {"bearc", "tests/hir/26.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args27, 2);
 
     return TEST_RESULT;
 }

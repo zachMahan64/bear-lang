@@ -228,7 +228,7 @@ static const bool parser_builtin_type_map[TOK__NUM]
 // match helpers
 bool token_is_builtin_type(token_type_e t) { return parser_builtin_type_map[t]; }
 bool token_is_builtin_type_or_id(token_type_e t) {
-    return parser_builtin_type_map[t] || t == TOK_IDENTIFIER || t == TOK_SELF_ID;
+    return t == TOK_IDENTIFIER || parser_builtin_type_map[t] || t == TOK_SELF_ID;
 }
 
 bool token_is_literal(token_type_e t) {

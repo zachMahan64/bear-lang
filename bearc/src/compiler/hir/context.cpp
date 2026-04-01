@@ -20,6 +20,7 @@
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/type.hpp"
+#include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/log.hpp"
@@ -166,7 +167,7 @@ SymbolId Context::concat_symbols(SymbolId sid1, SymbolId sid2) {
     return symbol_id(buf);
 }
 SymbolId Context::symbol_id_for_identifier_tkn(const token_t* tkn) {
-    assert(tkn->type == TOK_IDENTIFIER || tkn->type == TOK_SELF_ID);
+    assert(token_is_builtin_type_or_id(tkn->type));
     return symbol_id(tkn->start, tkn->len);
 }
 
@@ -671,16 +672,13 @@ TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
 [[nodiscard]] DefId Context::def_id(IdIdx<DefId> id) const { return def_ids.cat(id); }
 
 OptId<DefId> Context::look_up_variable(ScopeId scope, SymbolId sid) const {
-    auto res = hir::Scope::look_up_variable(*this, scope, sid);
-    return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+    return Scope::look_up_variable(*this, scope, sid);
 }
 OptId<DefId> Context::look_up_type(ScopeId scope, SymbolId sid) const {
-    auto res = hir::Scope::look_up_type(*this, scope, sid);
-    return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+    return Scope::look_up_type(*this, scope, sid);
 }
 OptId<DefId> Context::look_up_namespace(ScopeId scope, SymbolId sid) const {
-    auto res = hir::Scope::look_up_namespace(*this, scope, sid);
-    return (res.status == scope_look_up_status::okay) ? res.def_id : OptId<DefId>{};
+    return Scope::look_up_namespace(*this, scope, sid);
 }
 
 OptId<DefId> Context::look_up_scoped_variable(ScopeId scope, IdSlice<SymbolId> id_slice,

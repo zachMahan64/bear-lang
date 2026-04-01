@@ -43,6 +43,7 @@ enum class diag_code : uint8_t {
     declared_here_without_compt,
     not_a_compile_time_constant,
     use_of_undeclared_identifier,
+    use_of_undeclared_mod,
     not_declared_in_this_scope,
     replace_with,
     remove,

@@ -12,7 +12,7 @@
 #include "compiler/hir/indexing.hpp"
 #include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
-#include <stdint.h>
+#include <assert.h>
 namespace hir {
 
 // a hashmap optimized for Id storage, based on an internal arena that is not owned
@@ -32,7 +32,10 @@ class IdHashMap {
     IdHashMap& operator=(IdHashMap&&) = default;
     IdHashMap(DataArena& arena, size_t capacity)
         : arena(arena), map(mapu32u32_create_from_arena(capacity, arena.arena())) {}
-    void insert(K key, V value) { mapu32u32_insert(&map, key.val(), value.val()); }
+    void insert(K key, V value) {
+        assert((key.val() != HIR_ID_NONE) && "tried to insert a key with value HIR_ID_NONE");
+        mapu32u32_insert(&map, key.val(), value.val());
+    }
     bool remove(K key) { return mapu32u32_remove(&map, key.val()); }
     /// returns an optional id by value
     OptId<V> at(K key) const {

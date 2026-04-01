@@ -1,5 +1,26 @@
 //tests/hir/26.br 
 
 struct Node {
-    Node* next;
+    Node* next; // fine
+}
+
+struct Nodette {
+
+    Node* next; // fine 
+
+    mut Nodette nodette; // oops
+
+    static mut Nodette nodette_static; // fine
+
+    mut Node nodey; // fine
+    
+    struct Node {
+
+        mut Nodette..Node* prev; // fine 
+        Node* next; // fine 
+        Nodette* nodette; // fine
+        Nodette val; // fine
+
+        static compt i32 foo = 12345;
+    }
 }

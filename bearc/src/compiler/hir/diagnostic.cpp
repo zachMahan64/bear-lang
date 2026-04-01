@@ -149,6 +149,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "invalid cast";
     case diag_code::parentheses_should_be_used_for_chained_casts:
         return "parentheses should be used for chained casts";
+    case diag_code::use_of_undeclared_mod:
+        return "use of undeclared module";
     }
 
     std::unreachable();

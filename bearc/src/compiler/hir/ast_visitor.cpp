@@ -152,7 +152,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         // definition of foo!
         //
         // this would be bad.
-        OptId<DefId> existing = Scope::look_up_local_namespace(context, scope, name).as_id();
+        OptId<DefId> existing = Scope::look_up_local_namespace(context, scope, name);
 
         bool existing_module
             = existing.has_value()
@@ -226,8 +226,8 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         auto r = Scope::look_up_type(context, scope,
                                      context.symbol_id_for_identifier_tkn(info.scope_prefix_tkn));
         bool no_struct = false;
-        if (r.status == scope_look_up_status::okay) {
-            if (auto s = context.defs_to_scopes_for_types().at(r.def_id); s.has_value()) {
+        if (r.has_value()) {
+            if (auto s = context.defs_to_scopes_for_types().at(r.as_id()); s.has_value()) {
                 scope = s.as_id();
             } else {
                 no_struct = true;

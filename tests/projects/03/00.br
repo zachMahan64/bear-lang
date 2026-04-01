@@ -4,21 +4,40 @@ import "01.br";
 
 mod foo {
 
-import "01.br"; // oops
+    import "01.br"; // oops
 
-compt i32 thingie = 42;
+    compt i32 thingie = 42;
 
-use bar..Bar; // fine, inside mod
+    use bar..Bar; // fine, inside mod
 
 }
 
 use bar..Bar; // warn, global use
 
-use bar..Fooey; // oops hid
+use bar..Fooey; // oops hid; warn
 
 compt Bar bar = Bar{.bar = 12}; // fine
+
 compt Fooey f = Fooey{.f = 42}; // oops
+
+mod foooo {
+    
+    compt bingle..Thingy th1 = bingle..Thingy{}; // oops too early
+
+    use mod bar..barry..bingle; // fine
+
+    compt bingle..Thingy th2 = bingle..Thingy{}; // fine
+
+    use bar..barry..bingle; // oops, missing mod
+
+    use mod bar..barry..bingle..Thingy; // oops, have mod
+
+}
 
 fn main() -> i32 {
     return 0;
+}
+
+mt i32..guy() {
+
 }
