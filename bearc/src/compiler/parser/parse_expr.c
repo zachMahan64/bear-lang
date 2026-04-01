@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #define PREC_INIT UINT8_MAX
@@ -260,7 +261,7 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     if (parser_peek_match(p, TOK_GENERIC_SEP)) {
         call_expr->expr.fn_call.is_generic = true;
         parser_mode_e saved = parser_mode(p);
-        parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
+        parser_mode_set(p, PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS);
         call_expr->expr.fn_call.generic_args = parse_slice_of_generic_args(p);
         parser_mode_set(p, saved);
     } else {

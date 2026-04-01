@@ -42,7 +42,7 @@ ast_slice_of_stmts_t parse_slice_of_stmts_call(parser_t* p, token_type_e until_t
     spill_arr_ptr_t sarr;
     spill_arr_ptr_init(&sarr);
 
-    while (!(parser_peek_match(p, until_tkn) || parser_eof(p)) // while !eof (edge-case handling)
+    while (!parser_peek_match(p, until_tkn) && !parser_eof(p) // while !eof (edge-case handling)
     ) {
         spill_arr_ptr_push(&sarr, call(p));
     }
@@ -586,6 +586,11 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         return parser_sync_stmt(p);
     }
 
+    // guard trailing junk due to eof tok from previously synced stmt
+    if (parser_eof(p)) {
+        return parser_sync_stmt(p);
+    }
+
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type)
           || (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN))) {
@@ -595,12 +600,7 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // if malformed guard passes, try to parse as a var declaration
-    ast_stmt_t* stmt
-        = parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
-    if (stmt->type == AST_STMT_INVALID) {
-        compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
-    }
-    return stmt;
+    return parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
 }
 
 ast_stmt_t* parse_module(parser_t* p) {
@@ -935,7 +935,7 @@ ast_slice_of_generic_params_t parse_generic_params(parser_t* p) {
     spill_arr_ptr_init(&sarr);
 
     parser_mode_e saved = parser_mode(p);
-    parser_mode_set(p, PARSER_MODE_BAN_LT_GT);
+    parser_mode_set(p, PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS);
 
     while (!(parser_peek_match(p, TOK_GT) || parser_eof(p)) // while !eof (edge-case handling)
     ) {
@@ -1230,6 +1230,11 @@ ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p) {
         return parse_stmt_static_modifier(p, &parse_var_decl);
     }
 
+    // guard trailing junk due to eof tok from previously synced stmt
+    if (parser_eof(p)) {
+        return parser_sync_stmt(p);
+    }
+
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type)
           || (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN))) {
@@ -1239,12 +1244,7 @@ ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // if malformed guard passes, try to parse as a var declaration
-    ast_stmt_t* stmt
-        = parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
-    if (stmt->type == AST_STMT_INVALID) {
-        compiler_error_list_emplace(p->error_list, stmt->first, ERR_EXPECTED_DECLARTION);
-    }
-    return stmt;
+    return parse_var_decl_from_id_or_mut(p, NULL, false); // no leading id, leading mut == false
 }
 
 ast_stmt_t* parse_stmt_alignas_modifier(parser_t* p, ast_stmt_t* (*call)(parser_t*)) {

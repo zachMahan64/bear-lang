@@ -16,7 +16,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 
 // ----------- token consumption primitive functions -------
 
@@ -213,8 +212,44 @@ token_range_t parser_sync_until(parser_t* p, token_type_e tok_type) {
 
 token_range_t parser_sync(parser_t* p) { return parser_sync_call(p, &token_is_syncable_delim); }
 
+token_t* parser_expect_generic_closing_delim(parser_t* p) {
+    token_t* tkn = NULL;
+    // this unsigned_integral embedded val is zero initialized. So we're just overloading it here to
+    // check how many times we've ticked the tokens >>> and >> to be in place of > > > and > >
+    if ((tkn = parser_peek_match(p, TOK_RSHA))) {
+        uint32_t ticks = ++(tkn->val.unsigned_integral);
+        if (ticks == 3) {
+            return parser_eat(p);
+        }
+        if (ticks < 3) {
+            return tkn;
+        }
+    }
+    if ((tkn = parser_peek_match(p, TOK_RSHL))) {
+        uint32_t ticks = ++(tkn->val.unsigned_integral);
+        if (ticks == 2) {
+            return parser_eat(p);
+        }
+        if (ticks < 2) {
+            return tkn;
+        }
+    }
+    // just expect this guy, if this fails it returns NULL here as intended
+    return parser_expect_token(p, TOK_GT);
+}
+
+token_t* parser_peak_generic_closing_delims(parser_t* p) {
+    token_type_e type = parser_peek(p)->type;
+    if (type == TOK_GT || type == TOK_RSHA || type == TOK_RSHL) {
+        return parser_peek(p);
+    }
+    return NULL;
+}
+
 bool is_legal_binary_op(parser_t* p, token_type_e type) {
-    return is_binary_op(type) && !(p->mode == PARSER_MODE_BAN_LT_GT && is_lt_gt(type));
+    return is_binary_op(type)
+           && !((p->mode == PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS)
+                && is_angle_bracket_operator(type));
 }
 
 // map containing look-ups for builtin types

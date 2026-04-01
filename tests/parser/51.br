@@ -2,4 +2,37 @@
 
 HashMap<String, HashMap<i32, String> > map_map; // this is fine
 
-HashMap<String, HashMap<i32, String>> map_map_tricky; // this should be fine, but it's not
+HashMap<String, HashMap<i32, String>> map_map_tricky; // fine
+
+Foo<Foo<i32>> foo1; // fine
+
+Foo<Foo<Foo<i32>>> foo2; // fine
+
+Foo<Foo<Foo<Foo<i32>>>> foo3; // fine
+
+Foo<Foo<Foo<Foo<i32> >> > foo3; // fine
+
+Foo<Foo<Foo<Foo<i32> >>> foo4; // fine
+
+Foo<Foo<Foo<Foo<i32>>> > foo5; // fine
+
+Foo::Foo<Foo<Foo<i32>>> foo6; // fine
+
+Foo::Foo::Foo::Foo::Foo::Foo::i32 foo7; // fine
+
+Foo::<Foo::Foo::Foo::Foo::Foo::i32> foo8; // fine
+
+// well this is awful
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::Foo::
+Foo::Foo::Foo::Foo::Foo::Foo::<Foo::Foo<Foo::Foo<Foo::Foo>>> foo9;
+
+Foo<Foo<Foo<Foo<Foo<Foo<Foo<Foo<i32>>>>>>>> foo10;
+
+Foo::Foo::Foo<<Foo::i32> foops;

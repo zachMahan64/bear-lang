@@ -19,7 +19,6 @@
 #include "utils/spill_arr.h"
 #include <assert.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 ast_type_t* parser_alloc_type(parser_t* p) { return arena_alloc(p->arena, sizeof(ast_type_t)); }
 
@@ -373,16 +372,23 @@ ast_slice_of_generic_args_t parse_slice_of_generic_args(parser_t* p) {
     }
     // otherwise expect foo::<garg1, garg2> or foo<garg1, garg2>
     else {
-        while (!parser_peek_match(p, TOK_GT) && !parser_eof(p)) {
+        // ensure monkey business is banned
+        parser_mode_e saved_mode = parser_mode(p);
+        parser_mode_set(p, PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS);
+
+        while (!parser_peak_generic_closing_delims(p) && !parser_eof(p)) {
             arg = parse_generic_arg(p);
             valid |= arg->valid;
             spill_arr_ptr_push(&sarr, arg);
-            if (!parser_peek_match(p, TOK_GT) && !parser_peek_match(p, TOK_GENERIC_SEP)) {
+            if (!parser_peak_generic_closing_delims(p) && !parser_peek_match(p, TOK_GENERIC_SEP)) {
                 parser_expect_token(p, TOK_COMMA);
             }
         }
-        token_t* gt = parser_expect_token(p, TOK_GT);
+        token_t* gt = parser_expect_generic_closing_delim(p);
         valid = gt; // false if gt == NULL
+
+        // restore monkey business
+        parser_mode_set(p, saved_mode);
     }
     ast_slice_of_generic_args_t args = parser_freeze_generic_arg_spill_arr(p, &sarr);
     args.valid = valid;
@@ -401,7 +407,8 @@ ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
     outer->type.generic.inner = inner;
     outer->canonical_base = inner->canonical_base;
     parser_mode_e saved = parser_mode(p);
-    parser_mode_set(p, PARSER_MODE_BAN_LT_GT); // cleaner template parsing from < and > issues
+    parser_mode_set(
+        p, PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS); // cleaner template parsing from < and > issues
     ast_slice_of_generic_args_t args = parse_slice_of_generic_args(p);
     parser_mode_set(p, saved); // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     if (!args.valid) {

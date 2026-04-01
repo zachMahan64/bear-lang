@@ -113,16 +113,16 @@ br_test_result_t test_parser(void) {
                                   // this makes tests sustainally slower, so only enable when
                                   // parsing updates are made to verify correctness
     TEST_SET_ARGS(parser_args);
-    ASSERT_EQ_ERR("parser/00", 5);
+    ASSERT_EQ_ERR("parser/00", 4);
     ASSERT_EQ_ERR("parser/01", 0);
-    ASSERT_EQ_ERR("parser/02", 5);
+    ASSERT_EQ_ERR("parser/02", 2);
     ASSERT_EQ_ERR("parser/03", 0);
-    ASSERT_EQ_ERR("parser/04", 6);
+    ASSERT_EQ_ERR("parser/04", 4);
     ASSERT_EQ_ERR("parser/05", 0);
-    ASSERT_EQ_ERR("parser/06", 12);
-    ASSERT_EQ_ERR("parser/07", 9);
+    ASSERT_EQ_ERR("parser/06", 10);
+    ASSERT_EQ_ERR("parser/07", 6);
     ASSERT_EQ_ERR("parser/08", 0);
-    ASSERT_EQ_ERR("parser/09", 11);
+    ASSERT_EQ_ERR("parser/09", 7);
     ASSERT_EQ_ERR("parser/10", 1);
     ASSERT_EQ_ERR("parser/11", 0);
     ASSERT_EQ_ERR("parser/12", 0);
@@ -164,7 +164,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/48", 4);
     ASSERT_EQ_ERR("parser/49", 1);
     ASSERT_EQ_ERR("parser/50", 0);
-    ASSERT_EQ_ERR("parser/51", 0);
+    ASSERT_EQ_ERR("parser/51", 1);
     ASSERT_EQ_ERR("parser/52", 5);
 
     return TEST_RESULT;
