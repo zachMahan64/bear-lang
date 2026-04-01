@@ -21,8 +21,14 @@ class Context;
 
 template <typename T>
 concept IsDefVisitor = requires(T t, DefId def) {
+    // do not alter mention state
+    { t.visit_as_independent(def) } -> std::convertible_to<DefId>;
+    // alter mention state (mentioned)
     { t.visit_as_dependent(def) } -> std::convertible_to<DefId>;
+    // alter mention state (mentioned) and never resolve
     { t.visit_as_transparent(def) } -> std::convertible_to<DefId>;
+    // alter mention state (mutated)
+    { t.visit_as_mutator(def) } -> std::convertible_to<DefId>;
 };
 
 class TopLevelDefVisitor {
@@ -35,7 +41,7 @@ class TopLevelDefVisitor {
     bool began_resolution;
 
     DefId resolve_def(DefId did);
-    DefId visit(DefId def);
+    DefId visit_and_resolve_if_needed(DefId def);
     void report_cycle(DefId culprit);
 
   public:
@@ -43,15 +49,28 @@ class TopLevelDefVisitor {
     void resolve_top_level_definitions();
     /// visit a DefId where the def being visited is depended on by the visitor
     DefId visit_as_dependent(DefId def);
+
+    DefId visit_as_independent(DefId def);
+
+    DefId visit_as_mutator(DefId def);
+
     /// visit when not all info is need (i.e. just validate existence for pointers/references)
-    DefId visit_as_transparent(DefId def);
+    [[nodiscard]] DefId visit_as_transparent(DefId def) noexcept;
 };
 static_assert(IsDefVisitor<TopLevelDefVisitor>);
 
-struct InsideBodyDefVisitor {
-    [[nodiscard]] static DefId visit_as_dependent(DefId def) noexcept { return def; }
-    /// visit when not all info is need (i.e. just validate existence for pointers/references)
-    [[nodiscard]] static DefId visit_as_transparent(DefId def) noexcept { return def; }
+class InsideBodyDefVisitor {
+    Context& context;
+
+  public:
+    InsideBodyDefVisitor(Context& context) : context{context} {}
+    DefId visit_as_dependent(DefId def);
+
+    DefId visit_as_transparent(DefId def);
+
+    DefId visit_as_independent(DefId def);
+
+    DefId visit_as_mutator(DefId def);
 };
 static_assert(IsDefVisitor<InsideBodyDefVisitor>);
 

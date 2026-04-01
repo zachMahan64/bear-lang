@@ -151,8 +151,8 @@ struct Def : NodeWithVariantValue<Def> {
     /// represents the mention state corresponding to an hir::DefId
     enum class mention_state : uint8_t {
         unmentioned = 0,
-        mentioned,
-        mutated,
+        mentioned = 1,
+        mutated = 2,
     };
 
     using id_type = DefId;

@@ -23,10 +23,10 @@ void TopLevelDefVisitor::resolve_top_level_definitions() {
     this->began_resolution = true;
     auto last_top_level = context.end_def_id();
     for (auto d = context.begin_def_id(); d != last_top_level; d++) {
-        visit_as_dependent(d);
+        visit_as_independent(d);
     }
 }
-DefId TopLevelDefVisitor::visit(DefId def) {
+DefId TopLevelDefVisitor::visit_and_resolve_if_needed(DefId def) {
     if (context.resol_state_of(def) == Def::resol_state::resolved) {
         return def;
     }
@@ -38,6 +38,11 @@ DefId TopLevelDefVisitor::visit(DefId def) {
     return d;
 }
 
+DefId TopLevelDefVisitor::visit_as_transparent(DefId def) noexcept {
+    context.promote_mention_state_of(def, Def::mention_state::mentioned);
+    return def;
+}
+
 DefId TopLevelDefVisitor::visit_as_dependent(DefId def) {
     if (context.resol_state_of(def) == Def::resol_state::in_progress) {
         // reports the double diagnostic revealing the origin of the circular def
@@ -45,12 +50,23 @@ DefId TopLevelDefVisitor::visit_as_dependent(DefId def) {
         // return as to prevent infinite recursion
         return def;
     }
-    return visit(def);
+    context.promote_mention_state_of(def, Def::mention_state::mentioned);
+    return visit_and_resolve_if_needed(def);
 }
-DefId TopLevelDefVisitor::visit_as_transparent(DefId def) {
-    // in_progress is fine here since this is a transparent visitation (pointer or reference, so no
-    // information dependency)
-    return visit(def);
+
+DefId TopLevelDefVisitor::visit_as_independent(DefId def) {
+    // no need to check for cycles here since this is an independent def
+    return visit_and_resolve_if_needed(def);
+}
+
+DefId TopLevelDefVisitor::visit_as_mutator(DefId def) {
+    if (context.resol_state_of(def) == Def::resol_state::in_progress) {
+        report_cycle(def);
+        return def;
+    }
+    // mutated
+    context.promote_mention_state_of(def, Def::mention_state::mutated);
+    return visit_and_resolve_if_needed(def);
 }
 
 DefId TopLevelDefVisitor::resolve_def(DefId did) {
@@ -67,11 +83,16 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     ScopeId scope = context.containing_scope(did);
     Def& def = context.def(did);
     Span span = def.span;
+
+    auto needs_layout_info = [this, &def]() {
+        return (def.parent.has_value()) ? context.is_struct_def(def.parent.as_id()) : false;
+    };
+
     //  TODO write handlers
     switch (stmt->type) {
     case AST_STMT_VAR_DECL: {
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
-            span.file_id, scope, stmt->stmt.var_decl.type);
+            span.file_id, scope, stmt->stmt.var_decl.type, needs_layout_info());
         if (!maybe_type.has_value()) {
             return did; // maybe set a special value to indicate error differently
         }
@@ -90,7 +111,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     }
     case AST_STMT_VAR_INIT_DECL: {
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
-            span.file_id, scope, stmt->stmt.var_init_decl.type);
+            span.file_id, scope, stmt->stmt.var_init_decl.type, needs_layout_info());
         if (!maybe_type.has_value()) {
             return did; // maybe set a special value to indicate error differently
         }
@@ -241,5 +262,20 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
     // unreachable since we *should* find the culprit in the def_stack
     assert(false && "failed to find culprit defintion when reporting a circular defintion");
 }
+DefId InsideBodyDefVisitor::visit_as_dependent(DefId def) {
+    context.promote_mention_state_of(def, Def::mention_state::mentioned);
+    return def;
+}
 
+DefId InsideBodyDefVisitor::visit_as_transparent(DefId def) {
+    context.promote_mention_state_of(def, Def::mention_state::mentioned);
+    return def;
+}
+
+DefId InsideBodyDefVisitor::visit_as_independent(DefId def) { return def; }
+
+DefId InsideBodyDefVisitor::visit_as_mutator(DefId def) {
+    context.promote_mention_state_of(def, Def::mention_state::mutated);
+    return def;
+}
 } // namespace hir

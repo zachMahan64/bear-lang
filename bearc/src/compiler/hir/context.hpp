@@ -102,6 +102,10 @@ class Context {
     /// indicates resolution state of a definition
     [[nodiscard]] Def::resol_state resol_state_of(DefId def) const;
     void set_resol_state_of(DefId def, Def::resol_state resol_state);
+
+    [[nodiscard]] Def::mention_state mention_state_of(DefId def) const;
+    // will promote unmentioned to mentioned and mentioned to mutated, but never backwards
+    void promote_mention_state_of(DefId def, Def::mention_state mention_state);
     IdSlice<SymbolId> symbol_slice(token_ptr_slice_t token_slice);
 
     // diagnostics
@@ -178,6 +182,7 @@ class Context {
     [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
     [[nodiscard]] const Scope& scope(ScopeId sid) const;
     [[nodiscard]] const ast_stmt_t* def_ast_node(DefId def_id) const;
+    [[nodiscard]] bool is_struct_def(DefId def_id) const;
     [[nodiscard]] DefId begin_def_id() const;
     [[nodiscard]] DefId end_def_id() const;
 

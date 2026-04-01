@@ -579,6 +579,16 @@ void Context::set_resol_state_of(DefId def, Def::resol_state resol_state) {
     def_resol_states.at(def) = resol_state;
 }
 
+Def::mention_state Context::mention_state_of(DefId def) const {
+    return def_mention_states.cat(def);
+}
+void Context::promote_mention_state_of(DefId def, Def::mention_state new_mention_state) {
+    // only promote (when current is less than new)
+    if (mention_state_of(def) < new_mention_state) {
+        def_mention_states.at(def) = new_mention_state;
+    }
+}
+
 ScopeId Context::scope_for_top_level_def(DefId def_id) const {
     auto hopefully_scope = try_scope_for_top_level_def(def_id);
     if (hopefully_scope.has_value()) {
@@ -591,6 +601,10 @@ ScopeId Context::scope_for_top_level_def(DefId def_id) const {
 
 [[nodiscard]] const ast_stmt_t* Context::def_ast_node(DefId def_id) const {
     return def_ast_nodes.cat(def_id);
+}
+
+[[nodiscard]] bool Context::is_struct_def(DefId def_id) const {
+    return def_ast_nodes.cat(def_id)->type == AST_STMT_STRUCT_DEF;
 }
 
 OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {

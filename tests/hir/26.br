@@ -1,0 +1,5 @@
+//tests/hir/26.br 
+
+struct Node {
+    Node* next;
+}

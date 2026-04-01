@@ -12,44 +12,13 @@
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def_visitor.hpp"
+#include "compiler/token.h"
 
 namespace hir {
 
 template <IsDefVisitor V> class TypeResolver {
     V& def_visitor;
     Context& context;
-
-    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type,
-                                             bool need_layout_info) {
-        switch (type->tag) {
-        case AST_TYPE_BASE:
-            return type_base(fid, scope, type, need_layout_info);
-
-        case AST_TYPE_REF_PTR:
-            return type_ptr_ref(fid, scope, type, need_layout_info);
-
-        case AST_TYPE_ARR:
-            return type_arr(fid, scope, type, need_layout_info);
-
-        case AST_TYPE_SLICE:
-            return type_slice(fid, scope, type, need_layout_info);
-
-        case AST_TYPE_GENERIC:
-            // TODO: attempt a generic instantiation
-            break;
-
-        case AST_TYPE_FN_PTR:
-            return type_fn_ptr(fid, scope, type, need_layout_info);
-
-        case AST_TYPE_VARIADIC:
-            return type_variadic(fid, scope, type, need_layout_info);
-
-        case AST_TYPE_INVALID:
-            break;
-        }
-
-        return OptId<TypeId>{};
-    }
 
     [[nodiscard]] OptId<TypeId> type_base(FileId fid, ScopeId scope, const ast_type_t* type,
                                           bool need_layout_info) {
@@ -66,7 +35,16 @@ template <IsDefVisitor V> class TypeResolver {
                                         type->type.base.mut);
         }
 
-        if (type->type.base.id.len > 1 && type->type.base.id.start[0]->type == TOK_VAR) {
+        auto scoped_id_contains_var = +[](token_ptr_slice_t id_slice) -> bool {
+            for (size_t i = 0; i < id_slice.len; i++) {
+                if (id_slice.start[i]->type == TOK_VAR) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        if (type->type.base.id.len > 1 && scoped_id_contains_var(type->type.base.id)) {
             context.emplace_diagnostic(Span(context, fid, type->first, type->last),
                                        diag_code::var_cannot_be_part_of_a_scoped_identifier,
                                        diag_type::error);
@@ -79,8 +57,8 @@ template <IsDefVisitor V> class TypeResolver {
             = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id), id_span);
 
         if (maybe_structure.has_value()) {
-            auto def = need_layout_info ? maybe_structure.as_id()
-                                        : def_visitor.visit_as_dependent(maybe_structure.as_id());
+            auto def = need_layout_info ? def_visitor.visit_as_dependent(maybe_structure.as_id())
+                                        : def_visitor.visit_as_transparent(maybe_structure.as_id());
 
             return context.emplace_type(TypeStructure{def},
                                         Span(context, fid, type->first, type->last),
@@ -95,7 +73,8 @@ template <IsDefVisitor V> class TypeResolver {
 
     OptId<TypeId> type_ptr_ref(FileId fid, ScopeId scope, const ast_type_t* type,
                                bool need_layout_info) {
-        auto maybe_inner = resolve_type(fid, scope, type->type.ptr_ref.inner, true);
+        auto maybe_inner
+            = resolve_type(fid, scope, type->type.ptr_ref.inner, false); // don't need layout info
 
         if (!maybe_inner.has_value()) {
             return OptId<TypeId>{};
@@ -139,7 +118,8 @@ template <IsDefVisitor V> class TypeResolver {
 
     OptId<TypeId> type_slice(FileId fid, ScopeId scope, const ast_type_t* type,
                              bool need_layout_info) {
-        auto maybe_inner = resolve_type(fid, scope, type->type.slice.inner, true);
+        auto maybe_inner
+            = resolve_type(fid, scope, type->type.slice.inner, false); // don't need layout info
 
         if (!maybe_inner.has_value()) {
             return OptId<TypeId>{};
@@ -152,7 +132,7 @@ template <IsDefVisitor V> class TypeResolver {
 
     OptId<TypeId> type_fn_ptr(FileId fid, ScopeId scope, const ast_type_t* type,
                               bool need_layout_info) {
-        auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type, true);
+        auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type, false);
 
         if (!maybe_return_type.has_value()) {
             return OptId<TypeId>{};
@@ -182,7 +162,7 @@ template <IsDefVisitor V> class TypeResolver {
 
     OptId<TypeId> type_variadic(FileId fid, ScopeId scope, const ast_type_t* type,
                                 bool need_layout_info) {
-        auto maybe_inner = resolve_type(fid, scope, type->type.variadic.inner, true);
+        auto maybe_inner = resolve_type(fid, scope, type->type.variadic.inner, false);
 
         if (!maybe_inner.has_value()) {
             return OptId<TypeId>{};
@@ -194,6 +174,38 @@ template <IsDefVisitor V> class TypeResolver {
 
   public:
     explicit TypeResolver(Context& ctx, V& def_visitor) : def_visitor{def_visitor}, context{ctx} {}
+
+    [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type,
+                                             bool need_layout_info) {
+        switch (type->tag) {
+        case AST_TYPE_BASE:
+            return type_base(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_REF_PTR:
+            return type_ptr_ref(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_ARR:
+            return type_arr(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_SLICE:
+            return type_slice(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_GENERIC:
+            // TODO: attempt a generic instantiation
+            break;
+
+        case AST_TYPE_FN_PTR:
+            return type_fn_ptr(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_VARIADIC:
+            return type_variadic(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_INVALID:
+            break;
+        }
+
+        return OptId<TypeId>{};
+    }
 
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type) {
         return resolve_type(fid, scope, type, false);

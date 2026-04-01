@@ -285,16 +285,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin.value());
 
-#ifdef DEBUG_BUILD
-
-            if (!maybe_converted.has_value()) {
-
-                std::cout << "failed to convert from "
-                          << builtin_type_to_cstr(maybe_value.value().type_builtin()) << " into "
-                          << builtin_type_to_cstr(into_builtin.value())
-                          << " with failed value: " << maybe_value.value().to_string() << '\n';
-            }
-#endif
             // TODO give str cast hints here!
 
             if (!maybe_converted.has_value()) {
@@ -409,7 +399,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
 
-            const auto did = maybe_def_of_struct.as_id();
+            const auto did = def_visitor.visit_as_dependent(maybe_def_of_struct.as_id());
             const Def& def = context.def(did);
 
             if (context.type(into_tid).template holds<TypeGenericStructure>()) {
