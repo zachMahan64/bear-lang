@@ -106,7 +106,6 @@ void Scope::insert(SymbolId symbol, DefId def, scope_kind kind) {
     }
 }
 
-// ------------------------- named scope inserters -------------------------------
 void Scope::insert_namespace(SymbolId symbol, DefId def) {
     insert(symbol, def, scope_kind::namespacee);
 }
@@ -114,8 +113,6 @@ void Scope::insert_variable(SymbolId symbol, DefId def) {
     insert(symbol, def, scope_kind::variable);
 }
 void Scope::insert_type(SymbolId symbol, DefId def) { insert(symbol, def, scope_kind::type); }
-
-// -------------------------------------- anonymous scope inserters ----------------
 
 OptId<DefId> Scope::already_defines_variable(SymbolId symbol) const { return variables.at(symbol); }
 OptId<DefId> Scope::already_defines_type(SymbolId symbol) const { return types.at(symbol); }
