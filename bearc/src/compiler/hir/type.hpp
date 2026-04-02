@@ -263,6 +263,7 @@ class CanonicalTypeTable {
     };
     static constexpr size_t DEFAULT_CAP = 128;
     static constexpr double LOAD_FACTOR = 1.25;
+    static constexpr size_t GROWTH_FACTOR = 2;
     // internally, this consider mut recursively:
     using considerer_type = DoConsiderMut;
     Context& context;

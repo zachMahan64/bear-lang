@@ -435,7 +435,7 @@ CanonicalTypeId CanonicalTypeTable::canonical(TypeId tid) {
         return maybe_cid.as_id();
     }
     if (static_cast<double>(this->count + 1) > LOAD_FACTOR * static_cast<double>(this->capacity)) {
-        this->rehash(static_cast<size_t>(2 * static_cast<double>(this->capacity)));
+        this->rehash(static_cast<size_t>(GROWTH_FACTOR * static_cast<double>(this->capacity)));
     }
     // get new cid and set backward/forward pointing:
     // forward: tid -> cid (in this table)
