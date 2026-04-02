@@ -386,7 +386,7 @@ bool CanonicalTypeTable::same_structure(TypeId tid1, TypeId tid2) const {
     return TypeTransformer<TypeComparator<considerer_type>>{context}(tid1, tid2);
 }
 
-size_t CanonicalTypeTable::index(size_t hash, size_t cap) { return hash % cap; }
+size_t CanonicalTypeTable::index(size_t hash, size_t cap) { return hash & (cap - 1); }
 void CanonicalTypeTable::put_new_head_on_chain(Entry** chain, Entry* new_entry) {
     assert(chain);
     new_entry->next = *chain;
