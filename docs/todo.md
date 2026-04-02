@@ -19,6 +19,7 @@ main quest
         - [ ] boolean
         - [ ] unary ops
 
+    - [ ] refactor compt expr solver to fully attempt an expr then type check instead of having type checking in both builtin and struct solving
     - [ ] compt list literals
 
     - [ ] compt ternary if
@@ -97,7 +98,7 @@ side quests
 
 ##### chores 
 - [x] handle alignas accordingly during ast lowering
-- [ ] fix the `HashMap<i32, HashMap<i32, i32>>` parsing case by packing count tracking into `>>` and `>>>` tokens until they hit a value of 0. Will be a bit a tricky but it's doable. Needed in just generic args parsing
+- [x] fix the `HashMap<i32, HashMap<i32, i32>>` parsing case by packing count tracking into `>>` and `>>>` tokens until they hit a value of 2/3
 - [ ] allow arbitrarily ordered struct members inits, will require mini symbol hashmaps
 - [ ] add an Exec Stringifier (tedious)
 - [ ] add a Def Stringifier (tedious)  
@@ -106,7 +107,7 @@ side quests
 ##### diagnostics
 - [ ] elipse out diagnostics after like 16 lines
 - [ ] add trimming of cwd from file paths in diagnostics reporting?
-- [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings for it
+- [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings instead of always warning for it
 - [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
 
 ##### debugging 
