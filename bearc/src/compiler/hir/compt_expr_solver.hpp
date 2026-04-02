@@ -217,9 +217,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
                 assert(maybe_bin_op.holds<binary_op>());
                 // get res of binary op like +, -, etc.
-                auto maybe_eid
-                    = solve_binary_compt_exec(fid, scope, lhs.as_id(), maybe_bin_op.as<binary_op>(),
-                                              rhs.as_id(), into_builtin);
+                auto maybe_eid = solve_binary_compt_exec(fid, scope, lhs.as_id(),
+                                                         maybe_bin_op.as<binary_op>(), rhs.as_id());
 
                 if (maybe_eid.has_value()) {
                     auto exec = context.exec(maybe_eid.as_id());
@@ -655,8 +654,7 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
 
     [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, ScopeId scope, ExecId lhs_eid,
-                                                        binary_op op, ExecId rhs_eid,
-                                                        std::optional<builtin_type> into_builtin) {
+                                                        binary_op op, ExecId rhs_eid) {
         const Exec& lhs_exec = context.exec(lhs_eid);
         const Exec& rhs_exec = context.exec(rhs_eid);
 
