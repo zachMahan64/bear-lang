@@ -226,6 +226,8 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGSN(args26, 9, 3);
     char* args27[] = {"bearc", "tests/hir/26.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args27, 2);
+    char* args28[] = {"bearc", "tests/hir/27.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args28, 21);
 
     return TEST_RESULT;
 }

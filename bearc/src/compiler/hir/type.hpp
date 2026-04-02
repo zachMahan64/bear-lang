@@ -61,6 +61,11 @@ struct TypeStructure {
     DefId definition;
 };
 
+struct TypeDeftype {
+    TypeId true_type;
+    DefId definition;
+};
+
 struct TypeGenericStructure {
     DefId definition;
     IdSlice<GenericArgId> slice;
@@ -97,8 +102,24 @@ struct TypeVariadic {
 // ^^^^^^ struct impls ^^^^^^^^
 
 /// main exec union
-using TypeValue = std::variant<TypeBuiltin, TypeStructure, TypeGenericStructure, TypeArr, TypeSlice,
-                               TypeRef, TypePtr, TypeFnPtr, TypeVariadic, TypeVar>;
+using TypeValue
+    = std::variant<TypeBuiltin, TypeStructure, TypeDeftype, TypeGenericStructure, TypeArr,
+                   TypeSlice, TypeRef, TypePtr, TypeFnPtr, TypeVariadic, TypeVar>;
+
+struct Type : NodeWithVariantValue<Type> {
+    using id_type = TypeId;
+    using value_type = TypeValue;
+    TypeValue value;
+    Span span;
+    CanonicalTypeId canonical;
+    bool mut;
+    void set_value(TypeValue value) { this->value = value; }
+    // compares identical types (including mut)
+    static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2);
+    // canonical should get immediately set by context
+    Type(const TypeValue& value, Span span, bool mut)
+        : value{value}, span{span}, mut{mut}, canonical{HIR_ID_NONE} {}
+};
 
 template <class F>
 concept TypeTransformerFunctor = requires(F f, const Context& context, const Type& t1,
@@ -118,11 +139,18 @@ concept TypeTransformerFunctor = requires(F f, const Context& context, const Typ
 template <TypeTransformerFunctor F> class TypeTransformer {
     const Context& context;
     OptId<TypeId> try_inner(const Type& type);
+    Type get_type(TypeId tid) const noexcept;
+    Type get_type_as_mentioned(TypeId tid) const noexcept;
+
+    typename F::value_type invoke(TypeId tid, auto get_type_functor);
+    typename F::value_type invoke(TypeId tid1, TypeId tid2, auto get_type_functor);
 
   public:
     TypeTransformer(const Context& context) : context(context) {}
     typename F::value_type operator()(TypeId tid1, TypeId tid2);
     typename F::value_type operator()(TypeId tid);
+    typename F::value_type invoke_as_mentioned(TypeId tid);
+    typename F::value_type invoke_as_mentioned(TypeId tid1, TypeId tid2);
 };
 
 template <class C>
@@ -167,20 +195,25 @@ class TypeContainsMut {
     static bool transform(bool res1, bool res2) { return res1 || res2; }
 };
 
-class TypeContainsVar {
+template <typename T> class TypeContainsSome {
     const Context& context;
 
   public:
     using value_type = bool;
-    TypeContainsVar(const Context& context) : context(context) {}
+    TypeContainsSome(const Context& context) : context(context) {}
     bool operator()(const Type& t1, const Type& t2) const {
-        assert(false
-               && "double invocation should not be called when checking if a type contains var");
+        assert(
+            false
+            && "double invocation should not be called when checking if a type contains a deftype");
         return 0;
     }
-    bool operator()(const Type& t1) const;
+    bool operator()(const Type& t1) const { return t1.holds<T>(); }
     static bool transform(bool res1, bool res2) { return res1 || res2; }
 };
+
+using TypeContainsVar = TypeContainsSome<TypeVar>;
+
+using TypeContainsDeftype = TypeContainsSome<TypeDeftype>;
 
 template <ConsiderMut C> class TypeHasher {
     const Context& context;
@@ -253,27 +286,25 @@ class CanonicalTypeTable {
     [[nodiscard]] CanonicalTypeId canonical(TypeId tid);
 };
 
-struct Type : NodeWithVariantValue<Type> {
-    using id_type = TypeId;
-    using value_type = TypeValue;
-    TypeValue value;
-    Span span;
-    CanonicalTypeId canonical;
-    bool mut;
-    void set_value(TypeValue value) { this->value = value; }
-    // compares identical types (including mut)
-    static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2);
-    // canonical should get immediately set by context
-    Type(const TypeValue& value, Span span, bool mut)
-        : value{value}, span{span}, mut{mut}, canonical{HIR_ID_NONE} {}
-};
-
 // function to determine whether a type contains mut
 bool contains_mut(const Context& ctx, TypeId tid);
+
+bool contains_deftype(const Context& ctx, TypeId tid);
+
+// converts a TypeId to a string
+std::string type_to_string_with_akas(const Context& ctx, TypeId tid);
+// converts a TypeId to a string without any muts
+std::string type_to_string_with_akas_without_muts(const Context& ctx, TypeId tid);
+
 // converts a TypeId to a string
 std::string type_to_string(const Context& ctx, TypeId tid);
 // converts a TypeId to a string without any muts
 std::string type_to_string_without_muts(const Context& ctx, TypeId tid);
+
+// converts a TypeId to a string
+std::string type_to_string_as_mentioned(const Context& ctx, TypeId tid);
+// converts a TypeId to a string without any muts
+std::string type_to_string_as_mentioned_without_muts(const Context& ctx, TypeId tid);
 
 bool builtin_type_has_binary_op(builtin_type type, binary_op op);
 

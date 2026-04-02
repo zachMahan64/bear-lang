@@ -1412,6 +1412,7 @@ bool ExecExprComptConstant::equals_zero() const {
     case builtin_type::boolean:
         return !as<bool>();
     }
+    return false;
 }
 
 } // namespace hir

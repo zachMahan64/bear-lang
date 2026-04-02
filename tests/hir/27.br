@@ -1,0 +1,88 @@
+// tests/hir/27.br
+
+mod foo;
+
+deftype Foo = i32;
+
+compt Foo foo0 = 42; // fine
+
+compt mut Foo foo1 = 12; // oops 
+
+compt Foo foo2 = foo0; // fine 
+
+compt Foo foo3 = "ooops"; // oops
+
+deftype Bar = str;
+
+compt Bar barry = "nice"; // fine
+
+compt Bar bar1 = foo2 as str; // fine
+
+compt Bar bar2 = bar1; // fine 
+
+compt str my_str = bar1; // fine 
+
+compt Foo foo4 = bar2; // oops 
+
+deftype BarBar = Bar; // double layer 
+
+deftype BarBarBar = BarBar; // triple
+
+compt BarBarBar barbarbar = "three!";
+
+
+struct Cat {
+}
+
+deftype Gato = Cat; 
+
+compt Gato gato1 = Gato{}; // fine 
+
+compt Cat cat = Gato{}; // fine 
+
+compt Gato gato2 = Cat{}; // fine 
+
+deftype Gatito = Gato; // fine 
+
+compt Gatito gatty = Cat{}; // fine 
+
+compt Gatito gatty2 = Foo{}; // oops
+
+struct Bob { compt i32 age = 42; }
+
+compt Gatito gatty3 = Bob{}; // oops, but Bob itself is fine since no members need init
+
+deftype Bob = Bob; // oops
+
+mod ben { 
+    hid mod foo { hid struct Foo { } } 
+    
+    hid struct Ben {
+
+        hid struct Ny {
+
+        }
+
+    }
+
+    struct MyPub {
+        struct Ic {}
+        i32 a;
+        Ic b;
+    }
+
+}
+
+deftype Fooey = ben..foo..Foo; // oops hid
+
+deftype Benito = ben..Ben; // oops
+
+deftype Benny = ben..Ben..Ny; // oops
+
+deftype MyPubby = ben..MyPub; // fine
+
+use ben..MyPub..Ic;
+
+compt MyPubby my_pub1 = MyPubby{.a = 32, .b = Ic{}}; 
+
+compt MyPubby my_pub2 = MyPubby{.a = Ic{}}; // oops, missing b and a messed up

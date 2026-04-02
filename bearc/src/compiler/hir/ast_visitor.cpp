@@ -174,7 +174,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
                                        diag_code::capitalized_mod, diag_type::warning);
         }
-        context.def(mod_def).set_value(DefModule{.scope = mod_scope, .name = name});
+        context.def(mod_def).set_value(DefModule{.scope = mod_scope});
         context.scope(scope).insert_namespace(name, mod_def);
         register_top_level_stmts(mod_scope, stmt->stmt.module.decls, mod_def,
                                  abi); // pass in this module def as parent
@@ -446,8 +446,6 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     case AST_STMT_DEFTYPE:
         name_tkn = stmt->stmt.deftype.alias_id;
         kind = scope_kind::type;
-        do_not_insert_in_scope = true; // since we want this tkn to forward directly to another
-                                       // type, so this will have to be handled in resolution later
         break;
     case AST_STMT_USE: {
         token_ptr_slice_t id_slice = stmt->stmt.use.id;

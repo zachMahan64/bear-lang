@@ -20,6 +20,8 @@ main quest
         - [ ] unary ops
 
     - [ ] compt list literals
+
+    - [ ] compt ternary if
     
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 
@@ -34,11 +36,11 @@ main quest
     - `visit_as_dependent(DefId)` & `visit_as_transparent(DefId)` -> `mentioned` (update these methods)
     - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
-- [ ] fix/impl deftypes by having a direct def -> type forward mechanism (will be needed for generic params too)
+- [x] fix/impl deftypes by having a direct def -> type forward mechanism (will be needed for generic params too)
 
 - some reflection/compt stuff
 - [ ] `@type(...)` for getting type-exprs
-- [ ] `same_type(expr, expr)` where the exprs could be say `typeof(foo)` and `type(Foo)`
+- [ ] `same_type(expr, expr)` where the exprs could be say `typeof(foo)` and `@type(Foo<i32>)`
 - [ ] static_assert (make it a builtin in hir)
     - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `__static_assert(bool cond)` 
 

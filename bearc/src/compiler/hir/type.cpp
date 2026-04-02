@@ -9,6 +9,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/exec_ops.hpp"
+#include "compiler/hir/indexing.hpp"
 #include <utility>
 
 namespace hir {
@@ -33,6 +34,7 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             }
             return t.definition == t2.as<TypeGenericStructure>().definition;
         },
+        [&](const TypeDeftype& t) -> bool { return t2.holds<TypeDeftype>(); },
         [&](const TypeArr& t) -> bool {
             if (!t2.holds<TypeArr>()) {
                 return false;
@@ -78,8 +80,6 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
     return t1.visit(vs);
 }
 
-bool TypeContainsVar::operator()(const Type& t1) const { return t1.holds<TypeVar>(); };
-
 template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const {
     // https://xorshift.di.unimi.it/splitmix64.c
     auto mix = [](size_t x) {
@@ -94,6 +94,12 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
         [&](const TypeBuiltin& t) -> size_t { return mix(0x01ULL ^ static_cast<size_t>(t.type)); },
         [&](const TypeStructure& t) -> size_t {
             return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
+        },
+        [&](const TypeDeftype& t) -> size_t {
+            assert(false
+                   && "tried to directly hash a deftype, do not use `as_mentioned` invocations "
+                      "when hashing!");
+            return 0ULL;
         },
         [&](const TypeGenericStructure& t) -> size_t {
             return mix(0x03ULL ^ static_cast<size_t>(t.definition.val()));
@@ -146,6 +152,14 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             }
         },
         [&](const TypeStructure& t) {
+            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+        },
+        [&](const TypeDeftype& t) {
             str += context.symbol_id_to_cstr(context.def(t.definition).name);
             if constexpr (considers_mut()) {
                 if (t1.mut) {
@@ -244,6 +258,7 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> OTid { return OTid{}; },
         [&](const TypeStructure& t) -> OTid { return OTid{}; },
+        [&](const TypeDeftype& t) -> OTid { return OTid{}; },
         [&](const TypeGenericStructure& t) -> OTid { return OTid{}; },
         [&](const TypeArr& t) -> OTid { return t.inner; },
         [&](const TypeSlice& t) -> OTid { return t.inner; },
@@ -255,13 +270,44 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
     };
     return type.visit(vs);
 }
+template <TypeTransformerFunctor F> Type TypeTransformer<F>::get_type(TypeId tid) const noexcept {
+    return context.type(tid);
+};
 
 template <TypeTransformerFunctor F>
-typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) {
-    auto get_t = [&](TypeId tid) { return context.type(tid); };
+Type TypeTransformer<F>::get_type_as_mentioned(TypeId tid) const noexcept {
+    return context.type_as_mentioned(tid);
+};
 
-    auto t1 = get_t(tid1);
-    auto t2 = get_t(tid2);
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::invoke(TypeId tid, auto get_type_functor) {
+    auto t = get_type_functor(tid);
+
+    const auto invoker = F{context};
+
+    // get first value up-front (prevents collection bugs from a default initialized collector)
+    typename F::value_type collector = invoker(t);
+
+    OptId<TypeId> maybe_tid{tid};
+
+    while (true) {
+        maybe_tid = try_inner(t);
+        if (maybe_tid.has_value()) {
+            t = get_type_functor(maybe_tid.as_id());
+        }
+        if (!maybe_tid.has_value()) {
+            break;
+        }
+        collector = invoker.transform(collector, invoker(t));
+    }
+    return collector;
+}
+
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::invoke(TypeId tid1, TypeId tid2, auto get_type_functor) {
+
+    Type t1 = get_type_functor(tid1);
+    Type t2 = get_type_functor(tid2);
 
     const auto invoker = F{context};
 
@@ -275,10 +321,10 @@ typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) 
         maybe_tid1 = try_inner(t1);
         maybe_tid2 = try_inner(t2);
         if (maybe_tid1.has_value()) {
-            t1 = get_t(maybe_tid1.as_id());
+            t1 = get_type_functor(maybe_tid1.as_id());
         }
         if (maybe_tid2.has_value()) {
-            t2 = get_t(maybe_tid2.as_id());
+            t2 = get_type_functor(maybe_tid2.as_id());
         }
         if (!maybe_tid1.has_value() || !maybe_tid2.has_value()) {
             break;
@@ -293,31 +339,26 @@ typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) 
     return maybe_tid1.has_value() ? invoker.transform(collector, invoker(t1))
                                   : invoker.transform(collector, invoker(t2));
 }
+
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::operator()(TypeId tid1, TypeId tid2) {
+    return invoke(tid1, tid2, [this](TypeId tid) { return get_type(tid); });
+}
 template <TypeTransformerFunctor F>
 typename F::value_type TypeTransformer<F>::operator()(TypeId tid) {
-    auto get_t = [&](TypeId tid) { return context.type(tid); };
-
-    auto t = get_t(tid);
-
-    const auto invoker = F{context};
-
-    // get first value up-front (prevents collection bugs from a default initialized collector)
-    typename F::value_type collector = invoker(t);
-
-    OptId<TypeId> maybe_tid{tid};
-
-    while (true) {
-        maybe_tid = try_inner(t);
-        if (maybe_tid.has_value()) {
-            t = get_t(maybe_tid.as_id());
-        }
-        if (!maybe_tid.has_value()) {
-            break;
-        }
-        collector = invoker.transform(collector, invoker(t));
-    }
-    return collector;
+    return invoke(tid, [this](TypeId tid) { return get_type(tid); });
 }
+
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::invoke_as_mentioned(TypeId tid) {
+    return invoke(tid, [this](TypeId tid) { return get_type_as_mentioned(tid); });
+}
+
+template <TypeTransformerFunctor F>
+typename F::value_type TypeTransformer<F>::invoke_as_mentioned(TypeId tid1, TypeId tid2) {
+    return invoke(tid1, tid2, [this](TypeId tid) { return get_type_as_mentioned(tid); });
+}
+
 // explicit instatiantiations for the TypeTransformer
 template class TypeTransformer<TypeHasher<DoConsiderMut>>;
 template class TypeTransformer<TypeHasher<DoNotConsiderMut>>;
@@ -326,6 +367,7 @@ template class TypeTransformer<TypeComparator<DoNotConsiderMut>>;
 template class TypeTransformer<TypeToString<DoConsiderMut>>;
 template class TypeTransformer<TypeToString<DoNotConsiderMut>>;
 template class TypeTransformer<TypeContainsVar>;
+template class TypeTransformer<TypeContainsDeftype>;
 
 CanonicalTypeTable::CanonicalTypeTable(Context& context, DataArena& arena, HirSize capacity)
     : context(context), arena(arena), count{0} {
@@ -495,14 +537,51 @@ bool contains_mut(const Context& ctx, TypeId tid) {
     return TypeTransformer<TypeContainsMut>{ctx}(tid);
 }
 
+bool contains_deftype(const Context& ctx, TypeId tid) {
+    return TypeTransformer<TypeContainsDeftype>{ctx}.invoke_as_mentioned(tid);
+}
+
 bool TypeContainsMut::operator()(const Type& t1) const { return t1.mut; }
 
+template <ConsiderMut C> std::string type_to_string_impl_with_akas(const Context& ctx, TypeId tid) {
+    std::string str_with_true_type{};
+    str_with_true_type.reserve(128); // decently sized
+    str_with_true_type += TypeTransformer<TypeToString<C>>{ctx}(tid).str;
+    if (TypeTransformer<TypeContainsDeftype>{ctx}.invoke_as_mentioned(tid)) {
+        std::string str_with_aka{};
+        str_with_aka.reserve(128);
+        str_with_aka += TypeTransformer<TypeToString<C>>{ctx}.invoke_as_mentioned(tid).str;
+        str_with_aka += " aka ";
+        str_with_aka += str_with_true_type;
+        return str_with_aka;
+    }
+    return str_with_true_type;
+}
+
+std::string type_to_string_with_akas(const Context& ctx, TypeId tid) {
+    return type_to_string_impl_with_akas<DoConsiderMut>(ctx, tid);
+}
+
+std::string type_to_string_with_akas_without_muts(const Context& ctx, TypeId tid) {
+    return type_to_string_impl_with_akas<DoNotConsiderMut>(ctx, tid);
+}
+
+// converts a TypeId to a string
 std::string type_to_string(const Context& ctx, TypeId tid) {
     return TypeTransformer<TypeToString<DoConsiderMut>>{ctx}(tid).str;
 }
-
+// converts a TypeId to a string without any muts
 std::string type_to_string_without_muts(const Context& ctx, TypeId tid) {
     return TypeTransformer<TypeToString<DoNotConsiderMut>>{ctx}(tid).str;
+}
+
+// converts a TypeId to a string
+std::string type_to_string_as_mentioned(const Context& ctx, TypeId tid) {
+    return TypeTransformer<TypeToString<DoConsiderMut>>{ctx}.invoke_as_mentioned(tid).str;
+}
+// converts a TypeId to a string without any muts
+std::string type_to_string_as_mentioned_without_muts(const Context& ctx, TypeId tid) {
+    return TypeTransformer<TypeToString<DoNotConsiderMut>>{ctx}.invoke_as_mentioned(tid).str;
 }
 
 bool builtin_type_has_binary_op(builtin_type type, binary_op op) {

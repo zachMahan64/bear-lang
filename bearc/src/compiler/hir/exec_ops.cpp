@@ -117,6 +117,7 @@ const char* binary_op_to_cstr(binary_op op) {
     case binary_op::bool_not_equal:
         return "!=";
     }
+    return nullptr;
 }
 
 const char* binary_op_to_cstr(unary_op op) {
@@ -134,6 +135,7 @@ const char* binary_op_to_cstr(unary_op op) {
     case unary_op::bit_not:
         return "~";
     }
+    return nullptr;
 }
 
 const char* is_as_op_to_cstr(is_as_op op) {
@@ -143,6 +145,7 @@ const char* is_as_op_to_cstr(is_as_op op) {
     case is_as_op::as:
         return "as";
     }
+    return nullptr;
 }
 
 } // namespace hir

@@ -39,17 +39,18 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return solve_struct_compt_expr(
                     fid, scope, expr, context.emplace_type(TypeVar{}, Span::generated(), false));
             }
-            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt);
+            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, maybe_into_tid);
         }
         auto into_tid = maybe_into_tid.as_id();
         const Type& into_type = context.type(into_tid);
+
         // try to solve str& at comptime
         if (into_type.holds<TypeRef>()) {
             auto inner_tid = into_type.as<TypeRef>().inner;
             auto inner = context.type(inner_tid);
             if (inner.template holds<TypeBuiltin>()
                 && inner.template as<TypeBuiltin>().type == builtin_type::str) {
-                return solve_builtin_compt_expr(fid, scope, expr, builtin_type::str);
+                return solve_builtin_compt_expr(fid, scope, expr, builtin_type::str, into_tid);
             }
             auto did0 = context.emplace_diagnostic(
                 into_type.span, diag_code::type_is_not_resolvable_at_compt, diag_type::error);
@@ -69,7 +70,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (expr->type == AST_EXPR_STRUCT_INIT) {
                 return solve_struct_compt_expr(fid, scope, expr, into_tid);
             }
-            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt);
+            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, into_tid);
         }
 
         // guard against non-builtins
@@ -79,12 +80,13 @@ template <IsDefVisitor V> class ComptExprSolver {
             return OptId<ExecId>{};
         }
         builtin_type into_builtin_type = into_type.as<TypeBuiltin>().type;
-        return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type);
+        return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type, into_tid);
     }
 
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, ScopeId scope,
                                                          const ast_expr_t* expr,
-                                                         std::optional<builtin_type> into_builtin) {
+                                                         std::optional<builtin_type> into_builtin,
+                                                         OptId<TypeId> into_tid) {
         auto emplace_e = [this, fid, expr](ExecValue val) {
             return context.register_exec(
                 context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
@@ -241,15 +243,16 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_GROUPING: {
             // get inner
-            return solve_builtin_compt_expr(fid, scope, expr->expr.grouping.expr, into_builtin);
+            return solve_builtin_compt_expr(fid, scope, expr->expr.grouping.expr, into_builtin,
+                                            into_tid);
             break;
         }
         case AST_EXPR_PRE_UNARY: {
             // eventually allow sizeof, allignof
             if (expr->expr.unary.op->type == TOK_BOOL_NOT || expr->expr.unary.op->type == TOK_PLUS
                 || expr->expr.unary.op->type == TOK_MINUS) {
-                auto inner
-                    = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr, into_builtin);
+                auto inner = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr,
+                                                      into_builtin, into_tid);
             }
             // TODO, handle bool not, plus, and minus here
             break;
@@ -291,8 +294,10 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto from_builtin = maybe_value.value().type_builtin();
                 TypeId from = context.emplace_type(TypeBuiltin{.type = from_builtin},
                                                    Span::generated(), false);
-                TypeId to = context.emplace_type(TypeBuiltin{.type = into_builtin.value()},
-                                                 Span::generated(), false);
+                TypeId to = into_tid.has_value()
+                                ? into_tid.as_id()
+                                : context.emplace_type(TypeBuiltin{.type = into_builtin.value()},
+                                                       Span::generated(), false);
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                     diag_code::cannot_convert_value_of_type, diag_type::error,
@@ -400,7 +405,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
 
             const auto did = def_visitor.visit_as_dependent(maybe_def_of_struct.as_id());
-            const Def& def = context.def(did);
+            auto maybe_struct_did = context.try_struct_def(did);
 
             if (context.type(into_tid).template holds<TypeGenericStructure>()) {
                 auto did0 = context.emplace_diagnostic(
@@ -418,7 +423,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 context.set_next_diagnostic(did1, did2);
                 return std::nullopt;
             }
-            if (!def.holds<DefStruct>()) {
+            if (maybe_struct_did.empty()) {
                 auto did0 = context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), id_slice.start[0],
                          id_slice.start[id_slice.len - 1]),
@@ -426,15 +431,20 @@ template <IsDefVisitor V> class ComptExprSolver {
                     DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice},
                     DiagnosticNoOtherInfo{});
 
+                const Def& def = context.def(did);
                 auto did1 = context.emplace_diagnostic(def.span, diag_code::declared_here,
                                                        diag_type::note);
                 context.set_next_diagnostic(did0, did1);
                 return std::nullopt;
             }
 
-            // somewhat validated now
-            const DefStruct& def_as_struct = def.as<DefStruct>();
-            const auto defs = context.ordered_defs_for(did);
+            DefId struct_did = maybe_struct_did.as_id();
+
+            const Def& struct_def = context.def(struct_did);
+
+            const DefStruct& def_as_struct = struct_def.as<DefStruct>();
+
+            const auto defs = context.ordered_defs_for(struct_did);
 
             const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
 
@@ -464,14 +474,14 @@ template <IsDefVisitor V> class ComptExprSolver {
                 const TypeId member_type = member_as_var.type;
                 const OptId<ExecId> default_val = member_as_var.compt_value;
                 const SymbolId member_name = member.name;
-                const ScopeId struct_scope = context.scope_for_top_level_def(did);
+                const ScopeId struct_scope = context.scope_for_top_level_def(struct_did);
 
                 // handle too few
                 if (i >= init_slice.len) {
                     // get default value for the member field
                     if (default_val.has_value()) {
                         ExecExprStructMemberInit init{
-                            .field_def = did, .value = default_val.as_id(), .move = false};
+                            .field_def = member_did, .value = default_val.as_id(), .move = false};
                         member_init_execs.emplace_back(
                             context.register_exec(context, init, Span::generated(), true));
                     } else {
@@ -504,12 +514,12 @@ template <IsDefVisitor V> class ComptExprSolver {
                     = Span(fid, context.ast(fid).buffer(), member_init_expr->first,
                            member_init_expr->last);
 
-                const SymbolId true_name = member_as_var.name;
+                const SymbolId true_name = member.name;
                 if (context.symbol_id(proposed_member_name_tkn) != true_name) {
                     cooked = true;
                     context.emplace_diagnostic(
                         proposed_member_span, diag_code::field_initializer_does_not_match_field,
-                        diag_type::error, DiagnosticSymbolAfterMessage{member_as_var.name},
+                        diag_type::error, DiagnosticSymbolAfterMessage{member.name},
                         DiagnosticNoOtherInfo{});
                     continue;
                 }
@@ -536,7 +546,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             if (cooked) {
                 context.emplace_diagnostic(
-                    def.span, diag_code::declared_here, diag_type::note,
+                    struct_def.span, diag_code::declared_here, diag_type::note,
                     DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice},
                     DiagnosticNoOtherInfo{});
                 return std::nullopt;
@@ -544,12 +554,12 @@ template <IsDefVisitor V> class ComptExprSolver {
             // type check before returning here! but only if the into type isn't var!
             if (!context.type(into_tid).template holds<TypeVar>()) {
                 if (auto into_did = context.type(into_tid).template as<TypeStructure>().definition;
-                    did != into_did) {
+                    struct_did != into_did) {
                     context.emplace_diagnostic(
                         expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
                         DiagnosticTypeToType{
                             .from = context.emplace_type(
-                                TypeStructure{.definition = did},
+                                TypeStructure{.definition = struct_did},
                                 Span(fid, context.ast(fid).buffer(),
                                      expr->expr.struct_init.id.start[0],
                                      expr->expr.struct_init.id
@@ -564,7 +574,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             // all good, return the exec
             return context.emplace_exec(
                 ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
-                                   .struct_def = did},
+                                   .struct_def = struct_did},
                 expr_span, true);
         }
 

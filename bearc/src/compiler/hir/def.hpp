@@ -24,11 +24,9 @@ struct DefMalformed {};
 
 struct DefModule {
     ScopeId scope;
-    SymbolId name;
 };
 
 struct DefFunction {
-    SymbolId name;
     IdSlice<DefId> params;
     IdSlice<TypeId> param_types;
     OptId<TypeId> return_type;
@@ -39,7 +37,6 @@ struct DefFunction {
 
 struct DefGenericFunction {
     IdSlice<GenericParamId> generic_params;
-    SymbolId name;
     /// maps canonical lists of generics args to concrete instatiations
     CanonicalGenericArgsIdMapId generics_args_to_concrete_defs_map;
 };
@@ -51,13 +48,11 @@ struct DefFunctionPrototype {
 
 struct DefVariable {
     TypeId type;
-    SymbolId name;
     OptId<ExecId> compt_value;
     bool moved = false;
 };
 
 struct DefStruct {
-    SymbolId name;
     ScopeId scope;
     /// data members/fields, not functions
     IdSlice<DefId> ordered_members;
@@ -68,43 +63,36 @@ struct DefStruct {
 
 struct DefGenericStruct {
     IdSlice<GenericParamId> generic_params;
-    SymbolId name;
     /// maps canonical lists of generics args to concrete instatiations
     CanonicalGenericArgsIdMapId generics_args_to_concrete_defs_map;
 };
 
 struct DefVariant {
     ScopeId scope;
-    SymbolId name;
     /// if this variant was derived from an original generic variant
     OptId<DefId> orginal;
 };
 
 struct DefGenericVariant {
     IdSlice<GenericParamId> generic_params;
-    SymbolId name;
     /// maps canonical lists of generics args to concrete instatiations
     CanonicalGenericArgsIdMapId generics_args_to_concrete_defs_map;
 };
 
 struct DefVariantField {
-    SymbolId name;
     /// pointing to DefVariables which containg type and name info
     IdSlice<DefId> members;
 };
 
 struct DefUnion {
     ScopeId scope;
-    SymbolId name;
 };
 
 struct DefContract {
     ScopeId scope;
-    SymbolId name;
 };
 
-struct DefDefType {
-    SymbolId name;
+struct DefDeftype {
     TypeId type;
 };
 
@@ -116,7 +104,7 @@ struct DefUnevaluated {};
 using DefValue
     = std::variant<DefModule, DefFunction, DefGenericFunction, DefFunctionPrototype, DefVariable,
                    DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
-                   DefUnion, DefContract, DefDefType, DefUnevaluated, DefMalformed>;
+                   DefUnion, DefContract, DefDeftype, DefUnevaluated, DefMalformed>;
 
 enum class abi_lang : uint8_t {
     native = 0,

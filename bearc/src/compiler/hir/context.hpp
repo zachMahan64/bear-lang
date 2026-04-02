@@ -169,21 +169,48 @@ class Context {
     // converters
     [[nodiscard]] SymbolId symbol_id(IdIdx<SymbolId> sididx) const;
     [[nodiscard]] FileId file_id(IdIdx<FileId> ididx) const;
+    /// gets the canonical type value (bypassing deftypes)
     [[nodiscard]] const Type& type(IdIdx<TypeId> ididx) const;
+    /// gets the canonical type value (bypassing deftypes)
     [[nodiscard]] Type& type(IdIdx<TypeId> ididx);
+    /// gets the canonical type value (bypassing deftypes)
     [[nodiscard]] const Type& type(TypeId id) const;
+    /// gets the canonical type value (bypassing deftypes)
     [[nodiscard]] Type& type(TypeId id);
+
+    /// gets the type value without bypassing deftypes
+    [[nodiscard]] const Type& type_as_mentioned(IdIdx<TypeId> ididx) const;
+    /// gets the type value without bypassing deftypes
+    [[nodiscard]] Type& type_as_mentioned(IdIdx<TypeId> ididx);
+    /// gets the type value without bypassing deftypes
+    [[nodiscard]] const Type& type_as_mentioned(TypeId id) const;
+    /// gets the type value without bypassing deftypes
+    [[nodiscard]] Type& type_as_mentioned(TypeId id);
+
     [[nodiscard]] TypeId type_id(IdIdx<TypeId> tid) const;
+
     [[nodiscard]] bool equivalent_type(TypeId tid1, TypeId tid2) const;
+
     [[nodiscard]] const Def& def(DefId id) const;
+
     [[nodiscard]] const Def& def(IdIdx<DefId> id) const;
+    /// try to get a struct DefId, bypassing deftypes
+    [[nodiscard]] OptId<DefId> try_struct_def(DefId did) const;
+
     [[nodiscard]] DefId def_id(IdIdx<DefId> id) const;
+
     [[nodiscard]] const Exec& exec(ExecId id) const;
+
     [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
+
     [[nodiscard]] const Scope& scope(ScopeId sid) const;
+
     [[nodiscard]] const ast_stmt_t* def_ast_node(DefId def_id) const;
+
     [[nodiscard]] bool is_struct_def(DefId def_id) const;
+
     [[nodiscard]] DefId begin_def_id() const;
+
     [[nodiscard]] DefId end_def_id() const;
 
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage

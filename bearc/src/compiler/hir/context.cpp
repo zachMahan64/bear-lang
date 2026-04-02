@@ -642,10 +642,35 @@ Span Context::make_top_level_def_name_span(DefId def) const {
     return make_def_name_span(def, def_ast_nodes.cat(def));
 }
 
-const Type& Context::type(IdIdx<TypeId> ididx) const { return types.cat(type_ids.cat(ididx)); }
-Type& Context::type(IdIdx<TypeId> ididx) { return types.at(type_ids.at(ididx)); }
-const Type& Context::type(TypeId id) const { return types.cat(id); }
-Type& Context::type(TypeId id) { return types.at(id); }
+const Type& Context::type(IdIdx<TypeId> ididx) const { return type(type_ids.cat(ididx)); }
+Type& Context::type(IdIdx<TypeId> ididx) { return type(type_ids.at(ididx)); }
+const Type& Context::type(TypeId id) const {
+    const Type* t = &types.cat(id);
+    while (t->holds<TypeDeftype>()) {
+        t = &types.cat(t->as<TypeDeftype>().true_type);
+    }
+    return *t;
+}
+Type& Context::type(TypeId id) {
+    Type* t = &types.at(id);
+    while (t->holds<TypeDeftype>()) {
+        t = &types.at(t->as<TypeDeftype>().true_type);
+    }
+    return *t;
+}
+
+/// gets the type value without bypassing deftypes
+const Type& Context::type_as_mentioned(IdIdx<TypeId> ididx) const {
+    return type_as_mentioned(type_ids.cat(ididx));
+}
+/// gets the type value without bypassing deftypes
+Type& Context::type_as_mentioned(IdIdx<TypeId> ididx) {
+    return type_as_mentioned(type_ids.at(ididx));
+}
+
+[[nodiscard]] const Type& Context::type_as_mentioned(TypeId id) const { return types.cat(id); }
+/// gets the type value without bypassing deftypes
+[[nodiscard]] Type& Context::type_as_mentioned(TypeId id) { return types.at(id); }
 TypeId Context::type_id(IdIdx<TypeId> tid) const { return type_ids.cat(tid); }
 CanonicalTypeId Context::emplace_and_get_canonical_type_id(TypeId first_structural_type_id) {
     return canonical_to_type_id.emplace_and_get_id(first_structural_type_id);
@@ -668,6 +693,23 @@ TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
 [[nodiscard]] const Scope& Context::scope(ScopeId sid) const { return scopes.cat(sid); }
 
 [[nodiscard]] const Def& Context::def(IdIdx<DefId> id) const { return defs.cat(def_ids.cat(id)); }
+
+[[nodiscard]] OptId<DefId> Context::try_struct_def(DefId did) const {
+    const Def& d = def(did);
+
+    if (d.holds<DefStruct>()) {
+        return did;
+    }
+
+    if (d.holds<DefDeftype>()) {
+        const Type& t = type(d.as<DefDeftype>().type);
+        if (t.holds<TypeStructure>()) {
+            return t.as<TypeStructure>().definition;
+        }
+    }
+
+    return std::nullopt;
+}
 
 [[nodiscard]] DefId Context::def_id(IdIdx<DefId> id) const { return def_ids.cat(id); }
 
@@ -698,14 +740,14 @@ OptId<DefId> Context::look_up_scoped_variable(ScopeId scope, IdSlice<SymbolId> i
                                  scope, maybe_mod.as_id(),
                                  IdSlice<SymbolId>{id_slice.begin(),
                                                    sidx.val() + 1 - id_slice.begin().val()},
-                                 def(maybe_mod.as_id()).span))
+                                 id_span))
                              .as<DefModule>()
                              .scope;
         } else if (auto maybe_type = look_up_type(curr_scope, sid); maybe_type.has_value()) {
             curr_scope = scope_for_top_level_def(guard_hid_type(
                 scope, maybe_type.as_id(),
                 IdSlice<SymbolId>{id_slice.begin(), sidx.val() + 1 - id_slice.begin().val()},
-                def(maybe_type.as_id()).span));
+                id_span));
         }
     }
     // never entered the loop, so not found
@@ -728,7 +770,7 @@ OptId<DefId> Context::look_up_scoped_type(ScopeId scope, IdSlice<SymbolId> id_sl
                                  scope, maybe_mod.as_id(),
                                  IdSlice<SymbolId>{id_slice.begin(),
                                                    sidx.val() + 1 - id_slice.begin().val()},
-                                 def(maybe_mod.as_id()).span))
+                                 id_span))
                              .as<DefModule>()
                              .scope;
 
@@ -738,7 +780,7 @@ OptId<DefId> Context::look_up_scoped_type(ScopeId scope, IdSlice<SymbolId> id_sl
             curr_scope = scope_for_top_level_def(guard_hid_type(
                 scope, maybe_type.as_id(),
                 IdSlice<SymbolId>{id_slice.begin(), sidx.val() + 1 - id_slice.begin().val()},
-                def(maybe_type.as_id()).span));
+                id_span));
         }
     }
     // never entered the loop, so not found
@@ -761,7 +803,7 @@ OptId<DefId> Context::look_up_scoped_namespace(ScopeId scope, IdSlice<SymbolId> 
                                  scope, maybe_mod.as_id(),
                                  IdSlice<SymbolId>{id_slice.begin(),
                                                    sidx.val() + 1 - id_slice.begin().val()},
-                                 def(maybe_mod.as_id()).span))
+                                 id_span))
                              .as<DefModule>()
                              .scope;
 
@@ -771,7 +813,7 @@ OptId<DefId> Context::look_up_scoped_namespace(ScopeId scope, IdSlice<SymbolId> 
             curr_scope = scope_for_top_level_def(guard_hid_type(
                 scope, maybe_type.as_id(),
                 IdSlice<SymbolId>{id_slice.begin(), sidx.val() + 1 - id_slice.begin().val()},
-                def(maybe_type.as_id()).span));
+                id_span));
         }
     }
     // never entered the loop, so not found

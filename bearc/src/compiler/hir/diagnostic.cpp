@@ -240,8 +240,8 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
         [&](DiagnosticNoOtherInfo) { std::cout << '\n'; },
         [&](DiagnosticTypeToType t) {
             std::cout << accent_color_for_type(type) << "cannot convert value of type `"
-                      << type_to_string(context, t.from) << "` to `"
-                      << type_to_string(context, t.to) << '`' << ansi_reset() << '\n';
+                      << type_to_string_with_akas(context, t.from) << "` to `"
+                      << type_to_string_with_akas(context, t.to) << '`' << ansi_reset() << '\n';
         },
         [&](DiagnosticImportStack import_stack) { import_stack_helper(import_stack.files); },
         [&](DiagnosticSubCode sc) {
@@ -466,6 +466,24 @@ bool Diagnostic::has_complex_message() const {
 
 void Diagnostic::build_complex_message(const Context& ctx, std::string& str) const {
     str.reserve(64); // decent size
+
+    auto type_helper = [this, &ctx, &str](TypeId tid) {
+        if (contains_deftype(ctx, tid)) {
+            str += ansi_bold_reset();
+            str += '`';
+            str += accent_color_for_type(type);
+            str += type_to_string_as_mentioned(ctx, tid);
+            str += ansi_bold_reset();
+            str += '`';
+            str += " aka ";
+        }
+        str += '`';
+        str += accent_color_for_type(type);
+        str += type_to_string(ctx, tid);
+        str += ansi_bold_reset();
+        str += '`';
+    };
+
     auto vs = Ovld{
         [](DiagnosticNoOtherInfo) {},
         [&](DiagnosticIdentifierAfterMessage d) {
@@ -483,11 +501,8 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
         },
         [&](DiagnosticTypeAfterMessage d) {
             str += message_for_code(code);
-            str += " `";
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, d.tid);
-            str += ansi_bold_reset();
-            str += '`';
+            str += " ";
+            type_helper(d.tid);
         },
         [&](DiagnosticIdentifierBeforeMessage d) {
             str += '`';
@@ -525,47 +540,27 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
         },
         [&](DiagnosticTypeToType t) {
             str += message_for_code(code);
-            str += " `";
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, t.from);
-            str += ansi_bold_reset();
-            str += '`';
+            str += " ";
+            type_helper(t.from);
             str += " to ";
-            str += '`';
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, t.to);
-            str += ansi_bold_reset();
-            str += '`';
+            type_helper(t.to);
             str += ansi_reset();
         },
         [&](DiagnosticTypeAndType t) {
             str += message_for_code(code);
-            str += " `";
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, t.lhs_tid);
-            str += ansi_bold_reset();
-            str += '`';
+            str += " ";
+            type_helper(t.lhs_tid);
             str += " and ";
-            str += '`';
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, t.rhs_tid);
-            str += ansi_bold_reset();
-            str += '`';
+            type_helper(t.rhs_tid);
             str += ansi_reset();
         },
         [&](DiagnosticTypeAndTypeForBinaryOp t) {
             str += message_for_code(code);
-            str += " `";
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, t.lhs_tid);
-            str += ansi_bold_reset();
-            str += '`';
+            str += " ";
+            type_helper(t.lhs_tid);
             str += " and ";
-            str += '`';
-            str += accent_color_for_type(type);
-            str += type_to_string(ctx, t.rhs_tid);
-            str += ansi_bold_reset();
-            str += "` for binary operator ";
+            type_helper(t.rhs_tid);
+            str += " for binary operator ";
             str += '`';
             str += accent_color_for_type(type);
             str += binary_op_to_cstr(t.op);

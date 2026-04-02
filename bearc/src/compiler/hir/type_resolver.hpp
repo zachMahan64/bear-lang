@@ -13,6 +13,7 @@
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def_visitor.hpp"
 #include "compiler/token.h"
+#include <optional>
 
 namespace hir {
 
@@ -24,15 +25,16 @@ template <IsDefVisitor V> class TypeResolver {
                                           bool need_layout_info) {
         auto maybe_builtin = id_tkn_slice_to_maybe_builtin(type->type.base.id);
 
+        const bool mut = type->type.base.mut;
+
         if (maybe_builtin.has_value()) {
             return context.emplace_type(TypeBuiltin{maybe_builtin.value()},
-                                        Span(context, fid, type->first, type->last),
-                                        type->type.base.mut);
+                                        Span(context, fid, type->first, type->last), mut);
         }
 
         if (type->type.base.id.len == 1 && type->type.base.id.start[0]->type == TOK_VAR) {
             return context.emplace_type(TypeVar{}, Span(context, fid, type->first, type->last),
-                                        type->type.base.mut);
+                                        mut);
         }
 
         auto scoped_id_contains_var = +[](token_ptr_slice_t id_slice) -> bool {
@@ -53,20 +55,32 @@ template <IsDefVisitor V> class TypeResolver {
 
         Span id_span{fid, context.ast(fid).buffer(), type->type.base.id.start[0],
                      type->type.base.id.start[type->type.base.id.len - 1]};
-        OptId<DefId> maybe_structure
+        OptId<DefId> maybe_type
             = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id), id_span);
 
-        if (maybe_structure.has_value()) {
-            auto def = need_layout_info ? def_visitor.visit_as_dependent(maybe_structure.as_id())
-                                        : def_visitor.visit_as_transparent(maybe_structure.as_id());
+        Span span{context, fid, type->first, type->last};
 
-            return context.emplace_type(TypeStructure{def},
-                                        Span(context, fid, type->first, type->last),
-                                        type->type.base.mut);
+        if (maybe_type.has_value()) {
+            auto did = need_layout_info ? def_visitor.visit_as_dependent(maybe_type.as_id())
+                                        : def_visitor.visit_as_transparent(maybe_type.as_id());
+
+            const Def& def = context.def(did);
+
+            if (def.holds<DefDeftype>()) {
+                const Type& orig_type = context.type(def.as<DefDeftype>().type);
+
+                // make the true type
+                TypeId new_tid = context.emplace_type(orig_type.value, span,
+                                                      mut); // rebind mut here
+
+                return context.emplace_type(TypeDeftype{.true_type = new_tid, .definition = did},
+                                            span, mut);
+            }
+
+            return context.emplace_type(TypeStructure{did}, span, mut);
         }
 
-        context.emplace_diagnostic(Span(context, fid, type->first, type->last),
-                                   diag_code::type_not_defined, diag_type::error);
+        context.emplace_diagnostic(span, diag_code::type_not_defined, diag_type::error);
 
         return OptId<TypeId>{};
     }
@@ -100,7 +114,7 @@ template <IsDefVisitor V> class TypeResolver {
         }
 
         auto maybe_size_exec = ComptExprSolver<V>{context, def_visitor}.solve_builtin_compt_expr(
-            fid, scope, type->type.arr.size_expr, builtin_type::usize);
+            fid, scope, type->type.arr.size_expr, builtin_type::usize, std::nullopt);
 
         if (!maybe_size_exec.has_value()) {
             return OptId<TypeId>{};

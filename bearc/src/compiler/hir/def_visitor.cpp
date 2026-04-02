@@ -7,6 +7,7 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/def_visitor.hpp"
+#include "compiler/ast/expr.h"
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
@@ -94,7 +95,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
             span.file_id, scope, stmt->stmt.var_decl.type, needs_layout_info());
         if (!maybe_type.has_value()) {
-            return did; // maybe set a special value to indicate error differently
+            return did;
         }
         // compt =/= mut guard
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
@@ -103,8 +104,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 def.span, diag_code::a_compt_variable_should_be_explicitly_initialized,
                 diag_type::error, DiagnosticSymbolBeforeMessage{.sid = def.name});
         }
-        def.set_value(DefVariable{.type = maybe_type.as_id(),
-                                  .name = context.symbol_id(stmt->stmt.var_decl.name)});
+        def.set_value(DefVariable{.type = maybe_type.as_id()});
         // TODO handle invalid non-initialized statements
         // search for default value/ddefault method
         break;
@@ -138,8 +138,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             return did;
         }
         auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
-        def.set_value(DefVariable{
-            .type = maybe_type.as_id(), .name = name_sid, .compt_value = maybe_compt_exec.as_id()});
+        def.set_value(
+            DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec.as_id()});
         break;
     }
     case AST_STMT_STRUCT_DEF: {
@@ -154,10 +154,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         for (auto didx = ordered_defs.begin(); didx != ordered_defs.end(); didx++) {
             visit_as_dependent(context.def_id(didx));
         }
-        SymbolId name = context.symbol_id(strct.name);
         // TODO handle member functions and contracts
         def.set_value(DefStruct{
-            .name = name,
             .scope = context.scope_for_top_level_def(did),
             .ordered_members = ordered_defs,
             /* .contracts = */
@@ -204,6 +202,20 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         break;
     }
+    case AST_STMT_DEFTYPE: {
+        if (stmt->stmt.deftype.aliased_type_expr->type != AST_EXPR_TYPE) {
+            return did; // already malformed during parsing
+        }
+        OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
+            span.file_id, scope, stmt->stmt.deftype.aliased_type_expr->expr.type_expr.type);
+        if (!maybe_type.has_value()) {
+            return did;
+        }
+
+        def.set_value(DefDeftype{.type = maybe_type.as_id()});
+
+        break;
+    }
     case AST_STMT_CONTRACT_DEF:
     case AST_STMT_UNION_DEF:
     case AST_STMT_VARIANT_DEF:
@@ -211,9 +223,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_FN_DECL:
     case AST_STMT_FN_PROTOTYPE:
         break;
-    case AST_STMT_DEFTYPE: {
-        break;
-    }
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level
     case AST_STMT_FILE:
