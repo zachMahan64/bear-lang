@@ -15,7 +15,7 @@ main quest
         - [x] implement kind of operator <--> type mapping system for at least builtins
         - [x] arithmetic
         - [x] string literal concat 
-        - [ ] bitwise
+        - [x] bitwise
         - [ ] boolean
         - [ ] unary ops
 
