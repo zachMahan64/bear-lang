@@ -613,18 +613,43 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
         break;
     // i8
     case builtin_type::i8:
-    // u8
-    case builtin_type::u8:
     // i16
     case builtin_type::i16:
-    // u16
-    case builtin_type::u16:
     // i32
     case builtin_type::i32:
+    // i64
+    case builtin_type::i64: {
+        switch (op) {
+        case binary_op::plus:
+        case binary_op::minus:
+        case binary_op::multiply:
+        case binary_op::divide:
+        case binary_op::modulo:
+        case binary_op::bit_or:
+        case binary_op::bit_and:
+        case binary_op::bit_xor:
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_arithmetic:
+        case binary_op::bool_or:
+        case binary_op::bool_and:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return true;
+        case binary_op::right_shift_logical:
+            return false;
+        }
+        break;
+    }
+    // u8
+    case builtin_type::u8:
+    // u16
+    case builtin_type::u16:
     // u32
     case builtin_type::u32:
-    // i64
-    case builtin_type::i64:
     // u64
     case builtin_type::usize:
     case builtin_type::u64: {
@@ -643,12 +668,13 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
         case binary_op::less_than_or_equal:
         case binary_op::left_bitshift:
         case binary_op::right_shift_logical:
-        case binary_op::right_shift_arithmetic:
         case binary_op::bool_or:
         case binary_op::bool_and:
         case binary_op::bool_equal:
         case binary_op::bool_not_equal:
             return true;
+        case binary_op::right_shift_arithmetic:
+            return false;
         }
         break;
     }

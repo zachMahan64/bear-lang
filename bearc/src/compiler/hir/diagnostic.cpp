@@ -151,14 +151,15 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "parentheses should be used for chained casts";
     case diag_code::use_of_undeclared_mod:
         return "use of undeclared module";
-    case diag_code::operator_not_supported_at_compt:
-        return "operator is not supported at compile-time";
+    case diag_code::operator_not_viable_at_compt:
+        return "operator is not viable at compile-time";
     case diag_code::immutable_value_is_not_assignable:
         return "immutable value is not assignable";
     }
     std::unreachable();
     return "";
 }
+
 const char* Diagnostic::name_for_type(enum diag_type t) {
     switch (t) {
     case diag_type::error:

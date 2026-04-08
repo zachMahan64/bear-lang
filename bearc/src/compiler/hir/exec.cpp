@@ -1205,6 +1205,18 @@ template <typename T> EConst e_bit_xor(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() ^ r.as<T>())};
 }
 
+template <typename T> EConst e_lsh(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() << r.as<T>())};
+}
+
+template <typename T> EConst e_rshl(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() >> r.as<T>())};
+}
+
+template <typename T> EConst e_rsha(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() >> r.as<T>())};
+}
+
 std::optional<ExecConst> ExecConst::plus(Context& ctx, ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     // std::cout << lhs.to_string() << " + " << rhs.to_string() << '\n'; // debug
@@ -1516,4 +1528,91 @@ std::optional<ExecConst> ExecConst::bit_xor(ExecConst lhs, ExecConst rhs) {
     return std::nullopt;
 }
 
+std::optional<ExecConst> ExecConst::bit_lsh(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_lsh<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_lsh<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_lsh<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_lsh<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_lsh<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_lsh<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_lsh<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_lsh<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_lsh<usize>(lhs, rhs);
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::bit_rsha(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::i8:
+        return e_rsha<i8>(lhs, rhs);
+    case builtin_type::i16:
+        return e_rsha<i16>(lhs, rhs);
+    case builtin_type::i32:
+        return e_rsha<i32>(lhs, rhs);
+    case builtin_type::i64:
+        return e_rsha<i64>(lhs, rhs);
+    case builtin_type::usize:
+    case builtin_type::u8:
+    case builtin_type::u16:
+    case builtin_type::u32:
+    case builtin_type::u64:
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::bit_rshl(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::usize:
+        return e_rshl<usize>(lhs, rhs);
+    case builtin_type::u8:
+        return e_rshl<u8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_rshl<u16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_rshl<u32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_rshl<u64>(lhs, rhs);
+    case builtin_type::i8:
+    case builtin_type::i16:
+    case builtin_type::i32:
+    case builtin_type::i64:
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
 } // namespace hir

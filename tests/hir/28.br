@@ -43,3 +43,15 @@ compt usize i1 = 100467339 | 0x10;
 compt usize i2 = 0b1111 ^ 0b1001;
 
 compt usize i3 = i + i ^ i2;
+
+compt i64 j = 0b10 << 0b10;
+compt i64 j1 = 0b11 >>> 0x10;
+compt i64 j2 = 0b1111 >> 0b1001;
+
+compt u64 k = 0b10 >> 0b10;
+compt u64 k1 = 0b11 >>> 0x10;
+compt u64 k2 = 0b1111 << 0b1001;
+
+compt usize l = 0b10 >>> 0x100AFE32;
+compt usize l1 = 100467339 << 0x10;
+compt usize l2 = 0b1111 >> 0b1001;

@@ -255,8 +255,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                                                        into_builtin, into_tid);
             } else {
                 Span span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
-                auto d0 = context.emplace_diagnostic(
-                    span, diag_code::operator_not_supported_at_compt, diag_type::error);
+                auto d0 = context.emplace_diagnostic(span, diag_code::operator_not_viable_at_compt,
+                                                     diag_type::error);
                 // be more helpful for ++ and -- at compt
                 if (t == TOK_INC || t == TOK_DEC && maybe_inner.has_value()) {
                     auto d1 = context.emplace_diagnostic(
@@ -280,15 +280,14 @@ template <IsDefVisitor V> class ComptExprSolver {
             OptId<ExecId> maybe_inner = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr,
                                                                  into_builtin, into_tid);
             Span op_span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
-            auto d0 = context.emplace_diagnostic(
-                op_span, diag_code::operator_not_supported_at_compt, diag_type::error);
+            auto d0 = context.emplace_diagnostic(op_span, diag_code::operator_not_viable_at_compt,
+                                                 diag_type::error);
             // be more helpful for ++ and -- at compt
             if (t == TOK_INC || t == TOK_DEC && maybe_inner.has_value()) {
-                auto d1 = context.emplace_diagnostic(Span{fid, context.ast(fid).buffer(),
-                                                          expr->expr.unary.expr->first,
-                                                          expr->expr.unary.expr->last},
-                                                     diag_code::immutable_value_is_not_assignable,
-                                                     diag_type::note, DiagnosticNoOtherInfo{});
+                auto d1 = context.emplace_diagnostic(
+                    Span{fid, context.ast(fid).buffer(), expr->expr.unary.expr->first,
+                         expr->expr.unary.expr->last},
+                    diag_code::immutable_value_is_not_assignable, diag_type::note);
                 context.set_next_diagnostic(d0, d1);
             }
             // inner is already cooked and error has been reported
@@ -722,6 +721,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::bit_or:
         case binary_op::bit_and:
         case binary_op::bit_xor:
+        case binary_op::left_bitshift:
+        case binary_op::right_shift_logical:
+        case binary_op::right_shift_arithmetic:
             return handle_binary_bitwise(fid, lhs_exec, op, rhs_exec);
         case binary_op::greater_than:
         case binary_op::less_than:
@@ -730,10 +732,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::bool_equal:
         case binary_op::bool_not_equal:
             return handle_binary_comparision(fid, lhs_exec, op, rhs_exec);
-        case binary_op::left_bitshift:
-        case binary_op::right_shift_logical:
-        case binary_op::right_shift_arithmetic:
-            return handle_binary_shift(fid, lhs_exec, op, rhs_exec);
         case binary_op::bool_or:
         case binary_op::bool_and:
             return handle_binary_bool_conj_disj(fid, lhs_exec, op, rhs_exec);
@@ -864,6 +862,17 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
 
+        // try to do these when possible
+        if (op == binary_op::right_shift_logical) {
+            auto maybe_converted = lhs_val.try_down_convert_to(builtin_type::u64);
+            lhs_val = maybe_converted.has_value() ? maybe_converted.value() : lhs_val;
+            guard_try_converge_types(lhs_val, op, rhs_val);
+        } else if (op == binary_op::right_shift_arithmetic) {
+            auto maybe_converted = lhs_val.try_down_convert_to(builtin_type::i64);
+            lhs_val = maybe_converted.has_value() ? maybe_converted.value() : lhs_val;
+            guard_try_converge_types(lhs_val, op, rhs_val);
+        }
+
         if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
             return std::nullopt;
         }
@@ -880,13 +889,27 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::bit_xor:
             maybe_value = ExecConst::bit_xor(lhs_val, rhs_val);
             break;
+        case binary_op::left_bitshift:
+            maybe_value = ExecConst::bit_lsh(lhs_val, rhs_val);
+            break;
+        case binary_op::right_shift_logical: {
+            maybe_value = ExecConst::bit_rshl(lhs_val, rhs_val);
+            break;
+        }
+        case binary_op::right_shift_arithmetic: {
+            maybe_value = ExecConst::bit_rsha(lhs_val, rhs_val);
+            break;
+        }
         default:
             std::unreachable();
             break;
         }
 
-        return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
-                                    /*compt*/ true);
+        if (maybe_value.has_value()) {
+
+            return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
+                                        /*compt*/ true);
+        }
 
         return std::nullopt;
     }
