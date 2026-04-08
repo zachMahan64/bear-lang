@@ -156,17 +156,20 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
 
     [[nodiscard]] bool equals_zero() const;
 
-    [[nodiscard]] static std::optional<ExecExprComptConstant>
-    plus(Context& ctx, ExecExprComptConstant lhs, ExecExprComptConstant rhs);
-    [[nodiscard]] static std::optional<ExecExprComptConstant> minus(ExecExprComptConstant lhs,
-                                                                    ExecExprComptConstant rhs);
-    [[nodiscard]] static std::optional<ExecExprComptConstant> multiply(ExecExprComptConstant lhs,
-                                                                       ExecExprComptConstant rhs);
-    [[nodiscard]] static std::optional<ExecExprComptConstant> divide(ExecExprComptConstant lhs,
-                                                                     ExecExprComptConstant rhs);
-    [[nodiscard]] static std::optional<ExecExprComptConstant> mod(ExecExprComptConstant lhs,
-                                                                  ExecExprComptConstant rhs);
+    using ExecConst = ExecExprComptConstant;
+
+    [[nodiscard]] static std::optional<ExecConst> plus(Context& ctx, ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> minus(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> multiply(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> divide(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> mod(ExecConst lhs, ExecConst rhs);
+
+    [[nodiscard]] static std::optional<ExecConst> bit_and(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> bit_or(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> bit_xor(ExecConst lhs, ExecConst rhs);
 };
+
+using ExecConst = ExecExprComptConstant;
 
 struct ExecExprListLiteral {
     IdSlice<ExecId> elems;

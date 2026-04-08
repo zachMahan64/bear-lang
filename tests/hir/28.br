@@ -1,0 +1,45 @@
+// tests/hir/28.br 
+
+compt i32 z = 0b10 & 0b10;
+compt u32 z1 = 0b11 | 0x10;
+compt u8 z2 = 0b1111 ^ 0b1001;
+compt i32 w = z++;
+compt i32 u = ++w;
+
+compt i8 a = 0b10 & 0b10;
+compt i8 a1 = 0b11 | 100;
+compt i8 a2 = 0b1111 ^ 0b1001;
+
+compt u8 b = 0b10 & 0b10;
+compt u8 b1 = 0b11 | 0x10;
+compt u8 b2 = 0b1111 ^ 0b1001;
+
+compt i16 c = 0b10 & 0b10;
+compt i16 c1 = 0b11 | 0x10;
+compt i16 c2 = 0b1111 ^ 0b1001;
+
+compt u16 d = 0b10 & 0b10;
+compt u16 d1 = 0b11 | 0x10;
+compt u16 d2 = 0b1111 ^ 0b1001;
+
+compt i32 e = 0b10 & 0b10;
+compt i32 e1 = 0b11 | 0x10;
+compt i32 e2 = 0b1111 ^ 0b1001;
+
+compt u32 f = 0b10 & 0b10;
+compt u32 f1 = 0b11 | 0x10;
+compt u32 f2 = 0b1111 ^ 0b1001;
+
+compt i64 g = 0b10 & 0b10;
+compt i64 g1 = 0b11 | 0x10;
+compt i64 g2 = 0b1111 ^ 0b1001;
+
+compt u64 h = 0b10 & 0b10;
+compt u64 h1 = 0b11 | 0x10;
+compt u64 h2 = 0b1111 ^ 0b1001;
+
+compt usize i = 0b10 & 0x100AFE32;
+compt usize i1 = 100467339 | 0x10;
+compt usize i2 = 0b1111 ^ 0b1001;
+
+compt usize i3 = i + i ^ i2;

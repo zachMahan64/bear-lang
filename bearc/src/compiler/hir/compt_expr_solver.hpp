@@ -94,7 +94,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         auto visit_def
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
-        std::optional<ExecExprComptConstant> maybe_value;
+        std::optional<ExecConst> maybe_value;
         switch (expr->type) {
         case AST_EXPR_ID: {
             Span id_span{fid, context.ast(fid).buffer(), expr->expr.id.slice.start[0],
@@ -124,7 +124,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                                              // just return none)
                     }
                     auto exec = context.exec(def.as<DefVariable>().compt_value.as_id());
-                    maybe_value = exec.template as<ExecExprComptConstant>();
+                    maybe_value = exec.template as<ExecConst>();
                 }
             } else {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
@@ -141,13 +141,13 @@ template <IsDefVisitor V> class ComptExprSolver {
             const token_t* tkn = expr->expr.literal.tkn;
             switch (tkn->type) {
             case TOK_CHAR_LIT:
-                maybe_value = ExecExprComptConstant{tkn->val.character};
+                maybe_value = ExecConst{tkn->val.character};
                 break;
             case TOK_INT_LIT: {
-                maybe_value = ExecExprComptConstant{tkn->val.signed_integral};
+                maybe_value = ExecConst{tkn->val.signed_integral};
             } break;
             case TOK_UINT_LIT: {
-                maybe_value = ExecExprComptConstant{tkn->val.unsigned_integral};
+                maybe_value = ExecConst{tkn->val.unsigned_integral};
                 auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i64);
                 if (maybe_signed.has_value()) {
                     maybe_value = maybe_signed;
@@ -155,19 +155,19 @@ template <IsDefVisitor V> class ComptExprSolver {
                 break;
             }
             case TOK_FLOAT_LIT:
-                maybe_value = ExecExprComptConstant{tkn->val.floating};
+                maybe_value = ExecConst{tkn->val.floating};
                 break;
             case TOK_STR_LIT:
-                maybe_value = ExecExprComptConstant{context.symbol_id_for_str_lit_tkn(tkn)};
+                maybe_value = ExecConst{context.symbol_id_for_str_lit_tkn(tkn)};
                 break;
             case TOK_BOOL_LIT_FALSE:
-                maybe_value = ExecExprComptConstant{false};
+                maybe_value = ExecConst{false};
                 break;
             case TOK_BOOL_LIT_TRUE:
-                maybe_value = ExecExprComptConstant{true};
+                maybe_value = ExecConst{true};
                 break;
             case TOK_NULL_LIT:
-                maybe_value = ExecExprComptConstant{nullptr};
+                maybe_value = ExecConst{nullptr};
                 break;
             default:
                 std::unreachable();
@@ -222,10 +222,10 @@ template <IsDefVisitor V> class ComptExprSolver {
 
                 if (maybe_eid.has_value()) {
                     auto exec = context.exec(maybe_eid.as_id());
-                    if (!exec.template holds<ExecExprComptConstant>()) {
+                    if (!exec.template holds<ExecConst>()) {
                         cooked = true;
                     } else {
-                        maybe_value = exec.template as<ExecExprComptConstant>();
+                        maybe_value = exec.template as<ExecConst>();
                         // std::cout << "result of binary op: " << maybe_value.value().to_string()
                         //          << '\n'; // debug
                     }
@@ -248,16 +248,54 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_PRE_UNARY: {
             // eventually allow sizeof, allignof
-            if (expr->expr.unary.op->type == TOK_BOOL_NOT || expr->expr.unary.op->type == TOK_PLUS
-                || expr->expr.unary.op->type == TOK_MINUS) {
-                auto inner = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr,
-                                                      into_builtin, into_tid);
+            token_type_e t = expr->expr.unary.op->type;
+            OptId<ExecId> maybe_inner{};
+            if (t == TOK_BOOL_NOT || t == TOK_PLUS || t == TOK_MINUS || t == TOK_BIT_NOT) {
+                maybe_inner = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr,
+                                                       into_builtin, into_tid);
+            } else {
+                Span span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
+                auto d0 = context.emplace_diagnostic(
+                    span, diag_code::operator_not_supported_at_compt, diag_type::error);
+                // be more helpful for ++ and -- at compt
+                if (t == TOK_INC || t == TOK_DEC && maybe_inner.has_value()) {
+                    auto d1 = context.emplace_diagnostic(
+                        Span{fid, context.ast(fid).buffer(), expr->expr.unary.expr->first,
+                             expr->expr.unary.expr->last},
+                        diag_code::immutable_value_is_not_assignable, diag_type::note,
+                        DiagnosticNoOtherInfo{});
+                    context.set_next_diagnostic(d0, d1);
+                }
             }
-            // TODO, handle bool not, plus, and minus here
+            // already cooked (and error should have been reported)
+            if (maybe_inner.empty()) {
+                return std::nullopt;
+            }
+            // TODO, handle bool/bit not, plus, and minus here
             break;
         }
-        case AST_EXPR_POST_UNARY:
+        case AST_EXPR_POST_UNARY: {
             // not supported (-- or ++ require mutable lvalues)
+            token_type_e t = expr->expr.unary.op->type;
+            OptId<ExecId> maybe_inner = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr,
+                                                                 into_builtin, into_tid);
+            Span op_span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
+            auto d0 = context.emplace_diagnostic(
+                op_span, diag_code::operator_not_supported_at_compt, diag_type::error);
+            // be more helpful for ++ and -- at compt
+            if (t == TOK_INC || t == TOK_DEC && maybe_inner.has_value()) {
+                auto d1 = context.emplace_diagnostic(Span{fid, context.ast(fid).buffer(),
+                                                          expr->expr.unary.expr->first,
+                                                          expr->expr.unary.expr->last},
+                                                     diag_code::immutable_value_is_not_assignable,
+                                                     diag_type::note, DiagnosticNoOtherInfo{});
+                context.set_next_diagnostic(d0, d1);
+            }
+            // inner is already cooked and error has been reported
+            if (maybe_inner.empty()) {
+                return std::nullopt;
+            }
+        }
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_TERNARY_IF:
         case AST_EXPR_FN_CALL:
@@ -626,25 +664,24 @@ template <IsDefVisitor V> class ComptExprSolver {
         TypeId tid = maybe_tid.as_id();
         const Exec& exec = context.exec(eid);
         const Type& type = context.type(tid);
-        if (!exec.holds<ExecExprComptConstant>() || !type.holds<TypeBuiltin>()) {
+        if (!exec.holds<ExecConst>() || !type.holds<TypeBuiltin>()) {
             context.emplace_diagnostic_with_message_value(
                 exec.span, diag_code::cannot_convert_expression_to_type, diag_type::error,
                 DiagnosticTypeAfterMessage{.tid = tid});
             return std::nullopt;
         }
         auto into_builtin = type.as<TypeBuiltin>().type;
-        auto from_constant = exec.as<ExecExprComptConstant>();
+        auto from_constant = exec.as<ExecConst>();
 
         // allow string casts by converting to symbol id
-        std::optional<ExecExprComptConstant> maybe_converted
-            = (into_builtin == builtin_type::str)
-                  ? ExecExprComptConstant{from_constant.to_symbol_id(context)}
-                  : from_constant.try_safe_convert_to(into_builtin);
+        std::optional<ExecConst> maybe_converted
+            = (into_builtin == builtin_type::str) ? ExecConst{from_constant.to_symbol_id(context)}
+                                                  : from_constant.try_safe_convert_to(into_builtin);
         if (!maybe_converted.has_value()) {
             context.emplace_diagnostic_with_message_value(
                 exec.span, diag_code::cannot_convert_expression_to_type, diag_type::error,
                 DiagnosticTypeAfterMessage{.tid = tid});
-            ExecExprComptConstant eecc = exec.as<ExecExprComptConstant>();
+            ExecConst eecc = exec.as<ExecConst>();
             context.emplace_diagnostic_with_message_value(
                 exec.span, diag_code::guaranteed_narrowing_of_compt_value, diag_type::note,
                 DiagnosticSymbolAfterMessage(eecc.to_symbol_id(context)));
@@ -664,11 +701,11 @@ template <IsDefVisitor V> class ComptExprSolver {
         };
 
         bool cooked = false;
-        if (!lhs_exec.holds<ExecExprComptConstant>()) {
+        if (!lhs_exec.holds<ExecConst>()) {
             handle_invalid_operand(lhs_exec);
             cooked = true;
         }
-        if (!rhs_exec.holds<ExecExprComptConstant>()) {
+        if (!rhs_exec.holds<ExecConst>()) {
             handle_invalid_operand(rhs_exec);
             cooked = true;
         }
@@ -707,8 +744,7 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type);
 
     [[nodiscard]] bool guard_incompatible_types(FileId fid, const Exec& lhs, const Exec& rhs,
-                                                ExecExprComptConstant lhs_val,
-                                                ExecExprComptConstant rhs_val) {
+                                                ExecConst lhs_val, ExecConst rhs_val) {
 
         if (!lhs_val.holds_same_variant_type(rhs_val)) {
             auto lhs_tid = context.emplace_type(TypeBuiltin{.type = lhs_val.type_builtin()},
@@ -725,8 +761,8 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
 
     [[nodiscard]] bool guard_op_not_viable_for_types(FileId fid, const Exec& lhs, const Exec& rhs,
-                                                     ExecExprComptConstant lhs_val, binary_op op,
-                                                     ExecExprComptConstant rhs_val) {
+                                                     ExecConst lhs_val, binary_op op,
+                                                     ExecConst rhs_val) {
         if (!lhs_val.has_binary_op(op) || !rhs_val.has_binary_op(op)) {
             auto lhs_tid = context.emplace_type(TypeBuiltin{.type = lhs_val.type_builtin()},
                                                 lhs.span, false);
@@ -741,8 +777,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         return false;
     }
 
-    void guard_try_converge_types(ExecExprComptConstant& lhs_val, binary_op op,
-                                  ExecExprComptConstant& rhs_val) {
+    void guard_try_converge_types(ExecConst& lhs_val, binary_op op, ExecConst& rhs_val) {
         // try to safely convert (more ergonomic for literals and guranteed safe conversions)
         if (!lhs_val.holds_same_variant_type(rhs_val)) {
             const bool use_lhs_type = lhs_val.has_binary_op(op);
@@ -761,8 +796,8 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, const Exec& lhs, binary_op op,
                                                          const Exec& rhs) {
 
-        auto lhs_val = lhs.as<ExecExprComptConstant>();
-        auto rhs_val = rhs.as<ExecExprComptConstant>();
+        auto lhs_val = lhs.as<ExecConst>();
+        auto rhs_val = rhs.as<ExecConst>();
 
         // converge types, if possible
         guard_try_converge_types(/* & */ lhs_val, op, /* & */ rhs_val);
@@ -775,7 +810,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
 
-        std::optional<ExecExprComptConstant> maybe_value{};
+        std::optional<ExecConst> maybe_value{};
 
         auto guard_div_by_zero = [&]() -> bool {
             if (rhs_val.equals_zero()) {
@@ -788,23 +823,22 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         switch (op) {
         case binary_op::plus:
-            maybe_value = ExecExprComptConstant::plus(context, lhs_val, rhs_val);
+            maybe_value = ExecConst::plus(context, lhs_val, rhs_val);
             break;
         case binary_op::minus:
-            maybe_value = ExecExprComptConstant::minus(lhs_val, rhs_val);
+            maybe_value = ExecConst::minus(lhs_val, rhs_val);
             break;
         case binary_op::multiply:
-            maybe_value = ExecExprComptConstant::multiply(lhs_val, rhs_val);
+            maybe_value = ExecConst::multiply(lhs_val, rhs_val);
             break;
 
             // for div and mod guard div by zero so we don't crash the interpreter
         case binary_op::divide:
-            maybe_value = (guard_div_by_zero()) ? std::nullopt
-                                                : ExecExprComptConstant::divide(lhs_val, rhs_val);
+            maybe_value
+                = (guard_div_by_zero()) ? std::nullopt : ExecConst::divide(lhs_val, rhs_val);
             break;
         case binary_op::modulo:
-            maybe_value
-                = guard_div_by_zero() ? std::nullopt : ExecExprComptConstant::mod(lhs_val, rhs_val);
+            maybe_value = guard_div_by_zero() ? std::nullopt : ExecConst::mod(lhs_val, rhs_val);
             break;
         default:
             std::unreachable();
@@ -820,7 +854,40 @@ template <IsDefVisitor V> class ComptExprSolver {
 
     [[nodiscard]] OptId<ExecId> handle_binary_bitwise(FileId fid, const Exec& lhs, binary_op op,
                                                       const Exec& rhs) {
-        // TODO
+        auto lhs_val = lhs.as<ExecConst>();
+        auto rhs_val = rhs.as<ExecConst>();
+
+        // converge types, if possible
+        guard_try_converge_types(lhs_val, op, rhs_val);
+
+        if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
+            return std::nullopt;
+        }
+
+        if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
+            return std::nullopt;
+        }
+
+        std::optional<ExecConst> maybe_value{};
+
+        switch (op) {
+        case binary_op::bit_or:
+            maybe_value = ExecConst::bit_or(lhs_val, rhs_val);
+            break;
+        case binary_op::bit_and:
+            maybe_value = ExecConst::bit_and(lhs_val, rhs_val);
+            break;
+        case binary_op::bit_xor:
+            maybe_value = ExecConst::bit_xor(lhs_val, rhs_val);
+            break;
+        default:
+            std::unreachable();
+            break;
+        }
+
+        return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
+                                    /*compt*/ true);
+
         return std::nullopt;
     }
 

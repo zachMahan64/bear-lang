@@ -20,18 +20,15 @@
 #include <utility>
 namespace hir {
 
-std::optional<ExecExprComptConstant>
-ExecExprComptConstant::try_safe_convert_to(builtin_type type) const {
+std::optional<ExecConst> ExecConst::try_safe_convert_to(builtin_type type) const {
     auto maybe_up = try_up_convert_to(type);
     return maybe_up.has_value() ? maybe_up : try_down_convert_to(type);
 }
 
-std::optional<ExecExprComptConstant>
-ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
-    using OptConst = std::optional<ExecExprComptConstant>;
-    auto to_optconst = +[](ConstantValue constval) -> OptConst {
-        return OptConst{ExecExprComptConstant{constval}};
-    };
+std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
+    using OptConst = std::optional<ExecConst>;
+    auto to_optconst
+        = +[](ConstantValue constval) -> OptConst { return OptConst{ExecConst{constval}}; };
     auto none = +[] { return OptConst{}; };
     switch (value.index()) {
     case 0:
@@ -472,13 +469,11 @@ ExecExprComptConstant::try_up_convert_to(builtin_type type) const {
     }
     return OptConst{};
 }
-std::optional<ExecExprComptConstant>
-ExecExprComptConstant::try_down_convert_to(builtin_type type) const {
+std::optional<ExecConst> ExecConst::try_down_convert_to(builtin_type type) const {
 
-    using OptConst = std::optional<ExecExprComptConstant>;
+    using OptConst = std::optional<ExecConst>;
 
-    auto to_optconst
-        = +[](ConstantValue v) -> OptConst { return OptConst{ExecExprComptConstant{v}}; };
+    auto to_optconst = +[](ConstantValue v) -> OptConst { return OptConst{ExecConst{v}}; };
 
     auto none = +[] { return OptConst{}; };
 
@@ -956,9 +951,9 @@ bool Exec::is_equivalent(const Context& ctx, ExecId eid1, ExecId eid2) {
     if (!both_compt) {
         return false;
     }
-    if (e1.holds_same<ExecExprComptConstant>(e2)) {
-        const ExecExprComptConstant& lit1 = e1.as<ExecExprComptConstant>();
-        const ExecExprComptConstant& lit2 = e2.as<ExecExprComptConstant>();
+    if (e1.holds_same<ExecConst>(e2)) {
+        const ExecConst& lit1 = e1.as<ExecConst>();
+        const ExecConst& lit2 = e2.as<ExecConst>();
         return lit1.variant_value_equals(lit2);
     }
     return false;
@@ -978,7 +973,7 @@ bool Exec::can_be_compt(const Context& ctx) {
         [&](const ExecYieldStmt& t) -> bool { return false; },
         // exprs
         [&](const ExecExprIdentifier& t) -> bool { return get_d(t.identifier).compt; },
-        [&](const ExecExprComptConstant& t) -> bool { return true; },
+        [&](const ExecConst& t) -> bool { return true; },
         [&](const ExecExprListLiteral& t) -> bool {
             // just check each elem
             for (auto eidx = t.elems.begin(); eidx != t.elems.end(); eidx++) {
@@ -1040,7 +1035,7 @@ bool Exec::can_be_compt(const Context& ctx) {
     return visit(vs);
 }
 
-SymbolId ExecExprComptConstant::to_symbol_id(Context& ctx) const {
+SymbolId ExecConst::to_symbol_id(Context& ctx) const {
     std::string str;
     str.reserve(64); // pretty beeg
     switch (value.index()) {
@@ -1119,7 +1114,7 @@ SymbolId ExecExprComptConstant::to_symbol_id(Context& ctx) const {
     return ctx.symbol_id(str);
 }
 
-std::string ExecExprComptConstant::to_string() {
+std::string ExecConst::to_string() {
     switch (type_builtin()) {
     case builtin_type::u8:
         return std::to_string(static_cast<int>(as<uint8_t>()));
@@ -1158,10 +1153,10 @@ std::string ExecExprComptConstant::to_string() {
     return "";
 }
 
-[[nodiscard]] bool ExecExprComptConstant::has_binary_op(binary_op op) const {
+[[nodiscard]] bool ExecConst::has_binary_op(binary_op op) const {
     return builtin_type_has_binary_op(type_builtin(), op);
 }
-[[nodiscard]] bool ExecExprComptConstant::has_unary_op(unary_op op) const {
+[[nodiscard]] bool ExecConst::has_unary_op(unary_op op) const {
     return builtin_type_has_unary_op(type_builtin(), op);
 }
 
@@ -1176,7 +1171,7 @@ using u64 = uint64_t;
 using usize = uint64_t;
 using f32 = float;
 using f64 = double;
-using EConst = ExecExprComptConstant;
+using EConst = ExecConst;
 
 template <typename T> EConst e_plus(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() + r.as<T>())};
@@ -1198,8 +1193,19 @@ template <typename T> EConst e_mod(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() % r.as<T>())};
 }
 
-std::optional<ExecExprComptConstant>
-ExecExprComptConstant::plus(Context& ctx, ExecExprComptConstant lhs, ExecExprComptConstant rhs) {
+template <typename T> EConst e_bit_or(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() | r.as<T>())};
+}
+
+template <typename T> EConst e_bit_and(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() & r.as<T>())};
+}
+
+template <typename T> EConst e_bit_xor(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() ^ r.as<T>())};
+}
+
+std::optional<ExecConst> ExecConst::plus(Context& ctx, ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     // std::cout << lhs.to_string() << " + " << rhs.to_string() << '\n'; // debug
     switch (lhs.type_builtin()) {
@@ -1226,7 +1232,7 @@ ExecExprComptConstant::plus(Context& ctx, ExecExprComptConstant lhs, ExecExprCom
     case builtin_type::f64:
         return e_plus<f64>(lhs, rhs);
     case builtin_type::str:
-        return ExecExprComptConstant{ctx.concat_symbols(lhs.as<SymbolId>(), rhs.as<SymbolId>())};
+        return ExecConst{ctx.concat_symbols(lhs.as<SymbolId>(), rhs.as<SymbolId>())};
     case builtin_type::charr:
     case builtin_type::voidd:
     case builtin_type::nullpointer:
@@ -1236,8 +1242,7 @@ ExecExprComptConstant::plus(Context& ctx, ExecExprComptConstant lhs, ExecExprCom
     return std::nullopt;
 }
 
-std::optional<ExecExprComptConstant> ExecExprComptConstant::minus(ExecExprComptConstant lhs,
-                                                                  ExecExprComptConstant rhs) {
+std::optional<ExecConst> ExecConst::minus(ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     switch (lhs.type_builtin()) {
     case builtin_type::u8:
@@ -1271,8 +1276,7 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::minus(ExecExprComptC
     }
     return std::nullopt;
 }
-std::optional<ExecExprComptConstant> ExecExprComptConstant::multiply(ExecExprComptConstant lhs,
-                                                                     ExecExprComptConstant rhs) {
+std::optional<ExecConst> ExecConst::multiply(ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     switch (lhs.type_builtin()) {
     case builtin_type::u8:
@@ -1307,8 +1311,7 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::multiply(ExecExprCom
     return std::nullopt;
 }
 
-std::optional<ExecExprComptConstant> ExecExprComptConstant::divide(ExecExprComptConstant lhs,
-                                                                   ExecExprComptConstant rhs) {
+std::optional<ExecConst> ExecConst::divide(ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     switch (lhs.type_builtin()) {
     case builtin_type::u8:
@@ -1343,8 +1346,7 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::divide(ExecExprCompt
     return std::nullopt;
 }
 
-std::optional<ExecExprComptConstant> ExecExprComptConstant::mod(ExecExprComptConstant lhs,
-                                                                ExecExprComptConstant rhs) {
+std::optional<ExecConst> ExecConst::mod(ExecConst lhs, ExecConst rhs) {
 
     assert(lhs.holds_same_variant_type(rhs));
     switch (lhs.type_builtin()) {
@@ -1378,7 +1380,7 @@ std::optional<ExecExprComptConstant> ExecExprComptConstant::mod(ExecExprComptCon
     return std::nullopt;
 }
 
-bool ExecExprComptConstant::equals_zero() const {
+bool ExecConst::equals_zero() const {
     switch (type_builtin()) {
     case builtin_type::u8:
         return as<u8>() == 0;
@@ -1413,6 +1415,105 @@ bool ExecExprComptConstant::equals_zero() const {
         return !as<bool>();
     }
     return false;
+}
+
+std::optional<ExecConst> ExecConst::bit_and(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_bit_and<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_bit_and<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_bit_and<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_bit_and<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_bit_and<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_bit_and<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_bit_and<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_bit_and<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_bit_and<usize>(lhs, rhs);
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecConst> ExecConst::bit_or(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_bit_or<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_bit_or<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_bit_or<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_bit_or<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_bit_or<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_bit_or<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_bit_or<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_bit_or<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_bit_or<usize>(lhs, rhs);
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecConst> ExecConst::bit_xor(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_bit_xor<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_bit_xor<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_bit_xor<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_bit_xor<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_bit_xor<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_bit_xor<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_bit_xor<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_bit_xor<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_bit_xor<usize>(lhs, rhs);
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
 }
 
 } // namespace hir

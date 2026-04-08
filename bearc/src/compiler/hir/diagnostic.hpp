@@ -79,6 +79,8 @@ enum class diag_code : uint8_t {
     dividing_by_zero_at_compt_is_illegal,
     invalid_cast,
     parentheses_should_be_used_for_chained_casts,
+    operator_not_supported_at_compt,
+    immutable_value_is_not_assignable,
 
     count, // this must be last,
 
