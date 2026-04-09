@@ -26,6 +26,8 @@ main quest
     
     - [ ] debug and increase safety of particularly (large) integral literal parsing
 
+- [ ] finish some more ContextDatabase functionality for better testing 
+
 - [x] if compt (in parser/syntax doc, hir impl will come later in body resolution)
 - [x] ternary if: expr `if` `compt`? condition `else` expr (in parser/syntax doc)
 - [x] top level use (in parser/syntax doc, hir logic)
