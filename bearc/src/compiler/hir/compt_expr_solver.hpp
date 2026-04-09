@@ -289,6 +289,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                          expr->expr.unary.expr->last},
                     diag_code::immutable_value_is_not_assignable, diag_type::note);
                 context.set_next_diagnostic(d0, d1);
+                return std::nullopt;
             }
             // inner is already cooked and error has been reported
             if (maybe_inner.empty()) {
