@@ -1,0 +1,65 @@
+// tests/hir/29.br
+
+mod foo {
+    mod ben {
+        hid struct Foo {
+
+        }
+        struct Bar {
+
+        }
+    }
+
+    hid mod internal {
+        struct Foo1 {
+
+        }
+    }
+
+    use internal..Foo1;
+
+}
+
+mod foo {
+
+}
+
+compt foo..ben..Foo foo = foo..ben..Foo{};
+
+compt foo..ben..Bar bar = foo..ben..Bar{};
+
+deftype B = foo..ben..Bar;
+
+use foo..ben..Bar;
+
+compt Bar bar2 = Bar{};
+
+compt i32 a = 12 + 12 / (24 * 0);
+
+compt i8 b = 13;
+
+compt i32 c = b + 15;
+
+compt str my_str = "foo" + "bar" + "    ";
+
+compt str my_str_2 = my_str + c as str;
+
+struct Foo {
+    i32 a;
+}
+
+contract ToString {
+    mt to_string() -> String;
+}
+
+compt Foo foo1 = Foo{.a = 14}.to_str();
+
+compt Foo foo2 = Foo{} if true else Foo{};
+
+compt fn do_work(i32 a) -> i32 {
+    i32 b = a / 2;
+    b += 12;
+    return a * 12 * 13;
+}
+
+compt i32 f = do_work(a);
