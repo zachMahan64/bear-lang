@@ -45,7 +45,7 @@ class FileAst {
     size_t error_count() const;
     FileAst(const char* file_name);
     ~FileAst();
-    void try_print_info(const bearc_args_t* args) const;
+    void try_print_info(const bearc_args_t& args) const;
 };
 
 } // namespace hir

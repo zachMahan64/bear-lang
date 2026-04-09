@@ -58,7 +58,7 @@ static constexpr size_t DEFAULT_DEF_SLICE_COUNT = 0x100;
 static constexpr size_t DEFAULT_CANONICAL_TT_CAP = 0x400;
 static constexpr size_t DEFAULT_CANONICAL_GEN_ARGS_CAP = 0x400;
 
-Context::Context(const bearc_args_t* args)
+Context::Context(const bearc_args_t& args)
     : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
@@ -79,7 +79,7 @@ Context::Context(const bearc_args_t* args)
       ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
       canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP),
-      compact_diagnostics(args->flags[CLI_FLAG_COMPACT_DIAGS]),
+      compact_diagnostics(args.flags[CLI_FLAG_COMPACT_DIAGS]),
       generic_args_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_generic_args_id_to_def_id_map{DEFAULT_CANONICAL_GEN_ARGS_CAP},
       generic_arg_id_slices{DEFAULT_CANONICAL_GEN_ARGS_CAP},
@@ -89,12 +89,12 @@ Context::Context(const bearc_args_t* args)
                                    DEFAULT_CANONICAL_GEN_ARGS_CAP} {
 
     // this may only fail in horribly malfored arguments in test cases
-    assert(args->input_file_name);
+    assert(args.input_file_name);
 
     // get try to get root file, and allow checking cwd for it
 
     std::optional<std::filesystem::path> maybe_root_file
-        = resolve_on_import_path(args->input_file_name, ".", args);
+        = resolve_on_import_path(args.input_file_name, ".", &args);
 
     if (!maybe_root_file) {
         return;
@@ -137,9 +137,7 @@ int Context::help_count() const noexcept { return static_cast<int>(help_cnt); }
 
 bool Context::compact_diagnostics_enabled() const noexcept { return compact_diagnostics; }
 
-bool Context::has_flag(cli_flag_e flag) const noexcept { return args->flags[flag]; }
-
-const bearc_args_t* Context::get_args() const noexcept { return this->args; }
+bool Context::has_flag(cli_flag_e flag) const noexcept { return args.flags[flag]; }
 
 SymbolId Context::symbol_id(std::string_view str) { return symbol_id(str.data(), str.length()); }
 SymbolId Context::symbol_id(const token_t* tkn) { return symbol_id(tkn->start, tkn->len); }
@@ -403,7 +401,7 @@ OptId<FileId> Context::try_file_from_import_statement(FileId importer_id,
     const std::filesystem::path parent = std::filesystem::path(path).parent_path();
 
     // DNE guard
-    auto maybe_path = resolve_on_import_path(path, parent, this->args);
+    auto maybe_path = resolve_on_import_path(path, parent, &this->args);
     if (!maybe_path.has_value()) {
         emplace_diagnostic(Span(importer_id, ast(importer_id).buffer(), path_tkn),
                            diag_code::imported_file_dne, diag_type::error);

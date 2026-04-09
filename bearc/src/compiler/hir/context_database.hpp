@@ -18,11 +18,11 @@ class ContextDatabase {
   public:
     ContextDatabase(int arg_count, const char** args)
         : args{std::make_unique<bearc_args>(parse_cli_args(arg_count, const_cast<char**>(args)))},
-          ctx{std::make_unique<hir::Context>(this->args.get())} {}
+          ctx{std::make_unique<hir::Context>(*this->args)} {}
     ContextDatabase(std::vector<const char*> args_vec)
         : args{std::make_unique<bearc_args>(parse_cli_args(static_cast<int>(args_vec.size()),
                                                            const_cast<char**>(args_vec.data())))},
-          ctx{std::make_unique<hir::Context>(this->args.get())} {}
+          ctx{std::make_unique<hir::Context>(*this->args)} {}
 
     std::optional<hir::Def> query_definition(std::span<const char*> def_path);
 

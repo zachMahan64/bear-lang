@@ -37,17 +37,17 @@ void FileAst::print_token_table() const {
     print_out_src_buffer(&ast.src_buffer);
     print_out_tkn_table(&ast.tokens);
 }
-void FileAst::try_print_info(const bearc_args_t* args) const {
+void FileAst::try_print_info(const bearc_args_t& args) const {
     if (!this->root()) {
         return;
     }
     // --token-table
-    if (args->flags[CLI_FLAG_TOKEN_TABLE]) {
+    if (args.flags[CLI_FLAG_TOKEN_TABLE]) {
         this->print_token_table();
     }
 
     // --pretty-print
-    if (args->flags[CLI_FLAG_PRETTY_PRINT]) {
+    if (args.flags[CLI_FLAG_PRETTY_PRINT]) {
         this->pretty_print();
     }
 }
