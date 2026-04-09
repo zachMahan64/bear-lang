@@ -44,6 +44,7 @@ main quest
 - [ ] `same_type(expr, expr)` where the exprs could be say `typeof(foo)` and `@type(Foo<i32>)`
 - [ ] static_assert (make it a builtin in hir)
     - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `__static_assert(bool cond)` 
+- [ ] make `deftype = typeof(foo)` handling consistent
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
