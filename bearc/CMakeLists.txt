@@ -79,6 +79,7 @@ set(NO_TEST_SRC
 set(TEST_SRC
     ${SRC}
     src/tests/test.c
+    src/tests/test.cpp
 )
 
 

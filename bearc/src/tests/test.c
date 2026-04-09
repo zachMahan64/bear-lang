@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-static bearc_args_t args;
+bearc_args_t args;
 
 int main(int argc, char** argv) {
 
@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     // add all tests here ----------
     *((br_test_result_t*)vector_emplace_back(&results)) = test_parser();
     *((br_test_result_t*)vector_emplace_back(&results)) = test_hir();
+    *((br_test_result_t*)vector_emplace_back(&results)) = test_context_db();
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     printf("%s -----------------------------%s\n", ansi_bold_reset(), ansi_reset());
@@ -50,58 +51,6 @@ int main(int argc, char** argv) {
 /*
  * macros to easily test tests in the form tests/00.br
  */
-
-#define TEST_SET_ARGS(_args)                                                                       \
-    do {                                                                                           \
-        args = parse_cli_args(sizeof(_args) / sizeof((_args)[0]), _args);                          \
-    } while (0);
-#define TEST_INIT(_name)                                                                           \
-    br_test_result_t br_test_result = {.cnt_success = 0, .cnt_total = 0, .name = (_name)};         \
-    int true_cnt = 0;
-#define ASSERT_EQ_ERR(file_name, err_cnt)                                                          \
-    args.input_file_name = "tests/" file_name ".br";                                               \
-    true_cnt = compile_file(&args);                                                                \
-    if (true_cnt == (err_cnt)) {                                                                   \
-        br_test_result.cnt_success++;                                                              \
-    } else {                                                                                       \
-        printf("%s [!] %sTEST FAILED %s('"                                                         \
-               "tests/" file_name ".br"                                                            \
-               "'): expected %d errors, got %d %s\n\n",                                            \
-               ansi_bold_reset(), ansi_bold_red(), ansi_bold_reset(), err_cnt, true_cnt,           \
-               ansi_reset());                                                                      \
-    }                                                                                              \
-    br_test_result.cnt_total++;
-#define ASSERT_EQ_ERR_FROM_ARGS(args_, err_cnt)                                                    \
-    do {                                                                                           \
-        bearc_args_t arrggss = parse_cli_args(sizeof(args_) / sizeof((args_)[0]), args_);          \
-        true_cnt = compile_file(&arrggss);                                                         \
-        if (true_cnt == (err_cnt)) {                                                               \
-            br_test_result.cnt_success++;                                                          \
-        } else {                                                                                   \
-            printf("%s [!] %sTEST FAILED %s('"                                                     \
-                   "%s"                                                                            \
-                   "'): expected %d errors, got %d %s\n\n",                                        \
-                   ansi_bold_reset(), ansi_bold_red(), ansi_bold_reset(), (args_)[1], err_cnt,     \
-                   true_cnt, ansi_reset());                                                        \
-        }                                                                                          \
-        br_test_result.cnt_total++;                                                                \
-    } while (0);
-#define ASSERT_EQ_ERR_FROM_ARGSN(args_, err_cnt, arg_index_indicating_name)                        \
-    do {                                                                                           \
-        bearc_args_t arrggss = parse_cli_args(sizeof(args_) / sizeof((args_)[0]), args_);          \
-        true_cnt = compile_file(&arrggss);                                                         \
-        if (true_cnt == (err_cnt)) {                                                               \
-            br_test_result.cnt_success++;                                                          \
-        } else {                                                                                   \
-            printf("%s [!] %sTEST FAILED %s('"                                                     \
-                   "%s"                                                                            \
-                   "'): expected %d errors, got %d %s\n\n",                                        \
-                   ansi_bold_reset(), ansi_bold_red(), ansi_bold_reset(),                          \
-                   (args_)[arg_index_indicating_name], err_cnt, true_cnt, ansi_reset());           \
-        }                                                                                          \
-        br_test_result.cnt_total++;                                                                \
-    } while (0);
-#define TEST_RESULT br_test_result
 
 br_test_result_t test_parser(void) {
     TEST_INIT("parser");

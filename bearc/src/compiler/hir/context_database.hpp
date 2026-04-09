@@ -12,7 +12,6 @@
 #include "cli/args.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
-#include <span>
 
 class ContextDatabase {
   public:
@@ -32,9 +31,11 @@ class ContextDatabase {
         hir::OptId<hir::DefId> mod_id, type_id, variable_id;
     };
 
-    [[nodiscard]] DefQueryResult query_def(std::span<std::string_view> def_path);
+    [[nodiscard]] DefQueryResult query_def(const std::vector<std::string>& def_path);
 
-    [[nodiscard]] DefIdQueryResult query_def_id(std::span<std::string_view> def_path);
+    [[nodiscard]] DefIdQueryResult query_def_id(const std::vector<std::string>& def_path);
+
+    [[nodiscard]] hir::Exec exec(hir::ExecId eid) const;
 
     [[nodiscard]] int diagnostic_count() const noexcept;
 

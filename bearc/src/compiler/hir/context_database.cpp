@@ -12,7 +12,8 @@
 
 using namespace hir;
 
-ContextDatabase::DefQueryResult ContextDatabase::query_def(std::span<std::string_view> def_path) {
+ContextDatabase::DefQueryResult
+ContextDatabase::query_def(const std::vector<std::string>& def_path) {
     auto def_ids = query_def_id(def_path);
 
     auto maybe_mod = def_ids.mod_id;
@@ -33,9 +34,9 @@ ContextDatabase::DefQueryResult ContextDatabase::query_def(std::span<std::string
 }
 
 ContextDatabase::DefIdQueryResult
-ContextDatabase::query_def_id(std::span<std::string_view> def_path) {
+ContextDatabase::query_def_id(const std::vector<std::string>& def_path) {
     llvm::SmallVector<SymbolId> sid_vec;
-    for (auto s : def_path) {
+    for (const auto& s : def_path) {
         sid_vec.push_back(ctx->symbol_id(s));
     }
     IdSlice<SymbolId> sid_slice = ctx->freeze_id_vec(sid_vec);
@@ -45,10 +46,12 @@ ContextDatabase::query_def_id(std::span<std::string_view> def_path) {
     auto maybe_type = ctx->look_up_scoped_type_bypassing_visibility(ctx->root_scope(), sid_slice,
                                                                     Span::generated());
 
-    auto maybe_variable = ctx->look_up_scoped_type_bypassing_visibility(
+    auto maybe_variable = ctx->look_up_scoped_variable_bypassing_visibility(
         ctx->root_scope(), sid_slice, Span::generated());
     return DefIdQueryResult{
         .mod_id = maybe_mod, .type_id = maybe_type, .variable_id = maybe_variable};
 }
 
 int ContextDatabase::diagnostic_count() const noexcept { return ctx->diagnostic_count(); }
+
+hir::Exec ContextDatabase::exec(hir::ExecId eid) const { return ctx->exec(eid); }
