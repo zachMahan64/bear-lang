@@ -49,7 +49,7 @@ class Context {
     // ----- accessors / emplacers --------
     [[nodiscard]] SymbolId symbol_id(const token_t* tkn);
     [[nodiscard]] SymbolId symbol_id(const char* start, size_t len);
-    [[nodiscard]] SymbolId symbol_id(std::string_view str);
+    [[nodiscard]] SymbolId symbol_id(std::string_view sv);
     [[nodiscard]] SymbolId symbol_id_for_identifier_tkn(const token_t* tkn);
     [[nodiscard]] SymbolId symbol_id(Span span);
     /// should be ordered left, right
@@ -72,6 +72,10 @@ class Context {
     [[nodiscard]] OptId<DefId> look_up_variable(ScopeId scope, SymbolId sid) const;
     [[nodiscard]] OptId<DefId> look_up_type(ScopeId scope, SymbolId sid) const;
     [[nodiscard]] OptId<DefId> look_up_namespace(ScopeId scope, SymbolId sid) const;
+
+    [[nodiscard]] OptId<DefId> look_up_scoped(auto F, ScopeId scope, IdSlice<SymbolId> id_slice,
+                                              Span id_span);
+
     /// finds a variable and attempts to resolve definitions on the way to it
     [[nodiscard]] OptId<DefId> look_up_scoped_variable(ScopeId scope, IdSlice<SymbolId> id_slice,
                                                        Span id_span);
@@ -88,6 +92,22 @@ class Context {
                                            Span id_span);
     [[nodiscard]] DefId guard_hid_namespace(ScopeId scope, DefId did, IdSlice<SymbolId> id_slice,
                                             Span id_span);
+
+    [[nodiscard]] OptId<DefId> look_up_scoped_bypassing_visibility(auto F, ScopeId scope,
+                                                                   IdSlice<SymbolId> id_slice,
+                                                                   Span id_span);
+
+    [[nodiscard]] OptId<DefId>
+    look_up_scoped_variable_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice,
+                                                 Span id_span);
+    [[nodiscard]] OptId<DefId> look_up_scoped_type_bypassing_visibility(ScopeId scope,
+                                                                        IdSlice<SymbolId> id_slice,
+                                                                        Span id_span);
+
+    [[nodiscard]] OptId<DefId>
+    look_up_scoped_namespace_bypassing_visibility(ScopeId scope,
+
+                                                  IdSlice<SymbolId> id_slice, Span id_span);
 
     /// finds the scope containing a definition
     /// TODO needs to handle non-top level stmts too

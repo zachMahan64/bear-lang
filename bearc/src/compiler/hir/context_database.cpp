@@ -7,14 +7,48 @@
 // Licensed under the GNU GPL v3. See LICENSE for details.
 
 #include "compiler/hir/context_database.hpp"
+#include "compiler/hir/indexing.hpp"
+#include <optional>
 
 using namespace hir;
 
-std::optional<hir::Def> ContextDatabase::query_definition(std::span<const char*> def_path) {
+ContextDatabase::DefQueryResult ContextDatabase::query_def(std::span<std::string_view> def_path) {
+    auto def_ids = query_def_id(def_path);
+
+    auto maybe_mod = def_ids.mod_id;
+
+    auto maybe_type = def_ids.type_id;
+
+    auto maybe_variable = def_ids.variable_id;
+
+    return DefQueryResult{
+        .mod
+        = (maybe_mod.has_value() ? std::optional<Def>(ctx->def(maybe_mod.as_id())) : std::nullopt),
+        .type = (maybe_type.has_value() ? std::optional<Def>(ctx->def(maybe_type.as_id()))
+                                        : std::nullopt),
+        .variable
+        = (maybe_variable.has_value() ? std::optional<Def>(ctx->def(maybe_variable.as_id()))
+                                      : std::nullopt),
+    };
+}
+
+ContextDatabase::DefIdQueryResult
+ContextDatabase::query_def_id(std::span<std::string_view> def_path) {
     llvm::SmallVector<SymbolId> sid_vec;
-    for (const auto* const s : def_path) {
+    for (auto s : def_path) {
         sid_vec.push_back(ctx->symbol_id(s));
     }
-    IdSlice<hir::Id<hir::Symbol>> sid_slice = ctx->freeze_id_vec(sid_vec);
-    return std::nullopt; // TODO
+    IdSlice<SymbolId> sid_slice = ctx->freeze_id_vec(sid_vec);
+    auto maybe_mod = ctx->look_up_scoped_namespace_bypassing_visibility(
+        ctx->root_scope(), sid_slice, Span::generated());
+
+    auto maybe_type = ctx->look_up_scoped_type_bypassing_visibility(ctx->root_scope(), sid_slice,
+                                                                    Span::generated());
+
+    auto maybe_variable = ctx->look_up_scoped_type_bypassing_visibility(
+        ctx->root_scope(), sid_slice, Span::generated());
+    return DefIdQueryResult{
+        .mod_id = maybe_mod, .type_id = maybe_type, .variable_id = maybe_variable};
 }
+
+int ContextDatabase::diagnostic_count() const noexcept { return ctx->diagnostic_count(); }

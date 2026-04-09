@@ -24,7 +24,19 @@ class ContextDatabase {
                                                            const_cast<char**>(args_vec.data())))},
           ctx{std::make_unique<hir::Context>(*this->args)} {}
 
-    std::optional<hir::Def> query_definition(std::span<const char*> def_path);
+    struct DefQueryResult {
+        std::optional<hir::Def> mod, type, variable;
+    };
+
+    struct DefIdQueryResult {
+        hir::OptId<hir::DefId> mod_id, type_id, variable_id;
+    };
+
+    [[nodiscard]] DefQueryResult query_def(std::span<std::string_view> def_path);
+
+    [[nodiscard]] DefIdQueryResult query_def_id(std::span<std::string_view> def_path);
+
+    [[nodiscard]] int diagnostic_count() const noexcept;
 
   private:
     std::unique_ptr<const bearc_args> args;
