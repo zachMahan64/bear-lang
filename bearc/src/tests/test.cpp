@@ -15,6 +15,8 @@
 using SymSlice = std::vector<std::string>;
 using namespace hir;
 
+extern "C" {
+
 br_test_result_t test_context_db(void) {
     TEST_INIT("context database");
 
@@ -49,3 +51,5 @@ br_test_result_t test_context_db(void) {
 
     return TEST_RESULT;
 }
+
+} // extern "C"
