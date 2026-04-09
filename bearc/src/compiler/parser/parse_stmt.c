@@ -993,17 +993,17 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
 
     token_t* mut = parser_match_token(p, TOK_MUT);
 
-    if (mut && decl->stmt.fn_decl.kw->type != TOK_MT) {
+    if (mut && decl->stmt.fn_prototype.kw->type != TOK_MT) {
         compiler_error_list_emplace(p->error_list, mut, ERR_MUT_QUALIFIER_ON_NON_MT);
     }
 
-    decl->stmt.fn_decl.is_mut = mut; // token ptr into bool
+    decl->stmt.fn_prototype.is_mut = mut; // token ptr into bool
 
     parser_shed_visibility_qualis_with_error(p);
 
     decl->stmt.fn_prototype.name = parse_id_token_slice(p, TOK_SCOPE_RES);
-    if (decl->stmt.fn_decl.name.len > 1) {
-        compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.name.start[0],
+    if (decl->stmt.fn_prototype.name.len > 1) {
+        compiler_error_list_emplace(p->error_list, decl->stmt.fn_prototype.name.start[0],
                                     ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION);
         cooked = true;
     }
