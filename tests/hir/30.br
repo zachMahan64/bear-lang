@@ -46,3 +46,5 @@ compt bool m2 = 242042040 == +242042040;
 
 compt bool m3 = m = 123124124234;
 compt bool m4 = m += 123124124234;
+
+compt bool thiny = typeof(m);

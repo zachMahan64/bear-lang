@@ -266,6 +266,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                         DiagnosticNoOtherInfo{});
                     context.set_next_diagnostic(d0, d1);
                 }
+                return std::nullopt;
             }
 
             auto maybe_op = token_to_unary_op(expr->expr.unary.op);
