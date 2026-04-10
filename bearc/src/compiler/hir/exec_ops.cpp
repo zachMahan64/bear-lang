@@ -71,6 +71,8 @@ std::optional<unary_op> token_to_unary_op(const token_t* tkn) {
         return unary_op::minus;
     case TOK_BOOL_NOT:
         return unary_op::bool_not;
+    case TOK_BIT_NOT:
+        return unary_op::bit_not;
     default:
         break;
     }

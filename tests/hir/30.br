@@ -18,7 +18,7 @@ compt bool h = true || 0; // fine, true
 
 compt bool i = 0; // fine, false
 
-compt bool j = true || 0; // fine, true
+compt bool j = (true || 0) && !false && !!!!b; // fine, true
 
 compt bool k = "hello world" && true; // oops
 
@@ -32,6 +32,17 @@ compt Boole georgie1 = Boole{.george = georgie}; // oops
 
 compt bool l = 12 >= 11; // true
 
-compt bool l1 = 12 <= 11; // false
+compt bool l1 = (12 <= 11) && !(10000.12312 > 12); // false
 
 compt bool l2 = 12 < 11; // false
+
+compt bool l3 = ~(0x10 as u8) == 0xEF; // true
+
+compt i32 m = -13;
+
+compt bool m1 = -13 == m;
+
+compt bool m2 = 242042040 == +242042040;
+
+compt bool m3 = m = 123124124234;
+compt bool m4 = m += 123124124234;

@@ -114,6 +114,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/50", 0);
     ASSERT_EQ_ERR("parser/51", 1);
     ASSERT_EQ_ERR("parser/52", 5);
+    ASSERT_EQ_ERR("parser/53", 0);
 
     return TEST_RESULT;
 }
@@ -179,7 +180,7 @@ br_test_result_t test_hir(void) {
     char* args29[] = {"bearc", "tests/hir/28.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args29, 6);
     char* args30[] = {"bearc", "tests/hir/30.br"};
-    ASSERT_EQ_ERR_FROM_ARGS(args30, 3);
+    ASSERT_EQ_ERR_FROM_ARGS(args30, 5);
 
     return TEST_RESULT;
 }

@@ -185,7 +185,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             } else if (maybe_bin_op.holds<assign_op>()) {
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
-                    diag_code::assignment_not_permitted_in_compt_expr, diag_type::error);
+                    diag_code::cannot_assign_to_compt_constant, diag_type::error);
                 cooked = true;
             } else if (maybe_bin_op.holds<is_as_op>()) {
                 OptId<ExecId> lhs
@@ -228,8 +228,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                         cooked = true;
                     } else {
                         maybe_value = exec.template as<ExecConst>();
-                        // std::cout << "result of binary op: " << maybe_value.value().to_string()
-                        //          << '\n'; // debug
                     }
                 } else {
                     cooked = true;
@@ -269,11 +267,45 @@ template <IsDefVisitor V> class ComptExprSolver {
                     context.set_next_diagnostic(d0, d1);
                 }
             }
+
+            auto maybe_op = token_to_unary_op(expr->expr.unary.op);
+
+            // guard malformed ops
+            if (!maybe_op.has_value()) {
+                context.emplace_diagnostic(
+                    Span{fid, context.ast(fid).buffer(), expr->expr.unary.op},
+                    diag_code::operator_not_viable_at_compt, diag_type::error);
+                return std::nullopt;
+            }
+
+            // passed guard, so get value
+            auto op = maybe_op.value();
+
             // already cooked (and error should have been reported)
             if (maybe_inner.empty()) {
                 return std::nullopt;
             }
-            // TODO, handle bool/bit not, plus, and minus here
+
+            Span op_span = Span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
+
+            OptId<ExecId> maybe_eid
+                = solve_preunary_exec(fid, scope, op, op_span, maybe_inner.as_id());
+
+            bool cooked = false;
+
+            if (maybe_eid.has_value()) {
+                auto exec = context.exec(maybe_eid.as_id());
+                if (!exec.template holds<ExecConst>()) {
+                    cooked = true;
+                } else {
+                    maybe_value = exec.template as<ExecConst>();
+                }
+            } else {
+                cooked = true;
+            }
+            if (cooked) {
+                return std::nullopt; // return w/ no diag since we're poisoned
+            }
             break;
         }
         case AST_EXPR_POST_UNARY: {
@@ -997,6 +1029,66 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         // all good so exec up
         return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
+                                    /*compt*/ true);
+    }
+    [[nodiscard]] OptId<ExecId> solve_preunary_exec(FileId fid, ScopeId scope, unary_op op,
+                                                    Span op_span, ExecId eid) {
+        const Exec& inner_exec = context.exec(eid);
+
+        auto handle_invalid_operand = [this](const Exec& exec) {
+            context.emplace_diagnostic(exec.span, diag_code::invalid_operand_for_unary_expression,
+                                       diag_type::error);
+        };
+
+        if (!inner_exec.template holds<ExecConst>()) {
+            return std::nullopt;
+        }
+
+        ExecConst inner_val = inner_exec.as<ExecConst>();
+
+        // try make inner for !<expr> into a bool
+        if (op == unary_op::bool_not) {
+            auto maybe_converted = inner_val.try_down_convert_to(builtin_type::boolean);
+            if (!maybe_converted.has_value()) {
+                context.emplace_diagnostic_with_message_value(
+                    inner_exec.span, diag_code::value_is_not_contextually_convertible_to,
+                    diag_type::error,
+                    DiagnosticTypeAfterMessage{
+                        .tid = context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
+                                                    Span::generated(), false)});
+                return std::nullopt;
+            }
+            inner_val = maybe_converted.value();
+        }
+
+        std::optional<ExecConst> maybe_value{};
+
+        // TODO
+        switch (op) {
+        case unary_op::plus:
+            maybe_value = ExecConst::preunary_plus(inner_val);
+            break;
+        case unary_op::minus:
+            maybe_value = ExecConst::preunary_minus(inner_val);
+            break;
+        case unary_op::bool_not:
+            maybe_value = ExecConst::preunary_bool_not(inner_val);
+            break;
+        case unary_op::bit_not:
+            maybe_value = ExecConst::preunary_bit_not(inner_val);
+            break;
+
+        // these aren't halal at compt
+        case unary_op::inc:
+        case unary_op::dec:
+            break;
+        }
+        if (!maybe_value.has_value()) {
+            return std::nullopt;
+        }
+        // all good so exec up
+        auto inner_span = inner_exec.span;
+        return context.emplace_exec(maybe_value.value(), Span::combine(op_span, inner_exec.span),
                                     /*compt*/ true);
     }
 };

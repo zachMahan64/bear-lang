@@ -823,36 +823,19 @@ bool builtin_type_has_unary_op(builtin_type type, unary_op op) {
     // str
     case builtin_type::str:
         return false;
+
     case builtin_type::i8:
-        return true;
+    case builtin_type::i16:
+    case builtin_type::i32:
+    case builtin_type::i64:
+        return op != unary_op::bool_not;
 
     case builtin_type::u8:
-        return op != unary_op::minus;
-
-    // i16
-    case builtin_type::i16:
-        return true;
-
-    // u16
     case builtin_type::u16:
-        return op != unary_op::minus;
-
-    // i32
-    case builtin_type::i32:
-        return true;
-
-    // u32
     case builtin_type::u32:
-
-        return op != unary_op::minus;
-
-    // i64
-    case builtin_type::i64:
-        return true;
-
-    // u64
     case builtin_type::u64:
-        return op != unary_op::minus;
+        return op != unary_op::minus && op != unary_op::bool_not;
+
     // char
     case builtin_type::charr:
         return false;

@@ -17,7 +17,7 @@ main quest
         - [x] string literal concat 
         - [x] bitwise
         - [x] boolean
-        - [ ] unary ops
+        - [x] unary ops
 
     - [ ] refactor compt expr solver to fully attempt an expr then type check instead of having type checking in both builtin and struct solving
     - [ ] compt list literals

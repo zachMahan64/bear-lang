@@ -72,6 +72,7 @@ struct ComptBinaryOp : NodeWithVariantValue<ComptBinaryOp> {
         case TOK_IS:
             value = is_as_op::is;
             break;
+        case TOK_ASSIGN_EQ:
         case TOK_ASSIGN_PLUS_EQ:
         case TOK_ASSIGN_MINUS_EQ:
         case TOK_ASSIGN_MULT_EQ:
@@ -84,6 +85,9 @@ struct ComptBinaryOp : NodeWithVariantValue<ComptBinaryOp> {
         case TOK_ASSIGN_RSHL_EQ:
         case TOK_ASSIGN_RSHA_EQ:
             value = assign_op::assign_eq;
+            break;
+        case TOK_ASSIGN_MOVE:
+            value = assign_op::assign_move;
             break;
         default:
             value = InvalidOp{};

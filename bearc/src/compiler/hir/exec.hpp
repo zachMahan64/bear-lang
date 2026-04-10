@@ -180,6 +180,11 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     [[nodiscard]] static std::optional<ExecConst> not_equal(ExecConst lhs, ExecConst rhs);
     [[nodiscard]] static std::optional<ExecConst> bool_and(ExecConst lhs, ExecConst rhs);
     [[nodiscard]] static std::optional<ExecConst> bool_or(ExecConst lhs, ExecConst rhs);
+
+    [[nodiscard]] static std::optional<ExecConst> preunary_plus(ExecConst ec);
+    [[nodiscard]] static std::optional<ExecConst> preunary_minus(ExecConst ec);
+    [[nodiscard]] static std::optional<ExecConst> preunary_bool_not(ExecConst ec);
+    [[nodiscard]] static std::optional<ExecConst> preunary_bit_not(ExecConst ec);
 };
 
 using ExecConst = ExecExprComptConstant;

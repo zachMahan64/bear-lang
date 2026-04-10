@@ -94,9 +94,13 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     if (lhs && next_type == TOK_LBRACK) {
         return parse_subscript(p, lhs);
     }
+    // try s.mem and s->mem
+    if (lhs && (next_type == TOK_DOT || next_type == TOK_RARROW)) {
+        return parse_binary(p, lhs, PREC_INIT);
+    }
     // try ++x, etc.
     if (!lhs && is_preunary_op(first_type)) {
-        return parse_expr_prec(p, NULL, PREC_INIT);
+        return parse_expr_prec(p, NULL, prec_preunary(first_type));
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (lhs) {
@@ -161,7 +165,7 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
     }
     // all others like ++x, --x
     else {
-        sub_expr = parse_expr_prec(p, NULL, prec_preunary(op->type));
+        sub_expr = parse_primary_expr_impl(p, NULL);
     }
     preunary_expr->expr.unary.expr = sub_expr;
     preunary_expr->last = parser_prev(p);
@@ -237,7 +241,8 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
 
     while (binary_bind_right(curr_op, next_op)) {
         middle_expr = parse_expr_prec(p, middle_expr, prec_binary(next_op));
-        curr_op = next_op, next_op = parser_peek(p)->type;
+        curr_op = next_op;
+        next_op = parser_peek(p)->type;
     }
     binary_expr->expr.binary.rhs = middle_expr;
     binary_expr->first = binary_expr->expr.binary.lhs->first;

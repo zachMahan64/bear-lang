@@ -120,8 +120,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "`compt` variables should have an explicit type";
     case diag_code::cannot_convert_value_of_type:
         return "cannot convert value of type";
-    case diag_code::assignment_not_permitted_in_compt_expr:
-        return "assignment not permitted in compile-time expression";
+    case diag_code::cannot_assign_to_compt_constant:
+        return "cannot assign new value to compile-time constant";
     case diag_code::is_operator_requires_run_time_values:
         return "`is` operator requires run-time values";
     case diag_code::cannot_cast_expr_to_type:
@@ -157,6 +157,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "immutable value is not assignable";
     case diag_code::value_is_not_contextually_convertible_to:
         return "value is not contextually convertible to";
+    case diag_code::invalid_operand_for_unary_expression:
+        return "invalid operand for unary expression";
     }
     std::unreachable();
     return "";

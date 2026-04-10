@@ -924,6 +924,20 @@ std::optional<ExecConst> ExecConst::try_down_convert_to(builtin_type type) const
             return none();
         }
     }
+    // nullptr
+    case 12: {
+        if (type == builtin_type::nullpointer) {
+            return *this;
+        }
+        break;
+    }
+    // bool
+    case 13: {
+        if (type == builtin_type::boolean) {
+            return *this;
+        }
+        break;
+    }
 
     default:
         break;
@@ -1231,6 +1245,19 @@ template <typename T> EConst e_and(EConst l, EConst r) {
 template <typename T> EConst e_or(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() || r.as<T>())};
 }
+
+template <typename T> EConst e_preun_plus(ExecConst e) {
+    return EConst{static_cast<T>(+e.as<T>())};
+}
+
+template <typename T> EConst e_preun_minus(ExecConst e) {
+    return EConst{static_cast<T>(-e.as<T>())};
+}
+
+template <typename T> EConst e_bit_not(ExecConst e) { return EConst{static_cast<T>(~e.as<T>())}; }
+
+template <typename T> EConst e_bool_not(ExecConst e) { return EConst{static_cast<T>(!e.as<T>())}; }
+
 std::optional<ExecConst> ExecConst::plus(Context& ctx, ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     // std::cout << lhs.to_string() << " + " << rhs.to_string() << '\n'; // debug
@@ -1897,5 +1924,128 @@ std::optional<ExecConst> ExecConst::bool_or(ExecConst lhs, ExecConst rhs) {
     }
     return std::nullopt;
 }
-
+std::optional<ExecConst> ExecConst::preunary_plus(ExecConst ec) {
+    assert(ec.holds_same_variant_type(ec));
+    switch (ec.type_builtin()) {
+    case builtin_type::u8:
+        return e_preun_plus<u8>(ec);
+    case builtin_type::i8:
+        return e_preun_plus<i8>(ec);
+    case builtin_type::u16:
+        return e_preun_plus<u16>(ec);
+    case builtin_type::i16:
+        return e_preun_plus<i16>(ec);
+    case builtin_type::u32:
+        return e_preun_plus<u32>(ec);
+    case builtin_type::i32:
+        return e_preun_plus<i32>(ec);
+    case builtin_type::u64:
+        return e_preun_plus<u64>(ec);
+    case builtin_type::i64:
+        return e_preun_plus<i64>(ec);
+    case builtin_type::usize:
+        return e_preun_plus<usize>(ec);
+    case builtin_type::f32:
+        return e_preun_plus<f32>(ec);
+    case builtin_type::f64:
+        return e_preun_plus<f64>(ec);
+    case builtin_type::charr:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+    case builtin_type::voidd:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::preunary_minus(ExecConst ec) {
+    assert(ec.holds_same_variant_type(ec));
+    switch (ec.type_builtin()) {
+    case builtin_type::u8:
+        return e_preun_minus<u8>(ec);
+    case builtin_type::i8:
+        return e_preun_minus<i8>(ec);
+    case builtin_type::u16:
+        return e_preun_minus<u16>(ec);
+    case builtin_type::i16:
+        return e_preun_minus<i16>(ec);
+    case builtin_type::u32:
+        return e_preun_minus<u32>(ec);
+    case builtin_type::i32:
+        return e_preun_minus<i32>(ec);
+    case builtin_type::u64:
+        return e_preun_minus<u64>(ec);
+    case builtin_type::i64:
+        return e_preun_minus<i64>(ec);
+    case builtin_type::usize:
+        return e_preun_minus<usize>(ec);
+    case builtin_type::f32:
+        return e_preun_minus<f32>(ec);
+    case builtin_type::f64:
+        return e_preun_minus<f64>(ec);
+    case builtin_type::charr:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+    case builtin_type::voidd:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::preunary_bool_not(ExecConst ec) {
+    assert(ec.holds_same_variant_type(ec));
+    switch (ec.type_builtin()) {
+    case builtin_type::boolean:
+        return e_bool_not<bool>(ec);
+    case builtin_type::u8:
+    case builtin_type::i8:
+    case builtin_type::u16:
+    case builtin_type::i16:
+    case builtin_type::u32:
+    case builtin_type::i32:
+    case builtin_type::u64:
+    case builtin_type::i64:
+    case builtin_type::usize:
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::voidd:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::preunary_bit_not(ExecConst ec) {
+    assert(ec.holds_same_variant_type(ec));
+    switch (ec.type_builtin()) {
+    case builtin_type::u8:
+        return e_bit_not<u8>(ec);
+    case builtin_type::i8:
+        return e_bit_not<i8>(ec);
+    case builtin_type::u16:
+        return e_bit_not<u16>(ec);
+    case builtin_type::i16:
+        return e_bit_not<i16>(ec);
+    case builtin_type::u32:
+        return e_bit_not<u32>(ec);
+    case builtin_type::i32:
+        return e_bit_not<i32>(ec);
+    case builtin_type::u64:
+        return e_bit_not<u64>(ec);
+    case builtin_type::i64:
+        return e_bit_not<i64>(ec);
+    case builtin_type::usize:
+        return e_bit_not<usize>(ec);
+    case builtin_type::charr:
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+    case builtin_type::voidd:
+        break;
+    }
+    return std::nullopt;
+}
 } // namespace hir

@@ -90,6 +90,8 @@ br_test_result_t test_context_db(void) {
     assert_compt(db30, "l", true);
     assert_compt(db30, "l1", false);
     assert_compt(db30, "l2", false);
+    assert_compt(db30, "l3", true);
+    assert_compt(db30, "m1", true);
 
     return TEST_RESULT;
 }

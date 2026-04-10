@@ -1,0 +1,6 @@
+// tests/parser/53.br
+
+
+fn main() {
+    ++foo.bar;
+}
