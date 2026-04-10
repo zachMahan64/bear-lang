@@ -10,6 +10,7 @@
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
+#include <iostream>
 #include <utility>
 
 namespace hir {
@@ -96,9 +97,10 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
             return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeDeftype& t) -> size_t {
-            assert(false
-                   && "tried to directly hash a deftype, do not use `as_mentioned` invocations "
-                      "when hashing!");
+            std::cout << ("tried to directly hash a deftype, do not use `as_mentioned` invocations "
+                          "when hashing!")
+                      << '\n';
+            std::unreachable();
             return 0ULL;
         },
         [&](const TypeGenericStructure& t) -> size_t {
@@ -477,7 +479,7 @@ const char* builtin_type_to_cstr(builtin_type t) {
         return "str";
         break;
     case builtin_type::nullpointer:
-        return "nulltpr";
+        return "nullptr";
         break;
     case builtin_type::boolean:
         return "bool";
