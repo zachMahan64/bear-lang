@@ -19,4 +19,5 @@ int compile_file(const bearc_args_t* args) {
     context.try_print_info();
     return context.diagnostic_count();
 }
+
 } // extern "C"

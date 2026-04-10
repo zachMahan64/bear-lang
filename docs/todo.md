@@ -16,7 +16,7 @@ main quest
         - [x] arithmetic
         - [x] string literal concat 
         - [x] bitwise
-        - [ ] boolean
+        - [x] boolean
         - [ ] unary ops
 
     - [ ] refactor compt expr solver to fully attempt an expr then type check instead of having type checking in both builtin and struct solving

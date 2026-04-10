@@ -129,6 +129,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                   .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
                                     maybe_type.as_id());
 
+        auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
+        def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec});
+        // check poison /not init
         if (!maybe_compt_exec.has_value()) {
             if (!def.compt) {
                 context.emplace_diagnostic(def.span,
@@ -137,9 +140,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             }
             return did;
         }
-        auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
-        def.set_value(
-            DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec.as_id()});
         break;
     }
     case AST_STMT_STRUCT_DEF: {

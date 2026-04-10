@@ -155,6 +155,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "operator is not viable at compile-time";
     case diag_code::immutable_value_is_not_assignable:
         return "immutable value is not assignable";
+    case diag_code::value_is_not_contextually_convertible_to:
+        return "value is not contextually convertible to";
     }
     std::unreachable();
     return "";

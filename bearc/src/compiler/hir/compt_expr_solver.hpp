@@ -16,6 +16,7 @@
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/span.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
@@ -124,7 +125,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                                              // just return none)
                     }
                     auto exec = context.exec(def.as<DefVariable>().compt_value.as_id());
-                    maybe_value = exec.template as<ExecConst>();
+
+                    maybe_value = exec.template try_as<ExecConst>();
                 }
             } else {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
@@ -718,7 +720,13 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::multiply:
         case binary_op::divide:
         case binary_op::modulo:
-            return handle_binary_arithmetic(fid, lhs_exec, op, rhs_exec);
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
+            return handle_binary_scalar(fid, lhs_exec, op, rhs_exec);
         case binary_op::bit_or:
         case binary_op::bit_and:
         case binary_op::bit_xor:
@@ -726,13 +734,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::right_shift_logical:
         case binary_op::right_shift_arithmetic:
             return handle_binary_bitwise(fid, lhs_exec, op, rhs_exec);
-        case binary_op::greater_than:
-        case binary_op::less_than:
-        case binary_op::greater_than_or_equal:
-        case binary_op::less_than_or_equal:
-        case binary_op::bool_equal:
-        case binary_op::bool_not_equal:
-            return handle_binary_comparision(fid, lhs_exec, op, rhs_exec);
         case binary_op::bool_or:
         case binary_op::bool_and:
             return handle_binary_bool_conj_disj(fid, lhs_exec, op, rhs_exec);
@@ -792,8 +793,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_arithmetic(FileId fid, const Exec& lhs, binary_op op,
-                                                         const Exec& rhs) {
+    [[nodiscard]] OptId<ExecId> handle_binary_scalar(FileId fid, const Exec& lhs, binary_op op,
+                                                     const Exec& rhs) {
 
         auto lhs_val = lhs.as<ExecConst>();
         auto rhs_val = rhs.as<ExecConst>();
@@ -838,6 +839,24 @@ template <IsDefVisitor V> class ComptExprSolver {
             break;
         case binary_op::modulo:
             maybe_value = guard_div_by_zero() ? std::nullopt : ExecConst::mod(lhs_val, rhs_val);
+            break;
+        case binary_op::greater_than:
+            maybe_value = ExecConst::greater_than(lhs_val, rhs_val);
+            break;
+        case binary_op::less_than:
+            maybe_value = ExecConst::less_than(lhs_val, rhs_val);
+            break;
+        case binary_op::greater_than_or_equal:
+            maybe_value = ExecConst::greater_than_or_equal(lhs_val, rhs_val);
+            break;
+        case binary_op::less_than_or_equal:
+            maybe_value = ExecConst::less_than_or_equal(lhs_val, rhs_val);
+            break;
+        case binary_op::bool_equal:
+            maybe_value = ExecConst::equal(lhs_val, rhs_val);
+            break;
+        case binary_op::bool_not_equal:
+            maybe_value = ExecConst::not_equal(lhs_val, rhs_val);
             break;
         default:
             std::unreachable();
@@ -915,21 +934,70 @@ template <IsDefVisitor V> class ComptExprSolver {
         return std::nullopt;
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_comparision(FileId fid, const Exec& lhs, binary_op op,
-                                                          const Exec& rhs) {
-        // TODO
-        return std::nullopt;
-    }
-
-    [[nodiscard]] OptId<ExecId> handle_binary_shift(FileId fid, const Exec& lhs, binary_op op,
-                                                    const Exec& rhs) {
-        // TODO
-        return std::nullopt;
-    }
     [[nodiscard]] OptId<ExecId> handle_binary_bool_conj_disj(FileId fid, const Exec& lhs,
                                                              binary_op op, const Exec& rhs) {
-        // TODO
-        return std::nullopt;
+        auto lhs_val = lhs.as<ExecConst>();
+        auto rhs_val = rhs.as<ExecConst>();
+
+        // converge types to BOOL, if possible
+
+        auto maybe_converted_lhs = lhs_val.try_safe_convert_to(builtin_type::boolean);
+        auto maybe_converted_rhs = rhs_val.try_safe_convert_to(builtin_type::boolean);
+
+        auto do_no_bool = [this](const Exec& exec) {
+            context.emplace_diagnostic_with_message_value(
+                exec.span, diag_code::value_is_not_contextually_convertible_to, diag_type::error,
+                DiagnosticTypeAfterMessage{
+                    .tid = context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
+                                                Span::generated(), false)});
+        };
+
+        // LHS cannot be bool
+        if (!maybe_converted_lhs.has_value()) {
+            do_no_bool(lhs);
+        }
+
+        // RHS cannot be bool
+        if (!maybe_converted_rhs.has_value()) {
+            do_no_bool(rhs);
+        }
+
+        // if either cannot be bool, return none (no need to report further)
+        if (!maybe_converted_lhs.has_value() || !maybe_converted_rhs.has_value()) {
+            return std::nullopt;
+        }
+
+        // update converted to booleys
+        lhs_val = maybe_converted_lhs.value();
+        rhs_val = maybe_converted_rhs.value();
+
+        if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
+            return std::nullopt;
+        }
+
+        if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
+            return std::nullopt;
+        }
+
+        std::optional<ExecConst> maybe_value{};
+
+        switch (op) {
+        case hir::binary_op::bool_and:
+            maybe_value = ExecConst::bool_and(lhs_val, rhs_val);
+            break;
+        case hir::binary_op::bool_or:
+            maybe_value = ExecConst::bool_or(lhs_val, rhs_val);
+            break;
+        default:
+            std::unreachable();
+            break;
+        }
+        if (!maybe_value.has_value()) {
+            return std::nullopt;
+        }
+        // all good so exec up
+        return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
+                                    /*compt*/ true);
     }
 };
 } // namespace hir

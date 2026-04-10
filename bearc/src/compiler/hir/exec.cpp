@@ -10,6 +10,7 @@
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec_ops.hpp"
+#include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
 #include <cfloat>
 #include <cmath>
@@ -1206,6 +1207,30 @@ template <typename T> EConst e_rsha(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() >> r.as<T>())};
 }
 
+template <typename T> EConst e_greater_than(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() > r.as<T>())};
+}
+template <typename T> EConst e_less_than(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() < r.as<T>())};
+}
+template <typename T> EConst e_greater_than_or_equal(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() >= r.as<T>())};
+}
+template <typename T> EConst e_less_than_or_equal(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() <= r.as<T>())};
+}
+template <typename T> EConst e_equal(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() == r.as<T>())};
+}
+template <typename T> EConst e_not_equal(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() != r.as<T>())};
+}
+template <typename T> EConst e_and(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() && r.as<T>())};
+}
+template <typename T> EConst e_or(EConst l, EConst r) {
+    return EConst{static_cast<T>(l.as<T>() || r.as<T>())};
+}
 std::optional<ExecConst> ExecConst::plus(Context& ctx, ExecConst lhs, ExecConst rhs) {
     assert(lhs.holds_same_variant_type(rhs));
     // std::cout << lhs.to_string() << " + " << rhs.to_string() << '\n'; // debug
@@ -1604,4 +1629,273 @@ std::optional<ExecConst> ExecConst::bit_rshl(ExecConst lhs, ExecConst rhs) {
     }
     return std::nullopt;
 }
+
+std::optional<ExecConst> ExecConst::greater_than(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_greater_than<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_greater_than<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_greater_than<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_greater_than<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_greater_than<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_greater_than<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_greater_than<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_greater_than<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_greater_than<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_greater_than<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_greater_than<f64>(lhs, rhs);
+    case builtin_type::charr:
+        return e_greater_than<char>(lhs, rhs);
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::less_than(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_less_than<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_less_than<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_less_than<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_less_than<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_less_than<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_less_than<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_less_than<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_less_than<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_less_than<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_less_than<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_less_than<f64>(lhs, rhs);
+    case builtin_type::charr:
+        return e_less_than<char>(lhs, rhs);
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::greater_than_or_equal(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_greater_than_or_equal<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_greater_than_or_equal<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_greater_than_or_equal<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_greater_than_or_equal<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_greater_than_or_equal<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_greater_than_or_equal<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_greater_than_or_equal<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_greater_than_or_equal<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_greater_than_or_equal<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_greater_than_or_equal<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_greater_than_or_equal<f64>(lhs, rhs);
+    case builtin_type::charr:
+        return e_greater_than_or_equal<char>(lhs, rhs);
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::less_than_or_equal(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_less_than_or_equal<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_less_than_or_equal<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_less_than_or_equal<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_less_than_or_equal<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_less_than_or_equal<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_less_than_or_equal<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_less_than_or_equal<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_less_than_or_equal<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_less_than_or_equal<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_less_than_or_equal<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_less_than_or_equal<f64>(lhs, rhs);
+    case builtin_type::charr:
+        return e_less_than_or_equal<char>(lhs, rhs);
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+    case builtin_type::boolean:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::equal(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_equal<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_equal<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_equal<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_equal<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_equal<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_equal<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_equal<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_equal<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_equal<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_equal<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_equal<f64>(lhs, rhs);
+    case builtin_type::charr:
+        return e_equal<char>(lhs, rhs);
+    case builtin_type::str:
+        return e_equal<SymbolId>(lhs, rhs);
+    case builtin_type::nullpointer:
+        return std::optional<ExecConst>{true}; // both nullpointer, so they are equal => true
+    case builtin_type::boolean:
+        return e_equal<bool>(lhs, rhs);
+        break;
+    case builtin_type::voidd:
+        break;
+    }
+    return std::nullopt;
+}
+std::optional<ExecConst> ExecConst::not_equal(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::u8:
+        return e_not_equal<u8>(lhs, rhs);
+    case builtin_type::i8:
+        return e_not_equal<i8>(lhs, rhs);
+    case builtin_type::u16:
+        return e_not_equal<u16>(lhs, rhs);
+    case builtin_type::i16:
+        return e_not_equal<i16>(lhs, rhs);
+    case builtin_type::u32:
+        return e_not_equal<u32>(lhs, rhs);
+    case builtin_type::i32:
+        return e_not_equal<i32>(lhs, rhs);
+    case builtin_type::u64:
+        return e_not_equal<u64>(lhs, rhs);
+    case builtin_type::i64:
+        return e_not_equal<i64>(lhs, rhs);
+    case builtin_type::usize:
+        return e_not_equal<usize>(lhs, rhs);
+    case builtin_type::f32:
+        return e_not_equal<f32>(lhs, rhs);
+    case builtin_type::f64:
+        return e_not_equal<f64>(lhs, rhs);
+    case builtin_type::charr:
+        return e_not_equal<char>(lhs, rhs);
+    case builtin_type::str:
+        return e_not_equal<SymbolId>(lhs, rhs);
+    case builtin_type::nullpointer:
+        return std::optional<ExecConst>{true}; // noth nullpointer, so true
+    case builtin_type::boolean:
+        return e_not_equal<bool>(lhs, rhs);
+    case builtin_type::voidd:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecConst> ExecConst::bool_and(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::boolean:
+        return e_and<bool>(lhs, rhs);
+    case builtin_type::usize:
+    case builtin_type::u8:
+    case builtin_type::u16:
+    case builtin_type::u32:
+    case builtin_type::u64:
+    case builtin_type::i8:
+    case builtin_type::i16:
+    case builtin_type::i32:
+    case builtin_type::i64:
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+        break;
+    }
+    return std::nullopt;
+}
+
+std::optional<ExecConst> ExecConst::bool_or(ExecConst lhs, ExecConst rhs) {
+    assert(lhs.holds_same_variant_type(rhs));
+    switch (lhs.type_builtin()) {
+    case builtin_type::boolean:
+        return e_or<bool>(lhs, rhs);
+    case builtin_type::usize:
+    case builtin_type::u8:
+    case builtin_type::u16:
+    case builtin_type::u32:
+    case builtin_type::u64:
+    case builtin_type::i8:
+    case builtin_type::i16:
+    case builtin_type::i32:
+    case builtin_type::i64:
+    case builtin_type::f32:
+    case builtin_type::f64:
+    case builtin_type::charr:
+    case builtin_type::voidd:
+    case builtin_type::str:
+    case builtin_type::nullpointer:
+        break;
+    }
+    return std::nullopt;
+}
+
 } // namespace hir

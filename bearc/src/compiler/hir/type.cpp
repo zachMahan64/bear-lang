@@ -689,14 +689,14 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
         case binary_op::bit_or:
         case binary_op::bit_and:
         case binary_op::bit_xor:
-        case binary_op::greater_than:
-        case binary_op::less_than:
-        case binary_op::greater_than_or_equal:
-        case binary_op::less_than_or_equal:
         case binary_op::left_bitshift:
         case binary_op::right_shift_logical:
         case binary_op::right_shift_arithmetic:
             return false;
+        case binary_op::greater_than:
+        case binary_op::less_than:
+        case binary_op::greater_than_or_equal:
+        case binary_op::less_than_or_equal:
         case binary_op::bool_or:
         case binary_op::bool_and:
         case binary_op::bool_equal:

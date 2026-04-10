@@ -34,20 +34,62 @@ br_test_result_t test_context_db(void) {
               return exec;
           };
 
+    auto assert_compt = [&br_test_result, &econst](ContextDatabase& db, const char* name, bool b) {
+        auto def = db.query_def({name});
+        auto exec = econst(def, db);
+        TEST_ASSERT_EQ(b, exec.as<ExecConst>().as<bool>());
+    };
+
+    auto assert_no_compt_val = [&br_test_result, &econst](ContextDatabase& db, const char* name) {
+        auto def = db.query_def({name});
+        if (!def.variable.has_value()) {
+            TEST_ASSERT(true);
+            TEST_ASSERT(true);
+            return;
+        }
+        if (def.variable.value().holds<DefVariable>()) {
+            TEST_ASSERT(def.variable.value().holds<DefVariable>());
+            TEST_ASSERT(def.variable.value().as<DefVariable>().compt_value.empty());
+            return;
+        }
+        TEST_ASSERT(false);
+        TEST_ASSERT(false);
+    };
+
+    // TEST 1: BITWISE
     const char* args0[] = {"bearc", "tests/hir/28.br"};
     ContextDatabase db28{sizeof(args0) / sizeof(char*), args0};
 
     auto def0 = db28.query_def({"e"});
     auto exec0 = econst(def0, db28);
-    TEST_ASSERT_EQ(exec0.as<ExecConst>().as<i32>(), 0x10);
+    TEST_ASSERT_EQ(0x10, exec0.as<ExecConst>().as<i32>());
 
     auto def1 = db28.query_def({"b1"});
     auto exec1 = econst(def1, db28);
-    TEST_ASSERT_EQ(exec1.as<ExecConst>().as<u8>(), (0x11 | 0x10));
+    TEST_ASSERT_EQ((0x11 | 0x10), exec1.as<ExecConst>().as<u8>());
 
     auto def2 = db28.query_def({"h2"});
     auto exec2 = econst(def2, db28);
-    TEST_ASSERT_EQ(exec2.as<ExecConst>().as<usize>(), (0x1111 ^ 0x1001));
+    TEST_ASSERT_EQ((0x1111 ^ 0x1001), exec2.as<ExecConst>().as<usize>());
+
+    // TEST 2: BOOLEAN OPS
+    const char* args1[] = {"bearc", "tests/hir/30.br"};
+    ContextDatabase db30{sizeof(args1) / sizeof(char*), args1};
+
+    assert_compt(db30, "a", true);
+    assert_compt(db30, "b", true);
+    assert_compt(db30, "c", false);
+    assert_compt(db30, "d", true);
+    assert_compt(db30, "e", true);
+    assert_compt(db30, "f", true);
+    assert_compt(db30, "g", true);
+    assert_compt(db30, "h", true);
+    assert_compt(db30, "i", false);
+    assert_compt(db30, "j", true);
+    assert_no_compt_val(db30, "k");
+    assert_compt(db30, "l", true);
+    assert_compt(db30, "l1", false);
+    assert_compt(db30, "l2", false);
 
     return TEST_RESULT;
 }

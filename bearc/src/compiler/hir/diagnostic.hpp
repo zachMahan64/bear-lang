@@ -81,6 +81,7 @@ enum class diag_code : uint8_t {
     parentheses_should_be_used_for_chained_casts,
     operator_not_viable_at_compt,
     immutable_value_is_not_assignable,
+    value_is_not_contextually_convertible_to,
 
     count, // this must be last,
 

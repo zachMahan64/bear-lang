@@ -8,7 +8,6 @@
 
 #include "tests/test.h"
 #include "cli/args.h"
-#include "compiler/compile.h"
 #include "compiler/token.h"
 #include "string.h"
 #include "utils/ansi_codes.h"
@@ -150,7 +149,7 @@ br_test_result_t test_hir(void) {
     char* args14[] = {"bearc", "tests/hir/14.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args14, 5);
     char* args15[] = {"bearc", "tests/hir/15.br"};
-    ASSERT_EQ_ERR_FROM_ARGS(args15, 16);
+    ASSERT_EQ_ERR_FROM_ARGS(args15, 15);
     char* args16[] = {"bearc", "tests/hir/16.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args16, 9);
     char* args17[] = {"bearc", "tests/hir/17.br"};
@@ -179,6 +178,8 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args28, 21);
     char* args29[] = {"bearc", "tests/hir/28.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args29, 6);
+    char* args30[] = {"bearc", "tests/hir/30.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args30, 3);
 
     return TEST_RESULT;
 }

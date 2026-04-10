@@ -1,0 +1,37 @@
+// tests/hir/30.br
+
+compt bool a = true || false; // true
+
+compt bool b = a && true; // true
+
+compt bool c = b && false; // false
+
+compt bool d = 12.0 > 11.9 && (a && b); // true
+
+compt bool e = 'B' > 'A' && (d || a) && true; // true
+
+compt bool f = 12 + 12; // fine
+
+compt bool g = true || 12; // fine, true
+
+compt bool h = true || 0; // fine, true
+
+compt bool i = 0; // fine, false
+
+compt bool j = true || 0; // fine, true
+
+compt bool k = "hello world" && true; // oops
+
+struct Boole {
+    bool george;
+}
+
+compt Boole georgie = Boole{.george = true}; // fine
+
+compt Boole georgie1 = Boole{.george = georgie}; // oops
+
+compt bool l = 12 >= 11; // true
+
+compt bool l1 = 12 <= 11; // false
+
+compt bool l2 = 12 < 11; // false

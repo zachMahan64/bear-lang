@@ -170,6 +170,16 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     [[nodiscard]] static std::optional<ExecConst> bit_lsh(ExecConst lhs, ExecConst rhs);
     [[nodiscard]] static std::optional<ExecConst> bit_rsha(ExecConst lhs, ExecConst rhs);
     [[nodiscard]] static std::optional<ExecConst> bit_rshl(ExecConst lhs, ExecConst rhs);
+
+    [[nodiscard]] static std::optional<ExecConst> greater_than(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> less_than(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> greater_than_or_equal(ExecConst lhs,
+                                                                        ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> less_than_or_equal(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> equal(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> not_equal(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> bool_and(ExecConst lhs, ExecConst rhs);
+    [[nodiscard]] static std::optional<ExecConst> bool_or(ExecConst lhs, ExecConst rhs);
 };
 
 using ExecConst = ExecExprComptConstant;

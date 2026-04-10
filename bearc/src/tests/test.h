@@ -14,6 +14,7 @@
 extern "C" {
 #endif
 
+#include "compiler/compile.h"
 #include "utils/ansi_codes.h"
 #include <stddef.h>
 

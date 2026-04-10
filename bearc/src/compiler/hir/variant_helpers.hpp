@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_VARIANT_HELPERS_HPP
 #define COMPILER_HIR_VARIANT_HELPERS_HPP
 
+#include <optional>
 #include <variant>
 // visit helper
 template <class... Ts> struct Ovld : Ts... {
@@ -77,6 +78,12 @@ template <typename V> struct NodeWithVariantValue {
     }
     template <typename T> constexpr decltype(auto) visit(T&& visitor) const {
         return std::visit(visitor, self().value);
+    }
+
+    // try to get a as variant value type if holding T, else get empty
+    template <typename T> std::optional<T> try_as() noexcept {
+        return std::holds_alternative<T>(self().value) ? std::optional<T>{std::get<T>(self().value)}
+                                                       : std::nullopt;
     }
 
     friend V;
