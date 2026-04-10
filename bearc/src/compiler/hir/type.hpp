@@ -190,7 +190,6 @@ class TypeContainsMut {
     bool operator()(const Type& t1, const Type& t2) const {
         assert(false
                && "double invocation should not be called when checking if a type contains mut");
-        std::unreachable();
         return 0;
     }
     bool operator()(const Type& t1) const;
