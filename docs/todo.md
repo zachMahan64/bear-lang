@@ -19,8 +19,10 @@ main quest
         - [x] boolean
         - [x] unary ops
 
-    - [ ] compt ternary if
+    - [x] compt ternary if
 
+    - [ ] refactor compt expr solver to fully attempt an expr then type check instead of having type checking in both builtin and struct solving
+    
     - [ ] compt list literals
     
 - [x] finish some more ContextDatabase functionality for better testing 
@@ -37,8 +39,6 @@ main quest
     - `visit_as_mutator(DefId)` -> `mutated` (add this method)
 
 - [x] fix/impl deftypes by having a direct def -> type forward mechanism (will be needed for generic params too)
-
-- [ ] refactor compt expr solver to fully attempt an expr then type check instead of having type checking in both builtin and struct solving
 
 - [ ] debug and increase safety of particularly (large) integral literal parsing
 

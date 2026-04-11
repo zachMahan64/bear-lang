@@ -840,7 +840,6 @@ std::optional<ExecConst> ExecConst::try_down_convert_to(builtin_type type) const
             if (v <= INT16_MAX) {
                 return to_optconst(ConstantValue{static_cast<int16_t>(v)});
             }
-            std::cout << "VAL:" << v << '\n'; // TODO
             return none();
 
         case builtin_type::u32:

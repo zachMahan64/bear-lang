@@ -331,8 +331,10 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
         }
+        case AST_EXPR_TERNARY_IF: {
+            return solve_ternary_if(fid, scope, expr, into_tid);
+        }
         case AST_EXPR_SUBSCRIPT:
-        case AST_EXPR_TERNARY_IF:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
@@ -651,41 +653,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
 
         case AST_EXPR_TERNARY_IF: {
-            const auto* happy_expr = expr->expr.ternary_if.happy_expr;
-            const auto* cond_expr = expr->expr.ternary_if.condition;
-            const auto* else_expr = expr->expr.ternary_if.else_expr;
-            auto maybe_happy_exec = solve_compt_expr(fid, scope, happy_expr, into_tid);
-            auto maybe_cond_exec
-                = solve_builtin_compt_expr(fid, scope, cond_expr, builtin_type::boolean);
-            auto maybe_else_exec = solve_compt_expr(fid, scope, else_expr, into_tid);
-
-            if (maybe_cond_exec.empty()) {
-                return std::nullopt;
-            }
-
-            auto cond_exec = maybe_cond_exec.as_id();
-
-            auto maybe_cond_const = context.exec(cond_exec).template try_as<ExecConst>();
-
-            if (maybe_cond_const.empty()) {
-                return std::nullopt;
-            }
-
-            ExecConst cond_const = maybe_cond_const.value();
-
-            auto maybe_cond_bool_val = cond_const.try_as<bool>();
-
-            if (!maybe_cond_bool_val.has_value()) {
-                return std::nullopt;
-            }
-
-            const bool cond_val = maybe_cond_bool_val.value();
-
-            // TODO
-
-            break;
+            return solve_ternary_if(fid, scope, expr, into_tid);
         }
-
         // these are all invalid
         case AST_EXPR_LITERAL:
         case AST_EXPR_LIST_LITERAL:
@@ -1099,7 +1068,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         std::optional<ExecConst> maybe_value{};
 
-        // TODO
         switch (op) {
         case unary_op::plus:
             maybe_value = ExecConst::preunary_plus(inner_val);
@@ -1126,6 +1094,48 @@ template <IsDefVisitor V> class ComptExprSolver {
         auto inner_span = inner_exec.span;
         return context.emplace_exec(maybe_value.value(), Span::combine(op_span, inner_exec.span),
                                     /*compt*/ true);
+    }
+
+    [[nodiscard]] OptId<ExecId> solve_ternary_if(FileId fid, ScopeId scope,
+                                                 const ast_expr_t* tern_expr,
+                                                 OptId<TypeId> maybe_into_tid) {
+        const auto* happy_expr = tern_expr->expr.ternary_if.happy_expr;
+        const auto* cond_expr = tern_expr->expr.ternary_if.condition;
+        const auto* else_expr = tern_expr->expr.ternary_if.else_expr;
+        auto maybe_happy_exec = solve_compt_expr(fid, scope, happy_expr, maybe_into_tid);
+        auto maybe_cond_exec
+            = solve_compt_expr(fid, scope, cond_expr,
+                               context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
+                                                    Span::generated(), false));
+        auto maybe_else_exec = solve_compt_expr(fid, scope, else_expr, maybe_into_tid);
+
+        if (maybe_cond_exec.empty()) {
+            return std::nullopt;
+        }
+
+        auto cond_exec = maybe_cond_exec.as_id();
+
+        auto maybe_cond_const = context.exec(cond_exec).template try_as<ExecConst>();
+
+        if (!maybe_cond_const.has_value()) {
+            return std::nullopt;
+        }
+
+        ExecConst cond_const = maybe_cond_const.value();
+
+        auto maybe_cond_bool_val = cond_const.try_as<bool>();
+
+        if (!maybe_cond_bool_val.has_value()) {
+            return std::nullopt;
+        }
+
+        const bool cond_val = maybe_cond_bool_val.value();
+
+        if (cond_val) {
+            return maybe_happy_exec;
+        }
+
+        return maybe_else_exec;
     }
 };
 } // namespace hir

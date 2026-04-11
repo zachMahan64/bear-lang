@@ -1,0 +1,15 @@
+// tests/hir/31.br
+
+compt i32 a_val = 1 if true else 2;
+
+compt i32 b_val = 1 if compt false else 2;
+
+compt bool a = a_val == 1; // true
+
+compt bool b = b_val == 2; // true
+
+struct Foo {
+    i32 v;
+}
+
+compt Foo c_val = Foo{.v = 12} if 12 == 11 else Foo{.v = 13};  

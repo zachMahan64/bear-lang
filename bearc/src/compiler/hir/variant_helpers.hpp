@@ -81,7 +81,7 @@ template <typename V> struct NodeWithVariantValue {
     }
 
     // try to get a as variant value type if holding T, else get empty
-    template <typename T> std::optional<T> try_as() noexcept {
+    template <typename T> std::optional<T> try_as() const noexcept {
         return std::holds_alternative<T>(self().value) ? std::optional<T>{std::get<T>(self().value)}
                                                        : std::nullopt;
     }
