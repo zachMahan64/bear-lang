@@ -650,6 +650,42 @@ template <IsDefVisitor V> class ComptExprSolver {
                 expr_span, true);
         }
 
+        case AST_EXPR_TERNARY_IF: {
+            const auto* happy_expr = expr->expr.ternary_if.happy_expr;
+            const auto* cond_expr = expr->expr.ternary_if.condition;
+            const auto* else_expr = expr->expr.ternary_if.else_expr;
+            auto maybe_happy_exec = solve_compt_expr(fid, scope, happy_expr, into_tid);
+            auto maybe_cond_exec
+                = solve_builtin_compt_expr(fid, scope, cond_expr, builtin_type::boolean);
+            auto maybe_else_exec = solve_compt_expr(fid, scope, else_expr, into_tid);
+
+            if (maybe_cond_exec.empty()) {
+                return std::nullopt;
+            }
+
+            auto cond_exec = maybe_cond_exec.as_id();
+
+            auto maybe_cond_const = context.exec(cond_exec).template try_as<ExecConst>();
+
+            if (maybe_cond_const.empty()) {
+                return std::nullopt;
+            }
+
+            ExecConst cond_const = maybe_cond_const.value();
+
+            auto maybe_cond_bool_val = cond_const.try_as<bool>();
+
+            if (!maybe_cond_bool_val.has_value()) {
+                return std::nullopt;
+            }
+
+            const bool cond_val = maybe_cond_bool_val.value();
+
+            // TODO
+
+            break;
+        }
+
         // these are all invalid
         case AST_EXPR_LITERAL:
         case AST_EXPR_LIST_LITERAL:
@@ -668,7 +704,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_MATCH_BRANCH:
         case AST_EXPR_MATCH:
         case AST_EXPR_ELSE_MATCH_BRANCH:
-        case AST_EXPR_TERNARY_IF:
         case AST_EXPR_INVALID:
             break;
         }
