@@ -78,6 +78,8 @@ typedef struct {
 mapu32u32_iter_t mapu32u32_iter_begin(const mapu32u32_t* map);
 /// increment a mapu32u32_iter_t
 mapu32u32_entry_t* mapu32u32_iter_next(mapu32u32_iter_t* iter);
+/// indicates that the iter at the end
+bool mapu32u32_iter_end(mapu32u32_iter_t* iter);
 
 uint32_t hash_uint32(uint32_t x);
 uint32_t unhash_uint32(uint32_t x);

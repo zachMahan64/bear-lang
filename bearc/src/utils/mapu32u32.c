@@ -174,6 +174,8 @@ mapu32u32_entry_t* mapu32u32_iter_next(mapu32u32_iter_t* iter) {
     return iter->curr;
 }
 
+bool mapu32u32_iter_end(mapu32u32_iter_t* iter) { return iter->curr == NULL; }
+
 uint32_t hash_uint32(uint32_t x) {
     x = ((x >> 16) ^ x) * 0x45d9f3bU;
     x = ((x >> 16) ^ x) * 0x45d9f3bU;

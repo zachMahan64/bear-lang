@@ -25,12 +25,21 @@ enum class scope_kind : uint8_t {
     variable,
     type,
 };
+
+struct DummyCall {
+    void operator()();
+};
+
+template <typename T> struct Tester : T, DummyCall {};
+
+template <typename C>
+concept Callable = std::is_class_v<C> && !requires(Tester<C> t) { &Tester<C>::operator(); };
+
 /**
- * maps SymbolId -> hir_def_id
+ * maps SymbolId -> DefId
  * models named blocks/namespaces, such as function bodies or ctrl flow blocks
  */
-struct Scope {
-    using id_type = ScopeId;
+class Scope {
     OptId<ScopeId> parent;
     /// module, struct, and variant names
     ScopeIdMap namespaces;
@@ -45,6 +54,7 @@ struct Scope {
                                      SymbolId symbol, scope_kind kind);
 
   public:
+    using id_type = ScopeId;
     bool is_top_level() const { return top_level; };
     // constructs a non-top-level scope with a parent
     Scope(ScopeId parent, DataArena& arena);
@@ -73,6 +83,32 @@ struct Scope {
                                            SymbolId symbol);
     static OptId<DefId> look_up_local_variable(const Context& context, ScopeId local_scope,
                                                SymbolId symbol);
+
+    using Entry = ScopeIdMap::Entry;
+
+    /// call some functor F for each locally namespace defined in the scope
+    /// note: F must be callable with F(Scope::Entry)
+    template <Callable F> void for_each_local_namespace(F f) const {
+        for (Entry e : this->namespaces) {
+            f(e);
+        }
+    }
+
+    /// call some functor F for each locally type defined in the scope
+    /// note: F must be callable with F(Scope::Entry)
+    template <Callable F> void for_each_local_type(F f) const {
+        for (Entry e : this->types) {
+            f(e);
+        }
+    }
+
+    /// call some functor F for each locally type defined in the scope
+    /// note: F must be callable with F(Scope::Entry)
+    template <Callable F> void for_each_local_variable(F f) const {
+        for (Entry e : this->variables) {
+            f(e);
+        }
+    }
 
     friend class ScopeAnon;
 };

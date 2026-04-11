@@ -13,6 +13,7 @@
 #include "utils/data_arena.hpp"
 #include "utils/mapu32u32.h"
 #include <assert.h>
+#include <cstddef>
 namespace hir {
 
 // a hashmap optimized for Id storage, based on an internal arena that is not owned
@@ -46,6 +47,55 @@ class IdHashMap {
         return OptId<V>{V{*value}};
     }
     bool contains(K key) { return static_cast<bool>(mapu32u32_at(&map, key.val())); }
+
+    class Entry {
+        K key_;
+        V val_;
+
+      public:
+        K key() const noexcept { return *key_; }
+        V val() const noexcept { return *val_; }
+        Entry(K key, V val) : key_(key), val_(val) {}
+    };
+
+    struct Iter {
+        using iterator_category = std::forward_iterator_tag;
+
+        Iter(const mapu32u32_t* map) noexcept : it{mapu32u32_iter_begin(map)} {}
+        Iter(const mapu32u32_iter_t raw_it) noexcept : it{raw_it} {}
+
+        Entry operator*() const noexcept { return Entry{K{it.curr->key}, V{it.curr->val}}; }
+
+        Iter& operator++() noexcept {
+            mapu32u32_iter_next(&it);
+            return *this;
+        }
+
+        Iter operator++(int) noexcept {
+            Iter tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        static Iter end() noexcept {
+            return Iter{mapu32u32_iter_t{
+                .map = nullptr,
+                .bucket_idx = 0,
+                .curr = nullptr,
+            }};
+        }
+
+        friend bool operator==(const Iter& a, const Iter& b) noexcept {
+            return a.it.curr == b.it.curr;
+        }
+        friend bool operator!=(const Iter& a, const Iter& b) noexcept { return !(a == b); }
+
+      private:
+        mapu32u32_iter_t it;
+    };
+    Iter iter() { return Iter{&map}; }
+    Iter begin() const noexcept { return Iter{&map}; }
+    Iter end() const noexcept { return Iter::end(); }
 };
 
 } // namespace hir

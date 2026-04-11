@@ -121,13 +121,14 @@ OptId<DefId> Scope::look_up_local_namespace(const Context& context, ScopeId loca
     return context.scope(local_scope).namespaces.at(symbol);
 }
 
-static OptId<DefId> look_up_local_type(const Context& context, ScopeId local_scope,
+OptId<DefId> Scope::look_up_local_type(const Context& context, ScopeId local_scope,
                                        SymbolId symbol) {
     return context.scope(local_scope).types.at(symbol);
 }
 
-static OptId<DefId> look_up_local_variable(const Context& context, ScopeId local_scope,
+OptId<DefId> Scope::look_up_local_variable(const Context& context, ScopeId local_scope,
                                            SymbolId symbol) {
     return context.scope(local_scope).variables.at(symbol);
 }
+
 } // namespace hir
