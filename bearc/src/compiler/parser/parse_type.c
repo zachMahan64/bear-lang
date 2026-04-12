@@ -244,7 +244,10 @@ ast_type_t* parse_type_ref(parser_t* p) {
     outer->type.ptr_ref.modifier
         = parser_eat(p); // definitely fine because we know to be in this func
 
-    outer->type.ptr_ref.mut = parser_match_token(p, TOK_MUT); // match into bool
+    outer->type.ptr_ref.mut = parser_peek_match(
+        p, TOK_MUT); // peek match into bool, since we want a mut reference to
+                     // correspond to a mut inner as well
+                     // whereas a non mut reference is non-mut and not dependent on inner
 
     ast_type_t* inner = parse_type(p);
 

@@ -1,5 +1,5 @@
 fn main(i32 a) {
-& mut i32 mut a;
+& mut i32 mut a; // oops
 
 &&mut str  b = &b;
 

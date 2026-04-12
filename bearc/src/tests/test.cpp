@@ -24,8 +24,6 @@ br_test_result_t test_context_db(void) {
         = [&br_test_result](ContextDatabase::DefQueryResult def, const ContextDatabase& db) {
               TEST_ASSERT(def.variable.has_value());
 
-              auto eid = def.variable.value().as<DefVariable>().compt_value;
-
               TEST_ASSERT(def.variable.value().as<DefVariable>().compt_value.has_value());
 
               auto exec = db.exec(def.variable.value().as<DefVariable>().compt_value.as_id());
@@ -40,7 +38,7 @@ br_test_result_t test_context_db(void) {
         TEST_ASSERT_EQ(b, exec.as<ExecConst>().as<bool>());
     };
 
-    auto assert_no_compt_val = [&br_test_result, &econst](ContextDatabase& db, const char* name) {
+    auto assert_no_compt_val = [&br_test_result](ContextDatabase& db, const char* name) {
         auto def = db.query_def({name});
         if (!def.variable.has_value()) {
             TEST_ASSERT(true);

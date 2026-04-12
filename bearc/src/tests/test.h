@@ -44,6 +44,7 @@ void print_result(br_test_result_t* res);
 #define TEST_INIT(_name)                                                                           \
     br_test_result_t br_test_result = {.cnt_total = 0, .cnt_success = 0, .name = (_name)};         \
     int true_cnt = 0;
+
 #define ASSERT_EQ_ERR(file_name, err_cnt)                                                          \
     args.input_file_name = "tests/" file_name ".br";                                               \
     true_cnt = compile_file(&args);                                                                \
