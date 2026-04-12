@@ -1,12 +1,12 @@
 //tests/hir/26.br 
 
 struct Node {
-    Node* next; // fine
+    *Node next; // fine
 }
 
 struct Nodette {
 
-    Node* next; // fine 
+    *Node next; // fine 
 
     mut Nodette nodette; // oops
 
@@ -16,9 +16,9 @@ struct Nodette {
     
     struct Node {
 
-        mut Nodette..Node* prev; // fine 
-        Node* next; // fine 
-        Nodette* nodette; // fine
+        *Nodette..Node mut prev; // fine 
+        *Node next; // fine 
+        *Nodette nodette; // fine
         Nodette val; // fine
 
         static compt i32 foo = 12345;

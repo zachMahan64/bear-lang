@@ -1,0 +1,22 @@
+// tests/hir/34.br
+
+mod ben {
+    hid struct BenTheDogOops {
+        [3](str) strs;
+    }
+    struct BenTheDog {
+        ([3]str) strs;
+    }
+}
+
+use ben..BenTheDog; // oops
+
+deftype Ben = ben..BenTheDog;
+
+compt Ben b0 = Ben{.strs = ["1", "2", "3"]};
+
+compt [3]str s0 = ["1", "2", "3"];
+
+compt [3]&str s1 = s0; // oops
+
+&([3] mut str) s2 = s0; // oops

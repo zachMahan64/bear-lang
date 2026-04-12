@@ -18,8 +18,8 @@ compt i8 ohno7 = (12) / tricky; // oops
 
 compt str foobar = "foo" + "bar";
 
-compt str& foobarbar = foobar + "bar";
+compt &str foobarbar = foobar + "bar";
 
-str& my_foobar = foobar;
+&str my_foobar = foobar;
 
 compt i32 foobarbar5 = 5 + foobarbar; // oops

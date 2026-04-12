@@ -3,14 +3,14 @@
 // these are thru ptrs/refs/slices so it's fine
 
 struct Lo {
-    Op& op;
-    Op* op1;
+    &Op op;
+    *Op op1;
     [&]Op op2;
 }
 
 struct Op {
-    Lo& lo;
-    Lo* lo1;
+    &Lo lo;
+    *Lo lo1;
     [&]Lo lo2;
 }
 

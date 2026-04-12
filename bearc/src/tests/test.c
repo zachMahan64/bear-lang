@@ -61,7 +61,7 @@ br_test_result_t test_parser(void) {
                                   // this makes tests sustainally slower, so only enable when
                                   // parsing updates are made to verify correctness
     TEST_SET_ARGS(parser_args);
-    ASSERT_EQ_ERR("parser/00", 4);
+    ASSERT_EQ_ERR("parser/00", 3);
     ASSERT_EQ_ERR("parser/01", 0);
     ASSERT_EQ_ERR("parser/02", 2);
     ASSERT_EQ_ERR("parser/03", 0);
@@ -86,7 +86,7 @@ br_test_result_t test_parser(void) {
     ASSERT_EQ_ERR("parser/22", 1);
     ASSERT_EQ_ERR("parser/23", 1);
     ASSERT_EQ_ERR("parser/24", 1);
-    ASSERT_EQ_ERR("parser/25", 4);
+    ASSERT_EQ_ERR("parser/25", 5);
     ASSERT_EQ_ERR("parser/26", 1);
     ASSERT_EQ_ERR("parser/27", 10);
     ASSERT_EQ_ERR("parser/28", 0);
@@ -187,6 +187,8 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args32, 14);
     char* args33[] = {"bearc", "tests/hir/33.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args33, 10);
+    char* args34[] = {"bearc", "tests/hir/34.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args34, 4);
 
     return TEST_RESULT;
 }

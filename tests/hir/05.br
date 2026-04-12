@@ -1,5 +1,5 @@
 // 05.br
 
 struct Bar {
-    str& thingie;
+    &str thingie;
 }

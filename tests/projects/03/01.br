@@ -2,7 +2,7 @@
 
 struct Foo {
     import "00.br"; // oops
-    Foo* foo;
+    *Foo foo;
 }
 
 mod bar {

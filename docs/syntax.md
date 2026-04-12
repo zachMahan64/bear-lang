@@ -20,8 +20,8 @@
     - | Generic: \[BaseType `::`? `<` GenericParam(s) `>`] | BaseType `::` GenericParam
     - | Array: `[` CompileTimeExpression `]` Type 
     - | Slice: `[` `&` `mut`? `]` Type
-    - | Reference: Type `&`
-    - | Pointer: Type `*`
+    - | Reference: `&` Type
+    - | Pointer: `*` Type
     - | Variadic: Type `...`
 
 #### Expressions

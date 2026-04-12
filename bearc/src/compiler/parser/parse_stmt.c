@@ -179,6 +179,17 @@ ast_stmt_t* parse_stmt(parser_t* p) {
         return parse_stmt_deftype(p);
     }
 
+    // allow parsing of (type) name;
+    if (next_type == TOK_LPAREN) {
+        size_t cnt = 0;
+        while (parser_peek_n(p, cnt)->type == TOK_LPAREN) {
+            ++cnt;
+        }
+        if (token_is_non_id_type_idicator(parser_peek_n(p, cnt)->type)) {
+            return parse_var_decl(p);
+        }
+    }
+
     // vis modifers are illegal on plain statements
     if (token_is_visibility_modifier(next_type)) {
         parser_shed_visibility_qualis_with_error(p);
@@ -584,6 +595,17 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
         compiler_error_list_emplace(p->error_list, parser_peek(p),
                                     ERR_NON_TOP_LEVEL_IMPORT_STATEMENT);
         return parser_sync_stmt(p);
+    }
+
+    // allow parsing of (type) name;
+    if (next_type == TOK_LPAREN) {
+        size_t cnt = 0;
+        while (parser_peek_n(p, cnt)->type == TOK_LPAREN) {
+            ++cnt;
+        }
+        if (token_is_non_id_type_idicator(parser_peek_n(p, cnt)->type)) {
+            return parse_var_decl(p);
+        }
     }
 
     // guard trailing junk due to eof tok from previously synced stmt

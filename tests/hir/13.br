@@ -21,13 +21,13 @@ struct Foo {
 hid static alignas(64) Foo static_thingie;
 
 /// gets singleton
-fn Foo..get() -> mut Foo& {
+fn Foo..get() -> & Foo mut {
     return static_thingie;
 }
 
 fn main() -> i32 {
     var my_foo = Foo..get();
-    mut Foo& my_foo2 = my_foo;
+    &Foo mut my_foo2 = my_foo;
     my_foo2.set_bar(42);
     return my_foo.bar(); // 42
 }

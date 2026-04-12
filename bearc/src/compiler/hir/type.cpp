@@ -141,7 +141,7 @@ template <ConsiderMut C> size_t TypeHasher<C>::transform(size_t res1, size_t res
 }
 
 template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Type& t1) const {
-    TypeToStringValue val{.str = std::string{}};
+    TypeToStringValue val{.str = std::string{}, .goes_on_left = false};
     val.str.reserve(64); // decently sized
     std::string& str = val.str;
     auto vs = Ovld{
@@ -183,7 +183,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             str += '[';
             str += std::to_string(t.canonical_size);
             str += ']';
-            val.inner_goes_right = true;
+            val.goes_on_left = true;
         },
         [&](const TypeSlice&) {
             str += '[';
@@ -194,7 +194,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                 }
             }
             str += ']';
-            val.inner_goes_right = true;
+            val.goes_on_left = true;
         },
         [&](const TypeRef&) {
             str += '&';
@@ -203,6 +203,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                     str += "mut";
                 }
             }
+            val.goes_on_left = true;
         },
         [&](const TypePtr&) {
             str += '*';
@@ -211,6 +212,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                     str += "mut";
                 }
             }
+            val.goes_on_left = true;
         },
         [&](const TypeFnPtr& t) {
             str += "*fn";
@@ -250,9 +252,8 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
 template <ConsiderMut C>
 TypeToStringValue TypeToString<C>::transform(TypeToStringValue res1,   // NOLINT
                                              TypeToStringValue res2) { // NOLINT
-    return TypeToStringValue{.str
-                             = (res1.inner_goes_right) ? res1.str + res2.str : res2.str + res1.str,
-                             .inner_goes_right = res2.inner_goes_right};
+    return TypeToStringValue{.str = (res2.goes_on_left) ? res2.str + res1.str : res1.str + res2.str,
+                             .goes_on_left = res2.goes_on_left};
 }
 
 template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(const Type& type) {

@@ -12,5 +12,5 @@ fn main() -> i32 {
 
 struct Node {
     i32 val;
-    Node* next;
+    *Node next;
 }

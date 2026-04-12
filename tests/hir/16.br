@@ -28,7 +28,7 @@ compt var S = "ABCEF"; // err
 
 struct Bear {
     i32 a;
-    str& b;
+    &str b;
 }
 
 compt var..i32 fooey = 12; // err

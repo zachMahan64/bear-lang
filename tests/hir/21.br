@@ -17,11 +17,11 @@ mod ben {
         }
 
         hid struct Booey {
-            Fooey& fooey; // fine
+            &Fooey fooey; // fine
         }
 
         hid struct Hoeey {
-            Booey& booey; // fine
+            &Booey booey; // fine
         }
 
         compt ben..ny..Fooey big_foo = Fooey{}; // fine

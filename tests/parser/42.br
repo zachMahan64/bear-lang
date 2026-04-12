@@ -14,5 +14,5 @@ struct Foo {
 
 contract Thing {
     mt mut modify();
-    mt control(Foo& foo);
+    mt control(&Foo foo);
 }

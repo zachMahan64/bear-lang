@@ -140,66 +140,90 @@ ast_type_t* parse_type_base_with_leading_mut(parser_t* p) {
     return parse_type_base_impl(p, true, dummy);
 }
 
-ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner);
+static void parser_shed_rparens(parser_t* p, int* cnt) {
+    // shed right parens
+    for (int i = 0; i < *cnt; i++) {
+        parser_expect_token(p, TOK_RPAREN);
+        (*cnt)--;
+    }
+}
 
 static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bool has_leading_id) {
+    int paren_count = 0;
+    while (parser_match_token(p, TOK_LPAREN)) {
+        ++paren_count;
+    }
     token_t* first_tkn = parser_peek(p);
     token_type_e first_type = first_tkn->type;
 
-    if (first_type == TOK_LBRACK && parser_peek_n(p, 1)->type == TOK_AMPER) {
-        return parse_type_slice(p);
-    }
-    if (first_type == TOK_LBRACK) {
-        return parse_type_arr(p);
-    }
-
     ast_type_t* inner = NULL;
 
+    // parse opening guys
+    if (first_type == TOK_LBRACK && parser_peek_n(p, 1)->type == TOK_AMPER) {
+        inner = parse_type_slice(p);
+    } else if (first_type == TOK_LBRACK) {
+        inner = parse_type_arr(p);
+    }
+
+    if ((parser_peek(p)->type == TOK_STAR) && (parser_peek_n(p, 1)->type == TOK_FN)) {
+        inner = parse_type_fn_ptr(p);
+    }
+
+    // parse type modifiers
+    if (token_is_ref_or_ptr(parser_peek(p)->type)) {
+        inner = parse_type_ref(p);
+    }
+
+    if (parser_peek_match(p, TOK_BOOL_AND)) {
+        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_MULTILEVEL_REF);
+        inner = parser_invalid_type_and_toss_next_tkn(p);
+    }
+
     // parse base types
-    if (has_leading_id) {
-        inner = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
-    } else if (first_type == TOK_MUT) {
-        token_type_e t1 = parser_peek_n(p, 1)->type;
-        token_type_e t2 = parser_peek_n(p, 2)->type;
-        if (t1 == TOK_LBRACK && t2 == TOK_AMPER) {
-            compiler_error_list_emplace(p->error_list, first_tkn, ERR_NO_LEADING_MUT_FOR_SLICES);
-            return parser_sync_type(p);
-        }
-        if (t1 == TOK_LBRACK) {
-            compiler_error_list_emplace(p->error_list, first_tkn, ERR_MUT_CANNOT_BIND_TO_ARRAYS);
-            return parser_sync_type(p);
-        }
-        // try function ptr (effectively a special case)
-        if (t1 == TOK_STAR && t2 == TOK_FN) {
+    if (!inner) {
+        if (has_leading_id) {
+            inner = parse_type_base_with_leading_id(p, leading_id); // pre-mut = false
+        } else if (first_type == TOK_MUT) {
+            token_type_e t1 = parser_peek_n(p, 1)->type;
+            token_type_e t2 = parser_peek_n(p, 2)->type;
+            if (t1 == TOK_LBRACK && t2 == TOK_AMPER) {
+                compiler_error_list_emplace(p->error_list, first_tkn,
+                                            ERR_NO_LEADING_MUT_FOR_SLICES);
+                return parser_sync_type(p);
+            }
+            if (t1 == TOK_LBRACK) {
+                compiler_error_list_emplace(p->error_list, first_tkn,
+                                            ERR_MUT_CANNOT_BIND_TO_ARRAYS);
+                return parser_sync_type(p);
+            }
+            // try function ptr (effectively a special case)
+            if (t1 == TOK_STAR && t2 == TOK_FN) {
+                inner = parse_type_fn_ptr(p);
+            } else {
+                inner = parse_type_base_with_leading_mut(p);
+            }
+        } else if (first_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN) {
             inner = parse_type_fn_ptr(p);
         } else {
-            inner = parse_type_base_with_leading_mut(p);
+            leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
+            inner = parse_type_base_with_leading_id(p, leading_id);
         }
-    } else if (first_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN) {
-        inner = parse_type_fn_ptr(p);
-    } else {
-        leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
-        inner = parse_type_base_with_leading_id(p, leading_id);
     }
+
+    parser_shed_rparens(p, &paren_count);
 
     if (token_is_generic_opener(parser_peek(p)->type)) {
         inner = parse_type_generic(p, inner);
     }
 
-    // parse type modifiers
-    while (token_is_ref_or_ptr(parser_peek(p)->type)) {
-        inner = parse_type_ref(p, inner);
-    }
+    parser_shed_rparens(p, &paren_count);
 
     // parse variadic modifier
     if (parser_peek_match(p, TOK_ELLIPSE)) {
         inner = parse_type_variadic(p, inner);
     }
 
-    if (parser_peek_match(p, TOK_BOOL_AND)) {
-        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_MULTILEVEL_REF);
-        return parser_invalid_type_and_toss_next_tkn(p);
-    }
+    parser_shed_rparens(p, &paren_count);
 
     if (inner) {
         return inner;
@@ -217,11 +241,15 @@ ast_type_t* parse_type(parser_t* p) {
     return parse_type_impl(p, dummy, false); //! has_leading_id
 }
 
-ast_type_t* parse_type_ref(parser_t* p, ast_type_t* inner) {
+ast_type_t* parse_type_ref(parser_t* p) {
     ast_type_t* outer = parser_alloc_type(p);
     outer->type.ptr_ref.modifier
         = parser_eat(p); // definitely fine because we know to be in this func
+
     outer->type.ptr_ref.mut = parser_match_token(p, TOK_MUT); // match into bool
+
+    ast_type_t* inner = parse_type(p);
+
     outer->canonical_base = inner->canonical_base;
     outer->type.ptr_ref.inner = inner;
     outer->tag = AST_TYPE_REF_PTR;

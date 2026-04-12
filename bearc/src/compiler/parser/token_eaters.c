@@ -120,6 +120,7 @@ token_t* parser_expect_token(parser_t* parser, token_type_e expected_type) {
         parser->prev_discarded = false;
         return parser_prev(parser);
     }
+    parser_toss(parser);
     compiler_error_list_emplace_expected_token(parser->error_list, tkn, ERR_EXPECTED_TOKEN,
                                                expected_type);
     return NULL;
@@ -139,6 +140,7 @@ token_t* parser_expect_token_with_err_code(parser_t* parser, token_type_e expect
         parser->prev_discarded = false;
         return parser_prev(parser);
     }
+    parser_toss(parser);
     compiler_error_list_emplace(parser->error_list, tkn, code);
     return NULL;
 }
@@ -157,6 +159,7 @@ token_t* parser_expect_token_call(parser_t* parser, bool (*match)(token_type_e),
         parser->prev_discarded = false;
         return parser_prev(parser);
     }
+    parser_toss(parser);
     compiler_error_list_emplace(parser->error_list, tkn, code);
     return NULL;
 }
@@ -293,13 +296,14 @@ bool token_is_closing_region_delim(token_type_e t) { return t == TOK_RBRACE; }
 bool token_is_assignment_init(token_type_e t) { return t == TOK_ASSIGN_MOVE || t == TOK_ASSIGN_EQ; }
 
 bool token_is_posttype_indicator(token_type_e t) {
-    return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_AMPER || t == TOK_STAR || t == TOK_LT
-           || t == TOK_GENERIC_SEP;
+    return t == TOK_IDENTIFIER || t == TOK_MUT || t == TOK_LT || t == TOK_GENERIC_SEP;
 }
 
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }
 
-bool token_is_non_id_type_idicator(token_type_e t) { return t == TOK_MUT || t == TOK_LBRACK; }
+bool token_is_non_id_type_idicator(token_type_e t) {
+    return t == TOK_MUT || t == TOK_LBRACK || token_is_ref_or_ptr(t);
+}
 
 bool token_is_generic_opener(token_type_e t) { return t == TOK_GENERIC_SEP || t == TOK_LT; }
 

@@ -14,10 +14,10 @@ mod foo {
         fn new() -> Self {
             return Self{.bar = ""};
         }
-        mt assume_bar(str& other_bar) {
+        mt assume_bar(&str other_bar) {
             self.bar = other_bar;
         }
-        mt copy_bar(str &mut other_bar) {
+        mt copy_bar(&mut str other_bar) {
             other_bar = self.bar;
         }
 

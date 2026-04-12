@@ -234,7 +234,7 @@ template <ConsiderMut C> class TypeHasher {
 
 struct TypeToStringValue {
     std::string str;
-    bool inner_goes_right = false;
+    bool goes_on_left = false;
 };
 
 template <ConsiderMut C> class TypeToString {
