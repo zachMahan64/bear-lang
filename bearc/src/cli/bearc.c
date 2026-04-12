@@ -132,28 +132,34 @@ int bearc_compile_from_args(int argc, char** argv) {
 }
 
 void cli_help(void) {
-    const char* help_message
-        = "usage:\n"
-          "        bearc <file_name> [flags]\n"
-          "        bearc [options]\n"
-          "options:\n"
-          "        [--version | -v]  display current bearc version\n"
-          "        [--help | -h]     display this help message\n"
-          "flags:\n"
-          "        [--silent]        suppress all compiler messages\n"
+    const char* usage_title = "usage:\n";
+    const char* usage = "        bearc";
+    const char* usage_args = " <file_name> [flags]\n";
+    const char* usage_options = " [options]\n";
+    const char* options_title = "options:\n";
+    const char* options = "        [--version | -v]  display current bearc version\n"
+                          "        [--help | -h]     display this help message\n";
+    const char* flags_title = "flags:\n";
+    const char* flags
+        = "        [--silent]        suppress all compiler messages\n"
           "        [--token-table]   print a list of lexed tokens\n"
           "        [--pretty-print]  print a syntax tree diagram\n"
           "        [--file-graph]    list all compiled files with their dependencies\n"
           "        [--parse-only]    stop compilation after parsing\n"
-          "        [--compact-diags] print diagnostics that are vertically compact\n"
-          "flags with arguments:\n"
-          "        [--import-path | -i] <import_dirs...>  supply import paths\n"
+          "        [--compact-diags] print diagnostics that are vertically compact\n";
+    const char* flags_w_args_title = "flags with arguments:\n";
+    const char* flags_w_args
+        = "        [--import-path | -i] <import_dirs...>  supply import paths\n"
           "        [--compile | -c]     <root_file>       compile from a root file\n"
           "        [--output | -o]      <output_file>     specify an output file\n"
 
         ;
 
-    printf("%s", help_message);
+    printf("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", ansi_bold_magenta(), usage_title,
+           ansi_reset(), ansi_bold_green(), usage, ansi_bold_reset(), usage_args, ansi_bold_green(),
+           usage, ansi_bold_reset(), usage_options, ansi_bold_yellow(), options_title, ansi_reset(),
+           options, ansi_bold_cyan(), flags_title, ansi_reset(), flags, ansi_bold_cyan(),
+           flags_w_args_title, ansi_reset(), flags_w_args);
 }
 
 void cli_version(void) { puts("bearc v0.0.1"); }
