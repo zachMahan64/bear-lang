@@ -3,7 +3,8 @@
 mod vroom {
 
 fn main() -> i32 {
-
+    drive();
+    pilot();
     return 0;
 }
 
