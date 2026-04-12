@@ -65,7 +65,7 @@ main quest
     1. map to an already instatiated specialized, concrete instance of the def, or:
     2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
 
-- [ ] [lsp-compt](/docs/lsp-compat.md), mostly thru building span -> scope search trees
+- [ ] some basic [lsp-compt](/docs/lsp-compat.md), mostly thru building span -> scope search trees
 
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
 
@@ -75,6 +75,21 @@ main quest
     - note: already working for arbitrarily scoped modules, types, and variables
 - [ ] move checker
 
+#### optimizations
+- [ ] `hir::Context` ctor that takes a stale context and a list of update files, and then based on the stale context's files:
+```
+    for every file in stale context:
+        if red: # stale and already marked as such 
+            continue 
+        if not red && stale: 
+            color it and its dependents red
+            continue 
+        # since it's not stale:
+        move file and it's data (buffer, token, ast) from stale context into new context
+
+    delete the stale context and replace it with the new context 
+    # note make sure dtor of files inside context properly handle being moved (no double frees, etc.)
+```
 #### long term (compiler)
 - [ ] MIR? (compile-time ctrl flow and better optimizations)
 - [ ] LLVM IR (most likely lower directly from HIR)
