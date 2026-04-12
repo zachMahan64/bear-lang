@@ -256,6 +256,11 @@ static void print_type(ast_type_t* type) {
         printer_deindent();
         print_closing_green_brace();
     } break;
+    case AST_TYPE_TYPEOF:
+        print_title("typeof");
+        pretty_print_expr(type->type.type_of.of_expr);
+        print_closing_green_brace();
+        break;
     }
     puts(",");
     printer_deindent();

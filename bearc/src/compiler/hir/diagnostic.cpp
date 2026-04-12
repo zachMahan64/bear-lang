@@ -167,6 +167,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "value is of type";
     case diag_code::array_cannot_have_size_zero:
         return "array cannot have a size of zero";
+    case diag_code::cannot_infer_type_at_compt:
+        return "cannot infer type at compile-time";
     }
     std::unreachable();
     return "";

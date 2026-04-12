@@ -199,9 +199,9 @@ typedef struct ast_expr_list_literal {
     ast_slice_of_exprs_t slice;
 } ast_expr_list_literal_t;
 
-typedef struct ast_expr_compt {
+typedef struct ast_expr_wrapped {
     ast_expr_t* inner;
-} ast_expr_compt_t;
+} ast_expr_wrapped_t;
 
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -224,7 +224,7 @@ typedef union ast_expr_u {
     ast_expr_closure_t closure;
     ast_expr_list_literal_t list_literal;
     ast_expr_ternary_if_t ternary_if;
-    ast_expr_compt_t compt_expr;
+    ast_expr_wrapped_t compt_expr;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

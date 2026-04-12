@@ -613,13 +613,15 @@ ast_slice_of_exprs_t parse_has_contracts_clause(parser_t* p) {
     spill_arr_ptr_t ids;
     spill_arr_ptr_init(&ids);
     parser_expect_token(p, TOK_HAS);
-    parser_expect_token(p, TOK_LPAREN);
+    token_t* l_paren = parser_match_token(p, TOK_LPAREN);
     if (!parser_peek_match(p, TOK_RPAREN)) {
         do {
             *((ast_expr_t**)spill_arr_ptr_emplace(&ids)) = parse_id(p);
         } while (parser_match_token(p, TOK_COMMA));
     }
-    parser_expect_token(p, TOK_RPAREN);
+    if (l_paren) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
     return parser_freeze_expr_spill_arr(p, &ids);
 }
 

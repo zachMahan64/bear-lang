@@ -9,6 +9,7 @@
 #ifndef COMPILER_PARSER_PARSE_TYPE
 #define COMPILER_PARSER_PARSE_TYPE
 
+#include "compiler/ast/expr.h"
 #include "compiler/ast/type.h"
 #include "compiler/parser/parse_token_slice.h"
 #include "compiler/parser/parser.h"
@@ -23,6 +24,8 @@ ast_slice_of_params_t parse_slice_of_params(parser_t* p, token_type_e divider,
                                             token_type_e terminator);
 
 ast_type_t* parse_type_ref(parser_t* p);
+
+ast_type_t* parse_type_of(parser_t* p);
 
 ast_type_t* parse_type_arr(parser_t* p);
 

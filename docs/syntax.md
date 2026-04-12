@@ -23,6 +23,7 @@
     - | Reference: `&` Type
     - | Pointer: `*` Type
     - | Variadic: Type `...`
+    - | TypeOf: `typeof` Expression 
 
 #### Expressions
 - Expression:

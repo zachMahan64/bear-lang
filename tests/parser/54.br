@@ -1,0 +1,233 @@
+// tests/parser/54.br
+
+mod vroom {
+
+fn main() -> i32 {
+
+    return 0;
+}
+
+
+fn drive() {
+    Car::Michelin car = Car..new(); // inferred that we're calling Car..new::<Michelin>()
+    car.drive(); 
+
+    var t = Traffic..Car(car);
+    
+    // match on variant
+    match(t) {
+        Car(var c) => {
+            c.drive();
+            c.wreck();
+        },
+        Truck(var t) => {
+            t.drive();
+            t.park();
+        },
+    };
+
+    // if decomposition (if let)
+    if t is Truck(var t) {
+        crash_vehicle(t);
+    }
+}
+
+variant Dir {
+    PosX,
+    PosY,
+    NegX,
+    NegY,
+}
+
+contract Vehicle {
+    mt mut drive(Dir dir);
+    mt mut park();
+    mt is_parked() -> bool;
+    mt is_big() -> bool;
+    mt is_wrecked() -> bool;
+    mt wreck();
+}
+
+contract Wheel {
+    fn is_good() -> bool;
+}
+
+struct Michelin has Wheel {
+    hid compt bool is_good_ = true;
+    fn is_good() {
+        return is_good_;
+    }
+}
+
+struct Pirelli has Wheel {
+    hid compt bool is_good_ = true;
+    fn is_good() {
+        return is_good_;
+    }
+}
+
+struct InferiorWheel has Wheel {
+    hid compt bool is_good_ = false;
+    fn is_good() {
+        return is_good_;
+    }
+}
+
+struct Car<W has Wheel> {
+    
+    hid mut bool parked = false;
+
+    hid mut i32 x = 0;
+    hid mut i32 y = 0;
+
+    hid mut bool wrecked = false;
+
+    fn new() -> Self {
+        return Self{}; // empty cuz we have default vals already
+    }
+
+    mt mut drive(Dir dir) {
+        
+        self.parked = false;
+
+        match(dir) {
+            PosX => ++self.x,
+            PosY => ++self.y,
+            NegX => --self.x,
+            NegY => --self.y,
+        };
+    }
+    mt mut park() {
+        self.parked = true;
+    }
+
+    mt is_parked() {
+        return self.parked;
+    }
+    
+    mt is_big() {
+        return false;
+    }
+
+    fn wheels_are_good() {
+        return W..is_good();
+    }
+
+    mt wreck() {
+        self.wrecked = true;
+    }
+}
+
+struct Truck{
+    // ...
+}
+
+variant Traffic {
+    SmallAuto(Car car),
+    LargeAuto(Truck truck),
+}
+
+fn crash_vehicle<V has Vehicle>(V vehicle) {
+    vehicle.crash();
+}
+
+} // mod vroom
+
+mod nyoom {
+    struct Plane {
+        hid PlaneImpl pimpl;
+        
+        fn new() -> Self {
+            return Self{.pimpl = PlaneImpl{}}; // empty PlaneImpl init since it's field are elided here
+        }
+
+
+        mt mut fly() {
+            self.pimpl.fly();
+        }
+        mt mut land() {
+            self.pimpl.land();
+        }
+
+    }
+
+    hid struct PlaneImpl {
+        mt mut fly() {
+            // do work
+        }
+        mt mut land() {
+            // do work
+        }
+        // ...
+    }
+
+    // Air Traffic Control
+    mod atc {
+        
+        // since AtcWorker itself not hid, we can "re-export" it into the atc module's scope, 
+        // which makes AtcWorker thru `atc..Worker` fully availible while still hiding all impl details.
+        // we only had use to a single visibility modifier, `hid`, a sinle time to achieve this.
+        use internal..Worker; 
+
+        hid mod internal {
+
+            struct Worker {
+                fn new() {
+                    return Worker{}; // empty init cuz full impl elided
+                }
+                mt mut monitor() {
+                    var rand_fact = random_factor_based_conditions();
+                    if (rand_fact < .5) {
+                        self.do_work();
+                    }
+                    // be lazy otherwise
+                }
+                mt mut do_work() {
+                    var info = internal..complicated_info_fetch();
+                    do_work_based_on_complicated_info(info);
+                    // ...
+                }
+            }
+            
+            // pretend this is some complicated data-dense struct
+            struct ComplicatedInfo {
+                // ...
+            }
+            fn complicated_info_fetch() -> ComplicatedInfo {
+                // ...
+            }
+            fn do_work_based_on_complicated_info(ComplicatedInfo info) {
+                // ...
+            }
+            fn random_factor_based_conditions() -> f32 {
+                // generates a random floats based on enviormental factors ...
+            }
+            // pretend this is a super complicated sub-module
+        }
+    }
+}
+
+use nyoom..Plane;
+use nyoom..atc..Worker;
+
+deftype Aeroplane = Plane; // for Brits
+
+fn pilot() {
+    Aeroplane p = Plane..new();
+    
+    compt u8 NUM_WORKERS = 3;
+    [3]Worker workers = [Worker..new(), Worker..new(), Worker..new()];
+
+    // nyoooooom, let's fly
+    for var i in 0...=100 {
+        p.fly();
+
+        // labor
+        for var w in workers {
+            w.monitor();
+        }
+    }
+
+    std..println("Just flew 100 times");
+
+}

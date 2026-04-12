@@ -32,15 +32,44 @@ template <IsDefVisitor V> class ComptExprSolver {
   public:
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
 
-    [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, ScopeId scope,
-                                                 const ast_expr_t* expr) {
-        return solve_compt_expr(fid, scope, expr, std::nullopt);
+    [[nodiscard]] OptId<ExecId> solve_expr(FileId fid, ScopeId scope, const ast_expr_t* expr) {
+        return solve_expr(fid, scope, expr, std::nullopt);
+    }
+
+    [[nodiscard]] OptId<TypeId> infer_type_from_compt_expr(FileId fid, ScopeId scope,
+                                                           const ast_expr_t* expr) {
+
+        if (expr->type == AST_EXPR_ID) {
+            auto sid = context.symbol_slice(expr->expr.id.slice);
+            Span span{context, fid, expr->first, expr->last};
+            auto maybe_did = context.look_up_scoped_variable(scope, sid, span);
+            if (maybe_did.empty()) {
+                context.emplace_diagnostic(span, diag_code::use_of_undeclared_identifier,
+                                           diag_type::error);
+                return std::nullopt;
+            }
+            const Def& def = context.def(maybe_did.as_id());
+            if (!def.holds<DefVariable>()) {
+                return std::nullopt;
+            }
+            return def.as<DefVariable>().type;
+        }
+
+        OptId<ExecId> maybe_eid = solve_expr(fid, scope, expr);
+
+        if (maybe_eid.empty()) {
+            return std::nullopt; // already an issue/poisoned
+        }
+
+        auto eid = maybe_eid.as_id();
+
+        return infer_type_from_compt_exec(eid);
     }
 
     // solves a top level compt expr (this is primarily for array sizing & builtin types for top
     // level generic instantiation with compt parameterizations)
-    [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, ScopeId scope, const ast_expr_t* expr,
-                                                 OptId<TypeId> maybe_into_tid) {
+    [[nodiscard]] OptId<ExecId> solve_expr(FileId fid, ScopeId scope, const ast_expr_t* expr,
+                                           OptId<TypeId> maybe_into_tid) {
 
         // no type provided, so try to infer
         if (!maybe_into_tid.has_value()) {
@@ -240,8 +269,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 cooked = true;
             } else if (maybe_bin_op.holds<is_as_op>()) {
                 OptId<ExecId> lhs
-                    = solve_compt_expr(fid, scope, expr->expr.binary.lhs,
-                                       std::nullopt); // since we don't care about the type yet
+                    = solve_expr(fid, scope, expr->expr.binary.lhs,
+                                 std::nullopt); // since we don't care about the type yet
                 if (!lhs.has_value()) {
                     cooked = true;
                 }
@@ -255,13 +284,11 @@ template <IsDefVisitor V> class ComptExprSolver {
                     return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
                 }
             } else if (!cooked) {
-                OptId<ExecId> lhs
-                    = solve_compt_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
+                OptId<ExecId> lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
                 if (!lhs.has_value()) {
                     cooked = true;
                 }
-                OptId<ExecId> rhs
-                    = solve_compt_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
+                OptId<ExecId> rhs = solve_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
                 if (!rhs.has_value()) {
                     cooked = true;
                 }
@@ -381,12 +408,13 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (maybe_inner.empty()) {
                 return std::nullopt;
             }
+            return std::nullopt;
         }
         case AST_EXPR_TERNARY_IF: {
             return solve_ternary_if(fid, scope, expr, into_tid);
         }
         case AST_EXPR_COMPT:
-            return solve_compt_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
+            return solve_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
@@ -650,8 +678,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                         DiagnosticNoOtherInfo{});
                     continue;
                 }
-                OptId<ExecId> hopefully_exec
-                    = solve_compt_expr(fid, scope, proposed_val, member_type);
+                OptId<ExecId> hopefully_exec = solve_expr(fid, scope, proposed_val, member_type);
                 if (!hopefully_exec.has_value()) {
                     cooked = true;
                     // just continue, caused by other so must have already been reported
@@ -709,7 +736,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return solve_ternary_if(fid, scope, expr, into_tid);
         }
         case AST_EXPR_COMPT:
-            return solve_compt_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
+            return solve_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
         // these are all invalid
         case AST_EXPR_LITERAL:
         case AST_EXPR_LIST_LITERAL:
@@ -1162,12 +1189,12 @@ template <IsDefVisitor V> class ComptExprSolver {
         const auto* happy_expr = tern_expr->expr.ternary_if.happy_expr;
         const auto* cond_expr = tern_expr->expr.ternary_if.condition;
         const auto* else_expr = tern_expr->expr.ternary_if.else_expr;
-        auto maybe_happy_exec = solve_compt_expr(fid, scope, happy_expr, maybe_into_tid);
+        auto maybe_happy_exec = solve_expr(fid, scope, happy_expr, maybe_into_tid);
         auto maybe_cond_exec
-            = solve_compt_expr(fid, scope, cond_expr,
-                               context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
-                                                    Span::generated(), false));
-        auto maybe_else_exec = solve_compt_expr(fid, scope, else_expr, maybe_into_tid);
+            = solve_expr(fid, scope, cond_expr,
+                         context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
+                                              Span::generated(), false));
+        auto maybe_else_exec = solve_expr(fid, scope, else_expr, maybe_into_tid);
 
         if (maybe_cond_exec.empty()) {
             return std::nullopt;
@@ -1219,7 +1246,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_LIST_LITERAL:
             return handle_list_literal(fid, scope, expr, maybe_into_tid);
         case AST_EXPR_COMPT:
-            return solve_compt_expr(fid, scope, expr->expr.compt_expr.inner, maybe_into_tid);
+            return solve_expr(fid, scope, expr->expr.compt_expr.inner, maybe_into_tid);
         case AST_EXPR_LITERAL:
         case AST_EXPR_BINARY:
         case AST_EXPR_GROUPING:
@@ -1282,11 +1309,11 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         for (HirSize i = 0; i < list_slice.len; ++i) {
             const ast_expr_t* expr = list_slice.start[i];
-            OptId<ExecId> maybe_exec = solve_compt_expr(
-                fid, scope, expr,
-                maybe_elem_into_type); // this inner part runs at compt and thus will
-                                       // recursive check that sub exprs are compt
-                                       // and will error out when appropriate
+            OptId<ExecId> maybe_exec
+                = solve_expr(fid, scope, expr,
+                             maybe_elem_into_type); // this inner part runs at compt and thus will
+                                                    // recursive check that sub exprs are compt
+                                                    // and will error out when appropriate
             if (maybe_exec.empty()) {
                 return std::nullopt; // poisoned
             }
@@ -1388,6 +1415,10 @@ template <IsDefVisitor V> class ComptExprSolver {
                 },
                 Span::generated(), false);
         }
+
+        // report issue
+        context.emplace_diagnostic(exec.span, diag_code::cannot_infer_type_at_compt,
+                                   diag_type::error);
 
         return std::nullopt;
     }

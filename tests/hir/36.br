@@ -1,0 +1,23 @@
+// tests/hir/36.br 
+
+compt i8 a = 123;
+
+i8 b = 123;
+
+typeof(a) c; // fine 
+
+typeof(b) d; // fine
+
+typeof(gabagool) e; // oops
+
+typeof(b + 1) f; // oops
+
+struct BenTheDog{}
+
+deftype Ben = BenTheDog;
+
+compt Ben my_ben = Ben{};
+
+var ben0 = my_ben; // fine
+
+typeof(my_ben) ben1 = my_ben;

@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_TYPE_RESOLVER_HPP
 #define COMPILER_HIR_TYPE_RESOLVER_HPP
 
+#include "compiler/ast/type.h"
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def_visitor.hpp"
@@ -194,6 +195,25 @@ template <IsDefVisitor V> class TypeResolver {
                                     Span(context, fid, type->first, type->last), false);
     }
 
+    OptId<TypeId> type_typeof(FileId fid, ScopeId scope, const ast_type_t* type,
+                              bool need_layout_info) {
+
+        assert(type->tag == AST_TYPE_TYPEOF);
+
+        const ast_expr_t* expr = type->type.type_of.of_expr;
+
+        auto maybe_tid
+            = ComptExprSolver{context, def_visitor}.infer_type_from_compt_expr(fid, scope, expr);
+
+        if (maybe_tid.empty()) {
+            return std::nullopt;
+        }
+
+        // make new type as to update span
+        return context.emplace_type(context.type(maybe_tid.as_id()).value,
+                                    Span(context, fid, type->first, type->last), false);
+    }
+
   public:
     explicit TypeResolver(Context& ctx, V& def_visitor) : def_visitor{def_visitor}, context{ctx} {}
 
@@ -221,6 +241,10 @@ template <IsDefVisitor V> class TypeResolver {
 
         case AST_TYPE_VARIADIC:
             return type_variadic(fid, scope, type, need_layout_info);
+
+        case AST_TYPE_TYPEOF:
+            return type_typeof(fid, scope, type, need_layout_info);
+            break;
 
         case AST_TYPE_INVALID:
             break;

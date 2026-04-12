@@ -87,6 +87,7 @@ enum class diag_code : uint8_t {
     value_is_of_type,
     is_of_type,
     array_cannot_have_size_zero,
+    cannot_infer_type_at_compt,
 
     count, // this must be last,
 

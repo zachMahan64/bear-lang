@@ -124,10 +124,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         // compt =/= mut guard
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
 
-        auto maybe_compt_exec
-            = ComptExprSolver(context, *this)
-                  .solve_compt_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
-                                    maybe_type.as_id());
+        auto maybe_compt_exec = ComptExprSolver(context, *this)
+                                    .solve_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
+                                                maybe_type.as_id());
 
         auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
         def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec});
