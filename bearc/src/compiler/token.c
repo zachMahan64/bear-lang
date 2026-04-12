@@ -265,7 +265,7 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_CHAR] = "char",
 
     [TOK_F32] = "f32",
-    [TOK_F64] = "doub",
+    [TOK_F64] = "f64",
 
     [TOK_STR] = "str",
     [TOK_BOOL] = "bool",
