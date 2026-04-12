@@ -1,0 +1,15 @@
+// tests/hir/37.br
+
+contract Ben {
+    mt is_dog() -> bool;
+}
+
+struct Foo <T> {
+    T val;
+
+    mt bar<E has Ben>(E e) -> bool {
+        return val > 12 && e.is_dog();
+    }
+}
+
+Foo<Bar>::<Bar> foobar; // oops

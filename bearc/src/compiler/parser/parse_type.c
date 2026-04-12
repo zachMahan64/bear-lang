@@ -444,7 +444,7 @@ ast_type_t* parse_type_generic(parser_t* p, ast_type_t* inner) {
 
     // handle canonical base
     if (!(inner->tag == AST_TYPE_BASE)) {
-        compiler_error_list_emplace(p->error_list, inner->first, ERR_EXPECTED_BASE_TYPE_IN_GENERIC);
+        compiler_error_list_emplace(p->error_list, inner->last, ERR_EXPECTED_BASE_TYPE_IN_GENERIC);
         return parser_sync_type(p);
     }
     outer->type.generic.inner = inner;
