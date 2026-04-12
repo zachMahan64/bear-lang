@@ -572,6 +572,11 @@ void pretty_print_expr(const ast_expr_t* expression) {
         pretty_print_expr(expr.expr.ternary_if.else_expr);
         print_closing_green_brace();
         break;
+    case AST_EXPR_COMPT:
+        print_title("compt-ensured epxr");
+        pretty_print_expr(expr.expr.compt_expr.inner);
+        print_closing_green_brace();
+        break;
     }
     puts(",");
     printer_deindent();

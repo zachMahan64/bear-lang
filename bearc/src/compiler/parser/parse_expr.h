@@ -86,6 +86,8 @@ ast_expr_t* parse_expr_before_opening_brace(parser_t* p);
 /// parse the clause has(Foo0, Foo1, Foo2)
 ast_slice_of_exprs_t parse_has_contracts_clause(parser_t* p);
 
-ast_expr_t* parse_ternary_if(parser_t* p, ast_expr_t* lhs);
+ast_expr_t* parse_expr_ternary_if(parser_t* p, ast_expr_t* lhs);
+
+ast_expr_t* parse_expr_compt(parser_t* p);
 
 #endif

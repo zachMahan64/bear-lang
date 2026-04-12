@@ -1,0 +1,12 @@
+// tests/hir/35.br
+
+
+compt i32 a = compt(123123 + 123 / 3 + 3 * 32); // fine
+
+compt u8 z = 123; 
+
+compt u64 b = compt z; // fine
+
+u16 y = 12;
+
+compt u16 c = compt y; // oops (y not compt)

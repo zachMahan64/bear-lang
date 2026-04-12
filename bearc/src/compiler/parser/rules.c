@@ -27,10 +27,10 @@ static uint8_t postunary_prec_map[TOK__NUM] = {
 
 uint8_t prec_postunary(token_type_e type) { return postunary_prec_map[type]; }
 
-static uint8_t preunary_prec_map[TOK__NUM]
-    = {[TOK_INC] = 3,      [TOK_DEC] = 3,    [TOK_PLUS] = 3,   [TOK_MINUS] = 3,
-       [TOK_STAR] = 3,     [TOK_AMPER] = 3,  [TOK_SIZEOF] = 3, [TOK_ALIGNOF] = 3,
-       [TOK_BOOL_NOT] = 3, [TOK_TYPEOF] = 3, [TOK_BIT_NOT] = 3
+static uint8_t preunary_prec_map[TOK__NUM] = {
+    [TOK_INC] = 3,      [TOK_DEC] = 3,    [TOK_PLUS] = 3,    [TOK_MINUS] = 3,
+    [TOK_STAR] = 3,     [TOK_AMPER] = 3,  [TOK_SIZEOF] = 3,  [TOK_ALIGNOF] = 3,
+    [TOK_BOOL_NOT] = 3, [TOK_TYPEOF] = 3, [TOK_BIT_NOT] = 3, [TOK_COMPT] = 3,
 
 };
 

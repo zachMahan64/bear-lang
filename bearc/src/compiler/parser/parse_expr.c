@@ -127,7 +127,7 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
         return parse_binary(p, lhs, prec);
     }
     if (parser_peek_match(p, TOK_IF)) {
-        return parse_ternary_if(p, lhs);
+        return parse_expr_ternary_if(p, lhs);
     }
     if (!lhs) {
         return parse_expr(p);
@@ -140,6 +140,10 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
     // special preunary case, &mut <expr> or &<expr>
     if (parser_peek(p)->type == TOK_AMPER) {
         return parse_expr_borrow(p);
+    }
+    // special case compt(expr)
+    if (parser_peek(p)->type == TOK_COMPT) {
+        return parse_expr_compt(p);
     }
     token_t* op = parser_eat(p); // already been checked that this token is legit
     ast_expr_t* preunary_expr = parser_alloc_expr(p);
@@ -619,7 +623,7 @@ ast_slice_of_exprs_t parse_has_contracts_clause(parser_t* p) {
     return parser_freeze_expr_spill_arr(p, &ids);
 }
 
-ast_expr_t* parse_ternary_if(parser_t* p, ast_expr_t* lhs) {
+ast_expr_t* parse_expr_ternary_if(parser_t* p, ast_expr_t* lhs) {
     // we're looking for <expr> if compt? <condition> else <expr>
     ast_expr_t* tif = parser_alloc_expr(p);
     tif->type = AST_EXPR_TERNARY_IF;
@@ -639,6 +643,29 @@ ast_expr_t* parse_ternary_if(parser_t* p, ast_expr_t* lhs) {
     }
     tif->expr.ternary_if.else_expr = parse_expr(p);
     tif->first = first;
+    tif->last = parser_prev(p);
+    return tif;
+}
+
+ast_expr_t* parse_expr_compt(parser_t* p) {
+    ast_expr_t* tif = parser_alloc_expr(p);
+
+    tif->type = AST_EXPR_COMPT;
+
+    token_t* compt_tkn = parser_expect_token(p, TOK_COMPT);
+
+    if (!compt_tkn) {
+        return parser_sync_expr(p);
+    }
+
+    token_t* lparen = parser_match_token(p, TOK_LPAREN);
+    tif->expr.compt_expr.inner = parse_expr(p);
+
+    if (lparen) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
+
+    tif->first = compt_tkn;
     tif->last = parser_prev(p);
     return tif;
 }

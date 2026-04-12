@@ -385,6 +385,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_TERNARY_IF: {
             return solve_ternary_if(fid, scope, expr, into_tid);
         }
+        case AST_EXPR_COMPT:
+            return solve_compt_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
@@ -706,6 +708,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_TERNARY_IF: {
             return solve_ternary_if(fid, scope, expr, into_tid);
         }
+        case AST_EXPR_COMPT:
+            return solve_compt_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
         // these are all invalid
         case AST_EXPR_LITERAL:
         case AST_EXPR_LIST_LITERAL:
@@ -1214,6 +1218,8 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         case AST_EXPR_LIST_LITERAL:
             return handle_list_literal(fid, scope, expr, maybe_into_tid);
+        case AST_EXPR_COMPT:
+            return solve_compt_expr(fid, scope, expr->expr.compt_expr.inner, maybe_into_tid);
         case AST_EXPR_LITERAL:
         case AST_EXPR_BINARY:
         case AST_EXPR_GROUPING:
