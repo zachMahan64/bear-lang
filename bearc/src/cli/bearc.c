@@ -9,6 +9,7 @@
 #include "bearc.h"
 #include "cli/args.h"
 #include "cli/import_path.h"
+#include "cli/versioning.h"
 #include "compiler/compile.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
@@ -167,14 +168,6 @@ void cli_help(void) {
            ansi_reset(), flags, flags_color, flags_w_args_title, ansi_reset(), flags_w_args);
 }
 
-#define BEARC_VERSION_FALLBACK "v0.0.0 internal"
-
-#ifdef BEARC_VERSION
-#define BEARC_VERSION_STR BEARC_VERSION
-#else
-#define BEARC_VERSION_STR BEARC_VERSION_FALLBACK
-#endif
-
 void cli_version(void) { printf("bearc " BEARC_VERSION_STR "\n"); }
 
 cli_error_status cli_compile(const bearc_args_t* args) {
@@ -187,12 +180,17 @@ cli_error_status cli_compile(const bearc_args_t* args) {
 void cli_no_args(void) {
     printf("run '%sbearc%s --help%s' to see available operations.\n\n", ansi_bold_green(),
            ansi_bold_reset(), ansi_reset());
+
     printf("Bear Compiler Copyright (C) 2025-2026 Zachary Mahan \n"
            "This program comes with ABSOLUTELY NO WARRANTY.\n"
            "This is free software, and you are welcome to redistribute it under certain "
            "conditions.\n"
            "For more information, visit: "
-           "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text\n");
+           "https://www.gnu.org/licenses/gpl-3.0.en.html#license-text\n\n");
+
+    cli_version();
+
+    puts("");
 }
 void cli_announce_unknown_flag(void) {
     printf("%s(bearc)%s unknown flag(s)\n", ansi_bold(), ansi_reset());
