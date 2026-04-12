@@ -47,7 +47,7 @@ template <typename T> class Id {
     constexpr Id operator--(int) { return Id{value--}; }
 };
 
-struct Symbol;
+class Symbol;
 struct File;
 class FileAst;
 struct Scope;
@@ -117,20 +117,23 @@ template <hir::IsId T> class IdIdx {
     friend constexpr bool operator==(IdIdx<T> a, IdIdx<T> b) { return a.value == b.value; }
 };
 
-static constinit std::nullopt_t OPT_ID_NONE = std::nullopt;
-using NoneId = std::nullopt_t;
+struct Opt {
+    static constexpr std::nullopt_t none = std::nullopt;
+    using NoneId = std::nullopt_t;
+};
 
 /// holds an optional HirId or HirIdIdx type
 template <hir::IsId T> class OptId {
     T underlying{};
 
   public:
-    using none_type = NoneId;
-    static constexpr none_type none = OPT_ID_NONE;
+    using none_type = Opt::NoneId;
+    static constexpr none_type none = Opt::none;
     using id_tag = T;
     OptId() = default;
     OptId(T id_value) : underlying(id_value) {}
-    OptId(NoneId none) : OptId{} {}
+    // allow conversion from none_type
+    constexpr OptId(none_type none) : OptId{} { const auto _ = none; }
     HirId val() const { return underlying.val(); }
     constexpr T as_id() const noexcept {
         assert(underlying.val() != HIR_ID_NONE);

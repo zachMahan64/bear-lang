@@ -250,9 +250,10 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
 }
 
 template <ConsiderMut C>
-TypeToStringValue TypeToString<C>::transform(TypeToStringValue res1,   // NOLINT
-                                             TypeToStringValue res2) { // NOLINT
-    return TypeToStringValue{.str = (res2.goes_on_left) ? res2.str + res1.str : res1.str + res2.str,
+TypeToStringValue TypeToString<C>::transform(TypeToStringValue res1, TypeToStringValue res2) {
+    return TypeToStringValue{.str = (res2.goes_on_left)
+                                        ? std::move(std::move(res2.str) + std::move(res1.str))
+                                        : std::move(std::move(res1.str) + std::move(res2.str)),
                              .goes_on_left = res2.goes_on_left};
 }
 
