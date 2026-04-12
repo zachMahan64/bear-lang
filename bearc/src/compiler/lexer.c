@@ -157,6 +157,13 @@ lex_multichar_operator:
         LEX_KNOWN_LEN_PUSH(1);
     }
     case ('-'): {
+        if ((n1) >= '0' && n1 <= '9') {
+            // just proceed, this is a numerical lit
+            ++pos;
+            ++len;
+            ++col;
+            goto lex_start;
+        }
         if (n1 == '=' || n1 == '-' || n1 == '>') {
             // --, ->, or -=
             LEX_KNOWN_LEN_PUSH(2);

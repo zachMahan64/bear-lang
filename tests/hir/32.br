@@ -1,0 +1,33 @@
+// tests/hir/32.br
+
+var a = [1, 2, 3.0]; // oops
+
+var b = [60000, 0x123123, -123]; // fine
+
+compt [5]i64 c = [12, 12, 12, 11, 10]; // fine
+
+[5]i64 d = c; // fine
+
+var e = d; // oops
+
+compt [5]i64 f = c; //fine 
+
+compt [2][2]i64 g = [[1, 2], [3, 4]]; // fine
+
+var h = [[1, 2], [3, 4, 5]]; // oops
+
+compt [3]i8 i = [-1, 2, 3]; // fine
+
+[3]u8 j = i; // oops
+
+mod foo {
+    pub struct Foo {
+        [2]i64 i_list;
+    }
+}
+
+use foo..Foo;
+
+compt i64 foo_val = 15;
+
+compt Foo my_foo = Foo{.i_list = [foo_val, 16]}; // fine

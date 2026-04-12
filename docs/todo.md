@@ -8,10 +8,10 @@ main quest
 - [x] fix `tests/hir/10.br` falsely reported circular
 - [x] multi-line and more complicated diagnostics handling
 
-- [ ] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
+- [x] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
     - [x] struct compt handling (propagate constants thru member inits)
     
-    - [ ] compt operators: string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
+    - [x] compt operators: string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
         - [x] implement kind of operator <--> type mapping system for at least builtins
         - [x] arithmetic
         - [x] string literal concat 
@@ -21,9 +21,9 @@ main quest
 
     - [x] compt ternary if
 
-    - [ ] refactor compt expr solver to fully attempt an expr then type check instead of having type checking in both builtin and struct solving
-    
-    - [ ] compt list literals
+    - [x] refactor compt expr solver for some readibility and factor out some common logic between components
+
+    - [x] compt list literals
     
 - [x] finish some more ContextDatabase functionality for better testing 
 
@@ -116,7 +116,7 @@ side quests
 - [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
 
 ##### debugging 
-- [ ] make a scope iterator
+- [x] make a scope iterator
 - [ ] debug logger to display context and scope contents
 
 ##### lsp-friendly features

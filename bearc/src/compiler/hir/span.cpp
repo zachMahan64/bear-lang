@@ -9,6 +9,7 @@
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/token.h"
 #include <stddef.h>
 #include <string_view>
 
@@ -31,6 +32,9 @@ std::string_view Span::retrieve_from_buffer(const char* data, Span span) {
 
 Span::Span(const Context& ctx, FileId file_id, const token_t* first, const token_t* last)
     : Span(file_id, ctx.ast(file_id).buffer(), first, last) {}
+
+Span::Span(const Context& ctx, FileId file_id, token_ptr_slice_t token_slice)
+    : Span(ctx, file_id, token_slice.start[0], token_slice.start[token_slice.len - 1]) {}
 Span Span::generated() { return Span{0, 0, FileId{HIR_ID_NONE}, 0, 0}; }
 
 Span Span::combine(Span span1, Span span2) {

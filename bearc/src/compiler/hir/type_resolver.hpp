@@ -12,6 +12,7 @@
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def_visitor.hpp"
+#include "compiler/hir/diagnostic.hpp"
 #include "compiler/token.h"
 #include <optional>
 
@@ -110,7 +111,7 @@ template <IsDefVisitor V> class TypeResolver {
         auto maybe_inner = resolve_type(fid, scope, type->type.arr.inner, need_layout_info);
 
         if (!maybe_inner.has_value()) {
-            return OptId<TypeId>{};
+            return std::nullopt;
         }
 
         auto maybe_size_exec = ComptExprSolver<V>{context, def_visitor}.solve_builtin_compt_expr(
@@ -120,9 +121,16 @@ template <IsDefVisitor V> class TypeResolver {
             return OptId<TypeId>{};
         }
 
-        auto size = context.exec(maybe_size_exec.as_id())
-                        .template as<ExecConst>()
-                        .template as<uint64_t>();
+        const Exec& size_exec = context.exec(maybe_size_exec.as_id());
+
+        auto size = size_exec.template as<ExecConst>().template as<uint64_t>();
+
+        // guard zero-size
+        if (size == 0) {
+            context.emplace_diagnostic(size_exec.span, diag_code::array_cannot_have_size_zero,
+                                       diag_type::error);
+            return std::nullopt;
+        }
 
         return context.emplace_type(TypeArr{.inner = maybe_inner.as_id(),
                                             .compt_size_expr = maybe_size_exec.as_id(),

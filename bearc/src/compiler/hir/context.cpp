@@ -688,6 +688,8 @@ TypeId Context::emplace_type(const TypeValue& value, Span span, bool mut) {
     return execs.cat(exec_ids.cat(id));
 }
 
+ExecId Context::exec_id(IdIdx<ExecId> id) const { return exec_ids.cat(id); }
+
 [[nodiscard]] const Scope& Context::scope(ScopeId sid) const { return scopes.cat(sid); }
 
 [[nodiscard]] const Def& Context::def(IdIdx<DefId> id) const { return defs.cat(def_ids.cat(id)); }

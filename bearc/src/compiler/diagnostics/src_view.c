@@ -39,6 +39,11 @@ string_view_t get_line_string_view(const src_buffer_t* src_buffer, const char* s
 
 string_t get_cursor_string(string_view_t line_view, size_t len, size_t col,
                            const char* ansi_color) {
+    // we're at eof (only possible tok with len zero, so go back)
+    if (len == 0 && line_view.len > 0 && col > 0) {
+        ++len;
+        --col;
+    }
     string_t str = string_create_and_reserve(line_view.len + 20); // room for ansi strings
     string_push_cstr(&str, ansi_color);
     for (size_t i = 0; i < line_view.len; i++) {

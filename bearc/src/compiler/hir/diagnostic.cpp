@@ -159,6 +159,14 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "value is not contextually convertible to";
     case diag_code::invalid_operand_for_unary_expression:
         return "invalid operand for unary expression";
+    case diag_code::mismatched_types_in_list_literal:
+        return "mismatched types in list literal";
+    case diag_code::is_of_type:
+        return "is of type";
+    case diag_code::value_is_of_type:
+        return "value is of type";
+    case diag_code::array_cannot_have_size_zero:
+        return "array cannot have a size of zero";
     }
     std::unreachable();
     return "";
@@ -524,6 +532,21 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += ansi_bold_reset();
             str += "` ";
             str += message_for_code(code);
+        },
+        [&](DiagnosticIdentifierBeforeMessageAndTypeAfter d) {
+            str += '`';
+            str += accent_color_for_type(type);
+            for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                if (sidx != d.sid_slice.last_elem()) {
+                    str += "..";
+                }
+            }
+            str += ansi_bold_reset();
+            str += "` ";
+            str += message_for_code(code);
+            str += " ";
+            type_helper(d.tid);
         },
         [&](DiagnosticSymbolAfterMessage d) {
             str += message_for_code(code);

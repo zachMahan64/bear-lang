@@ -31,19 +31,48 @@ template <IsDefVisitor V> class ComptExprSolver {
 
   public:
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
+
+    [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, ScopeId scope,
+                                                 const ast_expr_t* expr) {
+        return solve_compt_expr(fid, scope, expr, std::nullopt);
+    }
+
     // solves a top level compt expr (this is primarily for array sizing & builtin types for top
     // level generic instantiation with compt parameterizations)
     [[nodiscard]] OptId<ExecId> solve_compt_expr(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                                  OptId<TypeId> maybe_into_tid) {
+
+        // no type provided, so try to infer
         if (!maybe_into_tid.has_value()) {
+            if (expr->type == AST_EXPR_ID) {
+                return handle_any_id(fid, scope, expr->expr.id);
+            }
             if (expr->type == AST_EXPR_STRUCT_INIT) {
                 return solve_struct_compt_expr(
                     fid, scope, expr, context.emplace_type(TypeVar{}, Span::generated(), false));
             }
+            if (expr->type == AST_EXPR_LIST_LITERAL) {
+                return solve_list(fid, scope, expr, maybe_into_tid);
+            }
             return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, maybe_into_tid);
         }
+
         auto into_tid = maybe_into_tid.as_id();
         const Type& into_type = context.type(into_tid);
+
+        // `var` provided as type, so try to infer
+        if (into_type.holds<TypeVar>()) {
+            if (expr->type == AST_EXPR_ID) {
+                return handle_any_id(fid, scope, expr->expr.id);
+            }
+            if (expr->type == AST_EXPR_STRUCT_INIT) {
+                return solve_struct_compt_expr(fid, scope, expr, into_tid);
+            }
+            if (expr->type == AST_EXPR_LIST_LITERAL) {
+                return solve_list(fid, scope, expr, into_tid);
+            }
+            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, into_tid);
+        }
 
         // try to solve str& at comptime
         if (into_type.holds<TypeRef>()) {
@@ -63,15 +92,37 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             return std::nullopt;
         }
-        if (into_type.holds<TypeStructure>()) {
-            return solve_struct_compt_expr(fid, scope, expr, into_tid);
+
+        // try TypeArr at compt
+        if (into_type.holds<TypeArr>()) {
+            auto maybe_list = solve_list(fid, scope, expr, into_tid);
+            if (maybe_list.empty()) {
+                return std::nullopt; // poisoned
+            }
+            auto list_eid = maybe_list.as_id();
+
+            auto maybe_list_type = infer_type_from_compt_exec(list_eid);
+
+            if (maybe_list_type.empty()) {
+                return std::nullopt; // poisoned
+            }
+
+            TypeId list_type = maybe_list_type.as_id();
+
+            // guard diff type
+            if (!context.equivalent_type(into_tid, list_type)) {
+                context.emplace_diagnostic_with_message_value(
+                    Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                    diag_code::cannot_convert_value_of_type, diag_type::error,
+                    DiagnosticTypeToType{.from = list_type, .to = into_tid});
+                return std::nullopt;
+            }
+
+            return list_eid;
         }
 
-        if (into_type.holds<TypeVar>()) {
-            if (expr->type == AST_EXPR_STRUCT_INIT) {
-                return solve_struct_compt_expr(fid, scope, expr, into_tid);
-            }
-            return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, into_tid);
+        if (into_type.holds<TypeStructure>()) {
+            return solve_struct_compt_expr(fid, scope, expr, into_tid);
         }
 
         // guard against non-builtins
@@ -701,12 +752,17 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
         TypeId tid = maybe_tid.as_id();
+        return handle_cast(fid, scope, eid, tid);
+    }
+
+    [[nodiscard]] OptId<ExecId> handle_cast(FileId fid, ScopeId scope, ExecId eid,
+                                            TypeId into_tid) {
         const Exec& exec = context.exec(eid);
-        const Type& type = context.type(tid);
+        const Type& type = context.type(into_tid);
         if (!exec.holds<ExecConst>() || !type.holds<TypeBuiltin>()) {
             context.emplace_diagnostic_with_message_value(
                 exec.span, diag_code::cannot_convert_expression_to_type, diag_type::error,
-                DiagnosticTypeAfterMessage{.tid = tid});
+                DiagnosticTypeAfterMessage{.tid = into_tid});
             return std::nullopt;
         }
         auto into_builtin = type.as<TypeBuiltin>().type;
@@ -719,7 +775,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (!maybe_converted.has_value()) {
             context.emplace_diagnostic_with_message_value(
                 exec.span, diag_code::cannot_convert_expression_to_type, diag_type::error,
-                DiagnosticTypeAfterMessage{.tid = tid});
+                DiagnosticTypeAfterMessage{.tid = into_tid});
             ExecConst eecc = exec.as<ExecConst>();
             context.emplace_diagnostic_with_message_value(
                 exec.span, diag_code::guaranteed_narrowing_of_compt_value, diag_type::note,
@@ -1136,6 +1192,232 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
 
         return maybe_else_exec;
+    }
+    [[nodiscard]] OptId<ExecId> solve_list(FileId fid, ScopeId scope, const ast_expr_t* expr,
+                                           OptId<TypeId> maybe_into_tid) {
+
+        Span expr_span{fid, context.ast(fid).buffer(), expr->first, expr->last};
+
+        switch (expr->type) {
+        case AST_EXPR_ID: {
+            OptId<ExecId> maybe_eid = handle_any_id(fid, scope, expr->expr.id);
+            if (maybe_eid.empty()) {
+                break;
+            }
+            auto eid = maybe_eid.as_id();
+            auto exec = context.exec(eid);
+            if (exec.template holds<ExecExprListLiteral>()) {
+                return context.emplace_exec(exec.value, expr_span, true);
+            }
+            break;
+        }
+
+        case AST_EXPR_LIST_LITERAL:
+            return handle_list_literal(fid, scope, expr, maybe_into_tid);
+        case AST_EXPR_LITERAL:
+        case AST_EXPR_BINARY:
+        case AST_EXPR_GROUPING:
+        case AST_EXPR_PRE_UNARY:
+        case AST_EXPR_POST_UNARY:
+        case AST_EXPR_SUBSCRIPT:
+        case AST_EXPR_FN_CALL:
+        case AST_EXPR_TYPE:
+        case AST_EXPR_BORROW:
+        case AST_EXPR_STRUCT_INIT:
+        case AST_EXPR_STRUCT_MEMBER_INIT:
+        case AST_EXPR_CLOSURE:
+        case AST_EXPR_TERNARY_IF:
+        case AST_EXPR_VARIANT_DECOMP:
+        case AST_EXPR_BLOCK:
+        case AST_EXPR_MATCH_BRANCH:
+        case AST_EXPR_MATCH:
+        case AST_EXPR_ELSE_MATCH_BRANCH:
+        case AST_EXPR_INVALID:
+            break;
+        }
+        context.emplace_diagnostic(expr_span, diag_code::cannot_resolve_at_compt, diag_type::error);
+        return std::nullopt;
+    }
+    [[nodiscard]] OptId<ExecId> handle_list_literal(FileId fid, ScopeId scope,
+                                                    const ast_expr_t* list_expr,
+                                                    OptId<TypeId> maybe_into_type) {
+        assert(list_expr->type == AST_EXPR_LIST_LITERAL);
+
+        Span whole_list_span{fid, context.ast(fid).buffer(), list_expr->first, list_expr->last};
+
+        ast_expr_list_literal_t list = list_expr->expr.list_literal;
+
+        ast_slice_of_exprs_t list_slice = list.slice;
+
+        // to properly understand desired type (if there is one)
+        OptId<TypeId> maybe_elem_into_type{};
+
+        // if into type is builtin, try to cast
+        if (maybe_into_type.has_value()) {
+            auto into_type = maybe_into_type.as_id();
+            auto type = context.type(into_type);
+            if (type.holds<TypeArr>()) {
+                auto inner_tid = type.as<TypeArr>().inner;
+
+                const Type& type = context.type(inner_tid);
+
+                maybe_elem_into_type = inner_tid;
+            }
+        }
+
+        // guard empty
+        if (list_slice.len == 0) {
+            return context.emplace_exec(ExecExprListLiteral{.elems = IdSlice<ExecId>{},
+                                                            .elem_type_id = maybe_elem_into_type},
+                                        whole_list_span, true);
+        }
+
+        llvm::SmallVector<ExecId> elem_execs{};
+
+        for (HirSize i = 0; i < list_slice.len; ++i) {
+            const ast_expr_t* expr = list_slice.start[i];
+            OptId<ExecId> maybe_exec = solve_compt_expr(
+                fid, scope, expr,
+                maybe_elem_into_type); // this inner part runs at compt and thus will
+                                       // recursive check that sub exprs are compt
+                                       // and will error out when appropriate
+            if (maybe_exec.empty()) {
+                return std::nullopt; // poisoned
+            }
+            elem_execs.push_back(maybe_exec.as_id());
+        }
+
+        IdSlice<ExecId> elem_slice = context.freeze_id_vec(elem_execs);
+
+        OptId<TypeId> maybe_first_type
+            = infer_type_from_compt_exec(context.exec_id(elem_slice.begin()));
+
+        if (maybe_first_type.empty()) {
+            return std::nullopt; // poisoned
+        }
+
+        // We will now type check this list literal for type-homogeneousness:
+
+        const Exec& first_exec = context.exec(elem_slice.begin());
+        TypeId type_for_list = maybe_first_type.as_id();
+
+        bool homo_type = true;
+        OptId<DiagnosticId> prev_diag{};
+
+        for (IdIdx<ExecId> eidx = elem_slice.begin(); eidx != elem_slice.end(); eidx++) {
+            ExecId eid = context.exec_id(eidx);
+            OptId<TypeId> maybe_curr_type = infer_type_from_compt_exec(eid);
+
+            if (maybe_curr_type.empty()) {
+                return std::nullopt; // poisoned
+            }
+
+            TypeId curr_type = maybe_curr_type.as_id();
+
+            if (!context.equivalent_type(curr_type, type_for_list)) {
+
+                const Exec& curr_exec = context.exec(eid);
+
+                // check if it's own first hetero-rodeo, and, if so, emplace the once diagnostic for
+                // the whole list before emplacing the per-exec diagnostics
+                if (homo_type) {
+                    prev_diag = context.emplace_diagnostic(
+                        whole_list_span, diag_code::mismatched_types_in_list_literal,
+                        diag_type::error);
+                    // say type of first diagnostic this one time
+                    auto curr_diag = context.emplace_diagnostic_with_message_value(
+                        first_exec.span, diag_code::value_is_of_type, diag_type::note,
+                        DiagnosticTypeAfterMessage{.tid = type_for_list});
+                    context.set_next_diagnostic(prev_diag.as_id(), curr_diag);
+                    prev_diag = curr_diag;
+                }
+
+                homo_type = false;
+
+                // prev_diag will always be set by now
+                auto curr_diag = prev_diag.as_id();
+
+                auto next_diag = context.emplace_diagnostic_with_message_value(
+                    curr_exec.span, diag_code::value_is_of_type, diag_type::note,
+                    DiagnosticTypeAfterMessage{.tid = curr_type});
+                context.set_next_diagnostic(curr_diag, next_diag);
+                prev_diag = next_diag;
+            }
+        }
+
+        // list isn't homogeneous, so it's invalid
+        if (!homo_type) {
+            return std::nullopt;
+        }
+
+        // fine, homogeneous, so return
+        return context.emplace_exec(
+            ExecExprListLiteral{.elems = elem_slice, .elem_type_id = type_for_list},
+            whole_list_span, true);
+    }
+
+    [[nodiscard]] OptId<TypeId> infer_type_from_compt_exec(ExecId eid) {
+        const Exec& exec = context.exec(eid);
+        if (exec.holds<ExecExprComptConstant>()) {
+            auto bin_type = exec.as<ExecExprComptConstant>().type_builtin();
+            return context.emplace_type(TypeBuiltin{.type = bin_type}, Span::generated(), false);
+        }
+        if (exec.holds<ExecExprStructInit>()) {
+            auto struct_did = exec.as<ExecExprStructInit>().struct_def;
+            return context.emplace_type(TypeStructure{.definition = struct_did}, Span::generated(),
+                                        false);
+        }
+        if (exec.holds<ExecExprListLiteral>()) {
+            auto list_exec = exec.as<ExecExprListLiteral>();
+            auto maybe_contained_type = list_exec.elem_type_id;
+            if (maybe_contained_type.empty()) {
+                return std::nullopt;
+            }
+            auto contained_type = maybe_contained_type.as_id();
+            auto len = list_exec.len();
+            return context.emplace_type(
+                TypeArr{
+                    .inner = contained_type,
+                    .canonical_size = len,
+                },
+                Span::generated(), false);
+        }
+
+        return std::nullopt;
+    }
+
+    // tries to get the const value corresponding to some variable's name, if it exists
+    [[nodiscard]] OptId<ExecId> handle_any_id(FileId fid, ScopeId scope, ast_expr_id id_expr) {
+        const auto id_slice = id_expr.slice;
+        const auto sid_slice = context.symbol_slice(id_slice);
+        const Span expr_span{context, fid, id_slice};
+        OptId<DefId> maybe_did = context.look_up_scoped_variable(scope, sid_slice, expr_span);
+        if (maybe_did.empty()) {
+            context.emplace_diagnostic(Span{context, fid, id_slice},
+                                       diag_code::use_of_undeclared_identifier, diag_type::error);
+            return std::nullopt;
+        }
+        auto did = maybe_did.as_id();
+        const Def& def = context.def(did);
+        if (def.holds<DefVariable>() && def.as<DefVariable>().compt_value.has_value()) {
+
+            if (!def.compt) {
+                auto d0 = context.emplace_diagnostic(
+                    expr_span, diag_code::cannot_resolve_at_compt, diag_type::error,
+                    DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
+                auto d1 = context.emplace_diagnostic_with_message_value(
+                    def.span, diag_code::declared_here_without_compt, diag_type::note,
+                    DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice});
+                context.set_next_diagnostic(d0, d1);
+                return std::nullopt;
+            }
+
+            // right thing, we good
+            // (make new exec w/ same val since we need to update the span loc!)
+            auto orig_exec = context.exec(def.as<DefVariable>().compt_value.as_id());
+            return context.emplace_exec(orig_exec.value, expr_span, true);
+        }
+        return std::nullopt;
     }
 };
 } // namespace hir

@@ -75,7 +75,7 @@ struct TypeGenericStructure {
 
 struct TypeArr {
     TypeId inner;
-    ExecId compt_size_expr;
+    OptId<ExecId> compt_size_expr;
     size_t canonical_size;
 };
 

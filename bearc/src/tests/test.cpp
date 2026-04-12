@@ -95,10 +95,10 @@ br_test_result_t test_context_db(void) {
 
     // TEST 3: ternary if
     const char* args2[] = {"bearc", "tests/hir/31.br"};
-    ContextDatabase db31{sizeof(args2) / sizeof(char*), args1};
+    ContextDatabase db31{sizeof(args2) / sizeof(char*), args2};
 
     assert_compt(db31, "a", true);
-    assert_compt(db31, "d", true);
+    assert_compt(db31, "b", true);
 
     return TEST_RESULT;
 }

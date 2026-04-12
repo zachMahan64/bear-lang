@@ -16,7 +16,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -754,7 +753,7 @@ std::optional<ExecConst> ExecConst::try_down_convert_to(builtin_type type) const
         switch (type) {
 
         case builtin_type::i8:
-            if (fits_signed(v, INT8_MIN, INT8_MAX)) {
+            if (fits_signed(v, -128, 127)) {
                 return to_optconst(ConstantValue{static_cast<int8_t>(v)});
             }
             return none();
@@ -1250,7 +1249,7 @@ template <typename T> EConst e_preun_plus(ExecConst e) {
 }
 
 template <typename T> EConst e_preun_minus(ExecConst e) {
-    return EConst{static_cast<T>(-e.as<T>())};
+    return EConst{static_cast<T>(-(e.as<T>()))};
 }
 
 template <typename T> EConst e_bit_not(ExecConst e) { return EConst{static_cast<T>(~e.as<T>())}; }

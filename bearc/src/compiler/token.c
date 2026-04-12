@@ -543,9 +543,28 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     memcpy(buf, str, len);
     buf[len] = '\0';
 
-    // UINT
     errno = 0;
     char* endptr = NULL;
+
+    // INT, if needed
+    if (str[0] == '-') {
+
+        long long integral_val = strtoll(buf, &endptr, 0);
+        if (endptr != buf && errno == 0) {
+            while (isspace((unsigned char)*endptr)) {
+                endptr++;
+            }
+            if (*endptr == '\0') {
+                tkn->type = TOK_INT_LIT;
+                tkn->val.signed_integral = integral_val;
+                return;
+            }
+        }
+    }
+
+    // UINT
+    errno = 0;
+    endptr = NULL;
     unsigned long long uintegral_val = strtoull(buf, &endptr, 0);
     if (endptr != buf && errno == 0) {
         while (isspace((unsigned char)*endptr)) {
@@ -554,21 +573,6 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
         if (*endptr == '\0') {
             tkn->type = TOK_UINT_LIT;
             tkn->val.unsigned_integral = uintegral_val;
-            return;
-        }
-    }
-
-    // INT, use a int literal unless it would overflow
-    errno = 0;
-    endptr = NULL;
-    long long integral_val = strtoll(buf, &endptr, 0);
-    if (endptr != buf && errno == 0) {
-        while (isspace((unsigned char)*endptr)) {
-            endptr++;
-        }
-        if (*endptr == '\0') {
-            tkn->type = TOK_INT_LIT;
-            tkn->val.signed_integral = integral_val;
             return;
         }
     }

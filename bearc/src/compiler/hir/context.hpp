@@ -222,6 +222,8 @@ class Context {
 
     [[nodiscard]] const Exec& exec(IdIdx<ExecId> id) const;
 
+    [[nodiscard]] ExecId exec_id(IdIdx<ExecId> id) const;
+
     [[nodiscard]] const Scope& scope(ScopeId sid) const;
 
     [[nodiscard]] const ast_stmt_t* def_ast_node(DefId def_id) const;

@@ -202,6 +202,9 @@ using f64 = double;
 
 struct ExecExprListLiteral {
     IdSlice<ExecId> elems;
+    OptId<TypeId> elem_type_id;
+    bool compt;
+    HirSize len() const noexcept { return elems.len(); }
 };
 
 struct ExecExprAssignMove {

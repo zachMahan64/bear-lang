@@ -83,6 +83,10 @@ enum class diag_code : uint8_t {
     immutable_value_is_not_assignable,
     value_is_not_contextually_convertible_to,
     invalid_operand_for_unary_expression,
+    mismatched_types_in_list_literal,
+    value_is_of_type,
+    is_of_type,
+    array_cannot_have_size_zero,
 
     count, // this must be last,
 
@@ -97,6 +101,11 @@ struct DiagnosticIdentifierAfterMessage {
 
 struct DiagnosticIdentifierBeforeMessage {
     IdSlice<SymbolId> sid_slice;
+};
+
+struct DiagnosticIdentifierBeforeMessageAndTypeAfter {
+    IdSlice<SymbolId> sid_slice;
+    TypeId tid;
 };
 
 struct DiagnosticSymbolBeforeMessage {
@@ -136,7 +145,7 @@ using DiagnosticMessageValue
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
                    DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
-                   DiagnosticTypeAndTypeForBinaryOp>;
+                   DiagnosticTypeAndTypeForBinaryOp, DiagnosticIdentifierBeforeMessageAndTypeAfter>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;

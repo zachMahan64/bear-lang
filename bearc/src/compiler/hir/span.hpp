@@ -33,6 +33,7 @@ class Span {
     /// token_t
     Span(FileId file_id, const char* src, const token_t* tkn);
     Span(FileId file_id, const char* src, const token_t* first, const token_t* last);
+    Span(const Context& ctx, FileId file_id, token_ptr_slice_t token_slice);
     Span(const Context& ctx, FileId file_id, const token_t* first, const token_t* last);
     [[nodiscard]] static std::string_view retrieve_from_buffer(const char* data, Span span);
     [[nodiscard]] std::string_view as_sv(const Context& context) const;

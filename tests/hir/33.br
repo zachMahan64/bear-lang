@@ -1,0 +1,41 @@
+// tests/hir/33.br
+
+[1][1][1][1] i8 a = [[[[-128]]]]; // fine 
+
+[1][1][1][2] i16 b = [[[[-128, -12000]]]]; // fine
+
+[1][1] i32 c = [[1]]; // fine
+
+compt i8 d = -128; // fine
+
+compt i32 e = -4000000000; // oops, too big
+
+compt bool f = !true;
+
+compt i64 g = -1000; //fine
+
+[1][1][1][1] i8 h = [[[[-129]]]]; // oops
+
+[1][1][1][2] i8 i = [[[[-128, 123]]]]; // fine
+
+[2][2] i8 j = [[],[1, 2]]; //oops
+
+[0]i32 k = []; // oops
+
+compt [1][1][0]str l = [[[]]]; // oops
+
+compt usize MY_STR_ARR_LEN = 5;
+
+compt [MY_STR_ARR_LEN]str ben_str_consts = ["i", "am", "ben", "the", "dog"]; // fine
+
+compt [MY_STR_ARR_LEN]str ben0 = ben_str_consts; // fine
+
+compt [MY_STR_ARR_LEN]str ben1 = ben_str_consts; // fine
+
+var ben_strs = ben_str_consts; // fine
+
+var ben_strs_again = ben_strs; // oops, not compt
+
+compt str ben_str = "i" + " am " + "ben" + " the " + "dog"; // fine
+
+compt [4]str ben_arr_strs = ["ben", "ben", "ben" + " dog", ben_str]; // fine 
