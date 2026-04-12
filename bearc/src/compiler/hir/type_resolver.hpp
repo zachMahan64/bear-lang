@@ -87,8 +87,7 @@ template <IsDefVisitor V> class TypeResolver {
         return OptId<TypeId>{};
     }
 
-    OptId<TypeId> type_ptr_ref(FileId fid, ScopeId scope, const ast_type_t* type,
-                               bool need_layout_info) {
+    OptId<TypeId> type_ptr_ref(FileId fid, ScopeId scope, const ast_type_t* type) {
         auto maybe_inner
             = resolve_type(fid, scope, type->type.ptr_ref.inner, false); // don't need layout info
 
@@ -139,8 +138,7 @@ template <IsDefVisitor V> class TypeResolver {
                                     Span(context, fid, type->first, type->last), false);
     }
 
-    OptId<TypeId> type_slice(FileId fid, ScopeId scope, const ast_type_t* type,
-                             bool need_layout_info) {
+    OptId<TypeId> type_slice(FileId fid, ScopeId scope, const ast_type_t* type) {
         auto maybe_inner
             = resolve_type(fid, scope, type->type.slice.inner, false); // don't need layout info
 
@@ -153,8 +151,7 @@ template <IsDefVisitor V> class TypeResolver {
                                     type->type.slice.mut);
     }
 
-    OptId<TypeId> type_fn_ptr(FileId fid, ScopeId scope, const ast_type_t* type,
-                              bool need_layout_info) {
+    OptId<TypeId> type_fn_ptr(FileId fid, ScopeId scope, const ast_type_t* type) {
         auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type, false);
 
         if (!maybe_return_type.has_value()) {
@@ -183,8 +180,7 @@ template <IsDefVisitor V> class TypeResolver {
             Span(context, fid, type->first, type->last), type->type.slice.mut);
     }
 
-    OptId<TypeId> type_variadic(FileId fid, ScopeId scope, const ast_type_t* type,
-                                bool need_layout_info) {
+    OptId<TypeId> type_variadic(FileId fid, ScopeId scope, const ast_type_t* type) {
         auto maybe_inner = resolve_type(fid, scope, type->type.variadic.inner, false);
 
         if (!maybe_inner.has_value()) {
@@ -195,8 +191,7 @@ template <IsDefVisitor V> class TypeResolver {
                                     Span(context, fid, type->first, type->last), false);
     }
 
-    OptId<TypeId> type_typeof(FileId fid, ScopeId scope, const ast_type_t* type,
-                              bool need_layout_info) {
+    OptId<TypeId> type_typeof(FileId fid, ScopeId scope, const ast_type_t* type) {
 
         assert(type->tag == AST_TYPE_TYPEOF);
 
@@ -224,26 +219,26 @@ template <IsDefVisitor V> class TypeResolver {
             return type_base(fid, scope, type, need_layout_info);
 
         case AST_TYPE_REF_PTR:
-            return type_ptr_ref(fid, scope, type, need_layout_info);
+            return type_ptr_ref(fid, scope, type);
 
         case AST_TYPE_ARR:
             return type_arr(fid, scope, type, need_layout_info);
 
         case AST_TYPE_SLICE:
-            return type_slice(fid, scope, type, need_layout_info);
+            return type_slice(fid, scope, type);
 
         case AST_TYPE_GENERIC:
             // TODO: attempt a generic instantiation
             break;
 
         case AST_TYPE_FN_PTR:
-            return type_fn_ptr(fid, scope, type, need_layout_info);
+            return type_fn_ptr(fid, scope, type);
 
         case AST_TYPE_VARIADIC:
-            return type_variadic(fid, scope, type, need_layout_info);
+            return type_variadic(fid, scope, type);
 
         case AST_TYPE_TYPEOF:
-            return type_typeof(fid, scope, type, need_layout_info);
+            return type_typeof(fid, scope, type);
             break;
 
         case AST_TYPE_INVALID:

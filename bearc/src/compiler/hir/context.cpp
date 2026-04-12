@@ -59,34 +59,34 @@ static constexpr size_t DEFAULT_CANONICAL_TT_CAP = 0x400;
 static constexpr size_t DEFAULT_CANONICAL_GEN_ARGS_CAP = 0x400;
 
 Context::Context(const bearc_args_t& args)
-    : symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
+    : file_ids{DEFAULT_FILE_ID_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
+      id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
-      scopes{DEFAULT_SCOPE_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
-      file_asts{DEFAULT_FILE_AST_VEC_CAP}, symbols{DEFAULT_SYMBOL_VEC_CAP},
-      execs{DEFAULT_EXEC_VEC_CAP}, defs{DEFAULT_DEF_CAP}, file_ids{DEFAULT_FILE_ID_VEC_CAP},
-      importer_to_importees{DEFAULT_FILE_VEC_CAP}, importee_to_importers{DEFAULT_FILE_VEC_CAP},
-      symbol_ids{DEFAULT_SYMBOL_VEC_CAP}, exec_ids{DEFAULT_EXEC_VEC_CAP}, def_ids{DEFAULT_DEF_CAP},
-      def_resol_states{DEFAULT_DEF_CAP}, def_mention_states{DEFAULT_DEF_CAP},
-      types{DEFAULT_TYPE_VEC_CAP}, type_ids{DEFAULT_DEF_CAP},
-      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
-      generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
-      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
-      str_to_symbol_id_map{symbol_map_arena}, args{args}, scope_arena{DEFAULT_SCOPE_ARENA_CAP},
-      def_ast_nodes(DEFAULT_DEF_CAP), diagnostics{DEFAULT_DIAG_NUM},
-      diagnostics_used{DEFAULT_DIAG_NUM}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
-      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP},
-      def_to_ordered_def_slice_id{id_map_arena, DEFAULT_DEF_SLICE_COUNT},
-      ordered_def_slices{DEFAULT_DEF_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
+      file_asts{DEFAULT_FILE_AST_VEC_CAP}, importer_to_importees{DEFAULT_FILE_VEC_CAP},
+      importee_to_importers{DEFAULT_FILE_VEC_CAP}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
+      scope_arena{DEFAULT_SCOPE_ARENA_CAP}, scopes{DEFAULT_SCOPE_VEC_CAP},
+      symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
+      str_to_symbol_id_map{symbol_map_arena}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
+      symbols{DEFAULT_SYMBOL_VEC_CAP}, exec_ids{DEFAULT_EXEC_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP},
+      def_ids{DEFAULT_DEF_CAP}, defs{DEFAULT_DEF_CAP}, def_resol_states{DEFAULT_DEF_CAP},
+      def_ast_nodes(DEFAULT_DEF_CAP), def_mention_states{DEFAULT_DEF_CAP},
+      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP}, ordered_def_slices{DEFAULT_DEF_CAP},
+      def_to_ordered_def_slice_id{id_map_arena, DEFAULT_DEF_SLICE_COUNT}, type_ids{DEFAULT_DEF_CAP},
+      types{DEFAULT_TYPE_VEC_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
       canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP),
-      compact_diagnostics(args.flags[CLI_FLAG_COMPACT_DIAGS]),
+      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
+      generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
+      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_generic_args_id_to_def_id_map{DEFAULT_CANONICAL_GEN_ARGS_CAP},
-      generic_arg_id_slices{DEFAULT_CANONICAL_GEN_ARGS_CAP},
       canonical_generic_args_to_first_instance{DEFAULT_CANONICAL_GEN_ARGS_CAP},
+      generic_arg_id_slices{DEFAULT_CANONICAL_GEN_ARGS_CAP},
       canonical_generic_args_table_arena{DEFAULT_CANONICAL_GEN_ARGS_ARENA_CAP},
       canonical_generic_args_table{*this, canonical_generic_args_table_arena,
-                                   DEFAULT_CANONICAL_GEN_ARGS_CAP} {
+                                   DEFAULT_CANONICAL_GEN_ARGS_CAP},
+      diagnostics{DEFAULT_DIAG_NUM}, diagnostics_used{DEFAULT_DIAG_NUM}, args{args},
+      compact_diagnostics(args.flags[CLI_FLAG_COMPACT_DIAGS]) {
 
     // this may only fail in horribly malfored arguments in test cases
     assert(args.input_file_name);
@@ -218,7 +218,7 @@ void Context::register_importer(FileId importee, FileId importer) {
     importee_to_importers.at(importee).emplace_back(importer);
 }
 
-void Context::report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
+void Context::report_cycle(llvm::SmallVectorImpl<FileId>& import_stack,
                            const token_t* import_path_tkn) {
     // gonna be imported in the previous thing, so top of import stack
     FileId imported_in = import_stack[import_stack.size() - 1];
@@ -239,7 +239,7 @@ void Context::explore_imports(FileId importer_file_id, llvm::SmallVectorImpl<Fil
     // angry base case, guard circularity
     if (file.load_state == file_import_state::in_progress) {
         // safe to take id because a circularity is only possible if a prev id exists
-        report_cycle(importer_file_id, import_stack, import_path_tkn);
+        report_cycle(import_stack, import_path_tkn);
         return;
     }
     // happy base case
@@ -809,8 +809,7 @@ DefId Context::guard_hid_namespace(ScopeId scope, DefId did, IdSlice<SymbolId> i
 }
 
 OptId<DefId> Context::look_up_scoped_bypassing_visibility(auto F, ScopeId scope,
-                                                          IdSlice<SymbolId> id_slice,
-                                                          Span id_span) {
+                                                          IdSlice<SymbolId> id_slice) {
     ScopeId curr_scope = scope;
     for (IdIdx<SymbolId> sidx = id_slice.begin(); sidx != id_slice.end(); sidx++) {
         SymbolId sid = symbol_ids.cat(sidx);
@@ -829,26 +828,22 @@ OptId<DefId> Context::look_up_scoped_bypassing_visibility(auto F, ScopeId scope,
     return OptId<DefId>{};
 }
 OptId<DefId> Context::look_up_scoped_variable_bypassing_visibility(ScopeId scope,
-                                                                   IdSlice<SymbolId> id_slice,
-                                                                   Span id_span) {
+                                                                   IdSlice<SymbolId> id_slice) {
     return look_up_scoped_bypassing_visibility(
         [this](ScopeId scope, SymbolId sid) { return look_up_variable(scope, sid); }, scope,
-        id_slice, id_span);
+        id_slice);
 }
 
 OptId<DefId> Context::look_up_scoped_type_bypassing_visibility(ScopeId scope,
-                                                               IdSlice<SymbolId> id_slice,
-                                                               Span id_span) {
+                                                               IdSlice<SymbolId> id_slice) {
     return look_up_scoped_bypassing_visibility(
-        [this](ScopeId scope, SymbolId sid) { return look_up_type(scope, sid); }, scope, id_slice,
-        id_span);
+        [this](ScopeId scope, SymbolId sid) { return look_up_type(scope, sid); }, scope, id_slice);
 }
 OptId<DefId> Context::look_up_scoped_namespace_bypassing_visibility(ScopeId scope,
-                                                                    IdSlice<SymbolId> id_slice,
-                                                                    Span id_span) {
+                                                                    IdSlice<SymbolId> id_slice) {
     return look_up_scoped_bypassing_visibility(
         [this](ScopeId scope, SymbolId sid) { return look_up_namespace(scope, sid); }, scope,
-        id_slice, id_span);
+        id_slice);
 }
 IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
     llvm::SmallVector<SymbolId> vec{};

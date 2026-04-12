@@ -119,7 +119,7 @@ struct Type : NodeWithVariantValue<Type> {
     static bool is_same(const Context& ctx, TypeId tid1, TypeId tid2);
     // canonical should get immediately set by context
     Type(const TypeValue& value, Span span, bool mut)
-        : value{value}, span{span}, mut{mut}, canonical{HIR_ID_NONE} {}
+        : value{value}, span{span}, canonical{HIR_ID_NONE}, mut{mut} {}
 };
 
 template <class F>
@@ -176,7 +176,7 @@ template <ConsiderMut C> class TypeComparator {
     TypeComparator(const Context& context) : context(context) {}
     bool operator()(const Type& t1, const Type& t2) const;
     // single invocation -> mismatch => false
-    bool operator()(const Type& t1) const { return false; }
+    bool operator()(const Type& t1) const { return false; } // NOLINT, intentionally taking t1
     static bool transform(bool res1, bool res2) { return res1 && res2; }
     static consteval bool considers_mut() { return C::considers_mut(); }
 };
@@ -187,7 +187,9 @@ class TypeContainsMut {
   public:
     using value_type = bool;
     TypeContainsMut(const Context& context) : context(context) {}
-    bool operator()(const Type& t1, const Type& t2) const {
+    bool
+    operator()(const Type& t1,         // NOLINT
+               const Type& t2) const { // NOLINT intentionally taking t1 and t2 here for the concept
         assert(false
                && "double invocation should not be called when checking if a type contains mut");
         return 0;
@@ -202,7 +204,7 @@ template <typename T> class TypeContainsSome {
   public:
     using value_type = bool;
     TypeContainsSome(const Context& context) : context(context) {}
-    bool operator()(const Type& t1, const Type& t2) const {
+    bool operator()(const Type& t1, const Type& t2) const { // NOLINT
         assert(
             false
             && "double invocation should not be called when checking if a type contains a deftype");
@@ -223,7 +225,7 @@ template <ConsiderMut C> class TypeHasher {
     using value_type = HirSize;
     TypeHasher(const Context& context) : context(context) {}
     // probably not needed for the hasher
-    size_t operator()(const Type& t1, const Type& t2) const {
+    size_t operator()(const Type& t1, const Type& t2) const { // NOLINT
         assert(false && "double invocation should not be called when hashing");
         return 0;
     }
@@ -244,7 +246,7 @@ template <ConsiderMut C> class TypeToString {
     using value_type = TypeToStringValue;
     TypeToString(const Context& context) : context(context) {}
     // probably not needed for the hasher
-    TypeToStringValue operator()(const Type& t1, const Type& t2) const {
+    TypeToStringValue operator()(const Type& t1, const Type& t2) const { // NOLINT
         assert(false && "double invocation should not be called when using ToString");
         return {};
     }

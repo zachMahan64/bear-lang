@@ -167,16 +167,16 @@ struct Def : NodeWithVariantValue<Def> {
 
     Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, bool generic, Span span,
         OptId<DefId> parent, enum abi_lang abi = abi_lang::native)
-        : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
-          statik{statik}, abi{abi}, generic{generic} {}
+        : value{value}, span{span}, name{name}, parent{parent}, pub{pub}, compt{compt},
+          statik{statik}, generic{generic}, abi{abi} {}
 
     Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, bool generic, Span span,
         OptId<DefId> parent, uint8_t alignment_preference, enum abi_lang abi = abi_lang::native)
-        : value{value}, span{span}, name{name}, pub{pub}, parent{parent}, compt{compt},
+        : value{value}, span{span}, name{name}, parent{parent}, pub{pub}, compt{compt},
           statik{statik}, generic{generic}, alignment_preference{alignment_preference}, abi{abi} {}
 
     Def(SymbolId name, bool pub, Span span)
-        : span{span}, name{name}, pub{pub}, value{DefUnevaluated{}} {}
+        : value{DefUnevaluated{}}, span{span}, name{name}, pub{pub} {}
     void set_value(DefValue value) { this->value = value; }
 };
 

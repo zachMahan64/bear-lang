@@ -35,6 +35,12 @@ ast_expr_t* parse_primary_expr(parser_t* p);
 
 ast_expr_t* parse_preunary_expr(parser_t* p);
 
+ast_expr_t* parse_expr_same_type(parser_t* p);
+
+ast_expr_t* parse_expr_type_to_str(parser_t* p);
+
+ast_expr_t* parse_expr_static_assert(parser_t* p);
+
 ast_expr_t* parse_literal(parser_t* p);
 
 ast_expr_t* parse_id(parser_t* p);

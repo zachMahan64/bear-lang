@@ -89,6 +89,7 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+        break;
     }
     case 2: {
         // builtin_type::u8;
@@ -125,6 +126,7 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+        break;
     }
     case 3: {
         // builtin_type::i16;
@@ -159,6 +161,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 4: {
         // builtin_type::u16;
@@ -193,6 +197,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 5: {
         // builtin_type::i32;
@@ -225,6 +231,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 6: {
         // builtin_type::u32;
@@ -257,6 +265,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 7: {
         // builtin_type::i64;
@@ -287,6 +297,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 8: {
         // builtin_type::u64;
@@ -317,6 +329,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 9: {
         // builtin_type::charr;
@@ -353,6 +367,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
         case builtin_type::boolean:
             return to_optconst(ConstantValue{static_cast<bool>(val)});
         }
+
+        break;
     }
     case 10: {
         // builtin_type::f32;
@@ -383,6 +399,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{static_cast<bool>(val)});
             break;
         }
+
+        break;
     }
     case 11: {
         // builtin_type::f64;
@@ -412,6 +430,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{static_cast<bool>(val)});
             break;
         }
+
+        break;
     }
     case 12: {
         // builtin_type::nullpointer;
@@ -438,6 +458,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
             return to_optconst(ConstantValue{false});
             break;
         }
+
+        break;
     }
     case 13: {
         // builtin_type::boolean;
@@ -462,6 +484,8 @@ std::optional<ExecConst> ExecConst::try_up_convert_to(builtin_type type) const {
             return *this;
             break;
         }
+
+        break;
     }
     default:
         assert(false && "unconsidered builtin type");
@@ -977,16 +1001,16 @@ bool Exec::can_be_compt(const Context& ctx) {
     auto get_e = [&](ExecId eid) { return ctx.exec(eid); };
     auto eidx_to_e = [&](IdIdx<ExecId> eid) { return ctx.exec(eid); };
     auto vs = Ovld{
-        [&](const ExecBlock& t) -> bool { return false; },
-        [&](const ExecExprStmt& t) -> bool { return false; },
-        [&](const ExecBreakStmt& t) -> bool { return false; },
-        [&](const ExecIfStmt& t) -> bool { return false; },
-        [&](const ExecLoopStmt& t) -> bool { return false; },
-        [&](const ExecReturnStmt& t) -> bool { return false; },
-        [&](const ExecYieldStmt& t) -> bool { return false; },
+        [&](const ExecBlock&) -> bool { return false; },
+        [&](const ExecExprStmt&) -> bool { return false; },
+        [&](const ExecBreakStmt&) -> bool { return false; },
+        [&](const ExecIfStmt&) -> bool { return false; },
+        [&](const ExecLoopStmt&) -> bool { return false; },
+        [&](const ExecReturnStmt&) -> bool { return false; },
+        [&](const ExecYieldStmt&) -> bool { return false; },
         // exprs
         [&](const ExecExprIdentifier& t) -> bool { return get_d(t.identifier).compt; },
-        [&](const ExecConst& t) -> bool { return true; },
+        [&](const ExecConst&) -> bool { return true; },
         [&](const ExecExprListLiteral& t) -> bool {
             // just check each elem
             for (auto eidx = t.elems.begin(); eidx != t.elems.end(); eidx++) {
@@ -1040,10 +1064,10 @@ bool Exec::can_be_compt(const Context& ctx) {
         },
         [&](const ExecExprStructMemberInit& t) -> bool { return get_e(t.value).compt; },
         // full compt ctrl no for now
-        [&](const ExecExprClosure& t) -> bool { return false; },
-        [&](const ExecExprVariantDecomp& t) -> bool { return false; },
-        [&](const ExecExprMatch& t) -> bool { return false; },
-        [&](const ExecExprMatchBranch& t) -> bool { return false; },
+        [&](const ExecExprClosure&) -> bool { return false; },
+        [&](const ExecExprVariantDecomp&) -> bool { return false; },
+        [&](const ExecExprMatch&) -> bool { return false; },
+        [&](const ExecExprMatchBranch&) -> bool { return false; },
     };
     return visit(vs);
 }
@@ -1232,10 +1256,10 @@ template <typename T> EConst e_less_than_or_equal(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() <= r.as<T>())};
 }
 template <typename T> EConst e_equal(EConst l, EConst r) {
-    return EConst{static_cast<T>(l.as<T>() == r.as<T>())};
+    return EConst{static_cast<bool>(l.as<T>() == r.as<T>())};
 }
 template <typename T> EConst e_not_equal(EConst l, EConst r) {
-    return EConst{static_cast<T>(l.as<T>() != r.as<T>())};
+    return EConst{static_cast<bool>(l.as<T>() != r.as<T>())};
 }
 template <typename T> EConst e_and(EConst l, EConst r) {
     return EConst{static_cast<T>(l.as<T>() && r.as<T>())};

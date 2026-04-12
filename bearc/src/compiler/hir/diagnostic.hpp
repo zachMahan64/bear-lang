@@ -88,6 +88,7 @@ enum class diag_code : uint8_t {
     is_of_type,
     array_cannot_have_size_zero,
     cannot_infer_type_at_compt,
+    static_assertion_failed,
 
     count, // this must be last,
 
@@ -175,15 +176,15 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     void print(Context& context, bool print_file) const;
     Diagnostic(Span span, enum diag_code code, enum diag_type type,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
-        : span(span), code(code), type(type), next(next), value(DiagnosticNoOtherInfo{}) {}
+        : value(DiagnosticNoOtherInfo{}), span(span), next(next), code(code), type(type) {}
     Diagnostic(Span span, enum diag_code code, enum diag_type type, DiagnosticInfoValue value,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
-        : span(span), code(code), type(type), next(next), value(value) {}
+        : value(value), span(span), next(next), code(code), type(type) {}
     Diagnostic(Span span, enum diag_code code, enum diag_type type,
                DiagnosticMessageValue message_value, DiagnosticInfoValue value,
                OptId<DiagnosticId> next = OptId<DiagnosticId>{})
-        : span(span), code(code), type(type), next(next), message_value(message_value),
-          value(value) {}
+        : message_value(message_value), value(value), span(span), next(next), code(code),
+          type(type) {}
     void set_next(DiagnosticId next) { this->next = next; }
 
   private:

@@ -15,8 +15,6 @@
 #include <stddef.h>
 // this may need to be tuned for a balance between cache locality and limited rehashing
 static constexpr size_t HIR_SCOPE_MAP_DEFAULT_SIZE = 0x100;
-static constexpr size_t HirScopeOP_LEVEL_SCALE_FACTOR = 4;
-/// helper for looking into symbol -> def maps
 
 namespace hir {
 

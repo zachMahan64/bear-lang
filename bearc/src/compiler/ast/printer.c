@@ -578,8 +578,29 @@ void pretty_print_expr(const ast_expr_t* expression) {
         print_closing_green_brace();
         break;
     case AST_EXPR_COMPT:
-        print_title("compt-ensured epxr");
+        print_title("compt-ensured expr");
         pretty_print_expr(expr.expr.compt_expr.inner);
+        print_closing_green_brace();
+        break;
+    case AST_EXPR_SAME_TYPE: {
+        print_title("@same_type");
+        print_opening_delim_from_type(TOK_LPAREN);
+        print_type(expr.expr.same_type.lhs_type);
+        print_type(expr.expr.same_type.rhs_type);
+        print_closing_delim_from_type(TOK_LPAREN);
+        print_closing_green_brace();
+        break;
+    }
+    case AST_EXPR_TYPE_TO_STR:
+        print_title("@type_to_str");
+        print_opening_delim_from_type(TOK_LPAREN);
+        print_type(expr.expr.type_to_str.type);
+        print_closing_delim_from_type(TOK_LPAREN);
+        print_closing_green_brace();
+        break;
+    case AST_EXPR_STATIC_ASSERT:
+        print_title("@static_assert");
+        pretty_print_expr(expr.expr.static_assert_expr.inner);
         print_closing_green_brace();
         break;
     }

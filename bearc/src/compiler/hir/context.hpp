@@ -94,20 +94,17 @@ class Context {
                                             Span id_span);
 
     [[nodiscard]] OptId<DefId> look_up_scoped_bypassing_visibility(auto F, ScopeId scope,
-                                                                   IdSlice<SymbolId> id_slice,
-                                                                   Span id_span);
+                                                                   IdSlice<SymbolId> id_slice);
 
     [[nodiscard]] OptId<DefId>
-    look_up_scoped_variable_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice,
-                                                 Span id_span);
+    look_up_scoped_variable_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
     [[nodiscard]] OptId<DefId> look_up_scoped_type_bypassing_visibility(ScopeId scope,
-                                                                        IdSlice<SymbolId> id_slice,
-                                                                        Span id_span);
+                                                                        IdSlice<SymbolId> id_slice);
 
     [[nodiscard]] OptId<DefId>
     look_up_scoped_namespace_bypassing_visibility(ScopeId scope,
 
-                                                  IdSlice<SymbolId> id_slice, Span id_span);
+                                                  IdSlice<SymbolId> id_slice);
 
     /// finds the scope containing a definition
     /// TODO needs to handle non-top level stmts too
@@ -369,8 +366,7 @@ class Context {
     /// wrapped by file handling logic and should thus not be used directly anywhere else
     [[nodiscard]] FileAstId emplace_ast(const char* file_name);
     void register_importer(FileId importee, FileId importer);
-    void report_cycle(FileId cyclical_file_id, llvm::SmallVectorImpl<FileId>& import_stack,
-                      const token_t* import_path_tkn);
+    void report_cycle(llvm::SmallVectorImpl<FileId>& import_stack, const token_t* import_path_tkn);
     [[nodiscard]] OptId<FileId> try_file_from_import_statement(FileId importer_id,
                                                                const ast_stmt_t* import_statement);
 };

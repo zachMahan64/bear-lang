@@ -19,7 +19,7 @@ Span::Span(FileId file_id, const char* src, const token_t* tkn)
       col(tkn->loc.col) {}
 
 Span::Span(FileId file_id, const char* src, const token_t* first, const token_t* last)
-    : start(first->start - src), file_id(file_id), len((last->start + last->len) - first->start),
+    : start(first->start - src), len((last->start + last->len) - first->start), file_id(file_id),
       line(first->loc.line), col(first->loc.col) {}
 
 std::string_view Span::retrieve_from_buffer(const char* data, Span span) {

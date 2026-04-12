@@ -24,7 +24,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #define PREC_INIT UINT8_MAX
@@ -137,13 +136,20 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
 }
 
 ast_expr_t* parse_preunary_expr(parser_t* p) {
-    // special preunary case, &mut <expr> or &<expr>
-    if (parser_peek(p)->type == TOK_AMPER) {
+    // special preunary cases
+    switch (parser_peek(p)->type) {
+    case TOK_AMPER:
         return parse_expr_borrow(p);
-    }
-    // special case compt(expr)
-    if (parser_peek(p)->type == TOK_COMPT) {
+    case TOK_COMPT:
         return parse_expr_compt(p);
+    case TOK_SAME_TYPE:
+        return parse_expr_same_type(p);
+    case TOK_STATIC_ASSERT:
+        return parse_expr_static_assert(p);
+    case TOK_TYPE_TO_STR:
+        return parse_expr_type_to_str(p);
+    default:
+        break;
     }
     token_t* op = parser_eat(p); // already been checked that this token is legit
     ast_expr_t* preunary_expr = parser_alloc_expr(p);
@@ -174,6 +180,67 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
     preunary_expr->expr.unary.expr = sub_expr;
     preunary_expr->last = parser_prev(p);
     return preunary_expr;
+}
+
+ast_expr_t* parse_expr_same_type(parser_t* p) {
+    ast_expr_t* ex = parser_alloc_expr(p);
+    ex->type = AST_EXPR_SAME_TYPE;
+
+    token_t* st_tkn = parser_expect_token(p, TOK_SAME_TYPE);
+    if (!st_tkn) {
+        return parser_sync_expr(p);
+    }
+
+    parser_expect_token(p, TOK_LPAREN);
+    ex->expr.same_type.lhs_type = parse_type(p);
+    parser_expect_token(p, TOK_COMMA);
+    ex->expr.same_type.rhs_type = parse_type(p);
+    parser_expect_token(p, TOK_RPAREN);
+
+    ex->first = st_tkn;
+    ex->last = parser_prev(p);
+    return ex;
+}
+
+ast_expr_t* parse_expr_type_to_str(parser_t* p) {
+    ast_expr_t* ex = parser_alloc_expr(p);
+    ex->type = AST_EXPR_TYPE_TO_STR;
+
+    token_t* tts_tkn = parser_expect_token(p, TOK_TYPE_TO_STR);
+    if (!tts_tkn) {
+        return parser_sync_expr(p);
+    }
+
+    parser_expect_token(p, TOK_LPAREN);
+    ex->expr.type_to_str.type = parse_type(p);
+    parser_expect_token(p, TOK_RPAREN);
+
+    ex->first = tts_tkn;
+    ex->last = parser_prev(p);
+    return ex;
+}
+
+ast_expr_t* parse_expr_static_assert(parser_t* p) {
+    ast_expr_t* ex = parser_alloc_expr(p);
+
+    ex->type = AST_EXPR_STATIC_ASSERT;
+
+    token_t* stass_tkn = parser_expect_token(p, TOK_STATIC_ASSERT);
+
+    if (!stass_tkn) {
+        return parser_sync_expr(p);
+    }
+
+    token_t* lparen = parser_match_token(p, TOK_LPAREN);
+    ex->expr.static_assert_expr.inner = parse_expr(p);
+
+    if (lparen) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
+
+    ex->first = stass_tkn;
+    ex->last = parser_prev(p);
+    return ex;
 }
 
 ast_expr_t* parse_literal(parser_t* p) {
@@ -650,9 +717,9 @@ ast_expr_t* parse_expr_ternary_if(parser_t* p, ast_expr_t* lhs) {
 }
 
 ast_expr_t* parse_expr_compt(parser_t* p) {
-    ast_expr_t* tif = parser_alloc_expr(p);
+    ast_expr_t* ex = parser_alloc_expr(p);
 
-    tif->type = AST_EXPR_COMPT;
+    ex->type = AST_EXPR_COMPT;
 
     token_t* compt_tkn = parser_expect_token(p, TOK_COMPT);
 
@@ -661,13 +728,13 @@ ast_expr_t* parse_expr_compt(parser_t* p) {
     }
 
     token_t* lparen = parser_match_token(p, TOK_LPAREN);
-    tif->expr.compt_expr.inner = parse_expr(p);
+    ex->expr.compt_expr.inner = parse_expr(p);
 
     if (lparen) {
         parser_expect_token(p, TOK_RPAREN);
     }
 
-    tif->first = compt_tkn;
-    tif->last = parser_prev(p);
-    return tif;
+    ex->first = compt_tkn;
+    ex->last = parser_prev(p);
+    return ex;
 }

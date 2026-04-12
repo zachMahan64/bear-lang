@@ -104,7 +104,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 def.span, diag_code::a_compt_variable_should_be_explicitly_initialized,
                 diag_type::error, DiagnosticSymbolBeforeMessage{.sid = def.name});
         }
-        def.set_value(DefVariable{.type = maybe_type.as_id()});
+        def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = std::nullopt});
         // TODO handle invalid non-initialized statements
         // search for default value/ddefault method
         break;
@@ -128,7 +128,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                     .solve_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
                                                 maybe_type.as_id());
 
-        auto name_sid = context.symbol_id(stmt->stmt.var_init_decl.name);
         def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec});
         // check poison /not init
         if (!maybe_compt_exec.has_value()) {
@@ -158,6 +157,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             .scope = context.scope_for_top_level_def(did),
             .ordered_members = ordered_defs,
             /* .contracts = */
+            .contracts = {},
+            .orginal = {},
         });
         break;
     }
@@ -215,13 +216,13 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         break;
     }
+        // TODO, need to lower these
     case AST_STMT_CONTRACT_DEF:
     case AST_STMT_UNION_DEF:
     case AST_STMT_VARIANT_DEF:
     case AST_STMT_VARIANT_FIELD_DECL:
     case AST_STMT_FN_DECL:
     case AST_STMT_FN_PROTOTYPE:
-        break;
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level
     case AST_STMT_FILE:

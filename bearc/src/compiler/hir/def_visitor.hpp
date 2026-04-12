@@ -68,7 +68,7 @@ class InsideBodyDefVisitor {
 
     DefId visit_as_transparent(DefId def);
 
-    DefId visit_as_independent(DefId def);
+    static DefId visit_as_independent(DefId def);
 
     DefId visit_as_mutator(DefId def);
 };

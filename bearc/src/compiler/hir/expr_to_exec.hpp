@@ -20,7 +20,7 @@ struct AstExprToExec {
     Context& context;
 
     AstExprToExec(Context& ctx, InsideBodyDefVisitor& def_visitor)
-        : context{ctx}, def_visitor{def_visitor} {}
+        : def_visitor{def_visitor}, context{ctx} {}
     [[nodiscard]] OptId<ExecId> to_exec(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                         TypeId into_tid) {
         return std::nullopt; // TODO

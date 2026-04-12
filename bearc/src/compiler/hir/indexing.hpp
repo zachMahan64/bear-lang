@@ -49,7 +49,7 @@ template <typename T> class Id {
 
 struct Symbol;
 struct File;
-struct FileAst;
+class FileAst;
 struct Scope;
 struct Exec;
 struct Def;

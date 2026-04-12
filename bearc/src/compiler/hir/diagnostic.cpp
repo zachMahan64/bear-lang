@@ -169,6 +169,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "array cannot have a size of zero";
     case diag_code::cannot_infer_type_at_compt:
         return "cannot infer type at compile-time";
+    case diag_code::static_assertion_failed:
+        return "static assertion failed";
     }
     std::unreachable();
     return "";
@@ -358,9 +360,10 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     static constexpr HirSize MAX_LINE_LEN = 100;
 
     HirSize curr_len = 0;
-    HirSize prev_len = 0;
+    HirSize prev_len = 0; // NOLINT
 
-    HirSize issue_line = 0;
+    HirSize issue_line = 0; // NOLINT
+                            //^ clang tidy was having issues with false positives here
     HirSize issue_len = 0;
     bool has_faux_lines = false;
 

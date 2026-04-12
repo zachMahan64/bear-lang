@@ -16,7 +16,7 @@
 
 namespace hir {
 
-struct Context;
+class Context;
 
 using ScopeIdMap = IdHashMap<SymbolId, DefId>;
 
@@ -41,13 +41,13 @@ concept Callable = std::is_class_v<C> && !requires(Tester<C> t) { &Tester<C>::op
  */
 class Scope {
     OptId<ScopeId> parent;
+    DataArena& arena;
     /// module, struct, and variant names
     ScopeIdMap namespaces;
     /// var foo;
     ScopeIdMap variables;
     /// structs, variants, unions, deftypes
     ScopeIdMap types;
-    DataArena& arena;
     const bool top_level;
     void insert(SymbolId symbol, DefId def, scope_kind kind);
     static OptId<DefId> look_up_impl(const Context& context, ScopeId local_scope_id,

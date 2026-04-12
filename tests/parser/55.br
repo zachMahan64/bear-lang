@@ -1,0 +1,7 @@
+// tests/parser/55.br
+
+fn main() {
+    @static_assert true;
+    @same_type(i32, i32);
+    @type_to_str(i32); 
+}

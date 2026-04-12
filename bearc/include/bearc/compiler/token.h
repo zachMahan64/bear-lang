@@ -118,6 +118,9 @@ typedef enum token_type {
     TOK_MOVE,
     TOK_AS,
     TOK_IS, // for variant decomp
+    TOK_SAME_TYPE,
+    TOK_TYPE_TO_STR,
+    TOK_STATIC_ASSERT,
 
     // constructs
     TOK_REQUIRES,

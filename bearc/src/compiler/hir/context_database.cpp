@@ -40,14 +40,13 @@ ContextDatabase::query_def_id(const std::vector<std::string>& def_path) {
         sid_vec.push_back(ctx->symbol_id(s));
     }
     IdSlice<SymbolId> sid_slice = ctx->freeze_id_vec(sid_vec);
-    auto maybe_mod = ctx->look_up_scoped_namespace_bypassing_visibility(
-        ctx->root_scope(), sid_slice, Span::generated());
+    auto maybe_mod
+        = ctx->look_up_scoped_namespace_bypassing_visibility(ctx->root_scope(), sid_slice);
 
-    auto maybe_type = ctx->look_up_scoped_type_bypassing_visibility(ctx->root_scope(), sid_slice,
-                                                                    Span::generated());
+    auto maybe_type = ctx->look_up_scoped_type_bypassing_visibility(ctx->root_scope(), sid_slice);
 
-    auto maybe_variable = ctx->look_up_scoped_variable_bypassing_visibility(
-        ctx->root_scope(), sid_slice, Span::generated());
+    auto maybe_variable
+        = ctx->look_up_scoped_variable_bypassing_visibility(ctx->root_scope(), sid_slice);
     return DefIdQueryResult{
         .mod_id = maybe_mod, .type_id = maybe_type, .variable_id = maybe_variable};
 }

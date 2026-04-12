@@ -1,0 +1,38 @@
+// tests/hir/38.br
+
+var _0 = @static_assert(true);
+var _1 = 12 if @static_assert(false) else 100.01003; // oops, failed, but this'll set _1 to be 12
+                                                     // this can be utilized for communicating compt failures
+                                                     // for better metaprogramming
+
+var _2 = @static_assert 1231231 > 5234234324; // oops
+
+compt bool a = @static_assert @same_type(i32, i32); // fine
+
+compt bool b = @static_assert @same_type(i32, i8); // oops
+
+struct Foo{}
+
+compt bool c = @static_assert @same_type(i32, Foo); // oops
+
+deftype Fooey = Foo;
+
+compt bool d = @static_assert @same_type(Foo, Foo); // fine
+
+compt bool e = @static_assert @same_type(Fooey, Foo); // fine
+
+Foo f = Foo{};
+
+compt bool g = @static_assert @same_type(typeof(f), Foo); // fine
+
+compt bool h = @static_assert @same_type(typeof(f), Foo); // fine
+
+compt str i = @type_to_str(Foo);
+
+compt str j = @type_to_str(Fooey);
+
+compt bool k = @static_assert(i == "Foo");
+
+compt bool l = @static_assert(j == "Fooey");
+
+compt bool m = @static_assert(@type_to_str(Foo) != @type_to_str(Fooey)); // mentioned differently

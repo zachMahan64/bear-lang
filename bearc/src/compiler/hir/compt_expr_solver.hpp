@@ -26,8 +26,8 @@
 namespace hir {
 
 template <IsDefVisitor V> class ComptExprSolver {
-    V& def_visitor;
     Context& context;
+    V& def_visitor;
 
   public:
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
@@ -210,7 +210,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
             } else {
                 auto sid_slice = context.symbol_slice(expr->expr.id.slice);
-                auto diag_id = context.emplace_diagnostic(
+                context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
                     diag_code::use_of_undeclared_identifier, diag_type::error,
                     DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice},
@@ -297,8 +297,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
                 assert(maybe_bin_op.holds<binary_op>());
                 // get res of binary op like +, -, etc.
-                auto maybe_eid = solve_binary_compt_exec(fid, scope, lhs.as_id(),
-                                                         maybe_bin_op.as<binary_op>(), rhs.as_id());
+                auto maybe_eid = solve_binary_compt_exec(lhs.as_id(), maybe_bin_op.as<binary_op>(),
+                                                         rhs.as_id());
 
                 if (maybe_eid.has_value()) {
                     auto exec = context.exec(maybe_eid.as_id());
@@ -336,7 +336,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto d0 = context.emplace_diagnostic(span, diag_code::operator_not_viable_at_compt,
                                                      diag_type::error);
                 // be more helpful for ++ and -- at compt
-                if (t == TOK_INC || t == TOK_DEC && maybe_inner.has_value()) {
+                if ((t == TOK_INC || t == TOK_DEC) && maybe_inner.has_value()) {
                     auto d1 = context.emplace_diagnostic(
                         Span{fid, context.ast(fid).buffer(), expr->expr.unary.expr->first,
                              expr->expr.unary.expr->last},
@@ -367,8 +367,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             Span op_span = Span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
 
-            OptId<ExecId> maybe_eid
-                = solve_preunary_exec(fid, scope, op, op_span, maybe_inner.as_id());
+            OptId<ExecId> maybe_eid = solve_preunary_exec(op, op_span, maybe_inner.as_id());
 
             bool cooked = false;
 
@@ -396,7 +395,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto d0 = context.emplace_diagnostic(op_span, diag_code::operator_not_viable_at_compt,
                                                  diag_type::error);
             // be more helpful for ++ and -- at compt
-            if (t == TOK_INC || t == TOK_DEC && maybe_inner.has_value()) {
+            if ((t == TOK_INC || t == TOK_DEC) && maybe_inner.has_value()) {
                 auto d1 = context.emplace_diagnostic(
                     Span{fid, context.ast(fid).buffer(), expr->expr.unary.expr->first,
                          expr->expr.unary.expr->last},
@@ -415,6 +414,12 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_COMPT:
             return solve_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
+        case AST_EXPR_SAME_TYPE:
+            return handle_same_type(fid, scope, expr);
+        case AST_EXPR_TYPE_TO_STR:
+            return handle_type_to_str(fid, scope, expr);
+        case AST_EXPR_STATIC_ASSERT:
+            return handle_static_assert(fid, scope, expr);
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
@@ -510,7 +515,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             DefId did = maybe_def.as_id();
             const Def& def = visit_def(did);
             if (!def.holds<DefVariable>()) {
-                auto sid_slice = context.symbol_slice(expr->expr.id.slice);
                 context.emplace_diagnostic(
                     expr_span, diag_code::cannot_convert_expression_to_type, diag_type::error,
                     DiagnosticTypeAfterMessage{.tid = into_tid}, DiagnosticNoOtherInfo{});
@@ -597,8 +601,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const Def& struct_def = context.def(struct_did);
 
-            const DefStruct& def_as_struct = struct_def.as<DefStruct>();
-
             const auto defs = context.ordered_defs_for(struct_did);
 
             const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
@@ -628,8 +630,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
                 const TypeId member_type = member_as_var.type;
                 const OptId<ExecId> default_val = member_as_var.compt_value;
-                const SymbolId member_name = member.name;
-                const ScopeId struct_scope = context.scope_for_top_level_def(struct_did);
 
                 // handle too few
                 if (i >= init_slice.len) {
@@ -641,7 +641,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                             context.register_exec(context, init, Span::generated(), true));
                     } else {
                         cooked = true;
-                        auto did0 = context.emplace_diagnostic(
+                        context.emplace_diagnostic(
                             Span(fid, context.ast(fid).buffer(), expr->last),
                             diag_code::struct_field_not_initialized, diag_type::error,
                             DiagnosticSymbolAfterMessage{.sid = context.def(defs.get(i)).name},
@@ -737,7 +737,10 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         case AST_EXPR_COMPT:
             return solve_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
-        // these are all invalid
+            // these are all invalid
+        case AST_EXPR_SAME_TYPE:
+        case AST_EXPR_TYPE_TO_STR:
+        case AST_EXPR_STATIC_ASSERT:
         case AST_EXPR_LITERAL:
         case AST_EXPR_LIST_LITERAL:
         case AST_EXPR_BINARY:
@@ -783,11 +786,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
         TypeId tid = maybe_tid.as_id();
-        return handle_cast(fid, scope, eid, tid);
+        return handle_cast(eid, tid);
     }
 
-    [[nodiscard]] OptId<ExecId> handle_cast(FileId fid, ScopeId scope, ExecId eid,
-                                            TypeId into_tid) {
+    [[nodiscard]] OptId<ExecId> handle_cast(ExecId eid, TypeId into_tid) {
         const Exec& exec = context.exec(eid);
         const Type& type = context.type(into_tid);
         if (!exec.holds<ExecConst>() || !type.holds<TypeBuiltin>()) {
@@ -816,8 +818,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return context.emplace_exec(maybe_converted.value(), exec.span, /*compt*/ true);
     }
 
-    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(FileId fid, ScopeId scope, ExecId lhs_eid,
-                                                        binary_op op, ExecId rhs_eid) {
+    [[nodiscard]] OptId<ExecId> solve_binary_compt_exec(ExecId lhs_eid, binary_op op,
+                                                        ExecId rhs_eid) {
         const Exec& lhs_exec = context.exec(lhs_eid);
         const Exec& rhs_exec = context.exec(rhs_eid);
 
@@ -850,25 +852,25 @@ template <IsDefVisitor V> class ComptExprSolver {
         case binary_op::less_than_or_equal:
         case binary_op::bool_equal:
         case binary_op::bool_not_equal:
-            return handle_binary_scalar(fid, lhs_exec, op, rhs_exec);
+            return handle_binary_scalar(lhs_exec, op, rhs_exec);
         case binary_op::bit_or:
         case binary_op::bit_and:
         case binary_op::bit_xor:
         case binary_op::left_bitshift:
         case binary_op::right_shift_logical:
         case binary_op::right_shift_arithmetic:
-            return handle_binary_bitwise(fid, lhs_exec, op, rhs_exec);
+            return handle_binary_bitwise(lhs_exec, op, rhs_exec);
         case binary_op::bool_or:
         case binary_op::bool_and:
-            return handle_binary_bool_conj_disj(fid, lhs_exec, op, rhs_exec);
+            return handle_binary_bool_conj_disj(lhs_exec, op, rhs_exec);
         }
         return std::nullopt;
     }
 
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type);
 
-    [[nodiscard]] bool guard_incompatible_types(FileId fid, const Exec& lhs, const Exec& rhs,
-                                                ExecConst lhs_val, ExecConst rhs_val) {
+    [[nodiscard]] bool guard_incompatible_types(const Exec& lhs, const Exec& rhs, ExecConst lhs_val,
+                                                ExecConst rhs_val) {
 
         if (!lhs_val.holds_same_variant_type(rhs_val)) {
             auto lhs_tid = context.emplace_type(TypeBuiltin{.type = lhs_val.type_builtin()},
@@ -884,7 +886,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         return false;
     }
 
-    [[nodiscard]] bool guard_op_not_viable_for_types(FileId fid, const Exec& lhs, const Exec& rhs,
+    [[nodiscard]] bool guard_op_not_viable_for_types(const Exec& lhs, const Exec& rhs,
                                                      ExecConst lhs_val, binary_op op,
                                                      ExecConst rhs_val) {
         if (!lhs_val.has_binary_op(op) || !rhs_val.has_binary_op(op)) {
@@ -917,7 +919,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_scalar(FileId fid, const Exec& lhs, binary_op op,
+    [[nodiscard]] OptId<ExecId> handle_binary_scalar(const Exec& lhs, binary_op op,
                                                      const Exec& rhs) {
 
         auto lhs_val = lhs.as<ExecConst>();
@@ -926,11 +928,11 @@ template <IsDefVisitor V> class ComptExprSolver {
         // converge types, if possible
         guard_try_converge_types(/* & */ lhs_val, op, /* & */ rhs_val);
 
-        if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
+        if (guard_incompatible_types(lhs, rhs, lhs_val, rhs_val)) {
             return std::nullopt;
         }
 
-        if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
+        if (guard_op_not_viable_for_types(lhs, rhs, lhs_val, op, rhs_val)) {
             return std::nullopt;
         }
 
@@ -994,7 +996,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                                     /*compt*/ true);
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_bitwise(FileId fid, const Exec& lhs, binary_op op,
+    [[nodiscard]] OptId<ExecId> handle_binary_bitwise(const Exec& lhs, binary_op op,
                                                       const Exec& rhs) {
         auto lhs_val = lhs.as<ExecConst>();
         auto rhs_val = rhs.as<ExecConst>();
@@ -1002,7 +1004,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         // converge types, if possible
         guard_try_converge_types(lhs_val, op, rhs_val);
 
-        if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
+        if (guard_incompatible_types(lhs, rhs, lhs_val, rhs_val)) {
             return std::nullopt;
         }
 
@@ -1017,7 +1019,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             guard_try_converge_types(lhs_val, op, rhs_val);
         }
 
-        if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
+        if (guard_op_not_viable_for_types(lhs, rhs, lhs_val, op, rhs_val)) {
             return std::nullopt;
         }
 
@@ -1058,8 +1060,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return std::nullopt;
     }
 
-    [[nodiscard]] OptId<ExecId> handle_binary_bool_conj_disj(FileId fid, const Exec& lhs,
-                                                             binary_op op, const Exec& rhs) {
+    [[nodiscard]] OptId<ExecId> handle_binary_bool_conj_disj(const Exec& lhs, binary_op op,
+                                                             const Exec& rhs) {
         auto lhs_val = lhs.as<ExecConst>();
         auto rhs_val = rhs.as<ExecConst>();
 
@@ -1095,11 +1097,11 @@ template <IsDefVisitor V> class ComptExprSolver {
         lhs_val = maybe_converted_lhs.value();
         rhs_val = maybe_converted_rhs.value();
 
-        if (guard_incompatible_types(fid, lhs, rhs, lhs_val, rhs_val)) {
+        if (guard_incompatible_types(lhs, rhs, lhs_val, rhs_val)) {
             return std::nullopt;
         }
 
-        if (guard_op_not_viable_for_types(fid, lhs, rhs, lhs_val, op, rhs_val)) {
+        if (guard_op_not_viable_for_types(lhs, rhs, lhs_val, op, rhs_val)) {
             return std::nullopt;
         }
 
@@ -1123,14 +1125,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return context.emplace_exec(maybe_value.value(), Span::combine(lhs.span, rhs.span),
                                     /*compt*/ true);
     }
-    [[nodiscard]] OptId<ExecId> solve_preunary_exec(FileId fid, ScopeId scope, unary_op op,
-                                                    Span op_span, ExecId eid) {
+    [[nodiscard]] OptId<ExecId> solve_preunary_exec(unary_op op, Span op_span, ExecId eid) {
         const Exec& inner_exec = context.exec(eid);
-
-        auto handle_invalid_operand = [this](const Exec& exec) {
-            context.emplace_diagnostic(exec.span, diag_code::invalid_operand_for_unary_expression,
-                                       diag_type::error);
-        };
 
         if (!inner_exec.template holds<ExecConst>()) {
             return std::nullopt;
@@ -1178,7 +1174,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
         // all good so exec up
-        auto inner_span = inner_exec.span;
         return context.emplace_exec(maybe_value.value(), Span::combine(op_span, inner_exec.span),
                                     /*compt*/ true);
     }
@@ -1266,6 +1261,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_MATCH:
         case AST_EXPR_ELSE_MATCH_BRANCH:
         case AST_EXPR_INVALID:
+        case AST_EXPR_SAME_TYPE:
+        case AST_EXPR_TYPE_TO_STR:
+        case AST_EXPR_STATIC_ASSERT:
             break;
         }
         context.emplace_diagnostic(expr_span, diag_code::cannot_resolve_at_compt, diag_type::error);
@@ -1292,8 +1290,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (type.holds<TypeArr>()) {
                 auto inner_tid = type.as<TypeArr>().inner;
 
-                const Type& type = context.type(inner_tid);
-
                 maybe_elem_into_type = inner_tid;
             }
         }
@@ -1301,7 +1297,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         // guard empty
         if (list_slice.len == 0) {
             return context.emplace_exec(ExecExprListLiteral{.elems = IdSlice<ExecId>{},
-                                                            .elem_type_id = maybe_elem_into_type},
+                                                            .elem_type_id = maybe_elem_into_type,
+                                                            .compt = true},
                                         whole_list_span, true);
         }
 
@@ -1385,7 +1382,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         // fine, homogeneous, so return
         return context.emplace_exec(
-            ExecExprListLiteral{.elems = elem_slice, .elem_type_id = type_for_list},
+            ExecExprListLiteral{.elems = elem_slice, .elem_type_id = type_for_list, .compt = true},
             whole_list_span, true);
     }
 
@@ -1411,6 +1408,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return context.emplace_type(
                 TypeArr{
                     .inner = contained_type,
+                    .compt_size_expr = std::nullopt,
                     .canonical_size = len,
                 },
                 Span::generated(), false);
@@ -1455,6 +1453,77 @@ template <IsDefVisitor V> class ComptExprSolver {
             return context.emplace_exec(orig_exec.value, expr_span, true);
         }
         return std::nullopt;
+    }
+    [[nodiscard]] OptId<ExecId> handle_same_type(FileId fid, ScopeId scope,
+                                                 const ast_expr_t* same_type_expr) {
+        assert(same_type_expr->type == AST_EXPR_SAME_TYPE);
+        auto maybe_lhs_tid = resolve_type(fid, scope, same_type_expr->expr.same_type.lhs_type);
+
+        if (maybe_lhs_tid.empty()) {
+            return std::nullopt;
+        }
+
+        auto lhs_tid = maybe_lhs_tid.as_id();
+
+        auto maybe_rhs_tid = resolve_type(fid, scope, same_type_expr->expr.same_type.rhs_type);
+
+        if (maybe_rhs_tid.empty()) {
+            return std::nullopt;
+        }
+
+        auto rhs_tid = maybe_rhs_tid.as_id();
+
+        const bool same_type_bool_val = context.equivalent_type(lhs_tid, rhs_tid);
+
+        return context.emplace_exec(ExecExprComptConstant{same_type_bool_val},
+                                    Span{context, fid, same_type_expr->first, same_type_expr->last},
+                                    true);
+    }
+    [[nodiscard]] OptId<ExecId> handle_type_to_str(FileId fid, ScopeId scope,
+                                                   const ast_expr_t* tts_expr) {
+
+        assert(tts_expr->type == AST_EXPR_TYPE_TO_STR);
+
+        auto maybe_tid = resolve_type(fid, scope, tts_expr->expr.type_to_str.type);
+
+        if (maybe_tid.empty()) {
+            return std::nullopt;
+        }
+
+        auto tid = maybe_tid.as_id();
+
+        SymbolId sid = context.symbol_id(type_to_string_as_mentioned(context, tid));
+
+        return context.emplace_exec(ExecExprComptConstant{sid},
+                                    Span{context, fid, tts_expr->first, tts_expr->last}, true);
+    }
+    [[nodiscard]] OptId<ExecId> handle_static_assert(FileId fid, ScopeId scope,
+                                                     const ast_expr_t* sass_expr) {
+        assert(sass_expr->type == AST_EXPR_STATIC_ASSERT);
+
+        auto maybe_eid = solve_expr(fid, scope, sass_expr->expr.static_assert_expr.inner,
+                                    context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
+                                                         Span::generated(), false));
+
+        if (maybe_eid.empty()) {
+            return std::nullopt;
+        }
+
+        const Exec& inner_exec = context.exec(maybe_eid.as_id());
+
+        if (!inner_exec.holds<ExecConst>() || !inner_exec.as<ExecConst>().holds<bool>()) {
+            return std::nullopt; // poisoned
+        }
+
+        const auto bool_val = inner_exec.as<ExecConst>().as<bool>();
+
+        Span span{context, fid, sass_expr->first, sass_expr->last};
+
+        if (!bool_val) {
+            context.emplace_diagnostic(span, diag_code::static_assertion_failed, diag_type::error);
+        }
+
+        return context.emplace_exec(ExecConst{bool_val}, span, true);
     }
 };
 } // namespace hir

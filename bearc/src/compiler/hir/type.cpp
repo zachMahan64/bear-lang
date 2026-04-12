@@ -35,16 +35,16 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             }
             return t.definition == t2.as<TypeGenericStructure>().definition;
         },
-        [&](const TypeDeftype& t) -> bool { return t2.holds<TypeDeftype>(); },
+        [&](const TypeDeftype&) -> bool { return t2.holds<TypeDeftype>(); },
         [&](const TypeArr& t) -> bool {
             if (!t2.holds<TypeArr>()) {
                 return false;
             }
             return t.canonical_size == t2.as<TypeArr>().canonical_size;
         },
-        [&](const TypeSlice& t) -> bool { return t2.holds<TypeSlice>(); },
-        [&](const TypeRef& t) -> bool { return t2.holds<TypeRef>(); },
-        [&](const TypePtr& t) -> bool { return t2.holds<TypePtr>(); },
+        [&](const TypeSlice&) -> bool { return t2.holds<TypeSlice>(); },
+        [&](const TypeRef&) -> bool { return t2.holds<TypeRef>(); },
+        [&](const TypePtr&) -> bool { return t2.holds<TypePtr>(); },
         [&](const TypeFnPtr& t) -> bool {
             if (!t2.holds<TypeFnPtr>()) {
                 return false;
@@ -69,8 +69,8 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             // all matched, so return true
             return true;
         },
-        [&](const TypeVariadic& t) -> bool { return t2.holds<TypeVariadic>(); },
-        [&](const TypeVar& t) -> bool { return t2.holds<TypeVar>(); },
+        [&](const TypeVariadic&) -> bool { return t2.holds<TypeVariadic>(); },
+        [&](const TypeVar&) -> bool { return t2.holds<TypeVar>(); },
 
     };
     if constexpr (considers_mut()) {
@@ -96,7 +96,7 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
         [&](const TypeStructure& t) -> size_t {
             return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
         },
-        [&](const TypeDeftype& t) -> size_t {
+        [&](const TypeDeftype&) -> size_t {
             std::cout << ("tried to directly hash a deftype, do not use `as_mentioned` invocations "
                           "when hashing!")
                       << '\n';
@@ -259,17 +259,17 @@ TypeToStringValue TypeToString<C>::transform(TypeToStringValue res1,   // NOLINT
 template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(const Type& type) {
     using OTid = OptId<TypeId>;
     auto vs = Ovld{
-        [&](const TypeBuiltin& t) -> OTid { return OTid{}; },
-        [&](const TypeStructure& t) -> OTid { return OTid{}; },
-        [&](const TypeDeftype& t) -> OTid { return OTid{}; },
-        [&](const TypeGenericStructure& t) -> OTid { return OTid{}; },
+        [&](const TypeBuiltin&) -> OTid { return OTid{}; },
+        [&](const TypeStructure&) -> OTid { return OTid{}; },
+        [&](const TypeDeftype&) -> OTid { return OTid{}; },
+        [&](const TypeGenericStructure&) -> OTid { return OTid{}; },
         [&](const TypeArr& t) -> OTid { return t.inner; },
         [&](const TypeSlice& t) -> OTid { return t.inner; },
         [&](const TypeRef& t) -> OTid { return t.inner; },
         [&](const TypePtr& t) -> OTid { return t.inner; },
-        [&](const TypeFnPtr& t) -> OTid { return OTid{}; },
+        [&](const TypeFnPtr&) -> OTid { return OTid{}; },
         [&](const TypeVariadic& t) -> OTid { return t.inner; },
-        [&](const TypeVar& t) -> OTid { return OTid{}; },
+        [&](const TypeVar&) -> OTid { return OTid{}; },
     };
     return type.visit(vs);
 }
@@ -592,6 +592,8 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
     case builtin_type::str:
         switch (op) {
         case binary_op::plus:
+        case binary_op::bool_equal:
+        case binary_op::bool_not_equal:
             return true;
         case binary_op::minus:
         case binary_op::multiply:
@@ -609,8 +611,6 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
         case binary_op::right_shift_arithmetic:
         case binary_op::bool_or:
         case binary_op::bool_and:
-        case binary_op::bool_equal:
-        case binary_op::bool_not_equal:
             return false;
         }
         break;
@@ -709,35 +709,7 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
 
         break;
     }
-    // f32
-    case builtin_type::f32: {
-        switch (op) {
-        case binary_op::plus:
-        case binary_op::minus:
-        case binary_op::multiply:
-        case binary_op::divide:
-        case binary_op::greater_than:
-        case binary_op::less_than:
-        case binary_op::greater_than_or_equal:
-        case binary_op::less_than_or_equal:
-        case binary_op::bool_equal:
-        case binary_op::bool_not_equal:
-            return true;
-        case binary_op::modulo:
-        case binary_op::bit_or:
-        case binary_op::bit_and:
-        case binary_op::bit_xor:
-        case binary_op::left_bitshift:
-        case binary_op::right_shift_logical:
-        case binary_op::right_shift_arithmetic:
-        case binary_op::bool_or:
-        case binary_op::bool_and:
-            return false;
-        }
-
-        break;
-    }
-    // f64
+    case builtin_type::f32:
     case builtin_type::f64: {
         switch (op) {
         case binary_op::plus:
@@ -762,6 +734,7 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
         case binary_op::bool_and:
             return false;
         }
+        break;
     }
     // nullptr
     case builtin_type::nullpointer: {
@@ -787,6 +760,7 @@ bool builtin_type_has_binary_op(builtin_type type, binary_op op) {
         case binary_op::bool_and:
             return false;
         }
+        break;
     }
     // bool
     case builtin_type::boolean: {
