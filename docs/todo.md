@@ -43,8 +43,7 @@ main quest
 - [ ] debug and increase safety of particularly (large) integral literal parsing
 
 - some reflection/compt stuff
-- [ ] `@type(...)` for getting type-exprs
-- [ ] `same_type(expr, expr)` where the exprs could be say `typeof(foo)` and `@type(Foo<i32>)`
+- [ ] special expr case `@same_type(expr, expr)` (yields bool) where the types could be say `typeof(foo)` and `Foo<i32>`
 - [ ] static_assert (make it a builtin in hir)
     - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `__static_assert(bool cond)` 
 - [ ] make `deftype = typeof(foo)` handling consistent
