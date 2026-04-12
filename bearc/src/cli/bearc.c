@@ -134,9 +134,12 @@ int bearc_compile_from_args(int argc, char** argv) {
 void cli_help(void) {
     const char* usage_title = "usage:\n";
     const char* usage = "        bearc";
-    const char* usage_args = " <file_name> [flags]\n";
-    const char* usage_options = " [options]\n";
+    const char* lbrack = " [";
+    const char* usage_options = "options";
+    const char* rbrack = "]\n";
     const char* options_title = "options:\n";
+    const char* usage_args = " <file_name>";
+    const char* usage_args_flags = "flags";
     const char* options = "        [--version | -v]  display current bearc version\n"
                           "        [--help | -h]     display this help message\n";
     const char* flags_title = "flags:\n";
@@ -154,15 +157,25 @@ void cli_help(void) {
           "        [--output | -o]      <output_file>     specify an output file\n"
 
         ;
-
-    printf("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s", ansi_bold_magenta(), usage_title,
-           ansi_reset(), ansi_bold_green(), usage, ansi_bold_reset(), usage_args, ansi_bold_green(),
-           usage, ansi_bold_reset(), usage_options, ansi_bold_yellow(), options_title, ansi_reset(),
-           options, ansi_bold_cyan(), flags_title, ansi_reset(), flags, ansi_bold_cyan(),
-           flags_w_args_title, ansi_reset(), flags_w_args);
+    const char* options_color = ansi_bold_yellow();
+    const char* flags_color = ansi_bold_cyan();
+    printf("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n", ansi_bold_cyan(),
+           usage_title, ansi_reset(), ansi_bold_green(), usage, ansi_bold_reset(), lbrack,
+           options_color, usage_options, ansi_bold_reset(), rbrack, ansi_bold_green(), usage,
+           ansi_bold_reset(), usage_args, lbrack, flags_color, usage_args_flags, ansi_bold_reset(),
+           rbrack, options_color, options_title, ansi_reset(), options, flags_color, flags_title,
+           ansi_reset(), flags, flags_color, flags_w_args_title, ansi_reset(), flags_w_args);
 }
 
-void cli_version(void) { puts("bearc v0.0.1"); }
+#define BEARC_VERSION_FALLBACK "v0.0.0 internal"
+
+#ifdef BEARC_VERSION
+#define BEARC_VERSION_STR BEARC_VERSION
+#else
+#define BEARC_VERSION_STR BEARC_VERSION_FALLBACK
+#endif
+
+void cli_version(void) { printf("bearc " BEARC_VERSION_STR "\n"); }
 
 cli_error_status cli_compile(const bearc_args_t* args) {
     cli_error_status error_status = {0, ""};
@@ -172,7 +185,8 @@ cli_error_status cli_compile(const bearc_args_t* args) {
 }
 
 void cli_no_args(void) {
-    printf("run '%sbearc --help%s' to see available operations.\n\n", ansi_bold(), ansi_reset());
+    printf("run '%sbearc%s --help%s' to see available operations.\n\n", ansi_bold_green(),
+           ansi_bold_reset(), ansi_reset());
     printf("Bear Compiler Copyright (C) 2025-2026 Zachary Mahan \n"
            "This program comes with ABSOLUTELY NO WARRANTY.\n"
            "This is free software, and you are welcome to redistribute it under certain "
