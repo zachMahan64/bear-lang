@@ -5,7 +5,7 @@ var _1 = 12 if @static_assert(false) else 100.01003; // oops, failed, but this'l
                                                      // this can be utilized for communicating compt failures
                                                      // for better metaprogramming
 
-var _2 = @static_assert 1231231 > 5234234324; // oops
+var _2 = @static_assert 1231231 > 52234324; // oops
 
 compt bool a = @static_assert @same_type(i32, i32); // fine
 

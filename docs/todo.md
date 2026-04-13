@@ -43,11 +43,17 @@ main quest
 - [ ] debug and increase safety of particularly (large) integral literal parsing
 
 - some reflection/compt stuff
-- [ ] special expr case `@same_type(expr, expr)` (yields bool) where the types could be say `typeof(foo)` and `Foo<i32>`
-- [ ] static_assert (make it a builtin in hir)
+- [x] special expr case `@same_type(expr, expr)` (yields bool) where the types could be say `typeof(foo)` and `Foo<i32>`
+- [x] static_assert (make it a builtin in hir)
     - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `@static_assert(bool cond)` 
-- [ ] `@type_to_str(<type>)` to get a reflected compt string that is just the type's string representation
+- [x] `@type_to_str(<type>)` to get a reflected compt string that is just the type's string representation
     - since compt strs are just `hir::SymbolId`s just do `context.symbol_id(type_to_str(context, hir::TypeId))` to get them
+- [ ] some `compt` function and struct improvements:
+    - [ ] add compt member accesses ex) `foo.bar`
+    - [ ] add `fn foo() [-> Type]? => [{Expr}] | Expr` syntax (easy-ish plugin for compt functions), this makes compt turing complete
+        - ex) `compt fn foo() -> i32 => 42`
+        - ex) `compt fn foo() => 42` (return type inferred here)
+        - ex) `compt fn foo() => {42}` (return type inferred here, braces allowed if desired)
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 

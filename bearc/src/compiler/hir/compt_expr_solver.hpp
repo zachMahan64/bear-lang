@@ -225,14 +225,25 @@ template <IsDefVisitor V> class ComptExprSolver {
             case TOK_CHAR_LIT:
                 maybe_value = ExecConst{tkn->val.character};
                 break;
+            // try as i32 if possible
             case TOK_INT_LIT: {
                 maybe_value = ExecConst{tkn->val.signed_integral};
-            } break;
-            case TOK_UINT_LIT: {
-                maybe_value = ExecConst{tkn->val.unsigned_integral};
-                auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i64);
+                auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i32);
                 if (maybe_signed.has_value()) {
                     maybe_value = maybe_signed;
+                }
+            } break;
+                // try as i32 and then i64 if possible
+            case TOK_UINT_LIT: {
+                maybe_value = ExecConst{tkn->val.unsigned_integral};
+                auto maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i32);
+                if (maybe_signed.has_value()) {
+                    maybe_value = maybe_signed;
+                } else {
+                    maybe_signed = maybe_value->try_safe_convert_to(builtin_type::i64);
+                    if (maybe_signed.has_value()) {
+                        maybe_value = maybe_signed;
+                    }
                 }
                 break;
             }
