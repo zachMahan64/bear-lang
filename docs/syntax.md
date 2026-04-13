@@ -7,7 +7,7 @@
 #### Types
 - Type: 
     - MutType: `mut`? Type `mut`? *** `mut`s bind leftward, unless nothing is to the left, where they will then bind rightward
-    - | FnPtr: `*` `fn` `mut`? `(` Parameter(s) `)` `->` ReturnType(s)
+    - | FnPtr: `*` `fn` `mut`? `(` Parameter(s) `)` `->` ReturnType
     - | BaseType:
         - Signed integers: `i8, i16, i32, i64`
         - | Unsigned integers: `u8, u16, u32, u64, usize`
@@ -63,7 +63,7 @@
     - | *ModuleDeclaration*: Visibility `mod` Identifier `;` | `{` TopLevelStatement(s) `}` 
     - | ImportStatement: `import` ExternalLanguage? -> PathLiteral `;` 
     - | *UseStatement*: `use` `mod`? Identifier `;`
-    - | *FunctionDeclaration*: Visibility `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}`
+    - | *FunctionDeclaration*: Visibility `fn` Identifier -> GenericParams? -> `(` Parameters `)` `;` | `{` BodyStatement(s) `}` | `=>` Expression
     - | GenericParams: `<` Identifier -> HasClause? `,` ... `>` 
         - *HasClause*: `has` `(` Contract(s) `)`
     - | *StructDeclaration*: Visibility `struct` Identifier -> GenericParams? -> HasClause? -> `{` TopLevelStatement(s) | MethodDeclaration(s) | DestructorDeclaration(s) `}` 
