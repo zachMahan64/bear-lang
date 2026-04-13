@@ -42,6 +42,8 @@ enum class assign_op : uint8_t { assign_eq, assign_move };
 
 enum class is_as_op : uint8_t { is, as };
 
+enum class access_op : uint8_t { rarrow, dot };
+
 class InvalidOp {};
 
 const char* binary_op_to_cstr(binary_op op);
@@ -57,7 +59,7 @@ std::optional<binary_op> token_to_binary_op(const token_t* tkn);
 std::optional<unary_op> token_to_unary_op(const token_t* tkn);
 
 struct ComptBinaryOp : NodeWithVariantValue<ComptBinaryOp> {
-    using Value = std::variant<binary_op, assign_op, is_as_op, InvalidOp>;
+    using Value = std::variant<binary_op, assign_op, is_as_op, access_op, InvalidOp>;
     Value value;
     ComptBinaryOp(const token_t* tkn) noexcept {
         auto maybe_bin = token_to_binary_op(tkn);
@@ -71,6 +73,12 @@ struct ComptBinaryOp : NodeWithVariantValue<ComptBinaryOp> {
             break;
         case TOK_IS:
             value = is_as_op::is;
+            break;
+        case TOK_DOT:
+            value = access_op::dot;
+            break;
+        case TOK_RARROW:
+            value = access_op::rarrow;
             break;
         case TOK_ASSIGN_EQ:
         case TOK_ASSIGN_PLUS_EQ:

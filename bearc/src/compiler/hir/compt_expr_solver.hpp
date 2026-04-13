@@ -20,7 +20,6 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
-#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -186,9 +185,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                 // happy path, canonicalize compt value
                 DefId did = maybe_def.as_id();
                 const Def& def = visit_def(did);
-                // std::cout << def.span.as_sv(context)
-                //          << ", resol: " << Def::resol_state_to_str(context.resol_state_of(did))
-                //          << '\n';
                 if (def.holds<DefVariable>()) {
                     if (!def.compt) {
                         auto diag_id = context.emplace_diagnostic(
@@ -269,64 +265,17 @@ template <IsDefVisitor V> class ComptExprSolver {
             break;
         }
         case AST_EXPR_BINARY: {
-            bool cooked = false;
-            ComptBinaryOp maybe_bin_op{expr->expr.binary.op};
-            if (maybe_bin_op.holds<InvalidOp>()) {
-                cooked = true;
-            } else if (maybe_bin_op.holds<assign_op>()) {
-                context.emplace_diagnostic(
-                    Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
-                    diag_code::cannot_assign_to_compt_constant, diag_type::error);
-                cooked = true;
-            } else if (maybe_bin_op.holds<is_as_op>()) {
-                OptId<ExecId> lhs
-                    = solve_expr(fid, scope, expr->expr.binary.lhs,
-                                 std::nullopt); // since we don't care about the type yet
-                if (!lhs.has_value()) {
-                    cooked = true;
-                }
-                if (maybe_bin_op.as<is_as_op>() == is_as_op::is) {
-                    context.emplace_diagnostic(
-                        Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
-                        diag_code::is_operator_requires_run_time_values, diag_type::error);
-                    cooked = true;
-                } else if (lhs.has_value()) {
-                    assert(maybe_bin_op.as<is_as_op>() == is_as_op::as);
-                    return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
-                }
-            } else if (!cooked) {
-                OptId<ExecId> lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
-                if (!lhs.has_value()) {
-                    cooked = true;
-                }
-                OptId<ExecId> rhs = solve_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
-                if (!rhs.has_value()) {
-                    cooked = true;
-                }
-                if (cooked) {
-                    return std::nullopt; // already poisoned
-                }
-                assert(maybe_bin_op.holds<binary_op>());
-                // get res of binary op like +, -, etc.
-                auto maybe_eid = solve_binary_compt_exec(lhs.as_id(), maybe_bin_op.as<binary_op>(),
-                                                         rhs.as_id());
-
-                if (maybe_eid.has_value()) {
-                    auto exec = context.exec(maybe_eid.as_id());
-                    if (!exec.template holds<ExecConst>()) {
-                        cooked = true;
-                    } else {
-                        maybe_value = exec.template as<ExecConst>();
-                    }
+            auto maybe_eid = solve_expr_binary(fid, scope, expr);
+            if (maybe_eid.has_value()) {
+                const Exec& exec = context.exec(maybe_eid.as_id());
+                if (exec.holds<ExecConst>()) {
+                    maybe_value = exec.as<ExecConst>();
                 } else {
-                    cooked = true;
+                    maybe_value = std::nullopt;
                 }
+            } else {
+                return std::nullopt; // poisoned
             }
-            if (cooked) {
-                return std::nullopt; // cooked / poisoned already, so just return since error
-                                     // should've already been reported
-            }
-
             break;
         }
         case AST_EXPR_GROUPING: {
@@ -476,13 +425,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
                 return OptId<ExecId>{};
             }
-#ifdef DEBUG_BUILD
-            if (!maybe_converted.value().matches_type(into_builtin.value())) {
-                std::cout << builtin_type_to_cstr(maybe_converted.value().type_builtin())
-                          << '\n';                                               // debug
-                std::cout << builtin_type_to_cstr(into_builtin.value()) << '\n'; // debug
-            }
-#endif
+
             assert(maybe_converted.value().matches_type(into_builtin.value()));
             return emplace_e(maybe_converted.value());
         }
@@ -1535,6 +1478,63 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
 
         return context.emplace_exec(ExecConst{bool_val}, span, true);
+    }
+    [[nodiscard]] OptId<ExecId> solve_expr_binary(FileId fid, ScopeId scope,
+                                                  const ast_expr_t* expr) {
+        bool cooked = false;
+        ComptBinaryOp maybe_bin_op{expr->expr.binary.op};
+        if (maybe_bin_op.holds<InvalidOp>()) {
+            cooked = true;
+        } else if (maybe_bin_op.holds<assign_op>()) {
+            context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
+                                       diag_code::cannot_assign_to_compt_constant,
+                                       diag_type::error);
+            cooked = true;
+        } else if (maybe_bin_op.holds<is_as_op>()) {
+            OptId<ExecId> lhs = solve_expr(fid, scope, expr->expr.binary.lhs,
+                                           std::nullopt); // since we don't care about the type yet
+            if (!lhs.has_value()) {
+                cooked = true;
+            }
+            if (maybe_bin_op.as<is_as_op>() == is_as_op::is) {
+                context.emplace_diagnostic(
+                    Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
+                    diag_code::is_operator_requires_run_time_values, diag_type::error);
+                cooked = true;
+            } else if (lhs.has_value()) {
+                assert(maybe_bin_op.as<is_as_op>() == is_as_op::as);
+                return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
+            }
+        } else if (maybe_bin_op.holds<access_op>()) {
+            context.emplace_diagnostic(Span{context, fid, expr->first, expr->last},
+                                       diag_code::remove, diag_type::error); // TODO
+            cooked = true;
+            // TODO,
+            /*
+             * - find lhs's type, if it's a struct:
+             *    - lookup symbol in that struct's scope
+             *    - if it's a hit, find that exact exec in the struct init exec by then looking up
+             *    the ordered member's index (need to add this field in when lowering decls)
+             * - else:
+             *   - issue error since trying to access member of non struct
+             */
+        } else if (!cooked && maybe_bin_op.holds<binary_op>()) {
+            OptId<ExecId> lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
+            if (!lhs.has_value()) {
+                cooked = true;
+            }
+            OptId<ExecId> rhs = solve_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
+            if (!rhs.has_value()) {
+                cooked = true;
+            }
+            if (cooked) {
+                return std::nullopt; // already poisoned
+            }
+            // get res of binary op like +, -, etc.
+            return solve_binary_compt_exec(lhs.as_id(), maybe_bin_op.as<binary_op>(), rhs.as_id());
+        }
+        return std::nullopt; // cooked / poisoned already, so just return since error
+                             // should've already been reported
     }
 };
 } // namespace hir

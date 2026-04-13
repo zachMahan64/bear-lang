@@ -1,0 +1,11 @@
+// tests/hir/40.br
+
+struct Foo {
+    i32 a = 42;
+}
+
+compt Foo foo = Foo{.a = 43};
+
+compt i32 my_a = foo.a;
+
+var _0 = @static_assert(my_a == 43);
