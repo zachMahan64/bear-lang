@@ -27,6 +27,8 @@ ast_type_t* parse_type_ref(parser_t* p);
 
 ast_type_t* parse_type_of(parser_t* p);
 
+ast_type_t* parse_type_decay(parser_t* p);
+
 ast_type_t* parse_type_arr(parser_t* p);
 
 ast_type_t* parse_type_slice(parser_t* p);

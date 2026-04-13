@@ -121,6 +121,7 @@ typedef enum token_type {
     TOK_SAME_TYPE,
     TOK_TYPE_TO_STR,
     TOK_STATIC_ASSERT,
+    TOK_DECAY,
 
     // constructs
     TOK_REQUIRES,

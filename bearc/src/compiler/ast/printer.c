@@ -261,6 +261,13 @@ static void print_type(ast_type_t* type) {
         pretty_print_expr(type->type.type_of.of_expr);
         print_closing_green_brace();
         break;
+    case AST_TYPE_DECAY:
+        print_title("decay");
+        print_opening_delim_from_type(TOK_LPAREN);
+        print_type(type->type.decay.inner);
+        print_closing_delim_from_type(TOK_RPAREN);
+        print_closing_green_brace();
+        break;
     }
     puts(",");
     printer_deindent();

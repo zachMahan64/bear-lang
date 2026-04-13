@@ -1,0 +1,45 @@
+// tests/hir/39.br
+
+decay(mut i32) a = 123;
+
+decay(&mut i32) b;
+
+decay(&i32) c;
+
+decay(&i64) d;
+
+decay([&mut] u64) f; // mut slice 
+
+decay([&] u64) g; // immut slice
+
+decay(*u8) h; 
+
+decay(&u8) i;
+
+typeof(i) j;
+
+compt str k = @type_to_str(decay(typeof(i)));
+
+compt str l = @type_to_str(u8);
+
+
+var _0 = @static_assert @same_type(decay(typeof(a)), i32); // fine
+
+var _1 = @static_assert @same_type(decay(typeof(a)), mut i32); // oops
+
+var _2 = @static_assert @same_type(decay(typeof(a)), decay(typeof(b))); // fine
+
+var _3 = @static_assert @same_type(decay(typeof(b)), decay(typeof(c))); // fine
+
+var _4 = @static_assert(@same_type(decay(typeof(c)), decay(typeof(d)))); // oops
+
+var _5 = @static_assert(@same_type(decay(typeof(f)), decay(typeof(g)))); // fine
+
+var _6 = @static_assert(@same_type(decay(typeof(h)), decay(typeof(i)))); // oops, pointers don't decay to base type
+                                                                         // since they are by-value
+
+var _7 = @static_assert(@same_type(decay(typeof(i)), decay(typeof(j)))); // fine
+
+var _8 = @static_assert k == l; // fine
+
+var _9 = @static_assert !(k == @type_to_str(&mut u8)); // oops

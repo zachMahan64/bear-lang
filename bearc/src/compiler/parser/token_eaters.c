@@ -302,7 +302,8 @@ bool token_is_posttype_indicator(token_type_e t) {
 bool token_is_ref_or_ptr(token_type_e t) { return t == TOK_AMPER || t == TOK_STAR; }
 
 bool token_is_non_id_type_idicator(token_type_e t) {
-    return t == TOK_MUT || t == TOK_LBRACK || t == TOK_TYPEOF || token_is_ref_or_ptr(t);
+    return t == TOK_MUT || t == TOK_DECAY || t == TOK_LBRACK || t == TOK_TYPEOF
+           || token_is_ref_or_ptr(t);
 }
 
 bool token_is_generic_opener(token_type_e t) { return t == TOK_GENERIC_SEP || t == TOK_LT; }

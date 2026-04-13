@@ -238,7 +238,6 @@ typedef union ast_expr_u {
     ast_expr_wrapped_t static_assert_expr;
     ast_expr_type_t type_to_str;
     ast_expr_two_types_t same_type;
-
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

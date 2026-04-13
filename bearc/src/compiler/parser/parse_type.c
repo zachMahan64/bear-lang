@@ -198,6 +198,10 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
         inner = parse_type_of(p);
     }
 
+    else if (parser_peek_match(p, TOK_DECAY)) {
+        inner = parse_type_decay(p);
+    }
+
     else if (parser_peek_match(p, TOK_BOOL_AND)) {
         compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_MULTILEVEL_REF);
         inner = parser_invalid_type_and_toss_next_tkn(p);
@@ -277,8 +281,32 @@ ast_type_t* parse_type_of(parser_t* p) {
         parser_expect_token(p, TOK_RPAREN);
     }
     outer->type.type_of.of_expr = inner;
+    outer->type.type_of.mut = parser_match_token(p, TOK_MUT);
     outer->first = inner->first;
     outer->last = parser_prev(p);
+    return outer;
+}
+
+ast_type_t* parse_type_decay(parser_t* p) {
+    ast_type_t* outer = parser_alloc_type(p);
+    outer->tag = AST_TYPE_DECAY;
+    if (!parser_expect_token(p, TOK_DECAY)) {
+        return parser_sync_type(p);
+    }
+    parser_expect_token(p, TOK_LPAREN);
+    ast_type_t* inner = parse_type(p);
+    parser_expect_token(p, TOK_RPAREN);
+    outer->type.decay.inner = inner;
+    bool valid = true;
+    if (outer->type.decay.inner->tag == AST_TYPE_INVALID) {
+        valid = false;
+    }
+    outer->canonical_base = inner->canonical_base;
+    outer->first = inner->first;
+    outer->last = parser_prev(p);
+    if (!valid) {
+        outer->tag = AST_TYPE_INVALID;
+    }
     return outer;
 }
 

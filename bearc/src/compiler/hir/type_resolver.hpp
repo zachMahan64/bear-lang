@@ -206,7 +206,21 @@ template <IsDefVisitor V> class TypeResolver {
 
         // make new type as to update span
         return context.emplace_type(context.type(maybe_tid.as_id()).value,
-                                    Span(context, fid, type->first, type->last), false);
+                                    Span(context, fid, type->first, type->last),
+                                    type->type.type_of.mut);
+    }
+
+    OptId<TypeId> type_decay(FileId fid, ScopeId scope, const ast_type_t* type_node) {
+
+        assert(type_node->tag == AST_TYPE_DECAY);
+
+        auto maybe_tid = resolve_type(fid, scope, type_node->type.decay.inner);
+
+        if (maybe_tid.empty()) {
+            return std::nullopt; // poisoned
+        }
+
+        return decay_type(maybe_tid.as_id(), Span{context, fid, type_node->first, type_node->last});
     }
 
   public:
@@ -240,7 +254,8 @@ template <IsDefVisitor V> class TypeResolver {
         case AST_TYPE_TYPEOF:
             return type_typeof(fid, scope, type);
             break;
-
+        case AST_TYPE_DECAY:
+            return type_decay(fid, scope, type);
         case AST_TYPE_INVALID:
             break;
         }
@@ -250,6 +265,21 @@ template <IsDefVisitor V> class TypeResolver {
 
     [[nodiscard]] OptId<TypeId> resolve_type(FileId fid, ScopeId scope, const ast_type_t* type) {
         return resolve_type(fid, scope, type, false);
+    }
+
+    [[nodiscard]] OptId<TypeId> decay_type(TypeId tid, Span span = Span::generated()) {
+        const Type& type = context.type(tid);
+
+        TypeValue decay_tval{};
+
+        if (type.holds<TypeRef>()) {
+            decay_tval = context.type(type.as<TypeRef>().inner).value;
+        } else {
+            decay_tval = type.value;
+        }
+
+        // make new type as to update span and remove mut
+        return context.emplace_type(decay_tval, span, false);
     }
 };
 

@@ -23,6 +23,7 @@ typedef enum ast_type_tag {
     AST_TYPE_FN_PTR,
     AST_TYPE_VARIADIC,
     AST_TYPE_TYPEOF,
+    AST_TYPE_DECAY,
     AST_TYPE_INVALID,
 } ast_type_tag_e;
 
@@ -71,6 +72,7 @@ typedef struct ast_type_wrapped {
 
 typedef struct ast_type_of {
     ast_expr_t* of_expr;
+    bool mut;
 } ast_type_of_t;
 
 typedef union ast_type_u {
@@ -82,6 +84,7 @@ typedef union ast_type_u {
     ast_type_fn_ptr_t fn_ptr;
     ast_type_wrapped_t variadic;
     ast_type_of_t type_of;
+    ast_type_wrapped_t decay;
 } ast_type_u;
 
 typedef struct ast_type {
