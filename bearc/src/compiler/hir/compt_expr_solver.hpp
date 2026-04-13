@@ -441,10 +441,6 @@ template <IsDefVisitor V> class ComptExprSolver {
      */
     [[nodiscard]] OptId<ExecId> solve_struct_compt_expr(FileId fid, ScopeId scope,
                                                         const ast_expr_t* expr, TypeId into_tid) {
-        auto emplace_e = [this, fid, expr](ExecValue val) {
-            return context.register_exec(
-                context, val, Span(fid, context.ast(fid).buffer(), expr->first, expr->last), true);
-        };
 
         auto visit_def
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
