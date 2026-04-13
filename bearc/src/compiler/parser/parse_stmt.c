@@ -9,6 +9,7 @@
 #include "compiler/parser/parse_stmt.h"
 #include "compiler/ast/expr.h"
 #include "compiler/ast/stmt.h"
+#include "compiler/ast/stmt_slice.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_expr.h"
@@ -363,10 +364,33 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
     } else {
         decl->stmt.fn_decl.return_type = NULL;
     }
-    decl->stmt.fn_decl.block = parse_stmt_block(p);
+    bool only_expr = parser_match_token(p, TOK_EQ_ARROW);
+
+    // handle fn foo() -> i32 => expr or {expr}
+    if (only_expr) {
+        decl->stmt.fn_decl.block = NULL;
+
+        token_t* lbrace = parser_match_token(p, TOK_LBRACE);
+
+        decl->stmt.fn_decl.expr = parse_expr(p);
+
+        if (lbrace && !parser_expect_token(p, TOK_RBRACE)) {
+            if (parser_prev(p)->type == TOK_SEMICOLON) {
+                compiler_error_list_emplace(p->error_list, parser_prev(p),
+                                            HELP_REMOVE_SEMICOLON_TO_YIELD_EXPRESSION_VALUE);
+            }
+            return parser_sync_stmt(p);
+        }
+
+    } else {
+        decl->stmt.fn_decl.block = parse_stmt_block(p);
+        decl->stmt.fn_decl.expr = NULL;
+    }
+
+    decl->stmt.fn_decl.only_expr = only_expr;
 
     decl->first = decl->stmt.fn_decl.kw;
-    decl->last = decl->stmt.fn_decl.block->last;
+    decl->last = parser_prev(p);
 
     if (cooked) {
         return parser_invalid_stmt(p, decl->first, decl->last);
@@ -1056,6 +1080,8 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
     } else {
         decl->stmt.fn_prototype.return_type = NULL;
     }
+    decl->stmt.fn_prototype.only_expr = false;
+    decl->stmt.fn_prototype.expr = NULL;
     parser_expect_token(p, TOK_SEMICOLON);
     decl->first = decl->stmt.fn_prototype.kw;
     decl->last = parser_prev(p);

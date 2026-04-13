@@ -193,10 +193,14 @@ void compiler_error_print_err(const compiler_error_list_t* list, size_t i, bool 
         if (error->error_code == HELP_REMOVE) {
             context = error->start_tkn->start;
             context_len = error->start_tkn->len;
+            printf("%s%s%s: %s `%s%.*s%s%s`\n", accent_color, error_word, ansi_bold_reset(),
+                   error_message, accent_color, (int)context_len, context, ansi_bold_reset(),
+                   ansi_reset());
         }
-        printf("%s%s%s: %s `%s%.*s%s%s`\n", accent_color, error_word, ansi_bold_reset(),
+        printf("%s%s%s: %s %s%.*s%s%s\n", accent_color, error_word, ansi_bold_reset(),
                error_message, accent_color, (int)context_len, context, ansi_bold_reset(),
                ansi_reset());
+
     } else {
         print_diagnostic(src_buffer, start, len, line, col, accent_color, error_word, error_message,
                          context, compact);

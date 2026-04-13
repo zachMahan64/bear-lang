@@ -176,6 +176,8 @@ typedef struct ast_stmt_fn_decl {
     /// NULLable if no return type
     ast_type_t* return_type;
     ast_stmt_t* block;
+    ast_expr_t* expr;
+    bool only_expr;
     bool is_generic;
     bool is_mut;
 } ast_stmt_fn_decl_t;

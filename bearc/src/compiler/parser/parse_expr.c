@@ -8,6 +8,7 @@
 
 #include "compiler/parser/parse_expr.h"
 #include "compiler/ast/expr.h"
+#include "compiler/ast/params.h"
 #include "compiler/ast/type.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
@@ -73,7 +74,7 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
             lhs = parse_grouping(p);
         } else if (first_type == TOK_MATCH) {
             lhs = parse_expr_match(p);
-        } else if (first_type == TOK_BAR || first_type == TOK_MOVE) {
+        } else if (first_type == TOK_BAR || first_type == TOK_MOVE || first_type == TOK_BOOL_OR) {
             lhs = parse_expr_closure(p);
         } else if (first_type == TOK_LBRACK) {
             lhs = parse_expr_list_literal(p);
@@ -637,13 +638,18 @@ ast_expr_t* parse_expr_closure(parser_t* p) {
     token_t* first = parser_peek(p);
     // move |...|{...}
     cl->expr.closure.is_move = parser_match_token(p, TOK_MOVE); // match into bool
-    if (!parser_expect_token(p, TOK_BAR)) {
-        return parser_sync_expr(p);
+    if (!parser_match_token(p, TOK_BOOL_OR)) {
+        if (!parser_expect_token(p, TOK_BAR)) {
+            return parser_sync_expr(p);
+        }
+        cl->expr.closure.params = parse_slice_of_params(p, TOK_COMMA, TOK_BAR);
+        parser_expect_token(p, TOK_BAR);
+    } else {
+        // we just have ||
+        cl->expr.closure.params = (ast_slice_of_params_t){.start = NULL, .len = 0};
     }
-    cl->expr.closure.params = parse_slice_of_params(p, TOK_COMMA, TOK_BAR);
-    parser_expect_token(p, TOK_BAR);
-    // allow '|thingie| -> thing' syntax
-    if (parser_match_token(p, TOK_RARROW)) {
+    // allow '|thingie| => thing' syntax
+    if (parser_match_token(p, TOK_EQ_ARROW)) {
         cl->expr.closure.body = parse_expr_allowing_block_exprs_without_yields(p);
     } else {
         // {....}

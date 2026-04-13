@@ -700,7 +700,16 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
             print_type(fn.return_type);
         }
         printer_do_indent();
-        pretty_print_stmt(fn.block);
+        if (fn.only_expr) {
+            print_op_from_type(TOK_EQ_ARROW);
+            printer_deindent();
+            print_opening_delim_from_type(TOK_LBRACE);
+            pretty_print_expr(fn.expr);
+            print_closing_delim_from_type(TOK_RBRACE);
+            printer_do_indent();
+        } else {
+            pretty_print_stmt(fn.block);
+        }
         printer_deindent();
         break;
     case AST_STMT_VAR_INIT_DECL:
