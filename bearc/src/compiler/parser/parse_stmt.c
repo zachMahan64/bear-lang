@@ -358,10 +358,19 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
         return parser_sync_stmt(p);
     }
 
-    token_t* rarrow = parser_match_token(p, TOK_RARROW);
+    token_t* rarrow = parser_match_token(p, TOK_DISCARD_RARROW);
+
+    if (!rarrow) {
+        rarrow = parser_match_token(p, TOK_RARROW);
+    }
+    decl->stmt.fn_decl.discardable = false;
     if (rarrow) {
+        if (rarrow->type == TOK_DISCARD_RARROW) {
+            decl->stmt.fn_decl.discardable = true;
+        }
         decl->stmt.fn_decl.return_type = parse_type(p);
     } else {
+        decl->stmt.fn_decl.ret_arrow = NULL;
         decl->stmt.fn_decl.return_type = NULL;
     }
     bool only_expr = parser_match_token(p, TOK_EQ_ARROW);
@@ -1074,10 +1083,18 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
         return parser_sync_stmt(p);
     }
 
-    token_t* rarrow = parser_match_token(p, TOK_RARROW);
+    token_t* rarrow = parser_match_token(p, TOK_DISCARD_RARROW);
+    if (!rarrow) {
+        rarrow = parser_match_token(p, TOK_RARROW);
+    }
+    decl->stmt.fn_prototype.discardable = false;
     if (rarrow) {
+        if (rarrow->type == TOK_DISCARD_RARROW) {
+            decl->stmt.fn_prototype.discardable = true;
+        }
         decl->stmt.fn_prototype.return_type = parse_type(p);
     } else {
+        decl->stmt.fn_prototype.ret_arrow = NULL;
         decl->stmt.fn_prototype.return_type = NULL;
     }
     decl->stmt.fn_prototype.only_expr = false;

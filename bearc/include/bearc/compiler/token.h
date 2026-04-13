@@ -161,9 +161,10 @@ typedef enum token_type {
 
     // punc
     TOK_EQ_ARROW,
-    TOK_RARROW,      // -> for return types
-    TOK_SCOPE_RES,   // ..
-    TOK_GENERIC_SEP, // :: , for example, box::int
+    TOK_RARROW,         // -> for return types
+    TOK_DISCARD_RARROW, // ~> for return types
+    TOK_SCOPE_RES,      // ..
+    TOK_GENERIC_SEP,    // :: , for example, box::int
 
     // operators
     // range

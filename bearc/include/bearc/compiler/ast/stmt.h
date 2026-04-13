@@ -174,12 +174,15 @@ typedef struct ast_stmt_fn_decl {
     ast_slice_of_generic_params_t generic_params;
     ast_slice_of_params_t params;
     /// NULLable if no return type
+    token_t* ret_arrow;
+    /// NULLable if no return type
     ast_type_t* return_type;
     ast_stmt_t* block;
     ast_expr_t* expr;
     bool only_expr;
     bool is_generic;
     bool is_mut;
+    bool discardable;
 } ast_stmt_fn_decl_t;
 
 typedef struct ast_stmt_var_decl_init {

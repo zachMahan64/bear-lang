@@ -191,11 +191,15 @@ lex_multichar_operator:
         }
         LEX_KNOWN_LEN_PUSH(1);
     // intentional fallthrough ~~~~~~~~~~~~~~~~~~~~
+    case ('~'):
+        if (n1 == '>') {
+            // ~>
+            LEX_KNOWN_LEN_PUSH(2);
+        }
     case ('*'):
     case ('/'):
     case ('%'):
     // bitwise
-    case ('~'):
     case ('^'):
     // boolean
     case ('!'):

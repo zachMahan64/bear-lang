@@ -695,7 +695,11 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         print_closing_delim_from_type(TOK_RPAREN);
         if (fn.return_type) {
             printer_do_indent();
-            print_op_from_type(TOK_RARROW);
+            if (fn.discardable) {
+                print_op_from_type(TOK_DISCARD_RARROW);
+            } else {
+                print_op_from_type(TOK_RARROW);
+            }
             printer_deindent();
             print_type(fn.return_type);
         }
@@ -881,7 +885,11 @@ void pretty_print_stmt(const ast_stmt_t* stmt) {
         print_closing_delim_from_type(TOK_RPAREN);
         if (fd.return_type) {
             printer_do_indent();
-            print_op_from_type(TOK_RARROW);
+            if (fd.discardable) {
+                print_op_from_type(TOK_DISCARD_RARROW);
+            } else {
+                print_op_from_type(TOK_RARROW);
+            }
             printer_deindent();
             print_type(fd.return_type);
         }

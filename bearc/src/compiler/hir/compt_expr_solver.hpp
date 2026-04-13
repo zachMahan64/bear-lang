@@ -1239,8 +1239,8 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         // if into type is builtin, try to cast
         if (maybe_into_type.has_value()) {
-            auto into_type = maybe_into_type.as_id();
-            auto type = context.type(into_type);
+            TypeId into_type = maybe_into_type.as_id();
+            const Type& type = context.type(into_type);
             if (type.holds<TypeArr>()) {
                 auto inner_tid = type.as<TypeArr>().inner;
 
