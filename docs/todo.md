@@ -46,6 +46,7 @@ main quest
     - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `@static_assert(bool cond)` 
 - [x] `@type_to_str(<type>)` to get a reflected compt string that is just the type's string representation
     - since compt strs are just `hir::SymbolId`s just do `context.symbol_id(type_to_str(context, hir::TypeId))` to get them
+- [ ] add `fn foo() ~> i32` syntax for discardable return values
 - [ ] some `compt` function, struct, and list improvements:
     - [ ] add compt member accesses ex) `foo.bar`
     - [ ] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
