@@ -40,8 +40,6 @@ main quest
 
 - [x] fix/impl deftypes by having a direct def -> type forward mechanism (will be needed for generic params too)
 
-- [ ] debug and increase safety of particularly (large) integral literal parsing
-
 - some reflection/compt stuff
 - [x] special expr case `@same_type(expr, expr)` (yields bool) where the types could be say `typeof(foo)` and `Foo<i32>`
 - [x] static_assert (make it a builtin in hir)
@@ -128,7 +126,10 @@ side quests
 ##### chores 
 - [x] handle alignas accordingly during ast lowering
 - [x] fix the `HashMap<i32, HashMap<i32, i32>>` parsing case by packing count tracking into `>>` and `>>>` tokens until they hit a value of 2/3
-- [ ] binary integer literals `0b1010101`
+- [ ] improve numerical literal handling 
+    - [ ] probably just replace strtoll and friends with hand-rolled impls 
+    - [ ] add binary integer literals `0b1010101` (keeping dec, hex, and float that we currently already have)
+    - [ ] set a tkn to TOK_OVERSIZED_INT_ERR if there's no decimal and it's greater than u64 max or less than i64 min
 - [ ] allow arbitrarily ordered struct members inits, will require mini symbol hashmaps
 - [ ] add an Exec Stringifier (tedious)
 - [ ] add a Def Stringifier (tedious)  
