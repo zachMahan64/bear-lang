@@ -20,7 +20,6 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
-#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -1546,15 +1545,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
             }
         } else if (maybe_bin_op.holds<access_op>()) {
-            // TODO,
-            /*
-             * - find lhs's type, if it's a struct:
-             *    - lookup symbol in that struct's scope
-             *    - if it's a hit, find that exact exec in the struct init exec by then looking up
-             *    the ordered member's index (need to add this field in when lowering decls)
-             * - else:
-             *   - issue error since trying to access member of non struct
-             */
+            // TODO: handle and ban compt ptr member acess since ptrs aren't allowed at compt
             OptId<ExecId> maybe_lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
             if (!maybe_lhs.has_value()) {
                 return std::nullopt; // poisoned
