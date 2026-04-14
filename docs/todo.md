@@ -61,7 +61,8 @@ main quest
         - [ ] will need to have a temp scope pool that allocates some number of scopes before freeing memory (like 128 MB or so) (as to not crazily bloat mem usage)
         - [ ] temp scopes won't have ScopeIds, so full-path scope look up methods that don't require a base ScopeId will be necessary (impl inside `Scope` and then `Context`) 
         - [ ] ban `compt mt mut` funcs
-    - [ ] add compt member accesses + calls: `foo.bar()` 
+        - [ ] add compt member calls: `foo.bar()` 
+    - [ ] compt subscripts and list equalities: `foo[1] and [1, 2] == [1, 2]`
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
 
