@@ -16,7 +16,6 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
 #include <cassert>
-#include <iostream>
 
 namespace hir {
 

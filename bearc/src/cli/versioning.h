@@ -34,6 +34,14 @@
 #ifdef BEARC_VERSION
 #define BEARC_VERSION_STR BEARC_VERSION " " BEARC_ARCH
 #else
-#define BEARC_VERSION_STR BEARC_VERSION_FALLBACK " (" __DATE__ ", " __TIME__ ") " BEARC_ARCH
+
+#ifdef NDEBUG
+#define BUILD_TYPE "release build"
+#else
+#define BUILD_TYPE "debug build"
+#endif
+
+#define BEARC_VERSION_STR                                                                          \
+    BEARC_VERSION_FALLBACK " " BUILD_TYPE " (" __DATE__ ", " __TIME__ ") " BEARC_ARCH
 #endif
 #endif
