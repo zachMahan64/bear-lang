@@ -17,7 +17,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
 #include <cassert>
-#include <iostream>
+#include <optional>
 
 namespace hir {
 
@@ -156,13 +156,16 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         // TODO handle member functions and contracts
 
+        ScopeId structs_scope = context.scope_for_top_level_def(did);
+
         def.set_value(DefStruct{
-            .scope = context.scope_for_top_level_def(did),
+            .scope = structs_scope,
             .ordered_members = ordered_defs,
             /* .contracts = */
             .contracts = {},
             .orginal = {},
         });
+
         break;
     }
     case AST_STMT_USE: {
@@ -236,6 +239,34 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             context.set_next_diagnostic(d0, d1);
             context.set_next_diagnostic(d1, d2);
         }
+        if (def.compt && !fn_decl.only_expr) {
+            Span span{context, fid, fn_decl.block->first};
+            auto d0 = context.emplace_diagnostic(
+                span, diag_code::compt_function_does_not_yield_a_pure_expr, diag_type::error);
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                span, diag_code::declare_using_pure_expression_syntax_replacing_body_with,
+                diag_type::help,
+                DiagnosticSymbolAfterMessage{.sid = context.symbol_id<"=> (Expression)">()});
+            context.set_next_diagnostic(d0, d1);
+        }
+        if (def.compt && fn_decl.only_expr) {
+            IdSlice<DefId> params{}; // TODO handle params, including self if function is mt
+            IdSlice<TypeId> param_types = IdSlice<TypeId>{}; // TODO run thru params and set types
+            TypeResolver type_resolver{context, *this};
+            ExecId val_eid{};
+            // handle methods explicitly
+            def.set_value(DefFunction{.params = params,
+                                      .param_types = param_types,
+                                      .return_type
+                                      = type_resolver.resolve_type(fid, scope, fn_decl.return_type),
+                                      .body = val_eid,
+                                      .original = std::nullopt});
+
+        }
+        // TODO, handle run-time functions
+        else {
+        }
+        def.set_value(DefFunction{});
         break;
     }
         // TODO, need to lower these

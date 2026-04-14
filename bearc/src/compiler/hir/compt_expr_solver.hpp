@@ -558,7 +558,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto did2
                     = context.emplace_diagnostic(expr_span, diag_code::remove, diag_type::help,
                                                  DiagnosticSymbolAfterMessageNoQuotes{
-                                                     context.symbol_id("the struct initializer")},
+                                                     context.symbol_id<"the struct initializer">()},
                                                  DiagnosticNoOtherInfo{});
 
                 context.set_next_diagnostic(did0, did1);

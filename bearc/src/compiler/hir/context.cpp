@@ -71,7 +71,8 @@ Context::Context(const bearc_args_t& args)
       symbols{DEFAULT_SYMBOL_VEC_CAP}, exec_ids{DEFAULT_EXEC_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP},
       def_ids{DEFAULT_DEF_CAP}, defs{DEFAULT_DEF_CAP}, def_resol_states{DEFAULT_DEF_CAP},
       def_ast_nodes(DEFAULT_DEF_CAP), def_mention_states{DEFAULT_DEF_CAP},
-      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP}, ordered_def_slices{DEFAULT_DEF_CAP},
+      def_to_scope_for_types{id_map_arena, DEFAULT_DEF_CAP},
+      def_to_scope_for_funcs{id_map_arena, DEFAULT_DEF_CAP}, ordered_def_slices{DEFAULT_DEF_CAP},
       def_to_ordered_def_slice_id{id_map_arena, DEFAULT_DEF_SLICE_COUNT}, type_ids{DEFAULT_DEF_CAP},
       types{DEFAULT_TYPE_VEC_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
       canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
@@ -970,9 +971,16 @@ ScopeId Context::containing_scope(DefId did) const {
     return containing_scope(parent_id);
 }
 
+void Context::register_func_to_scope(DefId did, ScopeId scope_id) {
+    def_to_scope_for_funcs.insert(did, scope_id);
+}
+
+OptId<ScopeId> Context::func_to_scope(DefId did) { return def_to_scope_for_funcs.at(did); }
+
 SymbolId Context::symbol_id(IdIdx<SymbolId> sididx) const { return symbol_ids.cat(sididx); }
 
 [[nodiscard]] bool Context::equivalent_type(TypeId tid1, TypeId tid2) const {
     return type(tid1).canonical == type(tid2).canonical;
 }
+
 } // namespace hir

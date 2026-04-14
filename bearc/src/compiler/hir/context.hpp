@@ -121,6 +121,10 @@ class Context {
     /// TODO needs to handle non-top level stmts too
     [[nodiscard]] ScopeId containing_scope(DefId did) const;
 
+    void register_func_to_scope(DefId did, ScopeId scope_id);
+
+    [[nodiscard]] OptId<ScopeId> func_to_scope(DefId did);
+
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
@@ -195,6 +199,10 @@ class Context {
 
     // converters
     [[nodiscard]] SymbolId symbol_id(IdIdx<SymbolId> sididx) const;
+    template <StringLiteral S> [[nodiscard]] SymbolId symbol_id() {
+        static const SymbolId sid = symbol_id(S.get()); // cache result
+        return sid;
+    }
     [[nodiscard]] FileId file_id(IdIdx<FileId> ididx) const;
     /// gets the canonical type value (bypassing deftypes)
     [[nodiscard]] const Type& type(IdIdx<TypeId> ididx) const;
@@ -314,6 +322,8 @@ class Context {
 
     /// for tracking DefId -> ScopeId for structs during the top level resolution
     IdHashMap<DefId, ScopeId> def_to_scope_for_types;
+
+    IdHashMap<DefId, ScopeId> def_to_scope_for_funcs;
 
     // for storing ordered defs (namely ordered member definitions)
     IdVecMap<OrderedDefSliceId, IdSlice<DefId>> ordered_def_slices;

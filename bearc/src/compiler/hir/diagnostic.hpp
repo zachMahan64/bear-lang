@@ -97,6 +97,8 @@ enum class diag_code : uint8_t {
     condition_is_false,
     compt_mut_methods_are_not_permitted,
     compt_expression_functions_can_only_act_on_immut_vals,
+    compt_function_does_not_yield_a_pure_expr,
+    declare_using_pure_expression_syntax_replacing_body_with,
 
     count, // this must be last,
 

@@ -9,6 +9,7 @@
 #ifndef COMPILER_HIR_INDEXING_HPP
 #define COMPILER_HIR_INDEXING_HPP
 
+#include <algorithm>
 #include <assert.h>
 #include <optional>
 #include <stdint.h>
@@ -98,6 +99,16 @@ class Symbol {
     using id_type = SymbolId;
     constexpr explicit Symbol(std::string_view string_view) : string_view(string_view) {}
     [[nodiscard]] constexpr std::string_view sv() const noexcept { return this->string_view; }
+    /// Self
+    static constexpr const char* self_type_str = "Self";
+};
+
+template <std::size_t N> struct StringLiteral {
+    char value[N];
+
+    // constexpr constructor to copy the string literal into the array
+    constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
+    constexpr const char* get() const { return value; }
 };
 
 /// repsents an index into the storage for a certain Id, to allow for slicing

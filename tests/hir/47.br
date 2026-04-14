@@ -6,3 +6,7 @@ struct Foo {
 
 
 compt mt mut Foo..do_work() -> i32=> 10
+
+compt mt Foo..thing() -> i32 {
+    return 12;
+}

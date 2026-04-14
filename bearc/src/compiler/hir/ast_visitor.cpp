@@ -194,7 +194,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                                              DiagnosticNoOtherInfo{});
             auto did1 = context.emplace_diagnostic(
                 span, diag_code::replace_with, diag_type::help,
-                DiagnosticSymbolAfterMessage{context.symbol_id("C")}, DiagnosticNoOtherInfo{});
+                DiagnosticSymbolAfterMessage{context.symbol_id<"C">()}, DiagnosticNoOtherInfo{});
             auto did2 = context.emplace_diagnostic(
                 span, diag_code::remove, diag_type::help,
                 DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});

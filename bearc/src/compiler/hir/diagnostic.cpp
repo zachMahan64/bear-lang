@@ -187,6 +187,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "compile-time `mut` methods are not permitted";
     case diag_code::compt_expression_functions_can_only_act_on_immut_vals:
         return "compile-time expression functions can only act on immutable values";
+    case diag_code::compt_function_does_not_yield_a_pure_expr:
+        return "compile-time function does not yield a pure expression";
+    case diag_code::declare_using_pure_expression_syntax_replacing_body_with:
+        return "declare using pure expression syntax, replacing the body with: ";
     }
     std::unreachable();
     return "";
