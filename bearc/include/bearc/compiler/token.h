@@ -116,12 +116,16 @@ typedef enum token_type {
     TOK_ALIGNAS,
     TOK_TYPEOF,
     TOK_MOVE,
+    TOK_DECAY, // decay
     TOK_AS,
     TOK_IS, // for variant decomp
-    TOK_SAME_TYPE,
-    TOK_TYPE_TO_STR,
-    TOK_STATIC_ASSERT,
-    TOK_DECAY,
+
+    // @____ style builtins
+
+    TOK_SAME_TYPE,     // @same_type
+    TOK_TYPE_TO_STR,   // @type_to_str
+    TOK_STATIC_ASSERT, // @static_assert
+    TOK_DEFINED,       // @defined
 
     // constructs
     TOK_REQUIRES,

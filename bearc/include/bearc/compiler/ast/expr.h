@@ -45,6 +45,7 @@ typedef enum ast_expr_type {
     AST_EXPR_SAME_TYPE,
     AST_EXPR_TYPE_TO_STR,
     AST_EXPR_STATIC_ASSERT,
+    AST_EXPR_DEFINED,
 
     // structs
     AST_EXPR_STRUCT_INIT,
@@ -213,6 +214,10 @@ typedef struct ast_expr_two_types {
     ast_type_t* rhs_type;
 } ast_expr_two_types_t;
 
+typedef struct ast_expr_wrapped_id_t {
+    token_ptr_slice_t id;
+} ast_expr_wrapped_id_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union ast_expr_u {
@@ -238,6 +243,7 @@ typedef union ast_expr_u {
     ast_expr_wrapped_t static_assert_expr;
     ast_expr_type_t type_to_str;
     ast_expr_two_types_t same_type;
+    ast_expr_wrapped_id_t defined;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

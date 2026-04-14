@@ -1,0 +1,27 @@
+// tests/hir/41.br
+
+var _0 = @static_assert !@defined(a); // fine, `a` DNE
+
+var _1 = @static_assert @defined(b); // oops, `b` DNE
+
+hid mod foo {
+    compt i32 foo = 12;
+    hid compt i32 bar = 12;
+}
+
+mod bar {
+    hid compt i32 foo = 12;
+    pub var bar = 12;
+}
+
+var _3 = @static_assert @defined(foo..foo); // fine
+
+var _4 = @static_assert @defined foo..bar; // oops, foo and foo..bar hid
+
+var _5 = @static_assert @defined bar..foo; // oops, bar..foo hid
+
+var _6 = @static_assert @defined bar..bar; // fine
+
+var _7 = foo..bar; // oops
+
+var _8 = foo..foo; // fine

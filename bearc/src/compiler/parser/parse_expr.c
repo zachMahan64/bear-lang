@@ -149,6 +149,8 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
         return parse_expr_static_assert(p);
     case TOK_TYPE_TO_STR:
         return parse_expr_type_to_str(p);
+    case TOK_DEFINED:
+        return parse_expr_defined(p);
     default:
         break;
     }
@@ -199,6 +201,35 @@ ast_expr_t* parse_expr_same_type(parser_t* p) {
     parser_expect_token(p, TOK_RPAREN);
 
     ex->first = st_tkn;
+    ex->last = parser_prev(p);
+    return ex;
+}
+
+ast_expr_t* parse_expr_defined(parser_t* p) {
+    ast_expr_t* ex = parser_alloc_expr(p);
+    ex->type = AST_EXPR_DEFINED;
+
+    token_t* tts_tkn = parser_expect_token(p, TOK_DEFINED);
+    if (!tts_tkn) {
+        return parser_sync_expr(p);
+    }
+
+    token_t* lparen = parser_match_token(p, TOK_LPAREN);
+
+    token_ptr_slice_t id_slice = parse_id_token_slice(p, TOK_SCOPE_RES);
+
+    // handle failure
+    if (id_slice.len == 0) {
+        ex->type = AST_EXPR_INVALID;
+        return ex;
+    }
+    ex->expr.defined.id = id_slice;
+
+    if (lparen) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
+
+    ex->first = tts_tkn;
     ex->last = parser_prev(p);
     return ex;
 }

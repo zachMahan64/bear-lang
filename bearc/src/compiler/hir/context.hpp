@@ -106,6 +106,10 @@ class Context {
 
                                                   IdSlice<SymbolId> id_slice);
 
+    [[nodiscard]] bool defined_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
+
+    [[nodiscard]] bool defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span);
+
     /// finds the scope containing a definition
     /// TODO needs to handle non-top level stmts too
     [[nodiscard]] ScopeId containing_scope(DefId did) const;

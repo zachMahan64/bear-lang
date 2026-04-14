@@ -845,6 +845,46 @@ OptId<DefId> Context::look_up_scoped_namespace_bypassing_visibility(ScopeId scop
         [this](ScopeId scope, SymbolId sid) { return look_up_namespace(scope, sid); }, scope,
         id_slice);
 }
+
+[[nodiscard]] bool Context::defined_bypassing_visibility(ScopeId scope,
+                                                         IdSlice<SymbolId> id_slice) {
+    auto maybe_type = look_up_scoped_type_bypassing_visibility(scope, id_slice);
+    if (maybe_type.has_value()) {
+        return true;
+    }
+    return look_up_scoped_variable_bypassing_visibility(scope, id_slice).has_value();
+}
+
+[[nodiscard]] bool Context::defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span) {
+    // bypass vis the second time around to not warn multiple times
+    auto maybe_type = look_up_scoped_type(scope, id_slice, id_span);
+
+    auto err_when_hid = [this, id_slice, id_span](DefId did) {
+        const Def& deffy = def(did);
+        if (!deffy.pub) {
+            auto d0 = emplace_diagnostic_with_message_value(
+                id_span, diag_code::is_declared_hid, diag_type::error,
+                DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
+            auto d1 = emplace_diagnostic_with_message_value(
+                deffy.span, diag_code::declared_here, diag_type::note,
+                DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
+            set_next_diagnostic(d0, d1);
+        }
+    };
+
+    if (maybe_type.has_value()) {
+        err_when_hid(maybe_type.as_id());
+        return true;
+    }
+    auto maybe_var = look_up_scoped_variable_bypassing_visibility(scope, id_slice);
+
+    if (maybe_var.has_value()) {
+        err_when_hid(maybe_var.as_id());
+        return true;
+    }
+    return false;
+}
+
 IdSlice<SymbolId> Context::symbol_slice(token_ptr_slice_t token_slice) {
     llvm::SmallVector<SymbolId> vec{};
     for (size_t i = 0; i < token_slice.len; i++) {

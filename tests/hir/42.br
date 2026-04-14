@@ -1,0 +1,69 @@
+// tests/hir/42.br
+
+/// this would be in another file in the stdlib ########
+mod std {
+    mod arch {
+        // (type and value are irrelevant here)
+        compt bool arm64 = true;
+        compt bool arm = true;
+    }
+    mod os {
+        compt bool darwin = true;
+    }
+    struct String {
+        // ...
+    }
+    fn println(str st) {
+        // ...
+    }
+    fn print(str st) {
+        // ...
+    }
+}
+
+// #####################################################
+
+/// here's a demo of home some basic compt reflection can emulate c-style conditional compilation:
+
+mod my_mod;
+
+use std..arch;
+
+compt bool bit_64_arch = @defined(arch..arm64) || @defined(arch..x64);
+
+compt bool bit_32_arch = (@defined(arch..arm) && !@defined(arch..arm64)) || (@defined(arch..x86) && !@defined(arch..x64));
+
+compt u8 BIT_ARCH = 64 if bit_64_arch else 32 if bit_32_arch else 0;
+
+compt bool KNOWN_ARCH = BIT_ARCH != 0;
+
+// since we known we have arm64:
+
+var _0 = @static_assert(BIT_ARCH == 64);
+
+var _1 = @static_assert KNOWN_ARCH;
+
+// since we know we have darwin
+
+var _2 = @static_assert @defined(std..os..darwin);
+
+// demo in a windowing system:
+struct DeviceIno {
+    compt bool ON_MAC = @defined(std..os..darwin);
+    compt bool ON_WIN32 = @defined(std..os..win32);
+    compt bool ON_LINUX = @defined(std..os..linux);
+    
+    use std..String;
+    
+    mt print_os(&String st) {
+        std..print("Currently on: ");
+        if compt ON_MAC {
+            std..println("macOS");
+        } else if compt ON_WIN32 {
+            std..println("Windows");
+        } else if compt ON_LINUX {
+            std..println("Linux");
+        }
+
+    }
+}

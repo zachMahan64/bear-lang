@@ -610,6 +610,15 @@ void pretty_print_expr(const ast_expr_t* expression) {
         pretty_print_expr(expr.expr.static_assert_expr.inner);
         print_closing_green_brace();
         break;
+    case AST_EXPR_DEFINED:
+        print_title("@defined");
+        printer_do_indent();
+        print_indent();
+        print_id_slice(expr.expr.defined.id);
+        puts(",");
+        printer_deindent();
+        print_closing_green_brace();
+        break;
     }
     puts(",");
     printer_deindent();

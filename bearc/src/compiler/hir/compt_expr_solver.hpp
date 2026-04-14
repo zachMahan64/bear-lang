@@ -380,6 +380,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             return handle_type_to_str(fid, scope, expr);
         case AST_EXPR_STATIC_ASSERT:
             return handle_static_assert(fid, scope, expr);
+        case AST_EXPR_DEFINED:
+            return handle_defined(fid, scope, expr);
+            break;
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
@@ -689,6 +692,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return solve_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
             // these are all invalid
         case AST_EXPR_SAME_TYPE:
+        case AST_EXPR_DEFINED:
         case AST_EXPR_TYPE_TO_STR:
         case AST_EXPR_STATIC_ASSERT:
         case AST_EXPR_LITERAL:
@@ -1199,6 +1203,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_POST_UNARY:
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_FN_CALL:
+        case AST_EXPR_DEFINED:
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
         case AST_EXPR_STRUCT_INIT:
@@ -1531,6 +1536,15 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         return std::nullopt; // cooked / poisoned already, so just return since error
                              // should've already been reported
+    }
+    [[nodiscard]] OptId<ExecId> handle_defined(FileId fid, ScopeId scope, const ast_expr_t* expr) {
+        assert(expr->type == AST_EXPR_DEFINED);
+        Span span{context, fid, expr->expr.defined.id};
+
+        const bool defined
+            = context.defined(scope, context.symbol_slice(expr->expr.defined.id), span);
+
+        return context.emplace_exec(ExecConst{defined}, span, true);
     }
 };
 } // namespace hir
