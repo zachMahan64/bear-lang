@@ -48,7 +48,7 @@ main quest
     - since compt strs are just `hir::SymbolId`s just do `context.symbol_id(type_to_str(context, hir::TypeId))` to get them
 - [x] add `fn foo() ~> i32` syntax for discardable return values
 
-- [ ] add `@defined()` expr
+- [x] add `@defined()` expr
 
 - [ ] some `compt` function, struct, and list improvements:
     - [ ] add compt member accesses ex) `foo.bar`
