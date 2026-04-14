@@ -1613,7 +1613,11 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             // TODO handle method calls here
             if (rhs_expr->type == AST_EXPR_FN_CALL) {
+                auto struct_scope = struct_def.as<DefStruct>().scope;
                 // ...
+                llvm::SmallVector<ExecId> arg_vec{};
+                arg_vec.push_back(lhs_eid);
+                return solve_compt_fn_call(fid, struct_scope, expr, lhs_eid); // TODO
             }
             context.emplace_diagnostic(Span{context, fid, expr},
                                        diag_code::value_does_not_refer_to_a_named_mem,
@@ -1650,6 +1654,16 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] bool exec_is_compt_viable(const Exec& exec) {
         return exec.holds<ExecConst>() || exec.holds<ExecExprStructInit>()
                || exec.holds<ExecExprListLiteral>();
+    }
+    [[nodiscard]] OptId<ExecId> solve_fn_call(FileId fid, ScopeId scope, const ast_expr_t* expr,
+                                              OptId<ExecId> self_val = std::nullopt) {
+        assert(expr->type == AST_EXPR_DEFINED);
+        Span span{context, fid, expr->expr.defined.id};
+
+        const bool defined
+            = context.defined(scope, context.symbol_slice(expr->expr.defined.id), span);
+
+        return context.emplace_exec(ExecConst{defined}, span, true);
     }
 };
 } // namespace hir
