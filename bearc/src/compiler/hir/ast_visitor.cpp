@@ -19,6 +19,7 @@
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
+#include <iostream>
 #include <variant>
 
 namespace hir {
@@ -292,6 +293,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             const bool is_small_scope = !stmts.has_value();
             ScopeId types_scope = (is_small_scope) ? context.make_small_named_scope(scope)
                                                    : context.make_named_scope(scope);
+
             context.defs_to_scopes_for_types().insert(def, types_scope);
             // warn on lowercase structure definition
             if (is_lower(name_tkn)) {
@@ -330,6 +332,7 @@ void FileAstVisitor::register_top_level_stmts_registering_ordered_members(
     for (size_t i = 0; i < stmts.len; i++) {
         OptId<DefId> maybe_def = register_top_level_stmt(scope, stmts.start[i], parent, abi);
         if (maybe_def.has_value()) {
+            context.def(maybe_def.as_id()).member_idx = def_vec.size(); // set member_idx
             def_vec.emplace_back(maybe_def.as_id());
         }
     }

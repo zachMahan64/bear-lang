@@ -98,6 +98,12 @@ br_test_result_t test_context_db(void) {
     assert_compt(db31, "a", true);
     assert_compt(db31, "b", true);
 
+    // TEST 4: struct mem access
+    const char* args3[] = {"bearc", "tests/hir/44.br"};
+    ContextDatabase db44{sizeof(args2) / sizeof(char*), args3};
+    auto d3 = db44.query_def_id({"Foo", "a"});
+    TEST_ASSERT(d3.variable_id.has_value());
+
     return TEST_RESULT;
 }
 

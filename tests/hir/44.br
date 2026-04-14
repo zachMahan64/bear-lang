@@ -1,0 +1,22 @@
+// tests/hir/44.br
+
+struct Foo {
+    i32 a = 42;
+    
+    compt i32 b = 12;
+    
+    struct Bar {
+
+    }
+}
+
+compt Foo foo = Foo{.a = 1231230};
+
+var _0 = foo.a;
+
+var _1 = Foo..a; // oops
+
+var _2 = Foo..Bar{};
+
+var _3 = foo.a..b; //oops
+

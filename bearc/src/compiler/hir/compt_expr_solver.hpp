@@ -20,6 +20,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
+#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -70,6 +71,10 @@ template <IsDefVisitor V> class ComptExprSolver {
     [[nodiscard]] OptId<ExecId> solve_expr(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                            OptId<TypeId> maybe_into_tid) {
 
+        auto expr_is_mem_access = +[](const ast_expr_t* expr) {
+            return expr->type == AST_EXPR_BINARY && expr->expr.binary.op->type == TOK_DOT;
+        };
+
         // no type provided, so try to infer
         if (!maybe_into_tid.has_value()) {
             if (expr->type == AST_EXPR_ID) {
@@ -81,6 +86,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             if (expr->type == AST_EXPR_LIST_LITERAL) {
                 return solve_list(fid, scope, expr, maybe_into_tid);
+            }
+            if (expr_is_mem_access(expr)) {
+                return solve_expr_binary(fid, scope, expr);
             }
             return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, maybe_into_tid);
         }
@@ -98,6 +106,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             if (expr->type == AST_EXPR_LIST_LITERAL) {
                 return solve_list(fid, scope, expr, into_tid);
+            }
+            if (expr_is_mem_access(expr)) {
+                return solve_expr_binary(fid, scope, expr);
             }
             return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, into_tid);
         }
@@ -119,6 +130,26 @@ template <IsDefVisitor V> class ComptExprSolver {
                 context.set_next_diagnostic(did0, did1);
             }
             return std::nullopt;
+        }
+
+        if (expr_is_mem_access(expr)) {
+            auto maybe_eid = solve_expr_binary(fid, scope, expr);
+            if (maybe_eid.empty()) {
+                return std::nullopt; // poison
+            }
+            auto maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            if (maybe_tid.empty()) {
+                return std::nullopt; // poison
+            }
+
+            // guard diff type
+            if (!context.equivalent_type(into_tid, maybe_tid.as_id())) {
+                context.emplace_diagnostic_with_message_value(
+                    Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                    diag_code::cannot_convert_value_of_type, diag_type::error,
+                    DiagnosticTypeToType{.from = maybe_tid.as_id(), .to = into_tid});
+                return std::nullopt;
+            }
         }
 
         // try TypeArr at compt
@@ -1407,6 +1438,13 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto orig_exec = context.exec(def.as<DefVariable>().compt_value.as_id());
             return context.emplace_exec(orig_exec.value, expr_span, true);
         }
+        auto d0 = context.emplace_diagnostic(
+            expr_span, diag_code::cannot_resolve_at_compt, diag_type::error,
+            DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
+        auto d1 = context.emplace_diagnostic_with_message_value(
+            def.span, diag_code::declared_here, diag_type::note,
+            DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice});
+        context.set_next_diagnostic(d0, d1);
         return std::nullopt;
     }
     [[nodiscard]] OptId<ExecId> handle_same_type(FileId fid, ScopeId scope,
@@ -1472,16 +1510,17 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         const auto bool_val = inner_exec.as<ExecConst>().as<bool>();
 
-        Span span{context, fid, sass_expr->first, sass_expr->last};
-
         if (!bool_val) {
-            context.emplace_diagnostic(span, diag_code::static_assertion_failed, diag_type::error);
+            context.emplace_diagnostic(
+                inner_exec.span, diag_code::static_assertion_failed, diag_type::error,
+                DiagnosticSubCode{.sub_code = diag_code::condition_is_false});
         }
 
-        return context.emplace_exec(ExecConst{bool_val}, span, true);
+        return context.emplace_exec(ExecConst{bool_val}, Span{context, fid, sass_expr}, true);
     }
     [[nodiscard]] OptId<ExecId> solve_expr_binary(FileId fid, ScopeId scope,
                                                   const ast_expr_t* expr) {
+        assert(expr->type == AST_EXPR_BINARY);
         bool cooked = false;
         ComptBinaryOp maybe_bin_op{expr->expr.binary.op};
         if (maybe_bin_op.holds<InvalidOp>()) {
@@ -1507,9 +1546,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
             }
         } else if (maybe_bin_op.holds<access_op>()) {
-            context.emplace_diagnostic(Span{context, fid, expr->first, expr->last},
-                                       diag_code::remove, diag_type::error); // TODO
-            cooked = true;
             // TODO,
             /*
              * - find lhs's type, if it's a struct:
@@ -1519,6 +1555,62 @@ template <IsDefVisitor V> class ComptExprSolver {
              * - else:
              *   - issue error since trying to access member of non struct
              */
+            OptId<ExecId> maybe_lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
+            if (!maybe_lhs.has_value()) {
+                return std::nullopt; // poisoned
+            }
+            auto lhs_eid = maybe_lhs.as_id();
+            const Exec& lhs_exec = context.exec(lhs_eid);
+            if (!lhs_exec.holds<ExecExprStructInit>()) {
+                context.emplace_diagnostic(
+                    lhs_exec.span, diag_code::value_not_a_struct, diag_type::error,
+                    DiagnosticSubCode{.sub_code = diag_code::is_not_a_struct});
+                return std::nullopt;
+            }
+            const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
+            const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def);
+            Span rhs_span{context, fid, rhs_expr};
+            if (rhs_expr->type == AST_EXPR_ID) {
+                assert(struct_def.holds<DefStruct>());
+                token_ptr_slice_t id_slice = rhs_expr->expr.id.slice;
+                if (id_slice.len > 1) {
+                    context.emplace_diagnostic(
+                        rhs_span, diag_code::scoped_identifer_not_allowed_here, diag_type::error);
+                }
+
+                auto maybe_mem_var = context.look_up_member_var_guarding_hid(
+                    struct_def, context.symbol_id(id_slice.start[0]), rhs_span);
+
+                if (maybe_mem_var.empty()) {
+                    return std::nullopt; // posioned
+                }
+
+                const Def& var_def = context.def(maybe_mem_var.as_id());
+
+                const Exec& mem_exec = context.exec(
+                    lhs_exec.as<ExecExprStructInit>().member_inits.get(var_def.member_idx));
+
+                const Exec& mem_exec_val
+                    = context.exec(mem_exec.as<ExecExprStructMemberInit>().value);
+
+                if (!exec_is_compt_viable(mem_exec_val)) {
+
+                    context.emplace_diagnostic(Span{context, fid, expr},
+                                               diag_code::cannot_resolve_at_compt,
+                                               diag_type::error);
+                    return std::nullopt;
+                }
+                return context.emplace_exec(mem_exec_val.value, Span{context, fid, expr}, true);
+            }
+            // TODO handle method calls here
+            if (rhs_expr->type == AST_EXPR_FN_CALL) {
+                // ...
+            }
+            context.emplace_diagnostic(Span{context, fid, expr},
+                                       diag_code::value_does_not_refer_to_a_named_mem,
+                                       diag_type::error);
+            return std::nullopt;
+
         } else if (!cooked && maybe_bin_op.holds<binary_op>()) {
             OptId<ExecId> lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
             if (!lhs.has_value()) {
@@ -1545,6 +1637,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             = context.defined(scope, context.symbol_slice(expr->expr.defined.id), span);
 
         return context.emplace_exec(ExecConst{defined}, span, true);
+    }
+    [[nodiscard]] bool exec_is_compt_viable(const Exec& exec) {
+        return exec.holds<ExecConst>() || exec.holds<ExecExprStructInit>()
+               || exec.holds<ExecExprListLiteral>();
     }
 };
 } // namespace hir

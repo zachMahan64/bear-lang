@@ -312,11 +312,11 @@ using ExecValue = std::variant<
     ExecBlock, ExecExprStmt, ExecBreakStmt, ExecIfStmt, ExecLoopStmt, ExecReturnStmt, ExecYieldStmt,
 
     // expressions
-    ExecExprIdentifier, ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove,
-    ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
-    ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
-    ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprStructInit, ExecExprStructMemberInit,
-    ExecExprClosure, ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch>;
+    ExecExprStructInit, ExecExprStructMemberInit, ExecExprIdentifier, ExecExprComptConstant,
+    ExecExprListLiteral, ExecExprAssignMove, ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess,
+    ExecExprPointerMemberAccess, ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary,
+    ExecExprSubscript, ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprClosure,
+    ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch>;
 
 /// main exec structure, corresponds to an hir::ExecId
 struct Exec : NodeWithVariantValue<Exec> {

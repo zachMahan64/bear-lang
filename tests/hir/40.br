@@ -8,4 +8,8 @@ compt Foo foo = Foo{.a = 43};
 
 compt i32 my_a = foo.a;
 
+compt i32 b = 42;
+
 var _0 = @static_assert(my_a == 43);
+
+var _1 = b.a; // oops, not `b` not a struct

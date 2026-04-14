@@ -152,6 +152,9 @@ struct Def : NodeWithVariantValue<Def> {
     const SymbolId name;
     /// parent's definition, if any
     OptId<DefId> parent;
+    static constexpr HirSize UNORDERED = HIR_SIZE_MAX;
+    /// indicates member's order in a struct, equals NOT_ORDERED if unordered
+    HirSize member_idx = UNORDERED;
     /// indicates pub (true) or hid (false) visibility
     const bool pub = false;
     /// indicates compt (compile-time)
@@ -175,9 +178,21 @@ struct Def : NodeWithVariantValue<Def> {
         : value{value}, span{span}, name{name}, parent{parent}, pub{pub}, compt{compt},
           statik{statik}, generic{generic}, alignment_preference{alignment_preference}, abi{abi} {}
 
+    Def(DefValue value, SymbolId name, bool pub, bool compt, bool statik, bool generic, Span span,
+        OptId<DefId> parent, uint8_t alignment_preference, HirSize member_idx,
+        enum abi_lang abi = abi_lang::native)
+        : value{value}, span{span}, name{name}, parent{parent}, member_idx{member_idx}, pub{pub},
+          compt{compt}, statik{statik}, generic{generic},
+          alignment_preference{alignment_preference}, abi{abi} {
+        // ordered statik is malformed
+        assert(!(is_ordered() && statik));
+    }
+
     Def(SymbolId name, bool pub, Span span)
         : value{DefUnevaluated{}}, span{span}, name{name}, pub{pub} {}
+
     void set_value(DefValue value) { this->value = value; }
+    bool is_ordered() const noexcept { return member_idx != UNORDERED; };
 };
 
 } // namespace hir

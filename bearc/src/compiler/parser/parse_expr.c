@@ -94,10 +94,6 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     if (lhs && next_type == TOK_LBRACK) {
         return parse_subscript(p, lhs);
     }
-    // try s.mem and s->mem
-    if (lhs && (next_type == TOK_DOT || next_type == TOK_RARROW)) {
-        return parse_binary(p, lhs, PREC_INIT);
-    }
     // try ++x, etc.
     if (!lhs && is_preunary_op(first_type)) {
         return parse_expr_prec(p, NULL, prec_preunary(first_type));

@@ -1,0 +1,36 @@
+// tests/hir/45.br
+
+struct Foo {
+    i32 a;
+    struct Bar {
+        str b = "";
+    }
+}
+
+compt Foo foo = Foo{.a = 12};
+
+var _0 = Foo{.a = 12};
+
+var _1 = @static_assert foo.a == 12;
+
+var _2 = @static_assert foo.a == 13; // oops, it's not 13
+
+var _3 = @static_assert Foo..a == 13; // oops
+
+var _4 = Foo..a; // oops
+
+var _5 = @static_assert Foo..Bar{.b = "hello world"}.b == "hello world";
+
+var _6 = @static_assert Foo..Bar{.b = "hello world"}.b == "hello earth"; // oops
+
+struct Hider {
+    hid i32 a;
+}
+
+var _7 = Hider{.a = 12}.a; // oops, a is hid
+
+var _8 = @static_assert @defined(Hider..a); // oops, hid
+
+var _9 = @static_assert @defined(Foo..a); // fine
+
+var _10 = @static_assert @defined(Foo..Bar..b); // fine

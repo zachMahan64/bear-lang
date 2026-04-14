@@ -51,8 +51,8 @@ main quest
 - [x] add `@defined()` expr
 
 - [ ] some `compt` function, struct, and list improvements:
-    - [ ] add compt member accesses ex) `foo.bar`
-    - [ ] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
+    - [x] add compt member accesses ex) `foo.bar`
+    - [x] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
     - [x] add `fn foo() [-> Type]? => [{Expr}] | Expr` syntax (easy-ish plugin for compt functions), this makes compt turing complete
         - ex) `compt fn foo() -> i32 => 42`
         - ex) `compt fn foo() => 42` (return type inferred here)

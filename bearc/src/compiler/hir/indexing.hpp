@@ -22,6 +22,8 @@ template <typename T, typename... Ts> constexpr bool is_any_of_v = (std::is_same
 /// defines the underlying size of indices of vectors storing HIR nodes
 using HirSize = uint32_t;
 
+constexpr HirSize HIR_SIZE_MAX = UINT32_MAX;
+
 /// represents a null HirId or its derivations, valued 0
 inline constexpr HirSize HIR_ID_NONE = 0;
 

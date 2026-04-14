@@ -16,6 +16,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
 #include <cassert>
+#include <iostream>
 
 namespace hir {
 
@@ -153,6 +154,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             visit_as_dependent(context.def_id(didx));
         }
         // TODO handle member functions and contracts
+
         def.set_value(DefStruct{
             .scope = context.scope_for_top_level_def(did),
             .ordered_members = ordered_defs,

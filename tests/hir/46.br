@@ -1,0 +1,15 @@
+// tests/hir/46.br
+
+struct Ben {
+    Ny ny;
+}
+
+struct Ny {
+    i32 dog;
+}
+
+compt Ben ben = Ben{.ny = Ny{.dog = 12}};
+
+var _11 = ben.ny; // fine
+
+var _12 = @static_assert ben.ny.dog == 12;

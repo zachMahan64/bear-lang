@@ -12,15 +12,28 @@ struct Nodette {
 
     static mut Nodette nodette_static; // fine
 
-    mut Node nodey; // fine
+    mut Node node; // fine
     
+    mut Nodey nodey;
+
     struct Node {
 
         *Nodette..Node mut prev; // fine 
         *Node next; // fine 
         *Nodette nodette; // fine
-        Nodette val; // fine
+        Nodette val; // oops
 
         static compt i32 foo = 12345;
     }
+
+    struct Nodey {
+
+        *Nodette..Node mut prev; // fine 
+        *Node next; // fine 
+        *Nodette nodette; // fine
+        *Nodette val; // fine
+
+        static compt i32 foo = 12345;
+    }
+
 }

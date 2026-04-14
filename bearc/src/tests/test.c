@@ -177,7 +177,7 @@ br_test_result_t test_hir(void) {
     char* args26[] = {"bearc", "00.br", "-i", "tests/projects/03"};
     ASSERT_EQ_ERR_FROM_ARGSN(args26, 9, 3);
     char* args27[] = {"bearc", "tests/hir/26.br"};
-    ASSERT_EQ_ERR_FROM_ARGS(args27, 2);
+    ASSERT_EQ_ERR_FROM_ARGS(args27, 4);
     char* args28[] = {"bearc", "tests/hir/27.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args28, 21);
     char* args29[] = {"bearc", "tests/hir/28.br"};
@@ -203,13 +203,17 @@ br_test_result_t test_hir(void) {
     char* args39[] = {"bearc", "tests/hir/39.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args39, 3);
     char* args40[] = {"bearc", "tests/hir/40.br"};
-    ASSERT_EQ_ERR_FROM_ARGS(args40, 0);
+    ASSERT_EQ_ERR_FROM_ARGS(args40, 2);
     char* args41[] = {"bearc", "tests/hir/41.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args41, 7);
     char* args42[] = {"bearc", "tests/hir/42.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args42, 2);
     char* args43[] = {"bearc", "tests/hir/43.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args43, 2);
+    char* args44[] = {"bearc", "tests/hir/44.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args44, 4);
+    char* args45[] = {"bearc", "tests/hir/45.br"};
+    ASSERT_EQ_ERR_FROM_ARGS(args45, 12);
 
     return TEST_RESULT;
 }

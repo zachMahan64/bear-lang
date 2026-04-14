@@ -102,9 +102,13 @@ class Context {
                                                                         IdSlice<SymbolId> id_slice);
 
     [[nodiscard]] OptId<DefId>
-    look_up_scoped_namespace_bypassing_visibility(ScopeId scope,
+    look_up_scoped_namespace_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 
-                                                  IdSlice<SymbolId> id_slice);
+    /// simply looks up a local variable inside some scope and issues a diagnostic if necessary
+    /// struct_def must correspond to a Def with value of DefStruct
+    /// only returns a DefId if it is a variable definition
+    [[nodiscard]] OptId<DefId> look_up_member_var_guarding_hid(const Def& struct_def,
+                                                               SymbolId symbol_id, Span id_span);
 
     [[nodiscard]] bool defined_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 
