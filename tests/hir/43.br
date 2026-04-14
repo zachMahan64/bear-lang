@@ -1,0 +1,12 @@
+// tests/hir/43.br
+
+mod foo {}
+
+mod foo;
+var _0 = @static_assert @defined(my_mod..Foo); // oops, my_mod DNE
+
+var _1 = @static_assert @defined(foo..Foo); // oops, Foo DNE
+
+var _2 = @static_assert @defined(foo..Bar); // fine
+
+struct Bar {}

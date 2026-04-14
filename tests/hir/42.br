@@ -67,3 +67,15 @@ struct DeviceIno {
 
     }
 }
+
+struct Foo {
+
+}
+
+var _3 = @static_assert @defined(Foo); //fine
+
+var _4 = @static_assert @defined(my_mod..Foo); //fine (we're still in my_mod)
+
+var _5 = @static_assert @defined(my_mod..Bar); // oops, bar DNE
+
+var _6 = @static_assert @defined(my_modd..Bar); // oops, my_modd DNE
