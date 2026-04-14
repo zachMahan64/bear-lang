@@ -10,6 +10,7 @@
 #define COMPILER_HIR_COMPT_EXPR_SOLVER_HPP
 
 #include "compiler/ast/expr.h"
+#include "compiler/ast/params.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
@@ -1545,7 +1546,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
             }
         } else if (maybe_bin_op.holds<access_op>()) {
-            // TODO: handle and ban compt ptr member acess since ptrs aren't allowed at compt
             OptId<ExecId> maybe_lhs = solve_expr(fid, scope, expr->expr.binary.lhs, std::nullopt);
             if (!maybe_lhs.has_value()) {
                 return std::nullopt; // poisoned
@@ -1560,6 +1560,24 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
             const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def);
+
+            if (maybe_bin_op.as<access_op>() == access_op::rarrow) {
+                Span op_span{context, fid, expr->expr.binary.op};
+                auto d0 = context.emplace_diagnostic(op_span, diag_code::invalid_binary_operator,
+                                                     diag_type::error);
+                auto d1 = context.emplace_diagnostic_with_message_value(
+                    op_span, diag_code::replace_with, diag_type::help,
+                    DiagnosticSymbolAfterMessage{.sid = context.symbol_id<".">()});
+
+                auto d2 = context.emplace_diagnostic(
+                    lhs_exec.span, diag_code::compt_expressions_do_not_have_addrs_so_no_ptrs,
+                    diag_type::note,
+                    DiagnosticSubCode{.sub_code = diag_code::value_is_not_a_pointer});
+                context.set_next_diagnostic(d0, d1);
+                context.set_next_diagnostic(d1, d2);
+                return std::nullopt; // poisoned
+            }
+
             Span rhs_span{context, fid, rhs_expr};
             if (rhs_expr->type == AST_EXPR_ID) {
                 assert(struct_def.holds<DefStruct>());

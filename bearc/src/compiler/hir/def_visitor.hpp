@@ -9,11 +9,13 @@
 #ifndef COMPILER_HIR_DEF_VISITOR_HPP
 #define COMPILER_HIR_DEF_VISITOR_HPP
 
+#include "compiler/hir/def.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/type.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <concepts>
+#include <optional>
 
 namespace hir {
 
@@ -56,6 +58,14 @@ class TopLevelDefVisitor {
 
     /// visit when not all info is need (i.e. just validate existence for pointers/references)
     [[nodiscard]] DefId visit_as_transparent(DefId def) noexcept;
+
+    [[nodiscard]] OptId<DefId> resolve_param(FileId fid, ScopeId scope, DefId func_def,
+                                             const ast_param_t* param);
+    [[nodiscard]] OptId<DefId> resolve_param(FileId fid, ScopeId scope, DefId func_def, TypeId tid,
+                                             SymbolId name, Span span);
+    [[nodiscard]] DefFunction::ParamResolResult
+    resolve_params(FileId fid, ScopeId scope, DefId func_def, ast_slice_of_params_t params,
+                   OptId<TypeId> self_type = std::nullopt);
 };
 static_assert(IsDefVisitor<TopLevelDefVisitor>);
 

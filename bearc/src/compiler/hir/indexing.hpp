@@ -70,7 +70,10 @@ using FileId = Id<File>;
 /// for addressing asts
 using FileAstId = Id<FileAst>;
 
-/// for addressing named scopes
+/// for addressing scopes
+/// - It is possible that a given ScopeId referes to a dead named scope, so precaution must be taken
+/// that random or dead ScopeId values (that are not known valid ScopeIds to living scope refereces)
+/// are not used
 using ScopeId = Id<Scope>;
 
 /// for addressing exec nodes
@@ -99,9 +102,12 @@ class Symbol {
     using id_type = SymbolId;
     constexpr explicit Symbol(std::string_view string_view) : string_view(string_view) {}
     [[nodiscard]] constexpr std::string_view sv() const noexcept { return this->string_view; }
-    /// Self
-    static constexpr const char* self_type_str = "Self";
 };
+
+/// Self
+static constexpr const char* self_type_str = "Self";
+/// self
+static constexpr const char* self_id_str = "self";
 
 template <std::size_t N> struct StringLiteral {
     char value[N];

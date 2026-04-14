@@ -99,6 +99,9 @@ enum class diag_code : uint8_t {
     compt_expression_functions_can_only_act_on_immut_vals,
     compt_function_does_not_yield_a_pure_expr,
     declare_using_pure_expression_syntax_replacing_body_with,
+    invalid_binary_operator,
+    compt_expressions_do_not_have_addrs_so_no_ptrs,
+    value_is_not_a_pointer,
 
     count, // this must be last,
 

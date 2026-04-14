@@ -23,6 +23,7 @@
 #include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
+#include "utils/data_arena.hpp"
 #include "utils/log.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
@@ -37,10 +38,11 @@ namespace hir {
 
 static constexpr size_t DEFAULT_SYMBOL_ARENA_CAP = 0x10000;
 static constexpr size_t DEFAULT_SCOPE_ARENA_CAP = 0x10000;
-static constexpr size_t DEFAULT_CANONICAL_TYPE_ARENA_CAP = 0x4000;
-static constexpr size_t DEFAULT_CANONICAL_GEN_ARGS_ARENA_CAP = 0x4000;
+static constexpr size_t DEFAULT_CANONICAL_TYPE_ARENA_CAP = 0x10000;
+static constexpr size_t DEFAULT_CANONICAL_GEN_ARGS_ARENA_CAP = 0x10000;
 static constexpr size_t DEFAULT_ID_MAP_ARENA_CAP
-    = 0x8000; // increase if any other top level maps need to be made
+    = 0x8000; // increase if any other top level maps need to be mades
+static constexpr size_t DEFAULT_TEMP_SCOPE_ARENA_CAP = 0x10000;
 static constexpr size_t DEFAULT_SYM_TO_FILE_ID_MAP_CAP = 0x80;
 static constexpr size_t DEFAULT_SCOPE_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_FILE_VEC_CAP = 0x80;
@@ -59,13 +61,16 @@ static constexpr size_t DEFAULT_DEF_SLICE_COUNT = 0x100;
 static constexpr size_t DEFAULT_CANONICAL_TT_CAP = 0x400;
 static constexpr size_t DEFAULT_CANONICAL_GEN_ARGS_CAP = 0x400;
 
-Context::Context(const bearc_args_t& args)
+Context::Context(const bearc_args_t& args) : Context(args, instances::multiple) {}
+
+Context::Context(const bearc_args_t& args, instances instances)
     : file_ids{DEFAULT_FILE_ID_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
       id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
       symbol_id_to_file_id_map{id_map_arena, DEFAULT_SYM_TO_FILE_ID_MAP_CAP},
       file_asts{DEFAULT_FILE_AST_VEC_CAP}, importer_to_importees{DEFAULT_FILE_VEC_CAP},
       importee_to_importers{DEFAULT_FILE_VEC_CAP}, file_to_diagnostics{EXPECTED_HIGH_NUM_IMPORTS},
       scope_arena{DEFAULT_SCOPE_ARENA_CAP}, scopes{DEFAULT_SCOPE_VEC_CAP},
+      temp_scope_arena{std::make_unique<DataArena>(DEFAULT_TEMP_SCOPE_ARENA_CAP)},
       symbol_storage_arena{DEFAULT_SYMBOL_ARENA_CAP}, symbol_map_arena{DEFAULT_SYMBOL_ARENA_CAP},
       str_to_symbol_id_map{symbol_map_arena}, symbol_ids{DEFAULT_SYMBOL_VEC_CAP},
       symbols{DEFAULT_SYMBOL_VEC_CAP}, exec_ids{DEFAULT_EXEC_VEC_CAP}, execs{DEFAULT_EXEC_VEC_CAP},
@@ -87,7 +92,8 @@ Context::Context(const bearc_args_t& args)
       canonical_generic_args_table_arena{DEFAULT_CANONICAL_GEN_ARGS_ARENA_CAP},
       canonical_generic_args_table{*this, canonical_generic_args_table_arena,
                                    DEFAULT_CANONICAL_GEN_ARGS_CAP},
-      diagnostics{DEFAULT_DIAG_NUM}, diagnostics_used{DEFAULT_DIAG_NUM}, args{args},
+      diagnostics{DEFAULT_DIAG_NUM}, diagnostics_used{DEFAULT_DIAG_NUM},
+      only_one_context_instance(instances == instances::one), args{args},
       compact_diagnostics(args.flags[CLI_FLAG_COMPACT_DIAGS]) {
 
     // this may only fail in horribly malfored arguments in test cases
@@ -423,6 +429,15 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
     return def;
 }
 
+DefId Context::register_compt_param(SymbolId name, Span span, DefId parent) {
+    DefId def
+        = defs.emplace_and_get_id(DefUnevaluated{}, name, true, true, true, false, span, parent);
+    def_resol_states.bump(Def::resol_state::top_level_visited);
+    def_ast_nodes.bump();
+    def_mention_states.bump(Def::mention_state::unmentioned);
+    return def;
+}
+
 [[nodiscard]] IdHashMap<DefId, ScopeId>& Context::defs_to_scopes_for_types() {
     return def_to_scope_for_types;
 }
@@ -450,7 +465,7 @@ ScopeId Context::get_or_make_root_scope() {
 
 ScopeId Context::root_scope() const {
     // the top-level scope will have to be the first scope!
-    assert(scopes.size() != 0 && "tried to get the root scope before its creation");
+    assert(this->scopes.size() != 0 && "tried to get the root scope before its creation");
     return ScopeId{1};
 }
 
@@ -472,9 +487,32 @@ ScopeId Context::make_scope(OptId<ScopeId> parent_scope, HirSize capacity) {
     return scopes.emplace_and_get_id(parent_scope, capacity, scope_arena);
 }
 
-ScopeId Context::make_pure_expr_compt_func_scope(ScopeId parent_scope, HirSize capacity) {
-    return scopes.emplace_and_get_id(parent_scope, capacity, scope_arena,
+ScopeId Context::make_compt_func_temp_scope(ScopeId parent_scope, HirSize capacity) {
+    return scopes.emplace_and_get_id(parent_scope, capacity, *temp_scope_arena,
                                      Scope::storage::variables);
+}
+
+DefId Context::register_generated_deftype(ScopeId scope, SymbolId name, TypeId type_id,
+                                          DefId parent, Span span) {
+    auto did = defs.emplace_and_get_id(DefDeftype{.type = type_id}, name, false, false, false,
+                                       false, span, parent);
+    this->scope(scope).insert_type(name, did);
+    return did;
+}
+
+bool Context::relinquish_temp_scopes() {
+
+    const size_t chunk_size = temp_scope_arena->first_chunk_size();
+    const size_t chunk_cap = temp_scope_arena->chunk_cap();
+
+    // try to catch the arena before it has to alloc a second chunk, but don't do it too undersized.
+    // estimate the value with 1/2 + 1/4 + 1/8 + 1/16 = 15/16
+    if (chunk_size > ((chunk_cap >> 1) + (chunk_cap >> 2) + (chunk_cap >> 3) + (chunk_cap >> 4))) {
+        temp_scope_arena
+            = std::make_unique<DataArena>(chunk_cap); // frees old arena and gives us another
+        return true;
+    }
+    return false;
 }
 
 Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }
@@ -533,7 +571,9 @@ DiagnosticId Context::emplace_diagnostic_with_message_value(Span span, diag_code
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, message_value,
                                                      DiagnosticNoOtherInfo{}, next);
     diagnostics_used.bump();
-    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    if (!span.is_generated()) {
+        file_to_diagnostics.at(span.file_id).emplace_back(id);
+    }
     handle_bump_diag_counts(code, type);
     return id;
 }
@@ -550,7 +590,9 @@ void Context::print_diagnostic(DiagnosticId diag_id, bool print_file) {
     // try print next
     if (diag.next.has_value() && !diagnostics_used.cat(diag.next.as_id())) {
         // only print next's file if it differs
-        bool print_next_file = diag.span.file_id != diagnostics.cat(diag.next.as_id()).span.file_id;
+        Span next_span = diagnostics.cat(diag.next.as_id()).span;
+        bool print_next_file
+            = !next_span.is_generated() && (diag.span.file_id != next_span.file_id);
         print_diagnostic(diag.next.as_id(), print_next_file);
     }
 

@@ -191,6 +191,13 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "compile-time function does not yield a pure expression";
     case diag_code::declare_using_pure_expression_syntax_replacing_body_with:
         return "declare using pure expression syntax, replacing the body with: ";
+    case diag_code::invalid_binary_operator:
+        return "invalid binary operator";
+    case diag_code::compt_expressions_do_not_have_addrs_so_no_ptrs:
+        return "compile-time expressions do not have addresses, so dereferencing to a member is "
+               "not possible";
+    case diag_code::value_is_not_a_pointer:
+        return "value is not a pointer";
     }
     std::unreachable();
     return "";
@@ -298,7 +305,7 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
 }
 
 void Diagnostic::print_multiline(Context& context, bool print_file) const {
-    const char* file_name = context.file_name(span.file_id);
+    const char* file_name = span.is_generated() ? "" : context.file_name(span.file_id);
     auto adjusted_line = span.line + 1;
     auto adjusted_col = span.col + 1;
     const char* accent_color = accent_color_for_type(type);

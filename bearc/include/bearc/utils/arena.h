@@ -10,6 +10,7 @@
 #define UTILS_ARENA_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +23,14 @@ typedef struct arena {
     arena_chunk_t* head;
     size_t chunk_size;
 } arena_t;
+
+// arena chunk, composes the arena
+typedef struct arena_chunk {
+    uint8_t* data;
+    size_t used;
+    size_t cap;
+    struct arena_chunk* next;
+} arena_chunk_t;
 
 /// arena ctor (init) from a specified standard chunk size.
 arena_t arena_create(size_t chunk_cap_bytes);

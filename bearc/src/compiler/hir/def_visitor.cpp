@@ -16,7 +16,10 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
+#include "compiler/parser/token_eaters.h"
+#include "llvm/ADT/SmallVector.h"
 #include <cassert>
+#include <iostream>
 #include <optional>
 
 namespace hir {
@@ -166,6 +169,11 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             .orginal = {},
         });
 
+        context.register_generated_deftype(
+            structs_scope, context.symbol_id<"Self">(),
+            context.emplace_type(TypeStructure{.definition = did}, Span::generated(), false), did,
+            Span{context, def.span.file_id, strct.name});
+
         break;
     }
     case AST_STMT_USE: {
@@ -249,18 +257,41 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 DiagnosticSymbolAfterMessage{.sid = context.symbol_id<"=> (Expression)">()});
             context.set_next_diagnostic(d0, d1);
         }
-        if (def.compt && fn_decl.only_expr) {
-            IdSlice<DefId> params{}; // TODO handle params, including self if function is mt
-            IdSlice<TypeId> param_types = IdSlice<TypeId>{}; // TODO run thru params and set types
+        if (def.compt && fn_decl.only_expr && !def.generic) {
+            OptId<TypeId> maybe_self_type;
+            if (token_is_mt_or_dt(fn_decl.kw->type)) {
+                auto maybe_did = context.look_up_type(scope, context.symbol_id<"Self">());
+
+                if (maybe_did.has_value()) {
+                    auto def = context.def(maybe_did.as_id());
+
+                    maybe_self_type = def.as<DefDeftype>().type;
+                }
+            }
+            DefFunction::ParamResolResult params_res
+                = resolve_params(fid, scope, did, fn_decl.params, maybe_self_type);
+
+            auto params = params_res.params;
+
+            llvm::SmallVector<TypeId> type_vec{};
+
+            for (auto didx = params.begin(); didx != params.end(); didx++) {
+                const Def& param_def = context.def(didx);
+                assert(param_def.holds<DefVariable>());
+                type_vec.push_back(param_def.as<DefVariable>().type);
+            }
+
+            auto param_types = context.freeze_id_vec(type_vec);
+
             TypeResolver type_resolver{context, *this};
-            ExecId val_eid{};
             // handle methods explicitly
-            def.set_value(DefFunction{.params = params,
+            def.set_value(DefFunction{.params = params_res.params,
                                       .param_types = param_types,
                                       .return_type
                                       = type_resolver.resolve_type(fid, scope, fn_decl.return_type),
-                                      .body = val_eid,
-                                      .original = std::nullopt});
+                                      .body = std::nullopt,
+                                      .original = std::nullopt,
+                                      .posioned = params_res.poisoned});
 
         }
         // TODO, handle run-time functions
@@ -338,6 +369,72 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
     // unreachable since we *should* find the culprit in the def_stack
     assert(false && "failed to find culprit defintion when reporting a circular defintion");
 }
+
+OptId<DefId> TopLevelDefVisitor::resolve_param(FileId fid, ScopeId scope, DefId func_def,
+                                               const ast_param_t* param) {
+
+    if (!param->valid) {
+        return std::nullopt;
+    }
+
+    Span span{context, fid, param->first, param->last};
+
+    auto maybe_tid = TypeResolver{context, *this}.resolve_type(fid, scope, param->type);
+
+    if (maybe_tid.empty()) {
+        return std::nullopt;
+    }
+
+    auto tid = maybe_tid.as_id();
+
+    SymbolId name = context.symbol_id(param->name);
+
+    return resolve_param(fid, scope, func_def, tid, name, span);
+}
+
+OptId<DefId> TopLevelDefVisitor::resolve_param(FileId fid, ScopeId scope, DefId func_def,
+                                               TypeId tid, SymbolId name, Span span) {
+    auto param_did = context.register_compt_param(name, span, func_def);
+
+    context.def(param_did).set_value(DefVariable{.type = tid, .compt_value = std::nullopt});
+
+    return param_did;
+}
+
+[[nodiscard]] DefFunction::ParamResolResult
+TopLevelDefVisitor::resolve_params(FileId fid, ScopeId scope, DefId func_def,
+                                   const ast_slice_of_params_t params, OptId<TypeId> self_type) {
+
+    llvm::SmallVector<DefId> vec;
+
+    auto freeze_params = [this, &vec](bool poisoned) {
+        return DefFunction::ParamResolResult{.params = context.freeze_id_vec(vec),
+                                             .poisoned = poisoned};
+    };
+
+    if (self_type.has_value()) {
+        const auto* fn_node = context.def_ast_node(func_def);
+        assert(fn_node->type == AST_STMT_FN_DECL || fn_node->type == AST_STMT_FN_PROTOTYPE);
+        auto hopefully_self_param
+            = resolve_param(fid, scope, func_def, self_type.as_id(), context.symbol_id<"self">(),
+                            Span{context, fid, fn_node->stmt.fn_decl.kw});
+        if (hopefully_self_param.empty()) {
+            return freeze_params(true); // poisoned
+        }
+        vec.push_back(hopefully_self_param.as_id());
+    }
+
+    for (HirSize i = 0; i < params.len; i++) {
+        const ast_param_t* param = params.start[i];
+        OptId<DefId> maybe_param = resolve_param(fid, scope, func_def, param);
+        if (maybe_param.empty()) {
+            return freeze_params(true); // poisoned
+        }
+        vec.push_back(maybe_param.as_id());
+    }
+    return freeze_params(false); // not poisoned
+}
+
 DefId InsideBodyDefVisitor::visit_as_dependent(DefId def) {
     context.promote_mention_state_of(def, Def::mention_state::mentioned);
     return def;

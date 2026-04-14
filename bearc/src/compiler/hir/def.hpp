@@ -27,12 +27,21 @@ struct DefModule {
 };
 
 struct DefFunction {
+
+    struct ParamResolResult {
+        IdSlice<DefId> params;
+        bool poisoned = false;
+    };
+
     IdSlice<DefId> params;
     IdSlice<TypeId> param_types;
     OptId<TypeId> return_type;
-    ExecId body;
+    OptId<ExecId> body;
     /// if this function was derived from an original generic function
     OptId<DefId> original;
+    bool posioned = false;
+    void poison() { posioned = true; }
+    bool poisoned() const noexcept { return posioned; }
 };
 
 struct DefGenericFunction {

@@ -19,9 +19,9 @@ typedef struct ast_type ast_type_t;
 typedef struct ast_param {
     ast_type_t* type;
     token_t* name;
-    bool valid;
     token_t* first;
     token_t* last;
+    bool valid;
 } ast_param_t;
 
 typedef struct ast_slice_of_params_t {

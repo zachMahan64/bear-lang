@@ -14,7 +14,8 @@
 extern "C" {
 
 int compile_file(const bearc_args_t* args) {
-    hir::Context context{*args};
+    using namespace hir;
+    Context context{*args, Context::instances::one};
     context.try_print_info();
     return context.diagnostic_count();
 }

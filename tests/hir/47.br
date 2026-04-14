@@ -1,6 +1,9 @@
 // tests/hir/47.br
 
+mod my_mod;
+
 struct Foo {
+    i32 a;
     compt mt mut work() -> i32=> 5 
 }
 
@@ -9,4 +12,13 @@ compt mt mut Foo..do_work() -> i32=> 10
 
 compt mt Foo..thing() -> i32 {
     return 12;
+}
+
+compt i32 _0 = Foo{.a = 1}->a;
+
+
+use Foo..Self; // oops, that's no good
+
+struct Bar {
+    
 }

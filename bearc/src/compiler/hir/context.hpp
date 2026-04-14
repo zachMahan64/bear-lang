@@ -38,7 +38,11 @@ namespace hir {
  */
 class Context {
   public:
+    // enum class to initialize Context with additional information that can improve performance
+    enum class instances : uint8_t { one, multiple };
+
     Context(const bearc_args_t& args);
+    Context(const bearc_args_t& args, instances instances);
     int diagnostic_count() const noexcept;
     int error_count() const noexcept;
     int warning_count() const noexcept;
@@ -70,7 +74,17 @@ class Context {
     [[nodiscard]] ScopeId make_small_scope(OptId<ScopeId> parent_scope);
     [[nodiscard]] ScopeId make_medium_scope(OptId<ScopeId> parent_scope);
     [[nodiscard]] ScopeId make_scope(OptId<ScopeId> parent_scope, HirSize capacity);
-    [[nodiscard]] ScopeId make_pure_expr_compt_func_scope(ScopeId parent_scope, HirSize capacity);
+    [[nodiscard]] ScopeId make_compt_func_temp_scope(ScopeId parent_scope, HirSize capacity);
+
+    // generate a deftype and insert into the provided scoep
+    // - this will forward all references of some identifer to an arbitrary type
+    DefId register_generated_deftype(ScopeId scope, SymbolId name, TypeId type_id, DefId parent,
+                                     Span span = Span::generated());
+
+    // allow the Context to clean up the memory footprint of temporary scopes
+    // only to be called when it is certain that there are no living ScopeIds to temporary scopes
+    bool relinquish_temp_scopes();
+
     [[nodiscard]] Scope& scope(ScopeId scope);
     [[nodiscard]] OptId<DefId> look_up_variable(ScopeId scope, SymbolId sid) const;
     [[nodiscard]] OptId<DefId> look_up_type(ScopeId scope, SymbolId sid) const;
@@ -179,6 +193,8 @@ class Context {
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
                                  Span span, ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
 
+    DefId register_compt_param(SymbolId name, Span span, DefId parent);
+
     // should only be used for types
     [[nodiscard]] IdHashMap<DefId, ScopeId>& defs_to_scopes_for_types();
 
@@ -200,8 +216,14 @@ class Context {
     // converters
     [[nodiscard]] SymbolId symbol_id(IdIdx<SymbolId> sididx) const;
     template <StringLiteral S> [[nodiscard]] SymbolId symbol_id() {
-        static const SymbolId sid = symbol_id(S.get()); // cache result
-        return sid;
+        // when there's only one instance for the life of the program, we can safely cache the
+        // symbol_id in static memory for a given string literal as such:
+        if (only_one_context_instance) {
+            static const SymbolId sid = symbol_id(S.get()); // cache result
+            return sid;
+        }
+        // otherwise, we much compute it for the current context
+        return symbol_id(S.get());
     }
     [[nodiscard]] FileId file_id(IdIdx<FileId> ididx) const;
     /// gets the canonical type value (bypassing deftypes)
@@ -295,8 +317,7 @@ class Context {
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
     DataArena scope_arena;
     NodeVector<Scope> scopes;
-    static constexpr HirSize relinquished_scope_vec_size = 256;
-    llvm::SmallVector<SymbolId, relinquished_scope_vec_size> relinquished_scope_vec;
+    std::unique_ptr<DataArena> temp_scope_arena;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     /// const char* -> hir::SymbolId
     DataArena symbol_storage_arena;
@@ -379,6 +400,7 @@ class Context {
     HirSize help_cnt{};
     HirSize normal_error_cnt{};
     HirSize fatal_error_cnt{};
+    const bool only_one_context_instance;
 
     // args
     const bearc_args_t& args;

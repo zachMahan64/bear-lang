@@ -223,11 +223,13 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     // hanlde scope prefix for Foo..bar() functions
     token_t* prefix = info.scope_prefix_tkn;
     if (prefix) {
-        auto r = Scope::look_up_type(context, scope,
-                                     context.symbol_id_for_identifier_tkn(info.scope_prefix_tkn));
+        OptId<DefId> maybe_type_did = Scope::look_up_type(
+            context, scope, context.symbol_id_for_identifier_tkn(info.scope_prefix_tkn));
         bool no_struct = false;
-        if (r.has_value()) {
-            if (auto s = context.defs_to_scopes_for_types().at(r.as_id()); s.has_value()) {
+        if (maybe_type_did.has_value()) {
+            parent = maybe_type_did.as_id();
+            if (auto s = context.defs_to_scopes_for_types().at(maybe_type_did.as_id());
+                s.has_value()) {
                 scope = s.as_id();
             } else {
                 no_struct = true;

@@ -38,7 +38,8 @@ class DataArena {
     {
         return static_cast<T>(arena_alloc(&this->arena_, size));
     } /// returns the chunk size (in bytes)
-    size_t chunk_size() const noexcept;
+    size_t chunk_cap() const noexcept;
+    size_t first_chunk_size() const noexcept;
     /// for testing purposes
     void log_debug_info();
 };

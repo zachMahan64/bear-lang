@@ -13,8 +13,10 @@ DataArena::DataArena(size_t chunk_size) : arena_{arena_create(chunk_size)} {}
 
 DataArena::~DataArena() { arena_destroy(&this->arena_); }
 
-size_t DataArena::chunk_size() const noexcept { return this->arena_.chunk_size; }
+size_t DataArena::chunk_cap() const noexcept { return this->arena_.chunk_size; }
 
 void DataArena::log_debug_info() { arena_log_debug_info(&this->arena_); }
 
 arena_t* DataArena::arena() { return &this->arena_; }
+
+size_t DataArena::first_chunk_size() const noexcept { return arena_.head->used; }

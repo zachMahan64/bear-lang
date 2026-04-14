@@ -13,14 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// arena chunk, composes the arena
-typedef struct arena_chunk {
-    uint8_t* data;
-    size_t used;
-    size_t cap;
-    struct arena_chunk* next;
-} arena_chunk_t;
-
 // ctor for an arena chunk, private helper
 arena_chunk_t* arena_chunk_new(size_t chunk_cap_bytes) {
     // meta data head + data
