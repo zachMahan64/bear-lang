@@ -183,6 +183,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "scoped identifer not allowed here";
     case diag_code::condition_is_false:
         return "condition is false";
+    case diag_code::compt_mut_methods_are_not_permitted:
+        return "compile-time `mut` methods are not permitted";
+    case diag_code::compt_expression_functions_can_only_act_on_immut_vals:
+        return "compile-time expression functions can only act on immutable values";
     }
     std::unreachable();
     return "";
@@ -301,7 +305,8 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     const char* message
         = has_complex_message() ? complex_message_str.c_str() : message_for_code(code);
     print_file
-        |= this->holds<DiagnosticInfoNoPreview>(); // no preview means file location is irrelvant
+        = print_file
+          && !this->holds<DiagnosticInfoNoPreview>(); // no preview means file location is irrelvant
     if (context.compact_diagnostics_enabled()) {
         if (print_file) {
             printf("%s%s:%u:%u: ", ansi_bold_reset(), file_name, adjusted_line, adjusted_col);

@@ -1,0 +1,8 @@
+// tests/hir/47.br
+
+struct Foo {
+    compt mt mut work() -> i32=> 5 
+}
+
+
+compt mt mut Foo..do_work() -> i32=> 10

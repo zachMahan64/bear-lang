@@ -95,6 +95,8 @@ enum class diag_code : uint8_t {
     id_names_a_static_mem_thru_dot_for,
     scoped_identifer_not_allowed_here,
     condition_is_false,
+    compt_mut_methods_are_not_permitted,
+    compt_expression_functions_can_only_act_on_immut_vals,
 
     count, // this must be last,
 

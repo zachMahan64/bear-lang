@@ -8,6 +8,7 @@
 
 #include "compiler/hir/def_visitor.hpp"
 #include "compiler/ast/expr.h"
+#include "compiler/ast/stmt.h"
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
@@ -16,6 +17,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
 #include <cassert>
+#include <iostream>
 
 namespace hir {
 
@@ -217,12 +219,30 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         break;
     }
+    case AST_STMT_FN_DECL: {
+        ast_stmt_fn_decl fn_decl = stmt->stmt.fn_decl;
+        auto fid = def.span.file_id;
+
+        if (def.compt && fn_decl.is_mut) {
+            Span span = Span::find_between_tokens(context, fid, fn_decl.kw, fn_decl.name.start[0]);
+            auto d0 = context.emplace_diagnostic(
+                span, diag_code::compt_mut_methods_are_not_permitted, diag_type::error);
+            auto d1 = context.emplace_diagnostic(
+                span, diag_code::compt_expression_functions_can_only_act_on_immut_vals,
+                diag_type::note, DiagnosticInfoNoPreview{});
+            auto d2 = context.emplace_diagnostic_with_message_value(
+                span, diag_code::remove, diag_type::help,
+                DiagnosticSymbolAfterMessage{context.symbol_id(span)});
+            context.set_next_diagnostic(d0, d1);
+            context.set_next_diagnostic(d1, d2);
+        }
+        break;
+    }
         // TODO, need to lower these
     case AST_STMT_CONTRACT_DEF:
     case AST_STMT_UNION_DEF:
     case AST_STMT_VARIANT_DEF:
     case AST_STMT_VARIANT_FIELD_DECL:
-    case AST_STMT_FN_DECL:
     case AST_STMT_FN_PROTOTYPE:
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level

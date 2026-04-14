@@ -609,6 +609,8 @@ void token_check_if_valid_literal_and_set_value(token_t* tkn) {
     tkn->type = TOK_INDETERMINATE;
 }
 
+bool is_whitespace(char c) { return c == ' ' || c == '\n' || c == '\r'; }
+
 /**
  * check if a token is a valid variable/function name (a "symbol")
  */

@@ -36,6 +36,10 @@ Span::Span(const Context& ctx, FileId file_id, const token_t* first, const token
 Span::Span(const Context& ctx, FileId file_id, const ast_expr_t* expr)
     : Span(ctx, file_id, expr->first, expr->last) {}
 
+Span::Span(const Context& ctx, FileId file_id, const token_t* tkn)
+    : start(tkn->start - ctx.ast(file_id).buffer()), len(tkn->len), file_id(file_id),
+      line(tkn->loc.line), col(tkn->loc.col) {}
+
 Span::Span(const Context& ctx, FileId file_id, token_ptr_slice_t token_slice)
     : Span(ctx, file_id, token_slice.start[0], token_slice.start[token_slice.len - 1]) {}
 Span Span::generated() { return Span{0, 0, FileId{HIR_ID_NONE}, 0, 0}; }
@@ -43,6 +47,39 @@ Span Span::generated() { return Span{0, 0, FileId{HIR_ID_NONE}, 0, 0}; }
 Span Span::combine(Span span1, Span span2) {
     return Span(span1.start, span2.start - span1.start + span2.len, span1.file_id, span1.line,
                 span1.col);
+}
+
+Span Span::find_between_tokens(const Context& ctx, FileId fid, const token_t* t1,
+                               const token_t* t2) {
+    Span s1{ctx, fid, t1};
+    Span s2{ctx, fid, t2};
+    return find_between_spans(ctx, fid, s1, s2);
+}
+
+Span Span::find_between_spans(const Context& ctx, FileId fid, Span s1, Span s2) {
+    assert(s1.file_id == s2.file_id);
+    const char* t1_c = retrieve_from_buffer(ctx.ast(fid).buffer(), s1).data();
+    char c = *t1_c;
+    HirSize len_from_left = 0;
+    while (c = *t1_c, t1_c++, !is_whitespace(c)) {
+        len_from_left++;
+    }
+    // undo overshoot
+    if (len_from_left != 0) {
+        t1_c--;
+    }
+
+    const char* t2_c = retrieve_from_buffer(ctx.ast(fid).buffer(), s2).data();
+
+    c = *t2_c;
+    HirSize len_from_right = 0;
+    while (c = *t2_c, t2_c--, !is_whitespace(c)) {
+        len_from_right++;
+    }
+    static_assert(sizeof(size_t) == sizeof(const char*));
+    return Span{(s1.start + len_from_left + 1),
+                (s2.start - s1.start - len_from_left - len_from_right - 1), (s1.file_id), (s1.line),
+                (s1.col)};
 }
 
 } // namespace hir

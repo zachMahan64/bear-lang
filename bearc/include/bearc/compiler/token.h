@@ -270,6 +270,9 @@ const char* get_always_one_char_to_token_map(void);
 /// returns a ptr to a map indicating whether a given char is the first char in a multichar operator
 /// (e.g.: ==)
 const char* get_first_char_in_multichar_operator_token_map(void);
+
+bool is_whitespace(char c);
+
 /**
  * builds token according to a starting ptr and length into src as well as an src_loc_t that
  * indicates row/col number for debugging purposes. This function assumes that the lexer has already

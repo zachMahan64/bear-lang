@@ -37,11 +37,15 @@ class Span {
     Span(const Context& ctx, FileId file_id, token_ptr_slice_t token_slice);
     Span(const Context& ctx, FileId file_id, const token_t* first, const token_t* last);
     Span(const Context& ctx, FileId file_id, const ast_expr_t* expr);
+    Span(const Context& ctx, FileId file_id, const token_t* tkn);
     [[nodiscard]] static std::string_view retrieve_from_buffer(const char* data, Span span);
     [[nodiscard]] std::string_view as_sv(const Context& context) const;
     static Span generated();
     bool is_generated() const { return file_id.val() == HIR_ID_NONE; };
     static Span combine(Span span1, Span span2);
+    static Span find_between_tokens(const Context& ctx, FileId fid, const token_t* t1,
+                                    const token_t* t2);
+    static Span find_between_spans(const Context& ctx, FileId fid, Span s1, Span s2);
 };
 
 } // namespace hir
