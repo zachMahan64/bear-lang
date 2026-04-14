@@ -30,6 +30,7 @@
 #include <filesystem>
 #include <iostream>
 #include <iso646.h>
+#include <optional>
 #include <stddef.h>
 #include <string_view>
 namespace hir {
@@ -440,7 +441,7 @@ const FileAst& Context::ast(FileId file_id) const {
 
 ScopeId Context::get_or_make_root_scope() {
     if (scopes.size() == 0) {
-        return scopes.emplace_and_get_id(scope_arena);
+        return make_scope(std::nullopt);
     }
     // the top-level scope will have to be the first scope!
     return ScopeId{1};
@@ -452,16 +453,27 @@ ScopeId Context::root_scope() const {
     return ScopeId{1};
 }
 
-ScopeId Context::make_named_scope(OptId<ScopeId> parent_scope) {
-    return (parent_scope.has_value()) ? scopes.emplace_and_get_id(parent_scope.as_id(), scope_arena)
-                                      : scopes.emplace_and_get_id(scope_arena);
+ScopeId Context::make_scope(OptId<ScopeId> parent_scope) {
+    return scopes.emplace_and_get_id(parent_scope, scope_arena);
 }
 
-ScopeId Context::make_small_named_scope(OptId<ScopeId> parent_scope) {
+ScopeId Context::make_small_scope(OptId<ScopeId> parent_scope) {
     static constexpr size_t CAP = 0x8;
-    return (parent_scope.has_value())
-               ? scopes.emplace_and_get_id(parent_scope.as_id(), CAP, scope_arena)
-               : scopes.emplace_and_get_id(CAP, scope_arena);
+    return make_scope(parent_scope, CAP);
+}
+
+ScopeId Context::make_medium_scope(OptId<ScopeId> parent_scope) {
+    static constexpr size_t CAP = 0x10;
+    return make_scope(parent_scope, CAP);
+}
+
+ScopeId Context::make_scope(OptId<ScopeId> parent_scope, HirSize capacity) {
+    return scopes.emplace_and_get_id(parent_scope, capacity, scope_arena);
+}
+
+ScopeId Context::make_pure_expr_compt_func_scope(ScopeId parent_scope, HirSize capacity) {
+    return scopes.emplace_and_get_id(parent_scope, capacity, scope_arena,
+                                     Scope::storage::variables);
 }
 
 Scope& Context::scope(ScopeId scope) { return scopes.at(scope); }

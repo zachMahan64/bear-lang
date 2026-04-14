@@ -54,16 +54,26 @@ class Scope {
                                      SymbolId symbol, scope_kind kind);
 
   public:
+    // this may need to be tuned for a balance between cache locality and limited rehashing
+    static constexpr size_t DEFAULT_CAP = 0x100;
     using id_type = ScopeId;
     bool is_top_level() const { return top_level; };
     // constructs a non-top-level scope with a parent
     Scope(ScopeId parent, DataArena& arena);
+    // constructs a scope with an optional parent
+    Scope(OptId<ScopeId> parent, DataArena& arena);
     // constructs a top level scope
     Scope(DataArena& arena);
     // constructs a non-top-level scope with a given capacity parent
-    Scope(ScopeId parent, size_t capacity, DataArena& arena);
+    Scope(OptId<ScopeId> parent, size_t capacity, DataArena& arena);
     // constructs a top level scope with a given capacity
     Scope(size_t capacity, DataArena& arena);
+    enum class storage : uint8_t {
+        variables,
+        types,
+    };
+    // construct a scope with only storage for a specific kind of def
+    Scope(ScopeId parent, size_t capacity, DataArena& arena, storage storage);
     static OptId<DefId> look_up_namespace(const Context& context, ScopeId local_scope,
                                           SymbolId symbol);
     static OptId<DefId> look_up_variable(const Context& context, ScopeId local_scope,

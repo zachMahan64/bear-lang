@@ -13,28 +13,31 @@
 #include <assert.h>
 #include <optional>
 #include <stddef.h>
-// this may need to be tuned for a balance between cache locality and limited rehashing
-static constexpr size_t HIR_SCOPE_MAP_DEFAULT_SIZE = 0x100;
 
 namespace hir {
 
-Scope::Scope(ScopeId parent, DataArena& arena)
-    : parent(parent), arena(arena), namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      top_level(false) {}
+Scope::Scope(ScopeId parent, DataArena& arena) : Scope(OptId<ScopeId>{parent}, arena) {}
 
-Scope::Scope(DataArena& arena)
-    : arena(arena), namespaces(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      variables(arena, HIR_SCOPE_MAP_DEFAULT_SIZE), types(arena, HIR_SCOPE_MAP_DEFAULT_SIZE),
-      top_level(true) {}
+Scope::Scope(OptId<ScopeId> parent, DataArena& arena)
+    : parent(parent), arena(arena), namespaces(arena, DEFAULT_CAP), variables(arena, DEFAULT_CAP),
+      types(arena, DEFAULT_CAP), top_level(false) {}
 
-Scope::Scope(ScopeId parent, size_t capacity, DataArena& arena)
+Scope::Scope(DataArena& arena) : Scope{std::nullopt, arena} {}
+
+Scope::Scope(OptId<ScopeId> parent, size_t capacity, DataArena& arena)
     : parent(parent), arena(arena), namespaces(arena, capacity), variables(arena, capacity),
       types(arena, capacity), top_level(false) {}
 
 Scope::Scope(size_t capacity, DataArena& arena)
     : arena(arena), namespaces(arena, capacity), variables(arena, capacity), types(arena, capacity),
       top_level(true) {}
+
+Scope::Scope(ScopeId parent, size_t capacity, DataArena& arena, storage storage)
+    : parent{parent}, arena(arena), namespaces(arena, 0),
+      variables(arena, storage == storage::variables ? capacity : 0),
+      types(arena, storage == storage::types ? capacity : 0), top_level(true) {
+    assert(storage == storage::variables);
+}
 
 OptId<DefId> Scope::look_up_impl(const Context& context, ScopeId local_scope_id, SymbolId symbol,
                                  scope_kind kind) {

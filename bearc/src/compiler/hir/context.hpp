@@ -65,9 +65,12 @@ class Context {
     // ------ scoping -----------
     [[nodiscard]] ScopeId get_or_make_root_scope();
     [[nodiscard]] ScopeId root_scope() const;
-    [[nodiscard]] ScopeId make_named_scope(OptId<ScopeId> parent_scope = OptId<ScopeId>{});
+    [[nodiscard]] ScopeId make_scope(OptId<ScopeId> parent_scope);
     // makes a named scope with a small capacity
-    [[nodiscard]] ScopeId make_small_named_scope(OptId<ScopeId> parent_scope);
+    [[nodiscard]] ScopeId make_small_scope(OptId<ScopeId> parent_scope);
+    [[nodiscard]] ScopeId make_medium_scope(OptId<ScopeId> parent_scope);
+    [[nodiscard]] ScopeId make_scope(OptId<ScopeId> parent_scope, HirSize capacity);
+    [[nodiscard]] ScopeId make_pure_expr_compt_func_scope(ScopeId parent_scope, HirSize capacity);
     [[nodiscard]] Scope& scope(ScopeId scope);
     [[nodiscard]] OptId<DefId> look_up_variable(ScopeId scope, SymbolId sid) const;
     [[nodiscard]] OptId<DefId> look_up_type(ScopeId scope, SymbolId sid) const;
@@ -284,6 +287,8 @@ class Context {
     // ~~~~~~~~~~~~~~~~~~~~~ scopes ~~~~~~~~~~~~~~~~~~~~~~~
     DataArena scope_arena;
     NodeVector<Scope> scopes;
+    static constexpr HirSize relinquished_scope_vec_size = 256;
+    llvm::SmallVector<SymbolId, relinquished_scope_vec_size> relinquished_scope_vec;
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     /// const char* -> hir::SymbolId
     DataArena symbol_storage_arena;

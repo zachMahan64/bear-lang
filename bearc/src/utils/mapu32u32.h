@@ -14,7 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define MAPU32U32_MINIMUM_CAPACITY 8
+#define MAPU32U32_MINIMUM_CAPACITY 4
 #define MAPU32U32_LOAD_FACTOR .75
 
 #ifdef __cplusplus

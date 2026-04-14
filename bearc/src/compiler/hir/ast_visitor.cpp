@@ -19,7 +19,6 @@
 #include "compiler/token.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
-#include <iostream>
 #include <variant>
 
 namespace hir {
@@ -169,7 +168,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                         parent); // just make span with name token otherwise it will be too long
         ScopeId mod_scope = existing_module
                                 ? get<DefModule>(context.def(existing.as_id()).value).scope
-                                : context.make_named_scope(scope);
+                                : context.make_scope(scope);
         // warn capitalized_mod if the mod is new and capitalized
         if (!existing_module && is_capital(name_tkn)) {
             context.emplace_diagnostic(Span(file, context.ast(file).buffer(), name_tkn),
@@ -291,8 +290,8 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             // if the type (namely a variant field decl) doesn't have statements then the scope
             // needn't be large
             const bool is_small_scope = !stmts.has_value();
-            ScopeId types_scope = (is_small_scope) ? context.make_small_named_scope(scope)
-                                                   : context.make_named_scope(scope);
+            ScopeId types_scope
+                = (is_small_scope) ? context.make_small_scope(scope) : context.make_scope(scope);
 
             context.defs_to_scopes_for_types().insert(def, types_scope);
             // warn on lowercase structure definition
