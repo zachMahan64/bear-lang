@@ -190,12 +190,14 @@ lex_multichar_operator:
             LEX_KNOWN_LEN_PUSH(2);
         }
         LEX_KNOWN_LEN_PUSH(1);
-    // intentional fallthrough ~~~~~~~~~~~~~~~~~~~~
     case ('~'):
-        if (n1 == '>') {
+        if (n1 == '>' || n1 == '=') {
             // ~>
             LEX_KNOWN_LEN_PUSH(2);
         }
+        LEX_KNOWN_LEN_PUSH(1);
+        break;
+    // intentional fallthrough ~~~~~~~~~~~~~~~~~~~~
     case ('*'):
     case ('/'):
     case ('%'):
