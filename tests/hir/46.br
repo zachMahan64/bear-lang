@@ -1,5 +1,7 @@
 // tests/hir/46.br
 
+mod test;
+
 struct Ben {
     Ny ny;
 }
@@ -10,6 +12,36 @@ struct Ny {
 
 compt Ben ben = Ben{.ny = Ny{.dog = 12}};
 
-var _11 = ben.ny; // fine
+var _1 = ben.ny; // fine
 
-var _12 = @static_assert ben.ny.dog == 12;
+var _2 = @static_assert ben.ny.dog == 12;
+
+struct Foo {
+    Bar bar;
+    struct Bar{
+        [3]i32 a;
+        struct Ey {
+            i32 c = 12;
+        }
+        str b;
+        Ey e;
+    }
+}
+
+use Foo..Bar;
+use Foo..Bar..Ey;
+
+compt Foo foo = Foo{
+    .bar = Bar{
+        .a = [1,2,3],
+        .b = "hi", 
+        .e = Ey{.c =42}
+    }
+};
+
+var _3 = @static_assert foo.bar.e.c == 42;
+
+var _4 = @static_assert foo.bar.b == "hi";
+
+var _5 = @static_assert foo.bar.b == "bye"; // oops
+
