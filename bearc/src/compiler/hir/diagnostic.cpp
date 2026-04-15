@@ -120,8 +120,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "`compt` variables should have an explicit type";
     case diag_code::cannot_convert_value_of_type:
         return "cannot convert value of type";
-    case diag_code::cannot_assign_to_compt_constant:
-        return "cannot assign new value to compile-time constant";
+    case diag_code::cannot_mutate_compt_const:
+        return "cannot mutate compile-time constant";
     case diag_code::is_operator_requires_run_time_values:
         return "`is` operator requires run-time values";
     case diag_code::cannot_cast_expr_to_type:
@@ -214,6 +214,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "compile-time variables should not be move-initialized";
     case diag_code::compile_time_constant_cannot_be_moved:
         return "compile-time constant value cannot be moved";
+    case diag_code::value_is_a_compile_time_constant:
+        return "value is a compile-time constant";
+    case diag_code::called_here:
+        return "called here";
     }
     std::unreachable();
     return "";

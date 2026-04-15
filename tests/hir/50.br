@@ -1,0 +1,25 @@
+// tests/hir/50.br
+
+compt fn add(var a, var b) => a + b
+
+compt fn get_big() -> i32 => 1000000
+
+compt fn square(var a) => a * a
+
+compt i32 a = add(12, 200);
+
+var _0 = @static_assert(212 == a); // fine
+
+compt i32 b = get_big(); 
+
+var _1 = @static_assert(b == a); // oops
+
+var _2 = a = b; // oops 
+
+compt i32 _3 = square("helllo"); // oops
+
+var _4 = @static_assert(square(12) == 144); // fine
+
+var _5 = @static_assert(square(12) == 143); // oops
+
+

@@ -65,7 +65,7 @@ enum class diag_code : uint8_t {
     var_cannot_be_part_of_a_scoped_identifier,
     compt_variable_should_have_an_explicit_type,
     cannot_convert_value_of_type,
-    cannot_assign_to_compt_constant,
+    cannot_mutate_compt_const,
     is_operator_requires_run_time_values,
     cannot_cast_expr_to_type,
     guaranteed_narrowing_of_compt_value,
@@ -110,6 +110,8 @@ enum class diag_code : uint8_t {
     only_message_value_is_meaning,
     compt_vars_should_not_be_move_initialized,
     compile_time_constant_cannot_be_moved,
+    value_is_a_compile_time_constant,
+    called_here,
 
     count, // this must be last,
 

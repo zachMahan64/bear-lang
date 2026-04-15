@@ -24,6 +24,7 @@
 #include "def_visitor.hpp"
 #include <cassert>
 #include <cstdint>
+#include <iso646.h>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -1615,9 +1616,17 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (maybe_bin_op.holds<InvalidOp>()) {
             cooked = true;
         } else if (maybe_bin_op.holds<assign_op>()) {
-            context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
-                                       diag_code::cannot_assign_to_compt_constant,
-                                       diag_type::error);
+            auto d0 = context.emplace_diagnostic(
+                Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
+                diag_code::cannot_mutate_compt_const, diag_type::error);
+            OptId<ExecId> maybe_eid = solve_expr(fid, scope, expr->expr.binary.lhs);
+            if (maybe_eid.has_value()) {
+                const Exec& exec = context.exec(maybe_eid.as_id());
+                auto d1 = context.emplace_diagnostic(Span{context, fid, expr->expr.binary.lhs},
+                                                     diag_code::value_is_a_compile_time_constant,
+                                                     diag_type::note);
+                context.set_next_diagnostic(d0, d1);
+            }
             cooked = true;
         } else if (maybe_bin_op.holds<is_as_op>()) {
             OptId<ExecId> lhs = solve_expr(fid, scope, expr->expr.binary.lhs,
@@ -1957,7 +1966,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         if (!context.def(func_did).template as<DefFunction>().posioned && maybe_eid.empty()) {
             context.emplace_diagnostic_with_message_value(
-                Span{context, fid, expr}, diag_code::declared_here, diag_type::note,
+                Span{context, fid, expr}, diag_code::called_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = func_symbol});
             return std::nullopt;
         }
