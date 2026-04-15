@@ -39,6 +39,7 @@ struct DefFunction {
     OptId<ExecId> body;
     /// if this function was derived from an original generic function
     OptId<DefId> original;
+    bool takes_self;
     bool posioned = false;
     void poison() { posioned = true; }
     bool poisoned() const noexcept { return posioned; }

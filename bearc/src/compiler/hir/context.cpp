@@ -497,6 +497,9 @@ DefId Context::register_generated_deftype(ScopeId scope, SymbolId name, TypeId t
     auto did = defs.emplace_and_get_id(DefDeftype{.type = type_id}, name, false, false, false,
                                        false, span, parent);
     this->scope(scope).insert_type(name, did);
+    def_resol_states.bump(Def::resol_state::resolved);
+    def_ast_nodes.bump();
+    def_mention_states.bump(Def::mention_state::unmentioned);
     return did;
 }
 
@@ -594,14 +597,10 @@ void Context::print_diagnostic(DiagnosticId diag_id, bool print_file) {
         bool print_next_file
             = !next_span.is_generated() && (diag.span.file_id != next_span.file_id);
         print_diagnostic(diag.next.as_id(), print_next_file);
-    }
-
-    /*
-       else if (!compact_diagnostics_enabled()) {
+    } else if (!compact_diagnostics_enabled()) {
         std::cout << '\n'; // this makes it so there's a new line between the start and end of
                            // none-contiguous diagnostics, which is more readable
     }
-    */
 }
 
 void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {

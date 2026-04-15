@@ -22,6 +22,8 @@
 #include "compiler/token.h"
 #include "def_visitor.hpp"
 #include <cassert>
+#include <cstdint>
+#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -1615,7 +1617,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             // TODO handle method calls here
             if (rhs_expr->type == AST_EXPR_FN_CALL) {
                 auto struct_scope = struct_def.as<DefStruct>().scope;
-                return solve_fn_call(fid, struct_scope, expr, lhs_eid); // TODO
+                return solve_fn_call(fid, struct_scope, rhs_expr, lhs_eid); // TODO
             }
             context.emplace_diagnostic(Span{context, fid, expr},
                                        diag_code::value_does_not_refer_to_a_named_mem,
@@ -1657,6 +1659,12 @@ template <IsDefVisitor V> class ComptExprSolver {
                                               OptId<ExecId> maybe_self_val = std::nullopt) {
         assert(expr->type == AST_EXPR_FN_CALL);
         llvm::SmallVector<ExecId> arg_vec{};
+        DefFunction func;
+        Span func_span = Span::generated();
+        SymbolId func_symbol;
+        uint8_t mt_arg_adjustment = 0;
+        uint8_t mt_param_adjustment = 0;
+
         if (maybe_self_val.has_value()) {
             const auto self_val = maybe_self_val.as_id();
             const Exec& exec = context.exec(self_val);
@@ -1668,7 +1676,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                                            diag_code::cannot_resolve_at_compt, diag_type::error);
                 return std::nullopt;
             }
-            token_ptr_slice_t id_slice = expr->expr.id.slice;
+            token_ptr_slice_t id_slice = called->expr.id.slice;
             if (id_slice.len > 1) {
                 context.emplace_diagnostic(Span{context, fid, called},
                                            diag_code::scoped_identifer_not_allowed_here,
@@ -1681,8 +1689,126 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto maybe_func_did = context.look_up_member_function_guarding_hid(
                 context.def(exec.as<ExecExprStructInit>().struct_def), func_name, fn_name_span,
                 scope);
-            // TODO
+            if (maybe_func_did.empty()) {
+                return std::nullopt;
+            }
+            auto func_did = maybe_func_did.as_id();
+            const Def& func_def = context.def(func_did);
+            assert(func_def.holds<DefFunction>());
+
+            func = func_def.as<DefFunction>();
+
+            if (!func.takes_self) {
+                auto d0 = context.emplace_diagnostic(Span{context, fid, called},
+                                                     diag_code::free_function_called_as_a_method,
+                                                     diag_type::error);
+                const ast_stmt_t* stmt = context.def_ast_node(func_did);
+                assert(stmt->type == AST_STMT_FN_DECL);
+                Span kw_span{context, fid, stmt->stmt.fn_decl.kw};
+                auto d1 = context.emplace_diagnostic_with_message_value(
+                    kw_span, diag_code::declared_here, diag_type::note,
+                    DiagnosticSymbolBeforeMessage{.sid = func_def.name});
+                context.set_next_diagnostic(d0, d1);
+                mt_param_adjustment = 0;
+            } else {
+                mt_param_adjustment = 1;
+            }
+
+            if (func.posioned) {
+                return std::nullopt;
+            }
+
+            func_span = func_def.span;
+            func_symbol = func_def.name;
+            mt_arg_adjustment = 1;
+        } else {
+            const ast_expr_t* called = expr->expr.fn_call.left_expr;
+            if (called->type != AST_EXPR_ID) {
+                context.emplace_diagnostic(Span{context, fid, called},
+                                           diag_code::cannot_resolve_at_compt, diag_type::error);
+                return std::nullopt;
+            }
+            token_ptr_slice_t id_slice = expr->expr.id.slice;
+
+            const Span called_span{context, fid, id_slice};
+
+            auto maybe_func_did = context.look_up_scoped_variable(
+                scope, context.symbol_slice(id_slice), called_span);
+            if (maybe_func_did.empty()) {
+                context.emplace_diagnostic(called_span, diag_code::use_of_undeclared_identifier,
+                                           diag_type::error);
+                return std::nullopt;
+            }
+            const Def& called_def = context.def(maybe_func_did.as_id());
+            if (!called_def.holds<DefFunction>()) {
+                context.emplace_diagnostic(
+                    called_span, diag_code::value_is_not_callable, diag_type::error,
+                    DiagnosticSubCode{.sub_code = diag_code::not_a_function});
+                return std::nullopt;
+            }
+            func = called_def.as<DefFunction>();
+            func_span = called_def.span;
+            func_symbol = called_def.name;
         }
+        const IdSlice<DefId> params = func.params;
+
+        const ast_slice_of_exprs_t exprs = expr->expr.fn_call.args;
+        for (HirSize i = 0; i < exprs.len; i++) {
+            const ast_expr_t* arg = exprs.start[i];
+            OptId<ExecId> maybe_arg_eid = solve_expr(fid, scope, arg);
+            if (maybe_arg_eid.empty()) {
+                return std::nullopt; // poisoned
+            }
+            arg_vec.push_back(maybe_arg_eid.as_id());
+        }
+
+        auto adjusted_arg_len = arg_vec.size() - mt_arg_adjustment;
+        auto adjusted_param_len = params.len() - mt_param_adjustment;
+
+        if (adjusted_arg_len != adjusted_param_len) {
+
+            auto params_len_sym_id = ExecConst{adjusted_param_len}.to_symbol_id(context);
+            auto args_len_sym_id = ExecConst{adjusted_arg_len}.to_symbol_id(context);
+
+            Span span_of_interest
+                = adjusted_arg_len < adjusted_param_len
+                      ? Span{context, fid, expr->last}
+                      : Span::combine(Span{context, fid, exprs.start[0]->first},
+                                      Span{context, fid, exprs.start[exprs.len - 1]->last});
+
+            context.emplace_diagnostic_with_message_value(
+                span_of_interest, diag_code::expected, diag_type::error,
+                DiagnosticSymButGotSym{
+                    .leading = func_symbol, .sid1 = params_len_sym_id, .sid2 = args_len_sym_id});
+
+            return std::nullopt;
+        }
+
+        // TODO
+        return std::nullopt;
+    }
+
+    [[nodiscard]] OptId<ExecId> try_convert_to(ExecId eid, TypeId tid) {
+        OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
+        if (maybe_inferred_etid.has_value()
+            && context.equivalent_type(maybe_inferred_etid.as_id(), tid)) {
+            return eid;
+        }
+
+        const Exec& exec = context.exec(eid);
+
+        if (!exec.holds<ExecConst>()) {
+            return std::nullopt;
+        }
+        const Type& type = context.type(tid);
+        if (!type.holds<TypeBuiltin>()) {
+            return std::nullopt;
+        }
+        auto conv = exec.as<ExecConst>().try_safe_convert_to(type.as<TypeBuiltin>().type);
+        if (!conv.has_value()) {
+            return std::nullopt;
+        }
+        return context.emplace_exec(ExecConst{conv.value()}, exec.span, exec.compt);
     }
 };
 } // namespace hir

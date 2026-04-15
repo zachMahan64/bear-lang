@@ -200,6 +200,14 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "value is not a pointer";
     case diag_code::id_does_not_name_a_method_of:
         return "identifer does not name a method of";
+    case diag_code::value_is_not_callable:
+        return "value is not callable";
+    case diag_code::not_a_function:
+        return "not a function";
+    case diag_code::expected:
+        return "expected";
+    case diag_code::free_function_called_as_a_method:
+        return "free function declared `fn` called as a method";
     }
     std::unreachable();
     return "";
@@ -634,6 +642,21 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += '`';
             str += ansi_reset();
         },
+        [&](DiagnosticSymButGotSym d) {
+            str += "function `";
+            str += ctx.symbol_id_to_cstr(d.leading);
+            str += "` ";
+            str += message_for_code(code);
+            str += " ";
+            str += ansi_bold_green();
+            str += ctx.symbol_id_to_cstr(d.sid1);
+            str += ansi_bold_reset();
+            str += " arguments but got ";
+            str += accent_color_for_type(type);
+            str += ctx.symbol_id_to_cstr(d.sid2);
+            str += ansi_bold_reset();
+        },
+
     };
     std::visit(vs, message_value);
 }

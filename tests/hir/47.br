@@ -22,3 +22,19 @@ use Foo..Self; // oops, that's no good
 struct Bar {
     
 }
+
+compt mt Bar..foo() -> i32 => -1237
+compt fn Bar..bar() -> u8 => 12
+compt mt Bar..work(i32 a, i32 b, i32 c) -> i32 => a + b + c
+
+compt Bar bar = Bar{};
+
+compt i32 a = bar.foo(); // fine
+
+compt i32 b = bar.bar(12); // oops
+
+compt i32 c = bar.work(1, 2, 3); // fine
+
+compt i32 d = bar.work(); // oops
+
+compt i32 e = bar.work(1, 2, 3, 4, 5, 6, 7, 8); // oops

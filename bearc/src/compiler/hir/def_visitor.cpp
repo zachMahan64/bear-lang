@@ -259,12 +259,13 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         if (def.compt && fn_decl.only_expr && !def.generic) {
             OptId<TypeId> maybe_self_type;
+            bool takes_self = false;
             if (token_is_mt_or_dt(fn_decl.kw->type)) {
+                takes_self = true;
                 auto maybe_did = context.look_up_type(scope, context.symbol_id<"Self">());
 
                 if (maybe_did.has_value()) {
                     auto def = context.def(maybe_did.as_id());
-
                     maybe_self_type = def.as<DefDeftype>().type;
                 }
             }
@@ -285,19 +286,19 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
             TypeResolver type_resolver{context, *this};
             // handle methods explicitly
-            def.set_value(DefFunction{.params = params_res.params,
+            def.set_value(DefFunction{.params = params,
                                       .param_types = param_types,
                                       .return_type
                                       = type_resolver.resolve_type(fid, scope, fn_decl.return_type),
                                       .body = std::nullopt,
                                       .original = std::nullopt,
+                                      .takes_self = takes_self,
                                       .posioned = params_res.poisoned});
-
         }
         // TODO, handle run-time functions
         else {
+            def.set_value(DefFunction{});
         }
-        def.set_value(DefFunction{});
         break;
     }
         // TODO, need to lower these
@@ -432,6 +433,7 @@ TopLevelDefVisitor::resolve_params(FileId fid, ScopeId scope, DefId func_def,
         }
         vec.push_back(maybe_param.as_id());
     }
+
     return freeze_params(false); // not poisoned
 }
 
