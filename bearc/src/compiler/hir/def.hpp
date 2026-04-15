@@ -41,8 +41,14 @@ struct DefFunction {
     OptId<DefId> original;
     bool takes_self;
     bool posioned = false;
+    bool infinite_recursion = false;
     void poison() { posioned = true; }
     bool poisoned() const noexcept { return posioned; }
+    bool infinitely_recurses() const noexcept { return infinite_recursion; }
+    void poison_infinite_recursion() noexcept {
+        posioned = true;
+        infinite_recursion = true;
+    }
 };
 
 struct DefGenericFunction {

@@ -89,9 +89,9 @@ set(CMAKE_C_FLAGS_DEBUG
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
 
 set(CMAKE_CXX_FLAGS_DEBUG
-    "-Wall -Wextra -Wpedantic -Wno-unused-parameter -fno-exceptions -g -gdwarf-4 -O0"
+    "-Wall -Wextra -Wpedantic -Wno-unused-parameter -g -gdwarf-4 -O0"
     CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -fno-exceptions" CACHE STRING "" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(DEBUG_BUILD)

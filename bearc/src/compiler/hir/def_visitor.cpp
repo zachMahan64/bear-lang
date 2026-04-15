@@ -19,7 +19,6 @@
 #include "compiler/parser/token_eaters.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
-#include <iostream>
 #include <optional>
 
 namespace hir {
@@ -94,6 +93,10 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         return (def.parent.has_value()) ? context.is_struct_def(def.parent.as_id()) : false;
     };
 
+    if (stmt == nullptr) {
+        std::cout << context.symbol_id_to_cstr(def.name) << '\n';
+    }
+
     //  TODO write handlers
     switch (stmt->type) {
     case AST_STMT_VAR_DECL: {
@@ -115,8 +118,10 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         break;
     }
     case AST_STMT_VAR_INIT_DECL: {
+        const auto var_init_decl = stmt->stmt.var_init_decl;
+
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
-            span.file_id, scope, stmt->stmt.var_init_decl.type, needs_layout_info());
+            span.file_id, scope, var_init_decl.type, needs_layout_info());
         if (!maybe_type.has_value()) {
             goto cleanup; // maybe set a special value to indicate error differently
         }
@@ -135,11 +140,22 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec});
         // check poison /not init
+        if (def.compt && var_init_decl.assign_op->type == TOK_ASSIGN_MOVE) {
+            auto d0 = context.emplace_diagnostic(
+                Span{context, def.span.file_id, var_init_decl.assign_op},
+                diag_code::compt_vars_should_not_be_move_initialized, diag_type::error);
+            if (maybe_compt_exec.has_value()) {
+                auto d1 = context.emplace_diagnostic(
+                    context.exec(maybe_compt_exec.as_id()).span,
+                    diag_code::compile_time_constant_cannot_be_moved, diag_type::note);
+                context.set_next_diagnostic(d0, d1);
+            }
+        }
         if (!maybe_compt_exec.has_value()) {
-            if (!def.compt) {
+            if (!def.compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
                 context.emplace_diagnostic(def.span,
                                            diag_code::even_non_compt_top_levels_need_compt_init,
-                                           diag_type::note, DiagnosticInfoNoPreview{});
+                                           diag_type::note, DiagnosticInfoDontDisplayFile{});
             }
             goto cleanup;
         }
@@ -257,7 +273,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 DiagnosticSymbolAfterMessage{.sid = context.symbol_id<"=> (Expression)">()});
             context.set_next_diagnostic(d0, d1);
         }
-        if (def.compt && fn_decl.only_expr && !def.generic) {
+        if (!def.generic) {
             OptId<TypeId> maybe_self_type;
             bool takes_self = false;
             if (token_is_mt_or_dt(fn_decl.kw->type)) {
@@ -284,12 +300,15 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
             auto param_types = context.freeze_id_vec(type_vec);
 
-            TypeResolver type_resolver{context, *this};
+            auto return_type
+                = (fn_decl.return_type)
+                      ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
+                      : std::nullopt;
+
             // handle methods explicitly
             def.set_value(DefFunction{.params = params,
                                       .param_types = param_types,
-                                      .return_type
-                                      = type_resolver.resolve_type(fid, scope, fn_decl.return_type),
+                                      .return_type = return_type,
                                       .body = std::nullopt,
                                       .original = std::nullopt,
                                       .takes_self = takes_self,
@@ -297,7 +316,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         // TODO, handle run-time functions
         else {
-            def.set_value(DefFunction{});
         }
         break;
     }

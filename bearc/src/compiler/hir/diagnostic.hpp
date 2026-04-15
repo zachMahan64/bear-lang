@@ -108,6 +108,8 @@ enum class diag_code : uint8_t {
     expected,
     free_function_called_as_a_method,
     only_message_value_is_meaning,
+    compt_vars_should_not_be_move_initialized,
+    compile_time_constant_cannot_be_moved,
 
     count, // this must be last,
 
@@ -185,13 +187,15 @@ struct DiagnosticImportStack {
 
 struct DiagnosticInfoNoPreview {};
 
+struct DiagnosticInfoDontDisplayFile {};
+
 struct DiagnosticSubCode {
     diag_code sub_code;
 };
 
 using DiagnosticInfoValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticImportStack, DiagnosticTypeToType,
-                   DiagnosticSubCode, DiagnosticInfoNoPreview>;
+                   DiagnosticSubCode, DiagnosticInfoNoPreview, DiagnosticInfoDontDisplayFile>;
 
 struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 

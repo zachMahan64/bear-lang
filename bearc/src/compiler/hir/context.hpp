@@ -410,6 +410,10 @@ class Context {
     HirSize help_cnt{};
     HirSize normal_error_cnt{};
     HirSize fatal_error_cnt{};
+
+    // for checking and setting the local only_one_context_instance on init
+    static std::atomic<bool> one_instance_status;
+
     const bool only_one_context_instance;
 
     // args

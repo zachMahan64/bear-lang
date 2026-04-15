@@ -391,6 +391,9 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
             return parser_sync_stmt(p);
         }
 
+        parser_match_token(
+            p, TOK_SEMICOLON); // allow a trailing semicolon so we don't later emit a warning for it
+
     } else {
         decl->stmt.fn_decl.block = parse_stmt_block(p);
         decl->stmt.fn_decl.expr = NULL;

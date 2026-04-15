@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -931,10 +932,7 @@ std::optional<ExecConst> ExecConst::try_down_convert_to(builtin_type type) const
             return none();
 
         case builtin_type::f32:
-            if (v >= FLT_MIN && v <= FLT_MAX) {
-                return to_optconst(ConstantValue{static_cast<float>(v)});
-            }
-            return none();
+            return to_optconst(ConstantValue{static_cast<float>(v)});
 
         case builtin_type::f64:
             return *this;

@@ -210,6 +210,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "free function declared `fn` called as a method";
     case diag_code::only_message_value_is_meaning:
         return "";
+    case diag_code::compt_vars_should_not_be_move_initialized:
+        return "compile-time variables should not be move-initialized";
+    case diag_code::compile_time_constant_cannot_be_moved:
+        return "compile-time constant value cannot be moved";
     }
     std::unreachable();
     return "";
@@ -308,6 +312,7 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
                       << ansi_reset() << '\n';
         },
         [](DiagnosticInfoNoPreview) {},
+        [](DiagnosticInfoDontDisplayFile) { std::cout << '\n'; },
     };
     this->visit(vs);
     if (!holds<DiagnosticNoOtherInfo>() && !context.compact_diagnostics_enabled()) {
@@ -327,9 +332,9 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
     }
     const char* message
         = has_complex_message() ? complex_message_str.c_str() : message_for_code(code);
-    print_file
-        = print_file
-          && !this->holds<DiagnosticInfoNoPreview>(); // no preview means file location is irrelvant
+    print_file = print_file && !this->holds<DiagnosticInfoNoPreview>()
+                 && !this->holds<DiagnosticInfoDontDisplayFile>(); // no preview means file location
+                                                                   // is irrelvant
     if (context.compact_diagnostics_enabled()) {
         if (print_file) {
             printf("%s%s:%u:%u: ", ansi_bold_reset(), file_name, adjusted_line, adjusted_col);

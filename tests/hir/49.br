@@ -1,0 +1,60 @@
+// tests/hir/49.br
+
+
+mod my_mod;
+
+mod bar {
+pub mod foo {
+   
+    compt fn inf_recursion() -> i32 => 1 + foo..inf_recursion(); // oops
+    
+    compt fn fib(i32 n) => n if n <= 1 else fib(n-1) + fib(n-2);
+
+    compt fn fact(f64 n) => 1 if n <= 1 else n * fact(n-1) 
+
+    compt fn between(f64 a, f64 b, f64 c) -> bool => (b <= a) && (c >= a)
+
+    compt fn approx(f64 a, f64 b) -> bool => between(a, b -1, b+1)
+}
+}
+
+use mod bar..foo;
+
+var _0 = foo..inf_recursion(); 
+
+var _1 = foo..inf_recursion(); 
+
+var _2 = foo..inf_recursion(); 
+
+var _3 = foo..inf_recursion(); 
+
+var _4 = foo..inf_recursion(); 
+
+var _5 = foo..inf_recursion(); 
+
+var _6  = @static_assert(1 == foo..fib(1));
+var _7  = @static_assert(1 == foo..fib(2));
+var _8  = @static_assert(2 == foo..fib(3));
+var _9  = @static_assert(3 == foo..fib(4));
+var _10 = @static_assert(5 == foo..fib(5));
+var _11 = @static_assert(8 == foo..fib(6));
+var _12 = @static_assert(13 == foo..fib(7));
+var _13 = @static_assert(21 == foo..fib(8));
+var _14 = @static_assert(34 == foo..fib(9));
+compt bool _15 = @static_assert(55 == foo..fib(10));
+
+compt u64 fact_10 = 3628800;
+compt u64 almost_fact_10 = fact_10 - 3; 
+var _16 = @static_assert(foo..between(foo..fact(10), fact_10 - 1, fact_10 + 1)); // fine
+
+var _17 = @static_assert(foo..between(foo..fact(10), almost_fact_10 - 1, almost_fact_10 + 1)); // oops
+
+var _18 = @static_assert(foo..approx(foo..fact(10), fact_10)); // fine
+
+var _19 = @static_assert(foo..approx(foo..fact(10), almost_fact_10)); // oops
+
+
+
+compt i32 foo <- oops;
+
+compt i32 foo1 <- 12345;

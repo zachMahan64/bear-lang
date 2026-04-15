@@ -57,9 +57,10 @@ main quest
         - ex) `compt fn foo() -> i32 => 42`
         - ex) `compt fn foo() => 42` (return type inferred here)
         - ex) `compt fn foo() => {42}` (return type inferred here, braces allowed if desired)
-    - [ ] add lowering of pure expr functions 
-        - [ ] ban `compt mt mut` funcs
-        - [ ] add compt member calls: `foo.bar()` 
+    - [x] add lowering of pure expr functions 
+        - [x] ban `compt mt mut` funcs
+        - [x] add compt member calls: `foo.bar()` 
+    - [ ] handle proper short-circuiting of `||` and `&&` at compt
     - [ ] compt subscripts and list equalities: `foo[1] and [1, 2] == [1, 2]`
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`

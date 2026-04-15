@@ -24,6 +24,7 @@
 #include "def_visitor.hpp"
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -31,10 +32,10 @@ namespace hir {
 template <IsDefVisitor V> class ComptExprSolver {
     Context& context;
     V& def_visitor;
-    HirSize compt_fn_call_depth = 0;
+    HirSize call_depth = 0;
 
   public:
-    static constexpr HirSize MAX_COMPT_CALL_FRAMES = 1000;
+    static constexpr HirSize MAX_COMPT_CALL_FRAMES = 100; // TODO increase once memoization is added
 
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
 
@@ -200,9 +201,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type, into_tid);
     }
 
-    void enter_compt_fn() { ++compt_fn_call_depth; }
+    void enter_compt_fn() { ++call_depth; }
 
-    void exit_compt_fn() { --compt_fn_call_depth; }
+    void exit_compt_fn() { --call_depth; }
 
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, ScopeId scope,
                                                          const ast_expr_t* expr,
@@ -429,6 +430,45 @@ template <IsDefVisitor V> class ComptExprSolver {
             return handle_static_assert(fid, scope, expr);
         case AST_EXPR_DEFINED:
             return handle_defined(fid, scope, expr);
+        case AST_EXPR_FN_CALL: {
+            auto cannot_conv = [this, fid, expr, into_builtin]() {
+                context.emplace_diagnostic_with_message_value(
+                    Span{context, fid, expr}, diag_code::cannot_convert_expression_to_type,
+                    diag_type::error,
+                    DiagnosticTypeAfterMessage{
+                        .tid = context.emplace_type(TypeBuiltin{.type = into_builtin.value()},
+                                                    Span::generated(), false)});
+                return std::nullopt;
+            };
+
+            OptId<ExecId> maybe_eid = solve_fn_call(fid, scope, expr);
+            if (!into_builtin.has_value()) {
+                return maybe_eid;
+            }
+            if (maybe_eid.empty()) {
+                return std::nullopt; // poisoned
+            }
+
+            const auto eid = maybe_eid.as_id();
+
+            const OptId<TypeId> maybe_inferred = infer_type_from_compt_exec(eid);
+            if (maybe_inferred.empty()) {
+                cannot_conv();
+                return std::nullopt;
+            }
+
+            const auto inffered_tid = maybe_inferred.as_id();
+            const auto inffered_type = context.type(inffered_tid);
+            if (!inffered_type.holds<TypeBuiltin>()) {
+                cannot_conv();
+                return std::nullopt;
+            }
+            if (inffered_type.as<TypeBuiltin>().type != into_builtin.value()) {
+                cannot_conv();
+                return std::nullopt;
+            }
+            return eid;
+        }
         case AST_EXPR_LIST_LITERAL:
         case AST_EXPR_STRUCT_INIT:
             if (into_builtin.has_value()) {
@@ -442,7 +482,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             break;
         case AST_EXPR_SUBSCRIPT:
-        case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
         case AST_EXPR_STRUCT_MEMBER_INIT:
@@ -505,6 +544,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
 
         auto expr_span = Span(fid, context.ast(fid).buffer(), expr->first, expr->last);
+
+        OptId<ExecId> maybe_eid{};
 
         switch (expr->type) {
         case AST_EXPR_ID: {
@@ -734,11 +775,12 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
             }
 
-            // all good, return the exec
-            return context.emplace_exec(
+            // all good, set the exec
+            maybe_eid = context.emplace_exec(
                 ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
                                    .struct_def = struct_did},
                 expr_span, true);
+            break;
         }
 
         case AST_EXPR_TERNARY_IF: {
@@ -747,6 +789,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_COMPT:
             return solve_expr(fid, scope, expr->expr.compt_expr.inner, into_tid);
             // these are all invalid
+        case AST_EXPR_FN_CALL: {
+            maybe_eid = solve_fn_call(fid, scope, expr);
+        }
         case AST_EXPR_SAME_TYPE:
         case AST_EXPR_DEFINED:
         case AST_EXPR_TYPE_TO_STR:
@@ -758,7 +803,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_PRE_UNARY:
         case AST_EXPR_POST_UNARY:
         case AST_EXPR_SUBSCRIPT:
-        case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
         case AST_EXPR_STRUCT_MEMBER_INIT:
@@ -770,6 +814,26 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_ELSE_MATCH_BRANCH:
         case AST_EXPR_INVALID:
             break;
+        }
+        if (maybe_eid.has_value()) {
+            auto eid = maybe_eid.as_id();
+            const Type& into_type = context.type(into_tid);
+            if (into_type.holds<TypeVar>()) {
+                return eid;
+            }
+            if (const Exec& exec = context.exec(eid);
+                exec.holds<ExecExprStructInit>() && into_type.holds<TypeStructure>()
+                && (exec.as<ExecExprStructInit>().struct_def
+                    == into_type.as<TypeStructure>().definition)) {
+                return eid;
+            }
+            auto maybe_inferred_etid = infer_type_from_compt_exec(eid);
+            if (maybe_inferred_etid.has_value()) {
+                auto inferred_tid = maybe_inferred_etid.as_id();
+                context.emplace_diagnostic_with_message_value(
+                    expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
+                    DiagnosticTypeToType{.from = inferred_tid, .to = into_tid});
+            }
         }
         context.emplace_diagnostic(expr_span, diag_code::cannot_convert_expression_to_type,
                                    diag_type::error, DiagnosticTypeAfterMessage{into_tid},
@@ -1199,7 +1263,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             = solve_expr(fid, scope, cond_expr,
                          context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
                                               Span::generated(), false));
-        auto maybe_else_exec = solve_expr(fid, scope, else_expr, maybe_into_tid);
 
         if (maybe_cond_exec.empty()) {
             return std::nullopt;
@@ -1226,6 +1289,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (cond_val) {
             return maybe_happy_exec;
         }
+
+        auto maybe_else_exec = solve_expr(fid, scope, else_expr, maybe_into_tid);
 
         return maybe_else_exec;
     }
@@ -1749,7 +1814,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                                            diag_code::cannot_resolve_at_compt, diag_type::error);
                 return std::nullopt;
             }
-            token_ptr_slice_t id_slice = expr->expr.id.slice;
+            token_ptr_slice_t id_slice = called->expr.id.slice;
 
             const Span called_span{context, fid, id_slice};
 
@@ -1792,7 +1857,8 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             OptId<ExecId> maybe_arg_eid = solve_expr(fid, scope, arg, maybe_into_tid);
             if (maybe_arg_eid.empty()) {
-                issue = true;
+                issue = true; // TODO potentiall bad error, propagatiom, prob. better safe than
+                              // sorry to call this an invalid arg?
             } else {
                 arg_vec.push_back(maybe_arg_eid.as_id());
             }
@@ -1839,21 +1905,32 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt; // just in case
         }
 
+        if (context.def(func_did).as<DefFunction>().posioned) {
+            return std::nullopt; // already posioned so don't even try it
+        }
+
         // mark that we're starting another call
         enter_compt_fn();
-        if (compt_fn_call_depth > MAX_COMPT_CALL_FRAMES) {
+        if (call_depth > MAX_COMPT_CALL_FRAMES) {
             auto d0 = context.emplace_diagnostic_with_message_value(
                 Span{context, fid, expr}, diag_code::only_message_value_is_meaning,
                 diag_type::error, DiagnosticComptStackOverflow{.function_sid = func_symbol});
             auto d1 = context.emplace_diagnostic_with_message_value(
                 func_span, diag_code::declared_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = func_symbol});
+
             context.set_next_diagnostic(d0, d1);
+
+            // poison before exit to prevent cascading diags
+            context.def(func_did).as<DefFunction>().poison_infinite_recursion();
+
             exit_compt_fn();
+
             return std::nullopt;
         }
 
-        ScopeId temp_scope = context.make_compt_func_temp_scope(scope, params.len());
+        ScopeId temp_scope
+            = context.make_compt_func_temp_scope(context.containing_scope(func_did), params.len());
 
         for (HirSize i = 0; i < params.len(); i++) {
             const Def& param_def = context.def(params.get(i));
@@ -1868,18 +1945,29 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         const ast_expr_t* body_expr = fn_stmt->stmt.fn_decl.expr;
 
-        const OptId<ExecId> maybe_eid = solve_expr(fid, temp_scope, body_expr, func.return_type);
+        OptId<ExecId> maybe_eid = solve_expr(fid, temp_scope, body_expr, func.return_type);
+
+        // try to get proper return type if possible
+        if (maybe_eid.has_value() && func.return_type.has_value()) {
+            maybe_eid = try_convert_to(maybe_eid.as_id(), func.return_type.as_id());
+        }
 
         // mark that we're done
         exit_compt_fn();
 
-        if (maybe_eid.empty()) {
+        if (!context.def(func_did).as<DefFunction>().posioned && maybe_eid.empty()) {
             context.emplace_diagnostic_with_message_value(
-                Span{context, fid, expr}, diag_code::remove, diag_type::note,
+                Span{context, fid, expr}, diag_code::declared_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = func_symbol});
+            return std::nullopt;
         }
 
-        return maybe_eid;
+        if (maybe_eid.empty()) {
+            return std::nullopt;
+        }
+
+        return context.emplace_exec(context.exec(maybe_eid.as_id()).value, Span{context, fid, expr},
+                                    true);
     }
 
     [[nodiscard]] OptId<ExecId> try_convert_to(ExecId eid, TypeId tid) {

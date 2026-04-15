@@ -26,6 +26,7 @@
 #include "utils/data_arena.hpp"
 #include "utils/log.hpp"
 #include "llvm/ADT/SmallVector.h"
+#include <atomic>
 #include <cstddef>
 #include <cstring>
 #include <filesystem>
@@ -63,6 +64,8 @@ static constexpr size_t DEFAULT_CANONICAL_GEN_ARGS_CAP = 0x400;
 
 Context::Context(const bearc_args_t& args) : Context(args, instances::multiple) {}
 
+std::atomic<bool> Context::one_instance_status = true;
+
 Context::Context(const bearc_args_t& args, instances instances)
     : file_ids{DEFAULT_FILE_ID_VEC_CAP}, files{DEFAULT_FILE_VEC_CAP},
       id_map_arena{DEFAULT_ID_MAP_ARENA_CAP},
@@ -93,8 +96,10 @@ Context::Context(const bearc_args_t& args, instances instances)
       canonical_generic_args_table{*this, canonical_generic_args_table_arena,
                                    DEFAULT_CANONICAL_GEN_ARGS_CAP},
       diagnostics{DEFAULT_DIAG_NUM}, diagnostics_used{DEFAULT_DIAG_NUM},
-      only_one_context_instance(instances == instances::one), args{args},
+      only_one_context_instance((instances == instances::one) && one_instance_status), args{args},
       compact_diagnostics(args.flags[CLI_FLAG_COMPACT_DIAGS]) {
+
+    one_instance_status = false; // we exist now
 
     // this may only fail in horribly malfored arguments in test cases
     assert(args.input_file_name);
@@ -431,7 +436,7 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
 
 DefId Context::register_compt_param(SymbolId name, Span span, DefId parent, DefValue value) {
     DefId def = defs.emplace_and_get_id(value, name, true, true, true, false, span, parent);
-    def_resol_states.bump(Def::resol_state::top_level_visited);
+    def_resol_states.bump(Def::resol_state::resolved);
     def_ast_nodes.bump();
     def_mention_states.bump(Def::mention_state::unmentioned);
     return def;

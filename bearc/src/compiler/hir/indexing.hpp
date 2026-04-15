@@ -104,11 +104,6 @@ class Symbol {
     [[nodiscard]] constexpr std::string_view sv() const noexcept { return this->string_view; }
 };
 
-/// Self
-static constexpr const char* self_type_str = "Self";
-/// self
-static constexpr const char* self_id_str = "self";
-
 template <std::size_t N> struct StringLiteral {
     char value[N];
 

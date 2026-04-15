@@ -1,0 +1,61 @@
+// tests/hir/48.br
+
+mod my_mod;
+
+compt fn foo() => 45 + 45
+
+var _0 = @static_assert foo() == 90; // fine
+
+struct Foo {
+    compt fn bar(i32 a, i32 b) -> i32 => (a + b) * a * b
+}
+
+compt i32 a = 12;
+
+compt i32 b = 10;
+
+var _1 = @static_assert Foo..bar(a, b) == ((a + b) * a * b); // fine
+
+var _2 = @static_assert Foo..bar(a, b) == 220 * 12 && Foo..bar(a,b) == 2640; // oops
+
+var _3 = @static_assert (Foo..bar(a, b) == 220 * 12) && (Foo..bar(a,b) == 2640); // fine
+
+struct Bar {
+    str my_str = "def";
+
+    compt mt get_my_str() => self.my_str
+}
+
+var _4 = @static_assert Bar{}.my_str == "def"; // fine
+
+compt Bar bar = Bar{.my_str = "not def"}; 
+
+var _5 = @static_assert bar.get_my_str() == "not def"; // fine 
+
+var _6 = @static_assert Bar{}.my_str != bar.get_my_str(); // fine
+
+
+struct Nest {
+    hid i32 a; // sneaky
+    pub Nested nested;
+    struct Nested {
+        f32 b;
+    }
+    compt mt get_flt() => self.nested.b
+    compt fn get_a() -> i32 => self.a // oops, trying to get a thru non-existent self
+}
+
+use Nest..Nested;
+
+compt f32 my_flt = -1234.4321;
+
+compt Nest nested = Nest {
+    .a = 12,
+    .nested = Nested { 
+        .b = my_flt
+    },
+};
+
+var _7 = @static_assert nested.get_flt() == my_flt; // fine
+
+var _8 = @static_assert nested.get_a() == 12; // oops
