@@ -12,6 +12,7 @@
 #include "compiler/ast/printer.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/hir/ast_visitor.hpp"
+#include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/def_visitor.hpp"
 #include "compiler/hir/diagnostic.hpp"
@@ -669,10 +670,16 @@ ScopeId Context::scope_for_top_level_def(DefId def_id) const {
 }
 
 OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {
-    const auto& def_node = defs.cat(def_id);
+    const auto& def = defs.cat(def_id);
     // no parent means parent scope is root scope
-    if (def_node.holds<DefModule>()) {
-        return def_node.as<DefModule>().scope;
+    if (def.holds<DefModule>()) {
+        return def.as<DefModule>().scope;
+    }
+    if (def.holds<DefDeftype>()) {
+        const Type& type = this->type(try_decay_ref(def.as<DefDeftype>().type));
+        if (type.holds<TypeStructure>()) {
+            return def_to_scope_for_types.at(type.as<TypeStructure>().definition);
+        }
     }
     // hopefully found
     return def_to_scope_for_types.at(def_id);
@@ -714,6 +721,14 @@ Type& Context::type(TypeId id) {
         t = &types.at(t->as<TypeDeftype>().true_type);
     }
     return *t;
+}
+
+TypeId Context::try_decay_ref(TypeId tid) const {
+    const Type& type = this->type(tid);
+    if (type.holds<TypeRef>()) {
+        return type.as<TypeRef>().inner;
+    }
+    return tid;
 }
 
 /// gets the type value without bypassing deftypes
@@ -1015,7 +1030,55 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
     return look_up_scoped_variable_bypassing_visibility(scope, id_slice).has_value();
 }
 
-[[nodiscard]] bool Context::defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span) {
+[[nodiscard]] bool Context::defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span,
+                                    bool member) {
+
+    if (member) {
+        OptId<DefId> curr_struct;
+        for (HirSize i = 0; i < id_slice.len(); i++) {
+            SymbolId sid = symbol_id(id_slice.get(i));
+            OptId<DefId> maybe_did;
+            if (curr_struct.empty()) {
+                maybe_did = look_up_variable(scope, sid);
+            } else {
+                maybe_did = look_up_member_function_guarding_hid(def(curr_struct.as_id()), sid,
+                                                                 id_span, scope);
+                if (maybe_did.empty()) {
+                    maybe_did = look_up_member_var_guarding_hid(def(curr_struct.as_id()), sid,
+                                                                id_span, scope);
+                }
+            }
+
+            if (maybe_did.has_value() && i == id_slice.len() - 1) {
+                return true;
+            }
+
+            if (maybe_did.empty()) {
+                return false;
+            }
+            auto did = maybe_did.as_id();
+            const Def& def = this->def(did);
+            // try get chained structs
+            if (def.holds<DefVariable>()) {
+                const DefVariable var_def = def.as<DefVariable>();
+                const Type& type = this->type(try_decay_ref(def.as<DefVariable>().type));
+                if (type.holds<TypeStructure>()) {
+                    curr_struct = type.as<TypeStructure>().definition;
+                } else if (var_def.compt_value.has_value()) {
+                    TopLevelDefVisitor def_vis{*this};
+                    ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
+                    const OptId<TypeId> maybe_tid
+                        = solver.infer_type_from_compt_exec(var_def.compt_value.as_id());
+                    if (maybe_tid.has_value()
+                        && this->type(maybe_tid.as_id()).holds<TypeStructure>()) {
+                        curr_struct = this->type(maybe_tid.as_id()).as<TypeStructure>().definition;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     // bypass vis the second time around to not warn multiple times
     auto maybe_type = look_up_scoped_type(scope, id_slice, id_span);
 

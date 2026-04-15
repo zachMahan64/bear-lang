@@ -136,7 +136,8 @@ class Context {
 
     [[nodiscard]] bool defined_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 
-    [[nodiscard]] bool defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span);
+    [[nodiscard]] bool defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span,
+                               bool member);
 
     /// finds the scope containing a definition
     /// TODO needs to handle non-top level stmts too
@@ -244,6 +245,9 @@ class Context {
     [[nodiscard]] const Type& type(TypeId id) const;
     /// gets the canonical type value (bypassing deftypes)
     [[nodiscard]] Type& type(TypeId id);
+
+    // gets inner tid if tid corresponds to a TypeRef
+    [[nodiscard]] TypeId try_decay_ref(TypeId tid) const;
 
     /// gets the type value without bypassing deftypes
     [[nodiscard]] const Type& type_as_mentioned(IdIdx<TypeId> ididx) const;

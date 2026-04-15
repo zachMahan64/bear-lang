@@ -1,0 +1,26 @@
+// tests/hir/52.br
+
+mod demo;
+
+compt str not_conv_str = "not convertible to str";
+
+compt fn str(var from) -> str => {
+    from if @same_type(str, decay(typeof(from)))
+        else (from.to_str()) if @defined(from.to_str)
+        else from as str
+}
+
+
+
+struct Foo {
+    i32 a;
+    compt mt to_str() => "Foo {.a = " + self.a as str + " }"
+}
+
+compt Foo foo = Foo{.a = 42};
+
+var _0 = @static_assert @defined(Foo..to_str); // fine 
+
+var _1 = @static_assert @defined(foo.to_str); // fine 
+
+var _2 = @static_assert @defined(foo); // fine 

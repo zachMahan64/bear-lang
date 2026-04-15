@@ -21,5 +21,3 @@ compt i32 _3 = square("helllo"); // oops
 var _4 = @static_assert(square(12) == 144); // fine
 
 var _5 = @static_assert(square(12) == 143); // oops
-
-

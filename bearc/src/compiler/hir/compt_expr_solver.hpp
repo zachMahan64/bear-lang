@@ -24,6 +24,7 @@
 #include "def_visitor.hpp"
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 #include <iso646.h>
 #include <optional>
 #include <utility>
@@ -71,6 +72,41 @@ template <IsDefVisitor V> class ComptExprSolver {
         auto eid = maybe_eid.as_id();
 
         return infer_type_from_compt_exec(eid);
+    }
+
+    [[nodiscard]] OptId<TypeId> infer_type_from_compt_exec(ExecId eid) {
+        const Exec& exec = context.exec(eid);
+        if (exec.holds<ExecExprComptConstant>()) {
+            auto bin_type = exec.as<ExecExprComptConstant>().type_builtin();
+            return context.emplace_type(TypeBuiltin{.type = bin_type}, Span::generated(), false);
+        }
+        if (exec.holds<ExecExprStructInit>()) {
+            auto struct_did = exec.as<ExecExprStructInit>().struct_def;
+            return context.emplace_type(TypeStructure{.definition = struct_did}, Span::generated(),
+                                        false);
+        }
+        if (exec.holds<ExecExprListLiteral>()) {
+            auto list_exec = exec.as<ExecExprListLiteral>();
+            auto maybe_contained_type = list_exec.elem_type_id;
+            if (maybe_contained_type.empty()) {
+                return std::nullopt;
+            }
+            auto contained_type = maybe_contained_type.as_id();
+            auto len = list_exec.len();
+            return context.emplace_type(
+                TypeArr{
+                    .inner = contained_type,
+                    .compt_size_expr = std::nullopt,
+                    .canonical_size = len,
+                },
+                Span::generated(), false);
+        }
+
+        // report issue
+        context.emplace_diagnostic(exec.span, diag_code::cannot_infer_type_at_compt,
+                                   diag_type::error);
+
+        return std::nullopt;
     }
 
     // solves a top level compt expr (this is primarily for array sizing & builtin types for top
@@ -1258,7 +1294,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         const auto* happy_expr = tern_expr->expr.ternary_if.happy_expr;
         const auto* cond_expr = tern_expr->expr.ternary_if.condition;
         const auto* else_expr = tern_expr->expr.ternary_if.else_expr;
-        auto maybe_happy_exec = solve_expr(fid, scope, happy_expr, maybe_into_tid);
         auto maybe_cond_exec
             = solve_expr(fid, scope, cond_expr,
                          context.emplace_type(TypeBuiltin{.type = builtin_type::boolean},
@@ -1286,13 +1321,12 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         const bool cond_val = maybe_cond_bool_val.value();
 
+        // happy
         if (cond_val) {
-            return maybe_happy_exec;
+            return solve_expr(fid, scope, happy_expr, maybe_into_tid);
         }
-
-        auto maybe_else_exec = solve_expr(fid, scope, else_expr, maybe_into_tid);
-
-        return maybe_else_exec;
+        // else
+        return solve_expr(fid, scope, else_expr, maybe_into_tid);
     }
     [[nodiscard]] OptId<ExecId> solve_list(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                            OptId<TypeId> maybe_into_tid) {
@@ -1462,41 +1496,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             whole_list_span, true);
     }
 
-    [[nodiscard]] OptId<TypeId> infer_type_from_compt_exec(ExecId eid) {
-        const Exec& exec = context.exec(eid);
-        if (exec.holds<ExecExprComptConstant>()) {
-            auto bin_type = exec.as<ExecExprComptConstant>().type_builtin();
-            return context.emplace_type(TypeBuiltin{.type = bin_type}, Span::generated(), false);
-        }
-        if (exec.holds<ExecExprStructInit>()) {
-            auto struct_did = exec.as<ExecExprStructInit>().struct_def;
-            return context.emplace_type(TypeStructure{.definition = struct_did}, Span::generated(),
-                                        false);
-        }
-        if (exec.holds<ExecExprListLiteral>()) {
-            auto list_exec = exec.as<ExecExprListLiteral>();
-            auto maybe_contained_type = list_exec.elem_type_id;
-            if (maybe_contained_type.empty()) {
-                return std::nullopt;
-            }
-            auto contained_type = maybe_contained_type.as_id();
-            auto len = list_exec.len();
-            return context.emplace_type(
-                TypeArr{
-                    .inner = contained_type,
-                    .compt_size_expr = std::nullopt,
-                    .canonical_size = len,
-                },
-                Span::generated(), false);
-        }
-
-        // report issue
-        context.emplace_diagnostic(exec.span, diag_code::cannot_infer_type_at_compt,
-                                   diag_type::error);
-
-        return std::nullopt;
-    }
-
     // tries to get the const value corresponding to some variable's name, if it exists
     [[nodiscard]] OptId<ExecId> handle_any_id(FileId fid, ScopeId scope, ast_expr_id id_expr) {
         const auto id_slice = id_expr.slice;
@@ -1621,7 +1620,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                 diag_code::cannot_mutate_compt_const, diag_type::error);
             OptId<ExecId> maybe_eid = solve_expr(fid, scope, expr->expr.binary.lhs);
             if (maybe_eid.has_value()) {
-                const Exec& exec = context.exec(maybe_eid.as_id());
                 auto d1 = context.emplace_diagnostic(Span{context, fid, expr->expr.binary.lhs},
                                                      diag_code::value_is_a_compile_time_constant,
                                                      diag_type::note);
@@ -1739,10 +1737,12 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
     [[nodiscard]] OptId<ExecId> handle_defined(FileId fid, ScopeId scope, const ast_expr_t* expr) {
         assert(expr->type == AST_EXPR_DEFINED);
-        Span span{context, fid, expr->expr.defined.id};
+        Span span{context, fid, expr};
 
-        const bool defined
-            = context.defined(scope, context.symbol_slice(expr->expr.defined.id), span);
+        bool defined = false;
+        token_ptr_slice_t id_slice = expr->expr.defined.id;
+        defined = context.defined(scope, context.symbol_slice(id_slice), span,
+                                  expr->expr.defined.member);
 
         return context.emplace_exec(ExecConst{defined}, span, true);
     }

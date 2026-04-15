@@ -268,18 +268,10 @@ template <IsDefVisitor V> class TypeResolver {
     }
 
     [[nodiscard]] OptId<TypeId> decay_type(TypeId tid, Span span = Span::generated()) {
-        const Type& type = context.type(tid);
-
-        TypeValue decay_tval{};
-
-        if (type.holds<TypeRef>()) {
-            decay_tval = context.type(type.as<TypeRef>().inner).value;
-        } else {
-            decay_tval = type.value;
-        }
+        const Type& type = context.type(context.try_decay_ref(tid));
 
         // make new type as to update span and remove mut
-        return context.emplace_type(decay_tval, span, false);
+        return context.emplace_type(type.value, span, false);
     }
 };
 

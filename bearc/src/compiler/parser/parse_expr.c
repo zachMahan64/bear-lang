@@ -212,7 +212,16 @@ ast_expr_t* parse_expr_defined(parser_t* p) {
 
     token_t* lparen = parser_match_token(p, TOK_LPAREN);
 
-    token_ptr_slice_t id_slice = parse_id_token_slice(p, TOK_SCOPE_RES);
+    ex->expr.defined.member = false;
+
+    token_ptr_slice_t id_slice;
+    if (parser_peek_n(p, 1)->type == TOK_DOT) {
+        id_slice = parse_id_token_slice(p, TOK_DOT);
+
+        ex->expr.defined.member = true;
+    } else {
+        id_slice = parse_id_token_slice(p, TOK_SCOPE_RES);
+    }
 
     // handle failure
     if (id_slice.len == 0) {

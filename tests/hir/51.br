@@ -1,0 +1,48 @@
+// tests/hir/51.br
+
+// some reflection stuff
+
+
+// this would be in the stdlib
+mod std {
+mod fmt{
+
+compt str not_conv_str = "not convertible to str";
+
+compt fn str(var from) -> str => {
+    from if @same_type(str, decay(typeof(from)))
+        else (from.to_str()) if @defined(from.to_str)
+        else from as str
+}
+
+}
+}
+
+// our tests/demo for this 
+mod demo;
+
+use std..fmt;
+
+struct Foo {
+    i32 a;
+    compt mt to_str() => "Foo {.a = " + self.a as str + " }"
+}
+
+
+var _0 = @static_assert fmt..str("foo") == "foo"; // fine
+
+var _1 = @static_assert fmt..str("foo") == "fooey"; // oops
+
+compt Foo foo = Foo{.a = 42};
+
+var _2 = @static_assert fmt..str(foo) == "Foo {.a = 42 }"; // fine
+
+var _2_0 = @static_assert fmt..str(foo) == "Foo {.a = 43 }"; // oops
+
+var _3 = @static_assert @defined(Foo..to_str); // fine
+
+deftype MyFoo = Foo;
+
+var _4 = @static_assert @defined(MyFoo..to_str); // fine 
+
+var _5 = @static_assert @defined(foo.to_str); // fine 
