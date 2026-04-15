@@ -24,7 +24,6 @@
 #include "def_visitor.hpp"
 #include <cassert>
 #include <cstdint>
-#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -338,7 +337,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             OptId<ExecId> maybe_inner{};
             if (t == TOK_BOOL_NOT || t == TOK_PLUS || t == TOK_MINUS || t == TOK_BIT_NOT) {
                 maybe_inner = solve_builtin_compt_expr(fid, scope, expr->expr.unary.expr,
-                                                       into_builtin, into_tid);
+                                                       std::nullopt, std::nullopt);
             } else {
                 Span span{fid, context.ast(fid).buffer(), expr->expr.unary.op};
                 auto d0 = context.emplace_diagnostic(span, diag_code::operator_not_viable_at_compt,

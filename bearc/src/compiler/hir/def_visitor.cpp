@@ -93,10 +93,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         return (def.parent.has_value()) ? context.is_struct_def(def.parent.as_id()) : false;
     };
 
-    if (stmt == nullptr) {
-        std::cout << context.symbol_id_to_cstr(def.name) << '\n';
-    }
-
     //  TODO write handlers
     switch (stmt->type) {
     case AST_STMT_VAR_DECL: {
