@@ -159,9 +159,7 @@ typedef struct ast_slice_of_generic_args {
 typedef struct ast_expr_fn_call {
     ast_expr_t* left_expr; // should resolve to a func/func ptr
     ast_slice_of_generic_args_t generic_args;
-    token_t* left_paren;
     ast_slice_of_exprs_t args; // of type ast_expr_t
-    token_t* right_paren;
     bool is_generic;
 } ast_expr_fn_call_t;
 

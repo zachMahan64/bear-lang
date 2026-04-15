@@ -21,6 +21,7 @@
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include "def_visitor.hpp"
+#include <cassert>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -1588,7 +1589,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
 
                 auto maybe_mem_var = context.look_up_member_var_guarding_hid(
-                    struct_def, context.symbol_id(id_slice.start[0]), rhs_span);
+                    struct_def, context.symbol_id(id_slice.start[0]), rhs_span, scope);
 
                 if (maybe_mem_var.empty()) {
                     return std::nullopt; // posioned
@@ -1614,10 +1615,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             // TODO handle method calls here
             if (rhs_expr->type == AST_EXPR_FN_CALL) {
                 auto struct_scope = struct_def.as<DefStruct>().scope;
-                // ...
-                llvm::SmallVector<ExecId> arg_vec{};
-                arg_vec.push_back(lhs_eid);
-                return solve_compt_fn_call(fid, struct_scope, expr, lhs_eid); // TODO
+                return solve_fn_call(fid, struct_scope, expr, lhs_eid); // TODO
             }
             context.emplace_diagnostic(Span{context, fid, expr},
                                        diag_code::value_does_not_refer_to_a_named_mem,
@@ -1656,14 +1654,35 @@ template <IsDefVisitor V> class ComptExprSolver {
                || exec.holds<ExecExprListLiteral>();
     }
     [[nodiscard]] OptId<ExecId> solve_fn_call(FileId fid, ScopeId scope, const ast_expr_t* expr,
-                                              OptId<ExecId> self_val = std::nullopt) {
-        assert(expr->type == AST_EXPR_DEFINED);
-        Span span{context, fid, expr->expr.defined.id};
+                                              OptId<ExecId> maybe_self_val = std::nullopt) {
+        assert(expr->type == AST_EXPR_FN_CALL);
+        llvm::SmallVector<ExecId> arg_vec{};
+        if (maybe_self_val.has_value()) {
+            const auto self_val = maybe_self_val.as_id();
+            const Exec& exec = context.exec(self_val);
+            assert(exec.holds<ExecExprStructInit>());
+            arg_vec.push_back(self_val);
+            const ast_expr_t* called = expr->expr.fn_call.left_expr;
+            if (called->type != AST_EXPR_ID) {
+                context.emplace_diagnostic(Span{context, fid, called},
+                                           diag_code::cannot_resolve_at_compt, diag_type::error);
+                return std::nullopt;
+            }
+            token_ptr_slice_t id_slice = expr->expr.id.slice;
+            if (id_slice.len > 1) {
+                context.emplace_diagnostic(Span{context, fid, called},
+                                           diag_code::scoped_identifer_not_allowed_here,
+                                           diag_type::error);
+            }
+            const token_t* id_tok = id_slice.start[0];
+            const SymbolId func_name = context.symbol_id(id_tok);
+            const Span fn_name_span{context, fid, id_tok};
 
-        const bool defined
-            = context.defined(scope, context.symbol_slice(expr->expr.defined.id), span);
-
-        return context.emplace_exec(ExecConst{defined}, span, true);
+            auto maybe_func_did = context.look_up_member_function_guarding_hid(
+                context.def(exec.as<ExecExprStructInit>().struct_def), func_name, fn_name_span,
+                scope);
+            // TODO
+        }
     }
 };
 } // namespace hir

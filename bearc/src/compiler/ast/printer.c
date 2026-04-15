@@ -79,12 +79,6 @@ static void print_opening_delim(token_t* delim) {
         print_tkn(delim), printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
 }
 
-static void print_closing_delim(token_t* delim) {
-    print_indent(), printf("%s`%s", ansi_bold_green(), ansi_bold_yellow()), print_tkn(delim),
-        printf("%s`%s,\n", ansi_bold_green(), ansi_reset());
-    printer_deindent();
-}
-
 static void print_opening_delim_from_type(token_type_e delim) {
     printer_do_indent(), print_indent(),
         printf("%s`%s%s", ansi_bold_green(), ansi_bold_yellow(), token_to_string_map()[delim]),
@@ -423,7 +417,7 @@ void pretty_print_expr(const ast_expr_t* expression) {
             }
             print_closing_delim_from_type(TOK_GT);
         }
-        print_opening_delim(expr.expr.fn_call.left_paren);
+        print_opening_delim_from_type(TOK_LPAREN);
 
         ast_slice_of_exprs_t args = expr.expr.fn_call.args;
         for (size_t i = 0; i < args.len; i++) {
@@ -433,7 +427,7 @@ void pretty_print_expr(const ast_expr_t* expression) {
             }
         }
 
-        print_closing_delim(expr.expr.fn_call.right_paren);
+        print_closing_delim_from_type(TOK_RPAREN);
         print_closing_green_brace();
         break;
     case AST_EXPR_INVALID:

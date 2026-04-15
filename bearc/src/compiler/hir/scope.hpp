@@ -40,7 +40,7 @@ concept Callable = std::is_class_v<C> && !requires(Tester<C> t) { &Tester<C>::op
  * models named blocks/namespaces, such as function bodies or ctrl flow blocks
  */
 class Scope {
-    OptId<ScopeId> parent;
+    OptId<ScopeId> parent_;
     DataArena& arena;
     /// module, struct, and variant names
     ScopeIdMap namespaces;
@@ -94,6 +94,8 @@ class Scope {
     static OptId<DefId> look_up_local_variable(const Context& context, ScopeId local_scope,
                                                SymbolId symbol);
 
+    [[nodiscard]] OptId<ScopeId> parent() const noexcept { return parent_; }
+
     using Entry = ScopeIdMap::Entry;
 
     /// call some functor F for each locally namespace defined in the scope
@@ -119,8 +121,6 @@ class Scope {
             f(e);
         }
     }
-
-    friend class ScopeAnon;
 };
 
 } // namespace hir

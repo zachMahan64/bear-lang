@@ -102,6 +102,7 @@ enum class diag_code : uint8_t {
     invalid_binary_operator,
     compt_expressions_do_not_have_addrs_so_no_ptrs,
     value_is_not_a_pointer,
+    id_does_not_name_a_method_of,
 
     count, // this must be last,
 

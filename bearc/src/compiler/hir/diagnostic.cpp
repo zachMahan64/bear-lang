@@ -198,6 +198,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
                "not possible";
     case diag_code::value_is_not_a_pointer:
         return "value is not a pointer";
+    case diag_code::id_does_not_name_a_method_of:
+        return "identifer does not name a method of";
     }
     std::unreachable();
     return "";

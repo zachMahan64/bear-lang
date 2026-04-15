@@ -121,11 +121,18 @@ class Context {
     [[nodiscard]] OptId<DefId>
     look_up_scoped_namespace_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 
+    [[nodiscard]] bool scope_has_parent(ScopeId local_scope, ScopeId possible_parent) const;
+
     /// simply looks up a local variable inside some scope and issues a diagnostic if necessary
     /// struct_def must correspond to a Def with value of DefStruct
     /// only returns a DefId if it is a variable definition
     [[nodiscard]] OptId<DefId> look_up_member_var_guarding_hid(const Def& struct_def,
-                                                               SymbolId symbol_id, Span id_span);
+                                                               SymbolId symbol_id, Span id_span,
+                                                               ScopeId local_scope);
+    [[nodiscard]] OptId<DefId> look_up_member_function_guarding_hid(const Def& struct_def,
+                                                                    SymbolId symbol_id,
+                                                                    Span id_span,
+                                                                    ScopeId local_scope);
 
     [[nodiscard]] bool defined_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 

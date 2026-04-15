@@ -371,10 +371,12 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     } else {
         call_expr->expr.fn_call.is_generic = false;
     }
-    token_t* lparen = parser_expect_token(p, TOK_LPAREN); // already verfied legit
+    token_t* lparen = parser_expect_token(p, TOK_LPAREN); // should be verfied legit
+    if (!lparen) {
+        return parser_sync_expr(p);
+    }
     call_expr->type = AST_EXPR_FN_CALL;
     call_expr->expr.fn_call.left_expr = lhs;
-    call_expr->expr.fn_call.left_paren = lparen;
 
     spill_arr_ptr_t args;
     spill_arr_ptr_init(&args);
@@ -390,8 +392,6 @@ ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
     if (!rparen) {
         return parser_sync_expr(p);
     }
-    call_expr->expr.fn_call.right_paren = rparen;
-
     call_expr->expr.fn_call.args = parser_freeze_expr_spill_arr(p, &args);
 
     call_expr->first = call_expr->expr.fn_call.left_expr->first;
