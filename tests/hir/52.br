@@ -1,5 +1,7 @@
 // tests/hir/52.br
 
+// more compt duck-typing demo
+
 mod demo;
 
 compt str not_conv_str = "not convertible to str";
@@ -15,6 +17,8 @@ compt fn str(var from) -> str => {
 struct Foo {
     i32 a;
     compt mt to_str() => "Foo {.a = " + self.a as str + " }"
+    hid compt mt my_hid_mt() => (0)
+    hid u8 b = 12;
 }
 
 compt Foo foo = Foo{.a = 42};
@@ -24,3 +28,25 @@ var _0 = @static_assert @defined(Foo..to_str); // fine
 var _1 = @static_assert @defined(foo.to_str); // fine 
 
 var _2 = @static_assert @defined(foo); // fine 
+
+var _3 = @static_assert @defined(foo.my_hid_mt); // oops, hid
+
+var _4 = @static_assert @defined(foo.b); // oops, hid
+
+struct Boo {
+    Bar bar = Bar {};
+    struct Bar {
+        u8 b = 12;
+    }
+    pub compt mt to_str() => { self.bar.b as str }
+}
+
+use Boo..Bar;
+
+compt Boo boo = Boo{};
+
+var _5 = @static_assert @defined(boo.bar.b);
+
+var _6 = @static_assert str(boo) == 12 as str;
+
+var _7 = @static_assert str(boo) == "12";

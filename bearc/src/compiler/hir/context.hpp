@@ -133,6 +133,15 @@ class Context {
                                                                     SymbolId symbol_id,
                                                                     Span id_span,
                                                                     ScopeId local_scope);
+    [[nodiscard]] OptId<DefId> look_up_member_function_no_diag_except_hid(const Def& struct_def,
+                                                                          SymbolId symbol_id,
+                                                                          Span id_span,
+                                                                          ScopeId local_scope);
+
+    [[nodiscard]] OptId<DefId> look_up_member_var_no_diag_except_hid(const Def& struct_def,
+                                                                     SymbolId symbol_id,
+                                                                     Span id_span,
+                                                                     ScopeId local_scope);
 
     [[nodiscard]] bool defined_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 

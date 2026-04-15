@@ -1005,6 +1005,54 @@ OptId<DefId> Context::look_up_member_function_guarding_hid(const Def& struct_def
     return maybe_def;
 }
 
+OptId<DefId> Context::look_up_member_function_no_diag_except_hid(const Def& struct_def,
+                                                                 SymbolId symbol_id, Span id_span,
+                                                                 ScopeId local_scope) {
+    auto maybe_def
+        = Scope::look_up_local_variable(*this, struct_def.as<DefStruct>().scope, symbol_id);
+    if (maybe_def.empty()) {
+        return std::nullopt;
+    }
+    const Def& def = this->def(maybe_def.as_id());
+    if (!def.holds<DefFunction>()) {
+        return std::nullopt;
+    }
+    if (!def.pub && !scope_has_parent(local_scope, struct_def.as<DefStruct>().scope)) {
+        auto d0 = emplace_diagnostic_with_message_value(
+            id_span, diag_code::is_declared_hid, diag_type::error,
+            DiagnosticSymbolBeforeMessage{.sid = symbol_id});
+        auto d1 = emplace_diagnostic_with_message_value(
+            def.span, diag_code::declared_here, diag_type::note,
+            DiagnosticSymbolBeforeMessage{.sid = symbol_id});
+        set_next_diagnostic(d0, d1);
+    }
+    return maybe_def;
+}
+
+OptId<DefId> Context::look_up_member_var_no_diag_except_hid(const Def& struct_def,
+                                                            SymbolId symbol_id, Span id_span,
+                                                            ScopeId local_scope) {
+    auto maybe_def
+        = Scope::look_up_local_variable(*this, struct_def.as<DefStruct>().scope, symbol_id);
+    if (maybe_def.empty()) {
+        return std::nullopt;
+    }
+    const Def& def = this->def(maybe_def.as_id());
+    if (!def.holds<DefVariable>()) {
+        return std::nullopt;
+    }
+    if (!def.pub && !scope_has_parent(local_scope, struct_def.as<DefStruct>().scope)) {
+        auto d0 = emplace_diagnostic_with_message_value(
+            id_span, diag_code::is_declared_hid, diag_type::error,
+            DiagnosticSymbolBeforeMessage{.sid = symbol_id});
+        auto d1 = emplace_diagnostic_with_message_value(
+            def.span, diag_code::declared_here, diag_type::note,
+            DiagnosticSymbolBeforeMessage{.sid = symbol_id});
+        set_next_diagnostic(d0, d1);
+    }
+    return maybe_def;
+}
+
 bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) const {
     ScopeId curr_scope = local_scope;
     while (true) {
@@ -1041,11 +1089,11 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
             if (curr_struct.empty()) {
                 maybe_did = look_up_variable(scope, sid);
             } else {
-                maybe_did = look_up_member_function_guarding_hid(def(curr_struct.as_id()), sid,
-                                                                 id_span, scope);
+                maybe_did = look_up_member_function_no_diag_except_hid(def(curr_struct.as_id()),
+                                                                       sid, id_span, scope);
                 if (maybe_did.empty()) {
-                    maybe_did = look_up_member_var_guarding_hid(def(curr_struct.as_id()), sid,
-                                                                id_span, scope);
+                    maybe_did = look_up_member_var_no_diag_except_hid(def(curr_struct.as_id()), sid,
+                                                                      id_span, scope);
                 }
             }
 
