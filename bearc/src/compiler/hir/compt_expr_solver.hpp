@@ -218,8 +218,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
 
         if (into_tid.has_value() && !into_builtin.has_value()
-            && context.type(into_tid.as_id()).holds<TypeBuiltin>()) {
-            into_builtin = context.type(into_tid.as_id()).as<TypeBuiltin>().type;
+            && context.type(into_tid.as_id()).template holds<TypeBuiltin>()) {
+            into_builtin = context.type(into_tid.as_id()).template as<TypeBuiltin>().type;
         }
 
         std::optional<ExecConst> maybe_value;
@@ -459,11 +459,11 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const auto inffered_tid = maybe_inferred.as_id();
             const auto inffered_type = context.type(inffered_tid);
-            if (!inffered_type.holds<TypeBuiltin>()) {
+            if (!inffered_type.template holds<TypeBuiltin>()) {
                 cannot_conv();
                 return std::nullopt;
             }
-            if (inffered_type.as<TypeBuiltin>().type != into_builtin.value()) {
+            if (inffered_type.template as<TypeBuiltin>().type != into_builtin.value()) {
                 cannot_conv();
                 return std::nullopt;
             }
@@ -816,7 +816,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             break;
         }
         if (maybe_eid.has_value()) {
-            auto eid = maybe_eid.as_id();
+            ExecId eid = maybe_eid.as_id();
             const Type& into_type = context.type(into_tid);
             if (into_type.holds<TypeVar>()) {
                 return eid;
@@ -827,7 +827,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                     == into_type.as<TypeStructure>().definition)) {
                 return eid;
             }
-            auto maybe_inferred_etid = infer_type_from_compt_exec(eid);
+            OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
             if (maybe_inferred_etid.has_value()) {
                 auto inferred_tid = maybe_inferred_etid.as_id();
                 context.emplace_diagnostic_with_message_value(
@@ -1850,10 +1850,11 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const auto param_index = i + mt_param_adjustment;
 
-            OptId<TypeId> maybe_into_tid
-                = (param_index < params.len())
-                      ? OptId<TypeId>{context.def(params.get(param_index)).as<DefVariable>().type}
-                      : std::nullopt;
+            OptId<TypeId> maybe_into_tid = (param_index < params.len())
+                                               ? OptId<TypeId>{context.def(params.get(param_index))
+                                                                   .template as<DefVariable>()
+                                                                   .type}
+                                               : std::nullopt;
 
             OptId<ExecId> maybe_arg_eid = solve_expr(fid, scope, arg, maybe_into_tid);
             if (maybe_arg_eid.empty()) {
@@ -1905,7 +1906,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt; // just in case
         }
 
-        if (context.def(func_did).as<DefFunction>().posioned) {
+        if (context.def(func_did).template as<DefFunction>().posioned) {
             return std::nullopt; // already posioned so don't even try it
         }
 
@@ -1922,7 +1923,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             context.set_next_diagnostic(d0, d1);
 
             // poison before exit to prevent cascading diags
-            context.def(func_did).as<DefFunction>().poison_infinite_recursion();
+            context.def(func_did).template as<DefFunction>().poison_infinite_recursion();
 
             exit_compt_fn();
 
@@ -1955,7 +1956,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         // mark that we're done
         exit_compt_fn();
 
-        if (!context.def(func_did).as<DefFunction>().posioned && maybe_eid.empty()) {
+        if (!context.def(func_did).template as<DefFunction>().posioned && maybe_eid.empty()) {
             context.emplace_diagnostic_with_message_value(
                 Span{context, fid, expr}, diag_code::declared_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = func_symbol});
