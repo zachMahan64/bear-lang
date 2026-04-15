@@ -1707,7 +1707,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
                 return context.emplace_exec(mem_exec_val.value, Span{context, fid, expr}, true);
             }
-            // TODO handle method calls here
             if (rhs_expr->type == AST_EXPR_FN_CALL) {
                 auto struct_scope = struct_def.as<DefStruct>().scope;
                 return solve_fn_call(fid, struct_scope, rhs_expr, lhs_eid); // TODO
