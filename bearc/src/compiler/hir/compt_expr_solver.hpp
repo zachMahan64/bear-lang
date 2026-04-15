@@ -11,6 +11,7 @@
 
 #include "compiler/ast/expr.h"
 #include "compiler/ast/params.h"
+#include "compiler/ast/stmt.h"
 #include "compiler/hir/context.hpp"
 #include "compiler/hir/def.hpp"
 #include "compiler/hir/diagnostic.hpp"
@@ -23,7 +24,6 @@
 #include "def_visitor.hpp"
 #include <cassert>
 #include <cstdint>
-#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -31,8 +31,11 @@ namespace hir {
 template <IsDefVisitor V> class ComptExprSolver {
     Context& context;
     V& def_visitor;
+    HirSize compt_fn_call_depth = 0;
 
   public:
+    static constexpr HirSize MAX_COMPT_CALL_FRAMES = 1000;
+
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
 
     [[nodiscard]] OptId<ExecId> solve_expr(FileId fid, ScopeId scope, const ast_expr_t* expr) {
@@ -197,6 +200,10 @@ template <IsDefVisitor V> class ComptExprSolver {
         return solve_builtin_compt_expr(fid, scope, expr, into_builtin_type, into_tid);
     }
 
+    void enter_compt_fn() { ++compt_fn_call_depth; }
+
+    void exit_compt_fn() { --compt_fn_call_depth; }
+
     [[nodiscard]] OptId<ExecId> solve_builtin_compt_expr(FileId fid, ScopeId scope,
                                                          const ast_expr_t* expr,
                                                          std::optional<builtin_type> into_builtin,
@@ -208,6 +215,12 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         auto visit_def
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
+
+        if (into_tid.has_value() && !into_builtin.has_value()
+            && context.type(into_tid.as_id()).holds<TypeBuiltin>()) {
+            into_builtin = context.type(into_tid.as_id()).as<TypeBuiltin>().type;
+        }
+
         std::optional<ExecConst> maybe_value;
         switch (expr->type) {
         case AST_EXPR_ID: {
@@ -416,13 +429,22 @@ template <IsDefVisitor V> class ComptExprSolver {
             return handle_static_assert(fid, scope, expr);
         case AST_EXPR_DEFINED:
             return handle_defined(fid, scope, expr);
+        case AST_EXPR_LIST_LITERAL:
+        case AST_EXPR_STRUCT_INIT:
+            if (into_builtin.has_value()) {
+                context.emplace_diagnostic_with_message_value(
+                    Span{context, fid, expr}, diag_code::cannot_convert_expression_to_type,
+                    diag_type::error,
+                    DiagnosticTypeAfterMessage{
+                        .tid = context.emplace_type(TypeBuiltin{.type = into_builtin.value()},
+                                                    Span::generated(), false)});
+                return std::nullopt;
+            }
             break;
         case AST_EXPR_SUBSCRIPT:
         case AST_EXPR_FN_CALL:
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
-        case AST_EXPR_LIST_LITERAL:
-        case AST_EXPR_STRUCT_INIT:
         case AST_EXPR_STRUCT_MEMBER_INIT:
         case AST_EXPR_CLOSURE:
         case AST_EXPR_VARIANT_DECOMP:
@@ -1662,8 +1684,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         DefFunction func;
         Span func_span = Span::generated();
         SymbolId func_symbol;
-        uint8_t mt_arg_adjustment = 0;
         uint8_t mt_param_adjustment = 0;
+        OptId<DefId> maybe_func_did{};
 
         if (maybe_self_val.has_value()) {
             const auto self_val = maybe_self_val.as_id();
@@ -1686,7 +1708,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             const SymbolId func_name = context.symbol_id(id_tok);
             const Span fn_name_span{context, fid, id_tok};
 
-            auto maybe_func_did = context.look_up_member_function_guarding_hid(
+            maybe_func_did = context.look_up_member_function_guarding_hid(
                 context.def(exec.as<ExecExprStructInit>().struct_def), func_name, fn_name_span,
                 scope);
             if (maybe_func_did.empty()) {
@@ -1720,7 +1742,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             func_span = func_def.span;
             func_symbol = func_def.name;
-            mt_arg_adjustment = 1;
         } else {
             const ast_expr_t* called = expr->expr.fn_call.left_expr;
             if (called->type != AST_EXPR_ID) {
@@ -1732,8 +1753,8 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const Span called_span{context, fid, id_slice};
 
-            auto maybe_func_did = context.look_up_scoped_variable(
-                scope, context.symbol_slice(id_slice), called_span);
+            maybe_func_did = context.look_up_scoped_variable(scope, context.symbol_slice(id_slice),
+                                                             called_span);
             if (maybe_func_did.empty()) {
                 context.emplace_diagnostic(called_span, diag_code::use_of_undeclared_identifier,
                                            diag_type::error);
@@ -1750,42 +1771,115 @@ template <IsDefVisitor V> class ComptExprSolver {
             func_span = called_def.span;
             func_symbol = called_def.name;
         }
+
+        const auto func_did = maybe_func_did.as_id();
+
         const IdSlice<DefId> params = func.params;
 
         const ast_slice_of_exprs_t exprs = expr->expr.fn_call.args;
+
+        HirSize total_arg_cnt = 0;
+        bool issue = false;
         for (HirSize i = 0; i < exprs.len; i++) {
             const ast_expr_t* arg = exprs.start[i];
-            OptId<ExecId> maybe_arg_eid = solve_expr(fid, scope, arg);
+
+            const auto param_index = i + mt_param_adjustment;
+
+            OptId<TypeId> maybe_into_tid
+                = (param_index < params.len())
+                      ? OptId<TypeId>{context.def(params.get(param_index)).as<DefVariable>().type}
+                      : std::nullopt;
+
+            OptId<ExecId> maybe_arg_eid = solve_expr(fid, scope, arg, maybe_into_tid);
             if (maybe_arg_eid.empty()) {
-                return std::nullopt; // poisoned
+                issue = true;
+            } else {
+                arg_vec.push_back(maybe_arg_eid.as_id());
             }
-            arg_vec.push_back(maybe_arg_eid.as_id());
+            total_arg_cnt++;
         }
 
-        auto adjusted_arg_len = arg_vec.size() - mt_arg_adjustment;
+        auto adjusted_arg_len = total_arg_cnt;
         auto adjusted_param_len = params.len() - mt_param_adjustment;
 
+        OptId<DiagnosticId> maybe_d0{};
         if (adjusted_arg_len != adjusted_param_len) {
 
             auto params_len_sym_id = ExecConst{adjusted_param_len}.to_symbol_id(context);
             auto args_len_sym_id = ExecConst{adjusted_arg_len}.to_symbol_id(context);
 
             Span span_of_interest
-                = adjusted_arg_len < adjusted_param_len
+                = ((adjusted_arg_len < adjusted_param_len) || exprs.len == 0)
                       ? Span{context, fid, expr->last}
                       : Span::combine(Span{context, fid, exprs.start[0]->first},
                                       Span{context, fid, exprs.start[exprs.len - 1]->last});
 
-            context.emplace_diagnostic_with_message_value(
+            maybe_d0 = context.emplace_diagnostic_with_message_value(
                 span_of_interest, diag_code::expected, diag_type::error,
                 DiagnosticSymButGotSym{
                     .leading = func_symbol, .sid1 = params_len_sym_id, .sid2 = args_len_sym_id});
 
+            issue = true;
+        }
+
+        const ast_stmt_t* fn_stmt = context.def_ast_node(func_did);
+        assert(fn_stmt->type == AST_STMT_FN_DECL);
+
+        if (issue) {
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                {context, fid, fn_stmt->stmt.fn_decl.name}, diag_code::declared_here,
+                diag_type::note, DiagnosticSymbolBeforeMessage{.sid = func_symbol});
+            if (maybe_d0.has_value()) {
+                context.set_next_diagnostic(maybe_d0.as_id(), d1);
+            }
+        }
+
+        // final guard before compt exec forward params -> execs
+        if (issue || (arg_vec.size() != params.len())) {
+            return std::nullopt; // just in case
+        }
+
+        // mark that we're starting another call
+        enter_compt_fn();
+        if (compt_fn_call_depth > MAX_COMPT_CALL_FRAMES) {
+            auto d0 = context.emplace_diagnostic_with_message_value(
+                Span{context, fid, expr}, diag_code::only_message_value_is_meaning,
+                diag_type::error, DiagnosticComptStackOverflow{.function_sid = func_symbol});
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                func_span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = func_symbol});
+            context.set_next_diagnostic(d0, d1);
+            exit_compt_fn();
             return std::nullopt;
         }
 
-        // TODO
-        return std::nullopt;
+        ScopeId temp_scope = context.make_compt_func_temp_scope(scope, params.len());
+
+        for (HirSize i = 0; i < params.len(); i++) {
+            const Def& param_def = context.def(params.get(i));
+            assert(param_def.holds<DefVariable>());
+            const DefVariable& param_var = param_def.as<DefVariable>();
+            ExecId eid = arg_vec[i];
+            const auto param = context.register_compt_param(
+                param_def.name, param_def.span, func_did,
+                DefVariable{.type = param_var.type, .compt_value = eid});
+            context.insert_variable(temp_scope, param_def.name, param);
+        }
+
+        const ast_expr_t* body_expr = fn_stmt->stmt.fn_decl.expr;
+
+        const OptId<ExecId> maybe_eid = solve_expr(fid, temp_scope, body_expr, func.return_type);
+
+        // mark that we're done
+        exit_compt_fn();
+
+        if (maybe_eid.empty()) {
+            context.emplace_diagnostic_with_message_value(
+                Span{context, fid, expr}, diag_code::remove, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = func_symbol});
+        }
+
+        return maybe_eid;
     }
 
     [[nodiscard]] OptId<ExecId> try_convert_to(ExecId eid, TypeId tid) {

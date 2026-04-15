@@ -200,7 +200,10 @@ class Context {
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
                                  Span span, ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
 
-    DefId register_compt_param(SymbolId name, Span span, DefId parent);
+    DefId register_compt_param(SymbolId name, Span span, DefId parent,
+                               DefValue value = DefUnevaluated{});
+
+    void insert_variable(ScopeId scope_id, SymbolId sid, DefId did);
 
     // should only be used for types
     [[nodiscard]] IdHashMap<DefId, ScopeId>& defs_to_scopes_for_types();

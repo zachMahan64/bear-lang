@@ -208,6 +208,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "expected";
     case diag_code::free_function_called_as_a_method:
         return "free function declared `fn` called as a method";
+    case diag_code::only_message_value_is_meaning:
+        return "";
     }
     std::unreachable();
     return "";
@@ -654,6 +656,14 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += " arguments but got ";
             str += accent_color_for_type(type);
             str += ctx.symbol_id_to_cstr(d.sid2);
+            str += ansi_bold_reset();
+        },
+        [&](DiagnosticComptStackOverflow d) {
+            str += "maximum call stack size exceeded when calling function `";
+            str += accent_color_for_type(type);
+            str += ctx.symbol_id_to_cstr(d.function_sid);
+            str += ansi_bold_reset();
+            str += "` ";
             str += ansi_bold_reset();
         },
 

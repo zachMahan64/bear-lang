@@ -4,17 +4,17 @@ mod my_mod;
 
 struct Foo {
     i32 a;
-    compt mt mut work() -> i32=> 5 
+    compt mt mut work() -> i32=> 5 // oops
 }
 
 
-compt mt mut Foo..do_work() -> i32=> 10
+compt mt mut Foo..do_work() -> i32=> 10 // oops
 
 compt mt Foo..thing() -> i32 {
     return 12;
 }
 
-compt i32 _0 = Foo{.a = 1}->a;
+compt i32 _0 = Foo{.a = 1}->a; //oops
 
 
 use Foo..Self; // oops, that's no good
@@ -27,6 +27,8 @@ compt mt Bar..foo() -> i32 => -1237
 compt fn Bar..bar() -> u8 => 12
 compt mt Bar..work(i32 a, i32 b, i32 c) -> i32 => a + b + c
 
+compt mt Bar..bar1(u8 a) -> u8 => a + 12
+
 compt Bar bar = Bar{};
 
 compt i32 a = bar.foo(); // fine
@@ -38,3 +40,8 @@ compt i32 c = bar.work(1, 2, 3); // fine
 compt i32 d = bar.work(); // oops
 
 compt i32 e = bar.work(1, 2, 3, 4, 5, 6, 7, 8); // oops
+
+compt i32 f = bar.bar1(-1231); // oops
+
+compt i32 g = bar.bar1(["hello", " ", "world"]); // oops
+

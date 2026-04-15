@@ -429,13 +429,16 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
     return def;
 }
 
-DefId Context::register_compt_param(SymbolId name, Span span, DefId parent) {
-    DefId def
-        = defs.emplace_and_get_id(DefUnevaluated{}, name, true, true, true, false, span, parent);
+DefId Context::register_compt_param(SymbolId name, Span span, DefId parent, DefValue value) {
+    DefId def = defs.emplace_and_get_id(value, name, true, true, true, false, span, parent);
     def_resol_states.bump(Def::resol_state::top_level_visited);
     def_ast_nodes.bump();
     def_mention_states.bump(Def::mention_state::unmentioned);
     return def;
+}
+
+void Context::insert_variable(ScopeId scope_id, SymbolId sid, DefId did) {
+    scopes.at(scope_id).insert_variable(sid, did);
 }
 
 [[nodiscard]] IdHashMap<DefId, ScopeId>& Context::defs_to_scopes_for_types() {

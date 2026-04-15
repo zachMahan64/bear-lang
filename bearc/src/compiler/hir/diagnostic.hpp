@@ -9,7 +9,6 @@
 #ifndef COMPILER_HIR_DIAGNOSTIC_HPP
 #define COMPILER_HIR_DIAGNOSTIC_HPP
 
-#include "compiler/hir/exec.hpp"
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
@@ -108,6 +107,7 @@ enum class diag_code : uint8_t {
     not_a_function,
     expected,
     free_function_called_as_a_method,
+    only_message_value_is_meaning,
 
     count, // this must be last,
 
@@ -167,13 +167,17 @@ struct DiagnosticSymButGotSym {
     SymbolId sid2;
 };
 
+struct DiagnosticComptStackOverflow {
+    SymbolId function_sid;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
                    DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
                    DiagnosticTypeAndTypeForBinaryOp, DiagnosticIdentifierBeforeMessageAndTypeAfter,
-                   DiagnosticSymButGotSym>;
+                   DiagnosticSymButGotSym, DiagnosticComptStackOverflow>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;

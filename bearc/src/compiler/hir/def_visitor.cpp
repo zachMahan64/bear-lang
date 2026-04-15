@@ -100,7 +100,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
             span.file_id, scope, stmt->stmt.var_decl.type, needs_layout_info());
         if (!maybe_type.has_value()) {
-            return did;
+            goto cleanup;
         }
         // compt =/= mut guard
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
@@ -118,13 +118,13 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
             span.file_id, scope, stmt->stmt.var_init_decl.type, needs_layout_info());
         if (!maybe_type.has_value()) {
-            return did; // maybe set a special value to indicate error differently
+            goto cleanup; // maybe set a special value to indicate error differently
         }
         if (def.compt && TypeTransformer<TypeContainsVar>{context}(maybe_type.as_id())) {
             context.emplace_diagnostic(context.type(maybe_type.as_id()).span,
                                        diag_code::compt_variable_should_have_an_explicit_type,
                                        diag_type::error);
-            return did;
+            goto cleanup;
         }
         // compt =/= mut guard
         check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
@@ -141,7 +141,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                            diag_code::even_non_compt_top_levels_need_compt_init,
                                            diag_type::note, DiagnosticInfoNoPreview{});
             }
-            return did;
+            goto cleanup;
         }
         break;
     }
@@ -149,7 +149,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         auto strct = stmt->stmt.struct_decl;
         // delay resolution/instantiation until specialization
         if (strct.is_generic) {
-            return did;
+            goto cleanup;
         }
         IdSlice<DefId> ordered_defs = context.ordered_defs_for(did);
         // visit each orderer member (variable), since the struct is actually dependent on those
@@ -218,12 +218,12 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     }
     case AST_STMT_DEFTYPE: {
         if (stmt->stmt.deftype.aliased_type_expr->type != AST_EXPR_TYPE) {
-            return did; // already malformed during parsing
+            goto cleanup; // already malformed during parsing
         }
         OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
             span.file_id, scope, stmt->stmt.deftype.aliased_type_expr->expr.type_expr.type);
         if (!maybe_type.has_value()) {
-            return did;
+            goto cleanup;
         }
 
         def.set_value(DefDeftype{.type = maybe_type.as_id()});
@@ -332,6 +332,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_INVALID:
         break;
     }
+cleanup:
+    context.relinquish_temp_scopes();
     return did;
 }
 
