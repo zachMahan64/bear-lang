@@ -61,7 +61,8 @@ main quest
         - [x] ban `compt mt mut` funcs
         - [x] add compt member calls: `foo.bar()` 
     - [ ] handle proper short-circuiting of `||` and `&&` at compt
-    - [ ] compt subscripts and list equalities: `foo[1] and [1, 2] == [1, 2]`
+    - [ ] compt subscripts and list equalities: `foo[1] and [1, 2] == [1, 2]` (bound check)
+    - [ ] subscripts on compt strings (bound check)
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive

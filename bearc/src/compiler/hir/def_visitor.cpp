@@ -147,6 +147,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 context.set_next_diagnostic(d0, d1);
             }
         }
+        // TODO only issue this if expr is a valid run-time statement, but not compt statement
         if (!maybe_compt_exec.has_value()) {
             if (!def.compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
                 context.emplace_diagnostic(def.span,
