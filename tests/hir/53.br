@@ -1,0 +1,59 @@
+// tests/hir/53.br
+
+fn square(var a) => a * a
+
+struct Foo {
+    i32 a_;
+    mt a() -> i32 => self.a_
+    mt set_a(i32 new_a) -> void => self.a_ = new_a // oops
+    fn combine(Self a, Self b) => Self{.a_ = (a.a_ + b.a_)}
+    
+    fn new(i32 a) => Self{.a_ = a}
+}
+
+var a = 123 as u32;
+
+var _0 = @static_assert square(2) > 1; // fine
+
+var _1 = @static_assert square(a) > 100; //oops
+
+compt bool _2 = @static_assert Foo{.a_ = 1}.a() == 1; // fine
+
+compt bool _3 = Foo{.a_ = 1}.set_a(3); // oops
+
+compt Foo foo0 = Foo{.a_ = 3, .b = 12}; // oops
+
+compt Foo foo = Foo{.a_ = 3}; // fine
+
+compt bool _4 = @static_assert Foo{.a_ = 3}.a() == foo.a(); // fine
+
+compt bool _5 = @static_assert (Foo{.a_ = 3}.a_ == foo.a_) && (foo.a_ == foo.a()); // fine
+
+compt bool _6 =  @static_assert Foo..combine(foo, foo).a() == 6; // fine
+
+compt bool _7 =  @static_assert Foo..combine(foo, foo).a() == 12; // oops
+
+compt Foo comb = Foo..combine(Foo..new(9), Foo..new(11));
+
+compt bool _8 = @static_assert comb.a() == 20; // fine
+
+compt bool _9 = @static_assert comb.a() == 19; // oops
+
+
+struct Bar {
+    &i32 a;
+}
+
+compt Bar bar = Bar{.a = 12}; // fine
+
+compt *i32 boo = 123; // oops
+
+compt i32 benn = 12;
+
+compt *i32 boo1 = &benn; // oops
+
+compt &i32 boo2 = &benn; // fine
+
+var _10 = @static_assert boo2 == 12;
+
+var _11 = @static_assert boo2 == 13; // oops

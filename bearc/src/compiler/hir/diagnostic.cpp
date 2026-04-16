@@ -218,6 +218,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "value is a compile-time constant";
     case diag_code::called_here:
         return "called here";
+    case diag_code::pointers_are_not_assignable_at_compt:
+        return "pointers are not assignable at compile-time";
+    case diag_code::compt_values_cannot_be_mut_borrowed:
+        return "compile-time values cannot be mutably borrowed";
     }
     std::unreachable();
     return "";

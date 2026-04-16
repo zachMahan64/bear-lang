@@ -112,6 +112,8 @@ enum class diag_code : uint8_t {
     compile_time_constant_cannot_be_moved,
     value_is_a_compile_time_constant,
     called_here,
+    pointers_are_not_assignable_at_compt,
+    compt_values_cannot_be_mut_borrowed,
 
     count, // this must be last,
 

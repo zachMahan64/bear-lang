@@ -118,7 +118,7 @@ typedef struct ast_expr_unary {
 
 typedef struct ast_expr_borrow {
     ast_expr_t* borrowed;
-    bool mut;
+    token_t* mut;
 } ast_expr_borrow_t;
 
 typedef struct ast_expr_struct_member_init {

@@ -24,8 +24,6 @@
 #include "def_visitor.hpp"
 #include <cassert>
 #include <cstdint>
-#include <iostream>
-#include <iso646.h>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -136,7 +134,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, maybe_into_tid);
         }
 
-        auto into_tid = maybe_into_tid.as_id();
+        const Type& orig_can_be_ref = context.type(maybe_into_tid.as_id());
+        const auto into_tid = context.try_decay_ref(maybe_into_tid.as_id());
         const Type& into_type = context.type(into_tid);
 
         // `var` provided as type, so try to infer
@@ -156,21 +155,21 @@ template <IsDefVisitor V> class ComptExprSolver {
             return solve_builtin_compt_expr(fid, scope, expr, std::nullopt, into_tid);
         }
 
+        if (orig_can_be_ref.holds<TypeRef>() && expr->type == AST_EXPR_BORROW) {
+            return solve_expr_borrow(fid, scope, expr, into_tid);
+        }
+
         // try to solve str& at comptime
-        if (into_type.holds<TypeRef>()) {
-            auto inner_tid = into_type.as<TypeRef>().inner;
+        if (into_type.holds<TypePtr>()) {
+            auto inner_tid = into_type.as<TypePtr>().inner;
             auto inner = context.type(inner_tid);
-            if (inner.template holds<TypeBuiltin>()
-                && inner.template as<TypeBuiltin>().type == builtin_type::str) {
-                return solve_builtin_compt_expr(fid, scope, expr, builtin_type::str, into_tid);
-            }
-            auto did0 = context.emplace_diagnostic(
-                into_type.span, diag_code::type_is_not_resolvable_at_compt, diag_type::error);
+            auto d0 = context.emplace_diagnostic(
+                into_type.span, diag_code::pointers_are_not_assignable_at_compt, diag_type::error);
             if (inner.template holds_any_of<TypeStructure, TypeBuiltin>()) {
-                auto did1 = context.emplace_diagnostic_with_message_value(
+                auto d1 = context.emplace_diagnostic_with_message_value(
                     into_type.span, diag_code::replace_with, diag_type::help,
                     DiagnosticTypeAfterMessage{.tid = inner_tid});
-                context.set_next_diagnostic(did0, did1);
+                context.set_next_diagnostic(d0, d1);
             }
             return std::nullopt;
         }
@@ -1351,6 +1350,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return handle_list_literal(fid, scope, expr, maybe_into_tid);
         case AST_EXPR_COMPT:
             return solve_expr(fid, scope, expr->expr.compt_expr.inner, maybe_into_tid);
+        case AST_EXPR_BORROW:
         case AST_EXPR_LITERAL:
         case AST_EXPR_BINARY:
         case AST_EXPR_GROUPING:
@@ -1360,7 +1360,6 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_FN_CALL:
         case AST_EXPR_DEFINED:
         case AST_EXPR_TYPE:
-        case AST_EXPR_BORROW:
         case AST_EXPR_STRUCT_INIT:
         case AST_EXPR_STRUCT_MEMBER_INIT:
         case AST_EXPR_CLOSURE:
@@ -1999,6 +1998,18 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
         return context.emplace_exec(ExecConst{conv.value()}, exec.span, exec.compt);
+    }
+    [[nodiscard]] OptId<ExecId> solve_expr_borrow(FileId fid, ScopeId scope, const ast_expr_t* expr,
+                                                  OptId<TypeId> maybe_into_tid) {
+        assert(expr->type == AST_EXPR_BORROW);
+
+        if (expr->expr.borrow.mut) {
+            context.emplace_diagnostic(Span{context, fid, expr->expr.borrow.mut},
+                                       diag_code::compt_values_cannot_be_mut_borrowed,
+                                       diag_type::error);
+        }
+
+        return solve_expr(fid, scope, expr->expr.borrow.borrowed, maybe_into_tid);
     }
 };
 } // namespace hir

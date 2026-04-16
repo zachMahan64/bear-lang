@@ -145,6 +145,12 @@ class Context {
 
     [[nodiscard]] bool defined_bypassing_visibility(ScopeId scope, IdSlice<SymbolId> id_slice);
 
+    /// checks if a provided SymbolId slice correpsonds to an existent value or defintion
+    /// scope - the scope within which to search for the definition
+    /// id_slice - the identifer to search for
+    /// id_span - span corresponding to the used ID for diagnostic purposes
+    /// member - true: identifer is a structured member (e.g. `foo.bar.a`); false: identifer is a
+    /// scope identifier (e.g. `foo..Foo..Bar`)
     [[nodiscard]] bool defined(ScopeId scope, IdSlice<SymbolId> id_slice, Span id_span,
                                bool member);
 
