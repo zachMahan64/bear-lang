@@ -37,20 +37,21 @@
 #define BEARCC "unknown compiler"
 #endif
 
+#ifdef NDEBUG
+#define BUILD_TYPE "(release)"
+#else
+#define BUILD_TYPE "(debug)"
+#endif
+
 #define BEARC_VERSION_FALLBACK "unversioned"
 
 #ifdef BEARC_VERSION
-#define BEARC_VERSION_STR BEARC_VERSION " " BEARC_ARCH
+#define BEARC_VERSION_STR                                                                          \
+    BEARC_VERSION " " BUILD_TYPE " " BEARC_ARCH " (" __DATE__ ", " __TIME__ ")"
 #else
-
-#ifdef NDEBUG
-#define BUILD_TYPE "release build"
-#else
-#define BUILD_TYPE "debug build"
-#endif
 
 #define BEARC_VERSION_STR                                                                          \
-    BEARC_VERSION_FALLBACK " " BUILD_TYPE " compiled on " BEARCC " (" __DATE__ ", " __TIME__       \
-                           ") " BEARC_ARCH
+    BEARC_VERSION_FALLBACK " " BUILD_TYPE " " BEARC_ARCH " (" __DATE__ ", " __TIME__ ")"
+
 #endif
 #endif
