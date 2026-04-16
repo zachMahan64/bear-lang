@@ -1816,8 +1816,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return context.emplace_exec(mem_exec_val.value, Span{context, fid, expr}, true);
             }
             if (rhs_expr->type == AST_EXPR_FN_CALL) {
-                auto struct_scope = struct_def.as<DefStruct>().scope;
-                return solve_fn_call(fid, struct_scope, rhs_expr, lhs_eid);
+                return solve_fn_call(fid, scope, rhs_expr, lhs_eid);
             }
             context.emplace_diagnostic(Span{context, fid, expr},
                                        diag_code::value_does_not_refer_to_a_named_mem,
@@ -2030,7 +2029,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         const ast_stmt_t* fn_stmt = context.def_ast_node(func_did);
         assert(fn_stmt->type == AST_STMT_FN_DECL);
 
-        if (issue) {
+        if (!func.poisoned() && issue) {
             auto d1 = context.emplace_diagnostic_with_message_value(
                 {context, fid, fn_stmt->stmt.fn_decl.name}, diag_code::declared_here,
                 diag_type::note, DiagnosticSymbolBeforeMessage{.sid = func_symbol});

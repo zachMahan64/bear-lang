@@ -293,9 +293,11 @@ ast_type_t* parse_type_decay(parser_t* p) {
     if (!parser_expect_token(p, TOK_DECAY)) {
         return parser_sync_type(p);
     }
-    parser_expect_token(p, TOK_LPAREN);
+    token_t* lparen = parser_match_token(p, TOK_LPAREN);
     ast_type_t* inner = parse_type(p);
-    parser_expect_token(p, TOK_RPAREN);
+    if (lparen) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
     outer->type.decay.inner = inner;
     bool valid = true;
     if (outer->type.decay.inner->tag == AST_TYPE_INVALID) {
