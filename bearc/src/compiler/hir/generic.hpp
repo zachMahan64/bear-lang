@@ -31,13 +31,13 @@ struct GenericParam : NodeWithVariantValue<GenericParam> {
 class Context;
 
 // TODO implement
-class CanonicalGenericArgsTable {
+class CanonicalComptArgsTable {
     struct Entry {
-        GenericArgIdSliceId key_id;
-        CanonicalGenericArgsId val;
+        ComptArgIdSliceId key_id;
+        CanonicalComptArgsId val;
         size_t hash;
         Entry* next;
-        Entry(GenericArgIdSliceId key_id, CanonicalGenericArgsId val, size_t hash, Entry* next)
+        Entry(ComptArgIdSliceId key_id, CanonicalComptArgsId val, size_t hash, Entry* next)
             : key_id(key_id), val(val), hash(hash), next(next) {}
     };
     static constexpr size_t DEFAULT_CAP = 128;
@@ -51,18 +51,18 @@ class CanonicalGenericArgsTable {
     size_t capacity;
 
     void rehash(size_t new_capacity);
-    bool same_structure(GenericArgIdSliceId tid1, GenericArgIdSliceId tid2) const;
+    bool same_structure(ComptArgIdSliceId tid1, ComptArgIdSliceId tid2) const;
     size_t hash(TypeId type) const;
     static size_t index(size_t hash, size_t cap);
     static void put_new_head_on_chain(Entry** chain, Entry* new_entry);
     // only use after at returns none to avoid duplicate inserts
-    void insert(TypeId tid, CanonicalGenericArgsId cid);
+    void insert(TypeId tid, CanonicalComptArgsId cid);
 
   public:
-    CanonicalGenericArgsTable(Context& context, DataArena& arena, HirSize capacity)
+    CanonicalComptArgsTable(Context& context, DataArena& arena, HirSize capacity)
         : context{context}, arena{arena}, capacity{capacity} {}
-    OptId<CanonicalGenericArgsId> at(GenericArgIdSliceId tid) const;
-    [[nodiscard]] CanonicalGenericArgsId canonical(GenericArgIdSliceId tid);
+    OptId<CanonicalComptArgsId> at(ComptArgIdSliceId tid) const;
+    [[nodiscard]] CanonicalComptArgsId canonical(ComptArgIdSliceId tid);
 };
 
 } // namespace hir

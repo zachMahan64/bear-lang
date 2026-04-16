@@ -94,8 +94,8 @@ Context::Context(const bearc_args_t& args, instances instances)
       canonical_generic_args_to_first_instance{DEFAULT_CANONICAL_GEN_ARGS_CAP},
       generic_arg_id_slices{DEFAULT_CANONICAL_GEN_ARGS_CAP},
       canonical_generic_args_table_arena{DEFAULT_CANONICAL_GEN_ARGS_ARENA_CAP},
-      canonical_generic_args_table{*this, canonical_generic_args_table_arena,
-                                   DEFAULT_CANONICAL_GEN_ARGS_CAP},
+      canonical_compt_args_table{*this, canonical_generic_args_table_arena,
+                                 DEFAULT_CANONICAL_GEN_ARGS_CAP},
       diagnostics{DEFAULT_DIAG_NUM}, diagnostics_used{DEFAULT_DIAG_NUM},
       only_one_context_instance((instances == instances::one) && one_instance_status), args{args},
       compact_diagnostics(args.flags[CLI_FLAG_COMPACT_DIAGS]) {
