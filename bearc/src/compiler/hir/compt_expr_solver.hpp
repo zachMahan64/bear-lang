@@ -1685,14 +1685,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             auto lhs_eid = maybe_lhs.as_id();
             const Exec& lhs_exec = context.exec(lhs_eid);
-            if (!lhs_exec.holds<ExecExprStructInit>()) {
-                context.emplace_diagnostic(
-                    lhs_exec.span, diag_code::value_not_a_struct, diag_type::error,
-                    DiagnosticSubCode{.sub_code = diag_code::is_not_a_struct});
-                return std::nullopt;
-            }
-            const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
-            const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def);
 
             if (maybe_bin_op.as<access_op>() == access_op::rarrow) {
                 Span op_span{context, fid, expr->expr.binary.op};
@@ -1710,6 +1702,37 @@ template <IsDefVisitor V> class ComptExprSolver {
                 context.set_next_diagnostic(d1, d2);
                 return std::nullopt; // poisoned
             }
+
+            const ast_expr_t* rhs = expr->expr.binary.rhs;
+
+            auto matches_len_builtin = [this](token_ptr_slice_t id_slice) {
+                return id_slice.len == 1
+                       && context.symbol_id(id_slice.start[0]) == context.symbol_id<"len">();
+            };
+
+            if (lhs_exec.holds<ExecExprListLiteral>() && rhs->type == AST_EXPR_ID) {
+                const auto id_slice = rhs->expr.id.slice;
+                if (matches_len_builtin(id_slice)) {
+                    return solve_list_len(lhs_exec, Span{context, fid, id_slice});
+                }
+            }
+
+            if (lhs_exec.holds<ExecConst>() && lhs_exec.as<ExecConst>().holds<SymbolId>()
+                && rhs->type == AST_EXPR_ID) {
+                const auto id_slice = rhs->expr.id.slice;
+                if (matches_len_builtin(id_slice)) {
+                    return solve_str_len(lhs_exec, Span{context, fid, id_slice});
+                }
+            }
+
+            if (!lhs_exec.holds<ExecExprStructInit>()) {
+                context.emplace_diagnostic(
+                    lhs_exec.span, diag_code::value_not_a_struct, diag_type::error,
+                    DiagnosticSubCode{.sub_code = diag_code::is_not_a_struct});
+                return std::nullopt;
+            }
+            const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
+            const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def);
 
             Span rhs_span{context, fid, rhs_expr};
             if (rhs_expr->type == AST_EXPR_ID) {
@@ -1746,7 +1769,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             if (rhs_expr->type == AST_EXPR_FN_CALL) {
                 auto struct_scope = struct_def.as<DefStruct>().scope;
-                return solve_fn_call(fid, struct_scope, rhs_expr, lhs_eid); // TODO
+                return solve_fn_call(fid, struct_scope, rhs_expr, lhs_eid);
             }
             context.emplace_diagnostic(Span{context, fid, expr},
                                        diag_code::value_does_not_refer_to_a_named_mem,
@@ -2124,6 +2147,17 @@ template <IsDefVisitor V> class ComptExprSolver {
                                                       diag_code::remove, diag_type::error,
                                                       DiagnosticTypeAfterMessage{.tid = tid});
         return std::nullopt;
+    }
+    [[nodiscard]] OptId<ExecId> solve_list_len(const Exec& list_exec, Span len_span) {
+        assert(list_exec.holds<ExecExprListLiteral>());
+        return context.emplace_exec(ExecConst{list_exec.as<ExecExprListLiteral>().len()},
+                                    Span::combine(list_exec.span, len_span), true);
+    }
+    [[nodiscard]] OptId<ExecId> solve_str_len(const Exec& str_exec, Span len_span) {
+        assert(str_exec.holds<ExecConst>() && str_exec.as<ExecConst>().holds<SymbolId>());
+        return context.emplace_exec(
+            ExecConst{context.symbol(str_exec.as<ExecConst>().as<SymbolId>()).size()},
+            Span::combine(str_exec.span, len_span), true);
     }
 };
 } // namespace hir

@@ -1,0 +1,41 @@
+// tests/hir/55.br
+
+fn streq(&str a, &str b) => a == b 
+
+fn streq_at(&str a, &mut str b, usize at) => a[at] == b[at]
+
+var _0 = @static_assert streq("foo", "foo"); // fine
+
+var _1 = @static_assert streq("foo", "foobar"); // oops
+
+var _2 = @static_assert streq_at("foo", "foo", 2); // fine
+
+var _3 = @static_assert streq_at("fobooo", "foa", 2); // oops
+
+var _4 = @static_assert [1, 2].len == 2; // fine
+
+var _5 = @static_assert [1, 2, 3, 4].len == 3; // oops
+
+var _6 = @static_assert [1, 2, 3, 4].len() == 3; // oops, don't call len
+
+var _7 = @static_assert "foo".len == 3;
+
+var _8 = @static_assert "foo".len == 0; // oops
+
+fn list_eq_str_helper(&str s, var list, i32 i) => {
+    true if (i == s.len) 
+        else ((s[i] == list[i]) && list_eq_str_helper(s, list, i + 1))
+}
+
+fn list_eq_str(&str s, var list) => {
+    false if (list.len != s.len) 
+        else list_eq_str_helper(s, list, 0)
+}
+
+var _9 = @static_assert list_eq_str("foo", ['f', 'o', 'o']); // fine
+
+var _10 = @static_assert list_eq_str("foo", ['f', 'o', 'b']); // oops
+
+var _11 = @static_assert list_eq_str("foo", ['f', 'o']); // oops
+
+var _12 = @static_assert list_eq_str("foo", ['f', 'o', 't', 'z', 'z']); // oops

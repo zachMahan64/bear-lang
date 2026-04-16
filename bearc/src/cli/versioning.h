@@ -29,6 +29,14 @@
 
 #endif
 
+#if defined(__clang__)
+#define BEARCC "clang"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define BEARCC "gcc"
+#else
+#define BEARCC "unknown compiler"
+#endif
+
 #define BEARC_VERSION_FALLBACK "unversioned"
 
 #ifdef BEARC_VERSION
@@ -42,6 +50,7 @@
 #endif
 
 #define BEARC_VERSION_STR                                                                          \
-    BEARC_VERSION_FALLBACK " " BUILD_TYPE " (" __DATE__ ", " __TIME__ ") " BEARC_ARCH
+    BEARC_VERSION_FALLBACK " " BUILD_TYPE " compiled on " BEARCC " (" __DATE__ ", " __TIME__       \
+                           ") " BEARC_ARCH
 #endif
 #endif
