@@ -2334,10 +2334,12 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
         for (HirSize i = 0; i < s1.member_inits.len(); i++) {
-            const auto e1
-                = context.exec(s1.member_inits.get(i)).as<ExecExprStructMemberInit>().value;
-            const auto e2
-                = context.exec(s2.member_inits.get(i)).as<ExecExprStructMemberInit>().value;
+            const auto e1 = context.exec(s1.member_inits.get(i))
+                                .template as<ExecExprStructMemberInit>()
+                                .value;
+            const auto e2 = context.exec(s2.member_inits.get(i))
+                                .template as<ExecExprStructMemberInit>()
+                                .value;
             const OptId<ExecId> eid = solve_binary_compt_exec(e1, binary_op::bool_equal, e2);
             if (eid.empty()) {
                 return std::nullopt;
