@@ -61,28 +61,25 @@ main quest
         - [x] ban `compt mt mut` funcs
         - [x] add compt member calls: `foo.bar()` 
     - [ ] handle proper short-circuiting of `||` and `&&` at compt
-    - [ ] compt subscripts and list equalities: `foo[1] and [1, 2] == [1, 2]` (bound check)
-    - [ ] subscripts on compt strings (bound check)
+    - [ ] compt list equalities: `[1, 2] == [1, 2]` (elem type, then len, then elems)
+    - [x] subscripts on compt lists and strings (bound check)
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive
             - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
             - [ ] if feasible, add range checking
 
-- [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions 
+- [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
+    - generic params become either deftypes to type args or simply compt variables for expression value args 
 
-- [ ] use canonical generic args canonicalization to memoize compt function args -> values
+- [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
 
-- [ ] `ast_type_t*` lowering to `hir::Type` (requires exprs for array subscripts and generic args)
+- [ ] `ast_type_t*` lowering to for generic `hir::Type`s 
         - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything
 
-- [ ] `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
-    - [ ] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
-
-- [ ] allow for passing insertion of `ast_generic_args_t*` -> into scope (variables and types)
-
-- [ ] properly handle default field values in structs   
+- [ ] fule `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
+    - [x] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
 
 - [ ] see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
     1. map to an already instatiated specialized, concrete instance of the def, or:
@@ -94,7 +91,7 @@ main quest
 
 ##### hir phase 2.b:
 - [ ] function body resolution 
-- [ ] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
+- [x] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
     - note: already working for arbitrarily scoped modules, types, and variables
 - [ ] move checker
 

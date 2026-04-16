@@ -679,6 +679,16 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += "` ";
             str += ansi_bold_reset();
         },
+        [&](DiagnosticIdxOutOfBounds d) {
+            str += "index with value ";
+            str += accent_color_for_type(type);
+            str += ctx.symbol(d.idx_sid);
+            str += ansi_bold_reset();
+            str += " is out of bounds for ordered value with length ";
+            str += ansi_bold_cyan();
+            str += ctx.symbol_id_to_cstr(d.length_sid);
+            str += ansi_bold_reset();
+        },
 
     };
     std::visit(vs, message_value);

@@ -225,6 +225,9 @@ FileAstId Context::emplace_ast(const char* file_name) {
 const char* Context::symbol_id_to_cstr(SymbolId id) const {
     return this->symbols.cat(id).sv().data();
 }
+
+std::string_view Context::symbol(SymbolId id) const { return this->symbols.cat(id).sv(); }
+
 /**
  * updates the slice storing the importers for an importee
  */

@@ -177,13 +177,18 @@ struct DiagnosticComptStackOverflow {
     SymbolId function_sid;
 };
 
+struct DiagnosticIdxOutOfBounds {
+    SymbolId idx_sid;
+    SymbolId length_sid;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
                    DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
                    DiagnosticTypeAndTypeForBinaryOp, DiagnosticIdentifierBeforeMessageAndTypeAfter,
-                   DiagnosticSymButGotSym, DiagnosticComptStackOverflow>;
+                   DiagnosticSymButGotSym, DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;

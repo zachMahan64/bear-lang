@@ -230,7 +230,14 @@ class Context {
     [[nodiscard]] ExecId emplace_exec(const ExecValue& value, Span span, bool should_be_compt);
 
     // ----- info viewing ------
+
+    /// get the c-string corresponding to a SymbolId
+    /// - this is guranteed to be null-terminated
     [[nodiscard]] const char* symbol_id_to_cstr(SymbolId id) const;
+
+    // gets the std::string_view associated with a SymbolId
+    /// - this is guranteed to be null-terminated
+    [[nodiscard]] std::string_view symbol(SymbolId id) const;
 
     // ------ transformers -----
     void explore_imports(FileId root_id);
