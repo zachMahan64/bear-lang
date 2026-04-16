@@ -1725,6 +1725,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
             }
 
+            // be helpful if we do this:
+            // [1, 2, 3].len() => should be just `len`
+            // "123123123".len() => should be just `len`
             if (((lhs_exec.holds<ExecExprListLiteral>())
                  || (lhs_exec.holds<ExecConst>() && lhs_exec.as<ExecConst>().holds<SymbolId>()))
                 && rhs->type == AST_EXPR_FN_CALL
