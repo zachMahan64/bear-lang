@@ -21,6 +21,7 @@
 #include "compiler/hir/scope.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/type.hpp"
+#include "compiler/parser/token_eaters.h"
 #include "compiler/token.h"
 #include "utils/ansi_codes.h"
 #include "utils/data_arena.hpp"
