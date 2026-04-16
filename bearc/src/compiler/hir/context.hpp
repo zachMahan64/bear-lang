@@ -229,6 +229,8 @@ class Context {
     }
     [[nodiscard]] ExecId emplace_exec(const ExecValue& value, Span span, bool should_be_compt);
 
+    [[nodiscard]] ExecId emplace_compt_exec(const ExecValue& value, Span span);
+
     // ----- info viewing ------
 
     /// get the c-string corresponding to a SymbolId

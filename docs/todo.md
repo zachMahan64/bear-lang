@@ -60,7 +60,7 @@ main quest
     - [x] add lowering of pure expr functions 
         - [x] ban `compt mt mut` funcs
         - [x] add compt member calls: `foo.bar()` 
-    - [ ] handle proper short-circuiting of `||` and `&&` at compt
+    - [x] handle proper short-circuiting of `||` and `&&` at compt
     - [ ] generalize solving booleqs 
         - [ ] compt list equalities: `[1, 2] == [1, 2]` (elem type, then len, then elems)
         - [ ] struct equalities, at least ExecId-wise, for now 

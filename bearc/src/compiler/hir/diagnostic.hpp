@@ -115,6 +115,8 @@ enum class diag_code : uint8_t {
     pointers_are_not_assignable_at_compt,
     compt_values_cannot_be_mut_borrowed,
     cannot_evaluate_non_pure_expr_fn_at_compt,
+    cannot_access_a_member_value,
+    tried_to_call_property,
 
     count, // this must be last,
 

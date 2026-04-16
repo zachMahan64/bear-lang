@@ -224,6 +224,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "compile-time values cannot be mutably borrowed";
     case diag_code::cannot_evaluate_non_pure_expr_fn_at_compt:
         return "cannot evaluate non-pure expression function at compile-time";
+    case diag_code::cannot_access_a_member_value:
+        return "cannot access a member value";
+    case diag_code::tried_to_call_property:
+        return "tried to call property";
     }
     std::unreachable();
     return "";

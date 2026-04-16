@@ -1,0 +1,19 @@
+// hir/tests/56.br
+
+// testing short circuiting
+
+compt fn always_a(i32 a) => a if true || a || (a == 0) else short(a - 1) // this doesn't get evaluated
+
+compt fn always_a1(i32 a) => short(a) if false && a && (a == 0) else a // happy doesn't get evaluated
+
+compt fn always_0(i32 a) => a if a == 0 else always_0(a - 1)
+
+var _0 = @static_assert always_a(12) == 12; // fine
+
+var _1 = @static_assert always_0(12) == 0; // fine 
+
+var _2 = @static_assert always_0(12) == 0 || false; // fine 
+
+var _3 = @static_assert always_a1(12) == 12; // fine 
+
+var _4 = @static_assert always_a1(12) != 12; // oops

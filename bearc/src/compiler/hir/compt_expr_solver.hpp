@@ -1652,9 +1652,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (maybe_bin_op.holds<InvalidOp>()) {
             cooked = true;
         } else if (maybe_bin_op.holds<assign_op>()) {
-            auto d0 = context.emplace_diagnostic(
-                Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
-                diag_code::cannot_mutate_compt_const, diag_type::error);
+            auto d0 = context.emplace_diagnostic(Span(context, fid, expr->expr.binary.op),
+                                                 diag_code::cannot_mutate_compt_const,
+                                                 diag_type::error);
             OptId<ExecId> maybe_eid = solve_expr(fid, scope, expr->expr.binary.lhs);
             if (maybe_eid.has_value()) {
                 auto d1 = context.emplace_diagnostic(Span{context, fid, expr->expr.binary.lhs},
@@ -1725,10 +1725,32 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
             }
 
+            if (((lhs_exec.holds<ExecExprListLiteral>())
+                 || (lhs_exec.holds<ExecConst>() && lhs_exec.as<ExecConst>().holds<SymbolId>()))
+                && rhs->type == AST_EXPR_FN_CALL
+                && rhs->expr.fn_call.left_expr->type == AST_EXPR_ID) {
+                const auto id_slice = rhs->expr.fn_call.left_expr->expr.id.slice;
+                if (matches_len_builtin(id_slice)) {
+                    const auto sid = context.symbol_id<"len">();
+                    auto d0 = context.emplace_diagnostic_with_message_value(
+                        Span{context, fid, rhs}, diag_code::tried_to_call_property,
+                        diag_type::error, DiagnosticSymbolAfterMessage{.sid = sid});
+                    auto d1 = context.emplace_diagnostic_with_message_value(
+                        Span{context, fid, rhs}, diag_code::replace_with, diag_type::help,
+                        DiagnosticSymbolAfterMessage{.sid = sid});
+                    context.link_diagnostic(d0, d1);
+                    return std::nullopt;
+                }
+            }
+
             if (!lhs_exec.holds<ExecExprStructInit>()) {
-                context.emplace_diagnostic(
-                    lhs_exec.span, diag_code::value_not_a_struct, diag_type::error,
+                auto d0 = context.emplace_diagnostic(Span{context, fid, expr->expr.binary.op},
+                                                     diag_code::cannot_access_a_member_value,
+                                                     diag_type::error);
+                auto d1 = context.emplace_diagnostic(
+                    lhs_exec.span, diag_code::value_not_a_struct, diag_type::note,
                     DiagnosticSubCode{.sub_code = diag_code::is_not_a_struct});
+                context.link_diagnostic(d0, d1);
                 return std::nullopt;
             }
             const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
@@ -1781,6 +1803,29 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (!lhs.has_value()) {
                 cooked = true;
             }
+            // try short circuit
+            const binary_op op = maybe_bin_op.as<binary_op>();
+            if (lhs.has_value() && (op == binary_op::bool_and || op == binary_op::bool_and)) {
+                const Exec& lhs_exec = context.exec(lhs.as_id());
+                if (lhs_exec.holds<ExecConst>() && lhs_exec.holds<ExecConst>()) {
+                    const std::optional<ExecConst> econst
+                        = lhs_exec.as<ExecConst>().try_safe_convert_to(builtin_type::boolean);
+                    if (econst.has_value()) {
+                        const bool bval = econst.value().as<bool>();
+                        // false && ____ => always false
+                        if ((op == binary_op::bool_and) && !bval) {
+                            return context.emplace_compt_exec(ExecConst{false},
+                                                              Span{context, fid, expr});
+                        }
+                        // true || ____ => always true
+                        if ((op == binary_op::bool_or) && bval) {
+                            return context.emplace_compt_exec(ExecConst{false},
+                                                              Span{context, fid, expr});
+                        }
+                    }
+                }
+            }
+
             OptId<ExecId> rhs = solve_expr(fid, scope, expr->expr.binary.rhs, std::nullopt);
             if (!rhs.has_value()) {
                 cooked = true;
@@ -1789,7 +1834,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt; // already poisoned
             }
             // get res of binary op like +, -, etc.
-            return solve_binary_compt_exec(lhs.as_id(), maybe_bin_op.as<binary_op>(), rhs.as_id());
+            return solve_binary_compt_exec(lhs.as_id(), op, rhs.as_id());
         }
         return std::nullopt; // cooked / poisoned already, so just return since error
                              // should've already been reported

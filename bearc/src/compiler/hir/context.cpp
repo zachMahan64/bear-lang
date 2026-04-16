@@ -461,6 +461,10 @@ ExecId Context::emplace_exec(const ExecValue& value, Span span, bool should_be_c
     return execs.emplace_and_get_id(*this, value, span, should_be_compt);
 }
 
+ExecId Context::emplace_compt_exec(const ExecValue& value, Span span) {
+    return execs.emplace_and_get_id(*this, value, span, true);
+}
+
 FileAst& Context::ast(FileId file_id) { return file_asts.at(files.at(file_id).ast_id); }
 
 const FileAst& Context::ast(FileId file_id) const {
