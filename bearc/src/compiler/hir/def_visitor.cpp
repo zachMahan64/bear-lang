@@ -89,26 +89,35 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     Def& def = context.def(did);
     Span span = def.span;
 
-    auto needs_layout_info = [this, &def]() {
+    auto parent_is_struct = [this, &def]() {
         return (def.parent.has_value()) ? context.is_struct_def(def.parent.as_id()) : false;
     };
 
     //  TODO write handlers
     switch (stmt->type) {
     case AST_STMT_VAR_DECL: {
-        OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
-            span.file_id, scope, stmt->stmt.var_decl.type, needs_layout_info());
-        if (!maybe_type.has_value()) {
+        OptId<TypeId> maybe_tid = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
+            span.file_id, scope, stmt->stmt.var_decl.type, parent_is_struct());
+        if (!maybe_tid.has_value()) {
             goto cleanup;
         }
         // compt =/= mut guard
-        check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
+        check_to_err_when_compt_is_not_mut(maybe_tid.as_id(), def);
         if (def.compt) {
             context.emplace_diagnostic_with_message_value(
                 def.span, diag_code::a_compt_variable_should_be_explicitly_initialized,
                 diag_type::error, DiagnosticSymbolBeforeMessage{.sid = def.name});
         }
-        def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = std::nullopt});
+        // error when struct member does not have an explicit type
+
+        const bool type_contains_var = TypeTransformer<TypeContainsVar>{context}(maybe_tid.as_id());
+        if (!def.statik && parent_is_struct() && type_contains_var) {
+            const Type& type = context.type(maybe_tid.as_id());
+            context.emplace_diagnostic_with_message_value(
+                type.span, diag_code::should_have_explicit_type, diag_type::error,
+                DiagnosticStructMemberSymBeforeMsg{.mem_sid = def.name});
+        };
+        def.set_value(DefVariable{.type = maybe_tid.as_id(), .compt_value = std::nullopt});
         // TODO handle invalid non-initialized statements
         // search for default value/ddefault method
         break;
@@ -116,39 +125,61 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_VAR_INIT_DECL: {
         const auto var_init_decl = stmt->stmt.var_init_decl;
 
-        OptId<TypeId> maybe_type = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
-            span.file_id, scope, var_init_decl.type, needs_layout_info());
-        if (!maybe_type.has_value()) {
+        OptId<TypeId> maybe_tid = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
+            span.file_id, scope, var_init_decl.type,
+            parent_is_struct()); // needs layout info if parent is struct
+        if (!maybe_tid.has_value()) {
             goto cleanup; // maybe set a special value to indicate error differently
         }
-        if (def.compt && TypeTransformer<TypeContainsVar>{context}(maybe_type.as_id())) {
-            context.emplace_diagnostic(context.type(maybe_type.as_id()).span,
+        const bool type_contains_var = TypeTransformer<TypeContainsVar>{context}(maybe_tid.as_id());
+        if (def.compt && type_contains_var) {
+            context.emplace_diagnostic(context.type(maybe_tid.as_id()).span,
                                        diag_code::compt_variable_should_have_an_explicit_type,
                                        diag_type::error);
-            goto cleanup;
         }
         // compt =/= mut guard
-        check_to_err_when_compt_is_not_mut(maybe_type.as_id(), def);
+        check_to_err_when_compt_is_not_mut(maybe_tid.as_id(), def);
 
-        auto maybe_compt_exec = ComptExprSolver(context, *this)
-                                    .solve_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs,
-                                                maybe_type.as_id());
+        auto maybe_compt_eid
+            = ComptExprSolver(context, *this)
+                  .solve_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs, maybe_tid.as_id());
 
-        def.set_value(DefVariable{.type = maybe_type.as_id(), .compt_value = maybe_compt_exec});
+        // error when struct member does not have an explicit type
+        if (!def.statik && parent_is_struct() && type_contains_var) {
+            const Type& type = context.type(maybe_tid.as_id());
+            auto d0 = context.emplace_diagnostic_with_message_value(
+                type.span, diag_code::should_have_explicit_type, diag_type::error,
+                DiagnosticStructMemberSymBeforeMsg{.mem_sid = def.name});
+
+            // if type is inferable from its compt default value, suggest changing type to said type
+            if (maybe_compt_eid.has_value()) {
+                OptId<TypeId> maybe_tid
+                    = ComptExprSolver{context, *this}.infer_type_from_compt_exec(
+                        maybe_compt_eid.as_id());
+                if (maybe_tid.has_value()) {
+                    auto d1 = context.emplace_diagnostic_with_message_value(
+                        type.span, diag_code::replace_with, diag_type::help,
+                        DiagnosticTypeAfterMessage{.tid = maybe_tid.as_id()});
+                    context.link_diagnostic(d0, d1);
+                }
+            }
+        };
+
+        def.set_value(DefVariable{.type = maybe_tid.as_id(), .compt_value = maybe_compt_eid});
         // check poison /not init
         if (def.compt && var_init_decl.assign_op->type == TOK_ASSIGN_MOVE) {
             auto d0 = context.emplace_diagnostic(
                 Span{context, def.span.file_id, var_init_decl.assign_op},
                 diag_code::compt_vars_should_not_be_move_initialized, diag_type::error);
-            if (maybe_compt_exec.has_value()) {
+            if (maybe_compt_eid.has_value()) {
                 auto d1 = context.emplace_diagnostic(
-                    context.exec(maybe_compt_exec.as_id()).span,
+                    context.exec(maybe_compt_eid.as_id()).span,
                     diag_code::compile_time_constant_cannot_be_moved, diag_type::note);
                 context.link_diagnostic(d0, d1);
             }
         }
         // TODO only issue this if expr is a valid run-time statement, but not compt statement
-        if (!maybe_compt_exec.has_value()) {
+        if (!maybe_compt_eid.has_value()) {
             if (!def.compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
                 context.emplace_diagnostic(
                     Span{context, def.span.file_id, stmt->stmt.var_init_decl.rhs},

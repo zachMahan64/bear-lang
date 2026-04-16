@@ -1,0 +1,58 @@
+// tests/hir/58.br
+
+// test explicit type rules
+
+struct Foo {
+    var a; // oops, should be an explicit type
+}
+
+struct Foo1 {
+    &var b; // oops, should be an explicit type
+}
+
+struct Bar {
+    i32 a = 12;
+}
+
+struct Foo2 {
+    var bar = Bar{}; // oops, should be explicit, but suggest Bar
+}
+
+struct Foo3 {
+    &var bar = Bar{}; // oops, should be explicit, but suggest Bar
+}
+
+struct Foo4 {
+    static var bar = "hello"; // fine
+}
+
+struct Foo5 {
+    static var bar = ["hello", " ", "world"]; // fine
+}
+
+// test should extemely bad formatting and redundancy edge cases
+
+mod foo {
+    mod fooo {
+        mod barrrr {
+            compt static static static compt static static compt mut var oops = Bar{}; // oops, majorly!
+        }
+    }
+}
+
+mod foo {
+    mod fooo {
+        mod barrrrrrrrrrrrrrrr {
+                                    compt static static compt static compt static static var oops = Bar{}; // oops
+                                                            
+                                                            var mut a;
+
+                                                            struct Foo {
+                                                                
+                                                                            var a;              // diabolical formatting
+                                                                                                                
+                                                                                                                var b;
+                                                            }
+        }
+    }
+}

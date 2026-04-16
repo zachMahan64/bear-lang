@@ -232,6 +232,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "value is a compile-time list holding type";
     case diag_code::value_is_a_struct_of_type:
         return "value is a struct of type";
+    case diag_code::should_have_explicit_type:
+        return "should have an explicit type";
     }
 
     std::unreachable();
@@ -698,6 +700,15 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += " is out of bounds for ordered value with length ";
             str += ansi_bold_cyan();
             str += ctx.symbol_id_to_cstr(d.length_sid);
+            str += ansi_bold_reset();
+        },
+        [&](DiagnosticStructMemberSymBeforeMsg d) {
+            str += "struct member `";
+            str += accent_color_for_type(type);
+            str += ctx.symbol(d.mem_sid);
+            str += ansi_bold_reset();
+            str += "` ";
+            str += message_for_code(code);
             str += ansi_bold_reset();
         },
 

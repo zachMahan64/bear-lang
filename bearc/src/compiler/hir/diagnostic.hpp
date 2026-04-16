@@ -119,6 +119,7 @@ enum class diag_code : uint8_t {
     tried_to_call_property,
     value_is_a_compt_list_holding_type,
     value_is_a_struct_of_type,
+    should_have_explicit_type,
 
     count, // this must be last,
 
@@ -187,13 +188,18 @@ struct DiagnosticIdxOutOfBounds {
     SymbolId length_sid;
 };
 
+struct DiagnosticStructMemberSymBeforeMsg {
+    SymbolId mem_sid;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
                    DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
                    DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
                    DiagnosticTypeAndTypeForBinaryOp, DiagnosticIdentifierBeforeMessageAndTypeAfter,
-                   DiagnosticSymButGotSym, DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds>;
+                   DiagnosticSymButGotSym, DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds,
+                   DiagnosticStructMemberSymBeforeMsg>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
