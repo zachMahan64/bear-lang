@@ -1,5 +1,7 @@
 // tests/hir/55.br
 
+mod strlist_demo;
+
 fn streq(&str a, &str b) => a == b 
 
 fn streq_at(&str a, &mut str b, usize at) => a[at] == b[at]
@@ -39,3 +41,11 @@ var _10 = @static_assert list_eq_str("foo", ['f', 'o', 'b']); // oops
 var _11 = @static_assert list_eq_str("foo", ['f', 'o']); // oops
 
 var _12 = @static_assert list_eq_str("foo", ['f', 'o', 't', 'z', 'z']); // oops
+
+fn get(i32 a) -> i32 {
+    return a;
+}
+
+var _13 = get(12); // oops
+
+var _14 = get(12 + 1); // oops, but don't re-report issue with fn decl

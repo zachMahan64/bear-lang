@@ -615,7 +615,7 @@ void Context::print_diagnostic(DiagnosticId diag_id, bool print_file) {
     }
 }
 
-void Context::set_next_diagnostic(DiagnosticId diag, DiagnosticId next) {
+void Context::link_diagnostic(DiagnosticId diag, DiagnosticId next) {
     diagnostics.at(diag).set_next(next);
 }
 
@@ -864,7 +864,7 @@ DefId Context::guard_hid(auto F, ScopeId scope, DefId did, IdSlice<SymbolId> id_
             defin.span, diag_code::declared_here, diag_type::note,
             DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
 
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
     }
     return did;
 }
@@ -934,7 +934,7 @@ OptId<DefId> Context::look_up_member_var_guarding_hid(const Def& struct_def, Sym
         auto d1 = emplace_diagnostic_with_message_value(
             struct_def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = struct_def.name});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
         return std::nullopt;
     }
     const Def& def = this->def(maybe_def.as_id());
@@ -945,7 +945,7 @@ OptId<DefId> Context::look_up_member_var_guarding_hid(const Def& struct_def, Sym
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = def.name});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
         return std::nullopt;
     }
     if (!def.is_ordered()) {
@@ -955,7 +955,7 @@ OptId<DefId> Context::look_up_member_var_guarding_hid(const Def& struct_def, Sym
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = def.name});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
         return std::nullopt;
     }
     if (!def.pub && !scope_has_parent(local_scope, struct_def.as<DefStruct>().scope)) {
@@ -965,7 +965,7 @@ OptId<DefId> Context::look_up_member_var_guarding_hid(const Def& struct_def, Sym
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = symbol_id});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
     }
     return maybe_def;
 }
@@ -982,7 +982,7 @@ OptId<DefId> Context::look_up_member_function_guarding_hid(const Def& struct_def
         auto d1 = emplace_diagnostic_with_message_value(
             struct_def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = struct_def.name});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
         return std::nullopt;
     }
     const Def& def = this->def(maybe_def.as_id());
@@ -993,7 +993,7 @@ OptId<DefId> Context::look_up_member_function_guarding_hid(const Def& struct_def
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = def.name});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
         return std::nullopt;
     }
     if (!def.pub && !scope_has_parent(local_scope, struct_def.as<DefStruct>().scope)) {
@@ -1003,7 +1003,7 @@ OptId<DefId> Context::look_up_member_function_guarding_hid(const Def& struct_def
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = symbol_id});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
     }
     return maybe_def;
 }
@@ -1027,7 +1027,7 @@ OptId<DefId> Context::look_up_member_function_no_diag_except_hid(const Def& stru
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = symbol_id});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
     }
     return maybe_def;
 }
@@ -1051,7 +1051,7 @@ OptId<DefId> Context::look_up_member_var_no_diag_except_hid(const Def& struct_de
         auto d1 = emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticSymbolBeforeMessage{.sid = symbol_id});
-        set_next_diagnostic(d0, d1);
+        link_diagnostic(d0, d1);
     }
     return maybe_def;
 }
@@ -1142,7 +1142,7 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
             auto d1 = emplace_diagnostic_with_message_value(
                 deffy.span, diag_code::declared_here, diag_type::note,
                 DiagnosticIdentifierBeforeMessage{.sid_slice = id_slice});
-            set_next_diagnostic(d0, d1);
+            link_diagnostic(d0, d1);
         }
     };
 

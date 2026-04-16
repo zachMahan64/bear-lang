@@ -144,15 +144,16 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 auto d1 = context.emplace_diagnostic(
                     context.exec(maybe_compt_exec.as_id()).span,
                     diag_code::compile_time_constant_cannot_be_moved, diag_type::note);
-                context.set_next_diagnostic(d0, d1);
+                context.link_diagnostic(d0, d1);
             }
         }
         // TODO only issue this if expr is a valid run-time statement, but not compt statement
         if (!maybe_compt_exec.has_value()) {
             if (!def.compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
-                context.emplace_diagnostic(def.span,
-                                           diag_code::even_non_compt_top_levels_need_compt_init,
-                                           diag_type::note, DiagnosticInfoDontDisplayFile{});
+                context.emplace_diagnostic(
+                    Span{context, def.span.file_id, stmt->stmt.var_init_decl.rhs},
+                    diag_code::all_runtime_glob_and_mem_vars_need_compt_init, diag_type::note,
+                    DiagnosticInfoDontDisplayFile{});
             }
             goto cleanup;
         }
@@ -257,8 +258,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             auto d2 = context.emplace_diagnostic_with_message_value(
                 span, diag_code::remove, diag_type::help,
                 DiagnosticSymbolAfterMessage{context.symbol_id(span)});
-            context.set_next_diagnostic(d0, d1);
-            context.set_next_diagnostic(d1, d2);
+            context.link_diagnostic(d0, d1);
+            context.link_diagnostic(d1, d2);
         }
         if (def.compt && !fn_decl.only_expr) {
             Span span{context, fid, fn_decl.block->first};
@@ -268,7 +269,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 span, diag_code::declare_using_pure_expression_syntax_replacing_body_with,
                 diag_type::help,
                 DiagnosticSymbolAfterMessage{.sid = context.symbol_id<"=> (Expression)">()});
-            context.set_next_diagnostic(d0, d1);
+            context.link_diagnostic(d0, d1);
         }
         if (!def.generic) {
             OptId<TypeId> maybe_self_type;
@@ -370,7 +371,7 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
                 context.make_top_level_def_name_span(d), diag_code::circular_definition_passes_thru,
                 diag_type::note);
             // set correlation inside of context
-            context.set_next_diagnostic(prev_diag, curr_diag);
+            context.link_diagnostic(prev_diag, curr_diag);
             // cycle
             prev_diag = curr_diag;
 
@@ -379,7 +380,7 @@ void TopLevelDefVisitor::report_cycle(DefId culprit) {
                 context.make_top_level_def_name_span(culprit),
                 diag_code::circular_definition_origin, diag_type::note);
             // set correlation inside of context
-            context.set_next_diagnostic(prev_diag, culprit_diag);
+            context.link_diagnostic(prev_diag, culprit_diag);
             // found, so return out of here
             return;
         }

@@ -169,7 +169,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto d1 = context.emplace_diagnostic_with_message_value(
                     into_type.span, diag_code::replace_with, diag_type::help,
                     DiagnosticTypeAfterMessage{.tid = inner_tid});
-                context.set_next_diagnostic(d0, d1);
+                context.link_diagnostic(d0, d1);
             }
             return std::nullopt;
         }
@@ -316,7 +316,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                             DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
                         auto sub_diag_id = context.emplace_diagnostic(
                             def.span, diag_code::declared_here_without_compt, diag_type::note);
-                        context.set_next_diagnostic(diag_id, sub_diag_id);
+                        context.link_diagnostic(diag_id, sub_diag_id);
                         return std::nullopt;
                     }
                     if (!def.as<DefVariable>().compt_value.has_value()) {
@@ -425,7 +425,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                              expr->expr.unary.expr->last},
                         diag_code::immutable_value_is_not_assignable, diag_type::note,
                         DiagnosticNoOtherInfo{});
-                    context.set_next_diagnostic(d0, d1);
+                    context.link_diagnostic(d0, d1);
                 }
                 return std::nullopt;
             }
@@ -483,7 +483,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                     Span{fid, context.ast(fid).buffer(), expr->expr.unary.expr->first,
                          expr->expr.unary.expr->last},
                     diag_code::immutable_value_is_not_assignable, diag_type::note);
-                context.set_next_diagnostic(d0, d1);
+                context.link_diagnostic(d0, d1);
                 return std::nullopt;
             }
             // inner is already cooked and error has been reported
@@ -621,7 +621,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                     DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
                 auto sub_diag_id = context.emplace_diagnostic(
                     def.span, diag_code::declared_here_without_compt, diag_type::note);
-                context.set_next_diagnostic(diag_id, sub_diag_id);
+                context.link_diagnostic(diag_id, sub_diag_id);
                 return std::nullopt;
             }
             if (!def_variable.compt_value.has_value()) {
@@ -672,8 +672,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                                                      context.symbol_id<"the struct initializer">()},
                                                  DiagnosticNoOtherInfo{});
 
-                context.set_next_diagnostic(did0, did1);
-                context.set_next_diagnostic(did1, did2);
+                context.link_diagnostic(did0, did1);
+                context.link_diagnostic(did1, did2);
                 return std::nullopt;
             }
             if (maybe_struct_did.empty()) {
@@ -687,7 +687,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 const Def& def = context.def(did);
                 auto did1 = context.emplace_diagnostic(def.span, diag_code::declared_here,
                                                        diag_type::note);
-                context.set_next_diagnostic(did0, did1);
+                context.link_diagnostic(did0, did1);
                 return std::nullopt;
             }
 
@@ -897,7 +897,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto d1 = context.emplace_diagnostic(
                 span, diag_code::parentheses_should_be_used_for_chained_casts, diag_type::note,
                 DiagnosticNoOtherInfo{});
-            context.set_next_diagnostic(d0, d1);
+            context.link_diagnostic(d0, d1);
             return std::nullopt;
         }
         const ast_type_t* ast_type = into_expr->expr.type_expr.type;
@@ -1505,7 +1505,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                     auto curr_diag = context.emplace_diagnostic_with_message_value(
                         first_exec.span, diag_code::value_is_of_type, diag_type::note,
                         DiagnosticTypeAfterMessage{.tid = type_for_list});
-                    context.set_next_diagnostic(prev_diag.as_id(), curr_diag);
+                    context.link_diagnostic(prev_diag.as_id(), curr_diag);
                     prev_diag = curr_diag;
                 }
 
@@ -1517,7 +1517,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto next_diag = context.emplace_diagnostic_with_message_value(
                     curr_exec.span, diag_code::value_is_of_type, diag_type::note,
                     DiagnosticTypeAfterMessage{.tid = curr_type});
-                context.set_next_diagnostic(curr_diag, next_diag);
+                context.link_diagnostic(curr_diag, next_diag);
                 prev_diag = next_diag;
             }
         }
@@ -1555,7 +1555,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto d1 = context.emplace_diagnostic_with_message_value(
                     def.span, diag_code::declared_here_without_compt, diag_type::note,
                     DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice});
-                context.set_next_diagnostic(d0, d1);
+                context.link_diagnostic(d0, d1);
                 return std::nullopt;
             }
 
@@ -1570,7 +1570,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         auto d1 = context.emplace_diagnostic_with_message_value(
             def.span, diag_code::declared_here, diag_type::note,
             DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice});
-        context.set_next_diagnostic(d0, d1);
+        context.link_diagnostic(d0, d1);
         return std::nullopt;
     }
     [[nodiscard]] OptId<ExecId> handle_same_type(FileId fid, ScopeId scope,
@@ -1660,7 +1660,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto d1 = context.emplace_diagnostic(Span{context, fid, expr->expr.binary.lhs},
                                                      diag_code::value_is_a_compile_time_constant,
                                                      diag_type::note);
-                context.set_next_diagnostic(d0, d1);
+                context.link_diagnostic(d0, d1);
             }
             cooked = true;
         } else if (maybe_bin_op.holds<is_as_op>()) {
@@ -1698,8 +1698,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                     lhs_exec.span, diag_code::compt_expressions_do_not_have_addrs_so_no_ptrs,
                     diag_type::note,
                     DiagnosticSubCode{.sub_code = diag_code::value_is_not_a_pointer});
-                context.set_next_diagnostic(d0, d1);
-                context.set_next_diagnostic(d1, d2);
+                context.link_diagnostic(d0, d1);
+                context.link_diagnostic(d1, d2);
                 return std::nullopt; // poisoned
             }
 
@@ -1862,7 +1862,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 auto d1 = context.emplace_diagnostic_with_message_value(
                     kw_span, diag_code::declared_here, diag_type::note,
                     DiagnosticSymbolBeforeMessage{.sid = func_def.name});
-                context.set_next_diagnostic(d0, d1);
+                context.link_diagnostic(d0, d1);
                 mt_param_adjustment = 0;
             } else {
                 mt_param_adjustment = 1;
@@ -1964,7 +1964,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 {context, fid, fn_stmt->stmt.fn_decl.name}, diag_code::declared_here,
                 diag_type::note, DiagnosticSymbolBeforeMessage{.sid = func_symbol});
             if (maybe_d0.has_value()) {
-                context.set_next_diagnostic(maybe_d0.as_id(), d1);
+                context.link_diagnostic(maybe_d0.as_id(), d1);
             }
         }
 
@@ -1987,7 +1987,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 func_span, diag_code::declared_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = func_symbol});
 
-            context.set_next_diagnostic(d0, d1);
+            context.link_diagnostic(d0, d1);
 
             // poison before exit to prevent cascading diags
             context.def(func_did).template as<DefFunction>().poison_infinite_recursion();
@@ -2009,6 +2009,26 @@ template <IsDefVisitor V> class ComptExprSolver {
                 param_def.name, param_def.span, func_did,
                 DefVariable{.type = param_var.type, .compt_value = eid});
             context.insert_variable(temp_scope, param_def.name, param);
+        }
+
+        if (!fn_stmt->stmt.fn_decl.only_expr) {
+            auto d0 = context.emplace_diagnostic(
+                Span{context, fid, expr}, diag_code::cannot_evaluate_non_pure_expr_fn_at_compt,
+                diag_type::error);
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                func_span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = func_symbol});
+            context.link_diagnostic(d0, d1);
+            if (context.def(func_did).compt) {
+                auto d2 = context.emplace_diagnostic_with_message_value(
+                    func_span, diag_code::declare_using_pure_expression_syntax_replacing_body_with,
+                    diag_type::help,
+                    DiagnosticSymbolAfterMessage{.sid = context.symbol_id<"=> (Expression)">()});
+                context.link_diagnostic(d1, d2);
+            }
+            context.def(func_did).template as<DefFunction>().poison();
+            exit_compt_fn();
+            return std::nullopt;
         }
 
         const ast_expr_t* body_expr = fn_stmt->stmt.fn_decl.expr;

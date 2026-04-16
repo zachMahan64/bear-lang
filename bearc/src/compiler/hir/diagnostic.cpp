@@ -136,7 +136,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "is declared `hid`";
     case diag_code::a_compt_variable_should_be_explicitly_initialized:
         return "should be explicitly initialized since it is a `compt` variable";
-    case diag_code::even_non_compt_top_levels_need_compt_init:
+    case diag_code::all_runtime_glob_and_mem_vars_need_compt_init:
         return "all run-time global and member variable initializers must be compile-time "
                "constants";
     case diag_code::incompatible_types_for_binary_expression:
@@ -222,6 +222,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "pointers are not assignable at compile-time";
     case diag_code::compt_values_cannot_be_mut_borrowed:
         return "compile-time values cannot be mutably borrowed";
+    case diag_code::cannot_evaluate_non_pure_expr_fn_at_compt:
+        return "cannot evaluate non-pure expression function at compile-time";
     }
     std::unreachable();
     return "";

@@ -190,7 +190,7 @@ class Context {
                                                        DiagnosticMessageValue message_value,
                                                        OptId<DiagnosticId> next
                                                        = OptId<DiagnosticId>{});
-    void set_next_diagnostic(DiagnosticId diag, DiagnosticId next);
+    void link_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag, bool print_file = true);
     // type emplacer
     /// emplaces and gets the id from a new CanonicalTypeId corresponding to a TypeId which points

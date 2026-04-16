@@ -73,7 +73,7 @@ enum class diag_code : uint8_t {
     type_is_not_resolvable_at_compt,
     is_declared_hid,
     a_compt_variable_should_be_explicitly_initialized,
-    even_non_compt_top_levels_need_compt_init,
+    all_runtime_glob_and_mem_vars_need_compt_init,
     incompatible_types_for_binary_expression,
     incompatible_types_for_binary_operator,
     dividing_by_zero_at_compt_is_illegal,
@@ -114,6 +114,7 @@ enum class diag_code : uint8_t {
     called_here,
     pointers_are_not_assignable_at_compt,
     compt_values_cannot_be_mut_borrowed,
+    cannot_evaluate_non_pure_expr_fn_at_compt,
 
     count, // this must be last,
 

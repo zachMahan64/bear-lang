@@ -63,7 +63,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                 auto did1 = context.emplace_diagnostic(
                     span, diag_code::remove, diag_type::help,
                     DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
-                context.set_next_diagnostic(did0, did1);
+                context.link_diagnostic(did0, did1);
             }
             compt = true;
             // take inner
@@ -79,7 +79,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                 auto did1 = context.emplace_diagnostic(
                     span, diag_code::remove, diag_type::help,
                     DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
-                context.set_next_diagnostic(did0, did1);
+                context.link_diagnostic(did0, did1);
             }
             statik = true;
             // take inner
@@ -107,7 +107,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                 auto did1 = context.emplace_diagnostic(
                     span, diag_code::remove, diag_type::help,
                     DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
-                context.set_next_diagnostic(did0, did1);
+                context.link_diagnostic(did0, did1);
             }
             const ast_expr_t* expr = stmt->stmt.alignaz.align_expr;
             if (expr->type == AST_EXPR_LITERAL) {
@@ -130,7 +130,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
                 auto did1 = context.emplace_diagnostic(
                     Span(file, context.ast(file).buffer(), expr->first, expr->last),
                     diag_code::alignas_expr_must_be_a_valid_uint_lit, diag_type::help);
-                context.set_next_diagnostic(did0, did1);
+                context.link_diagnostic(did0, did1);
             }
             stmt = stmt->stmt.alignaz.inner;
         }
@@ -198,8 +198,8 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
             auto did2 = context.emplace_diagnostic(
                 span, diag_code::remove, diag_type::help,
                 DiagnosticSymbolAfterMessage{context.symbol_id(span)}, DiagnosticNoOtherInfo{});
-            context.set_next_diagnostic(did0, did1);
-            context.set_next_diagnostic(did1, did2);
+            context.link_diagnostic(did0, did1);
+            context.link_diagnostic(did1, did2);
 
         } else {
             enum abi_lang abi = maybe_abi.value();
@@ -269,7 +269,7 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         auto* t = top_level_info_for(context.def_ast_node(already_defined.as_id())).name_tkn;
         auto d2 = context.emplace_diagnostic(Span(orig_file, context.ast(orig_file).buffer(), t),
                                              diag_code::previous_def_here, diag_type::note);
-        context.set_next_diagnostic(d1, d2);
+        context.link_diagnostic(d1, d2);
         return OptId<DefId>{};
     }
 
