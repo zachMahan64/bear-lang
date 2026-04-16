@@ -72,6 +72,7 @@ main quest
             - [ ] if feasible, add range checking
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
+    - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
     - generic params become either deftypes to type args or simply compt variables for expression value args 
 
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
