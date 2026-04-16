@@ -78,25 +78,35 @@ main quest
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
 
 - [ ] `ast_type_t*` lowering to for generic `hir::Type`s 
-        - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
+    - [x] non-generic types 
+    - [ ] generic types (just find/instatiate mentioned generic def and then use that concrete def within the type)
+    - [ ] handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything
+    - [ ] 
 
-- [ ] full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
+
+- [ ] preliminary full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
     - [x] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
 
 - [ ] see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
     1. map to an already instatiated specialized, concrete instance of the def, or:
     2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
 
-- [ ] some basic [lsp-compt](/docs/lsp-compat.md), mostly thru building span -> scope search trees
+- [ ] some basic [lsp-compat](/docs/lsp-compat.md), mostly thru building span -> scope search trees (only build these when a flag is enabled, tho; this will need to be added)
 
-- [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic
+- [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic for every possible `ast_stmt_t`
+    - perhaps consider constexpr-based policies to exhaustively check all possibilities for more combinatorically complex stmts (fn_decls come to mind) 
 
 ##### hir phase 2.b:
 - [ ] function body resolution 
 - [x] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
     - note: already working for arbitrarily scoped modules, types, and variables
 - [ ] move checker
+- [ ] a borrow checker should be trivial, however:
+    - [ ] allow mutiple immutable and mutable borrows
+    - [ ] no lifetimes
+    - [ ] strictly ban returning a reference to a local variable
+- [ ] remember: run-time values that are immutable references and have compile-time initializers can just reference static variables that store that compile-time value
 
 #### optimizations
 - [ ] `hir::Context` ctor that takes a stale context and a list of update files, and then based on the stale context's files:

@@ -58,6 +58,7 @@ struct TypeBuiltin {
 };
 
 // structure meaning struct, variant, or union
+// TODO: consider something seperate for variants/unions
 struct TypeStructure {
     DefId definition;
 };
