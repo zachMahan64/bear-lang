@@ -1,0 +1,56 @@
+// tests/hir/57.br
+
+var _0 = @static_assert [1, 2, 3] == [1, 2, 3]; // fine
+
+var _1 = @static_assert [1, 2, 3] == [1, 5, 3]; // oops
+
+var _2 = @static_assert [1, 2, 3] == [1, 5, 3.0]; // oops
+
+var _3 = @static_assert [1, 2, 3] == [1.0, 5.0, 3.0]; // oops
+
+var _4 = @static_assert [[1]] == [[2]]; // oops 
+
+var _5 = @static_assert [[1]] == [[1]]; // fine 
+
+var _6 = @static_assert [[1], [2], [3]] == "123"; // oops
+
+struct Foo {
+    i32 a = 12;
+}
+
+var _7 = @static_assert Foo{} == Foo {}; // fine
+
+var _8 = @static_assert Foo{} == Foo {.a = 42}; // oops 
+
+compt Foo foo = Foo {.a = 12312};
+
+var _9 = @static_assert Foo{.a = 122} == foo; // ooops
+
+Foo rtfoo = foo;
+
+var _10 = @static_assert rtfoo == foo; // oops, rtfoo is runtime
+
+struct Bar {
+    Ben a = Ben{};
+    struct Ben {
+        En a = En {};
+        struct En {
+            char a = 'e';
+        }
+    }
+}
+
+use Bar..Ben;
+use Bar..Ben..En;
+
+compt Bar bar0 = Bar{};
+
+compt Bar bar1 = Bar{};
+
+var _11 = @static_assert bar0 == bar1; // fine
+
+var _12 = @static_assert bar0 != bar1; // oops
+
+var _13 = @static_assert bar0 == Bar {.a = Ben {.a = En{.a = 'f'}}}; // oops
+
+var _14 = @static_assert bar0 == Bar {.a = Ben {.a = En{.a = 'e'}}}; // fine

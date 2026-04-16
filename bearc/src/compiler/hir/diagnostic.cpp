@@ -228,7 +228,12 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "cannot access a member value";
     case diag_code::tried_to_call_property:
         return "tried to call property";
+    case diag_code::value_is_a_compt_list_holding_type:
+        return "value is a compile-time list holding type";
+    case diag_code::value_is_a_struct_of_type:
+        return "value is a struct of type";
     }
+
     std::unreachable();
     return "";
 }

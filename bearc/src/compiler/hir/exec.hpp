@@ -63,7 +63,7 @@ using ConstantValue
                    /*7*/ int64_t, /*8*/ uint64_t, /*9*/ char, /*10*/ float, /*11*/ double,
                    /* 12 */ std::nullptr_t, /* 13 */ bool>;
 
-/// represents literals and true compt values
+/// represents literals/constant builtin types
 struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     ConstantValue value;
     bool matches_type(builtin_type type) const {
@@ -187,6 +187,7 @@ struct ExecExprComptConstant : NodeWithVariantValue<ExecExprComptConstant> {
     [[nodiscard]] static std::optional<ExecConst> preunary_bit_not(ExecConst ec);
 };
 
+/// corresponding to a constant builtin type
 using ExecConst = ExecExprComptConstant;
 using i8 = int8_t;
 using u8 = uint8_t;

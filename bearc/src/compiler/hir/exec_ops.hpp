@@ -104,6 +104,10 @@ struct ComptBinaryOp : NodeWithVariantValue<ComptBinaryOp> {
     }
 };
 
+static inline bool bin_op_is_eq_neq(binary_op op) {
+    return op == binary_op::bool_equal || op == binary_op::bool_not_equal;
+}
+
 } // namespace hir
 
 #endif

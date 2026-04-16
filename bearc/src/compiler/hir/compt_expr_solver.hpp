@@ -944,18 +944,41 @@ template <IsDefVisitor V> class ComptExprSolver {
         const Exec& lhs_exec = context.exec(lhs_eid);
         const Exec& rhs_exec = context.exec(rhs_eid);
 
-        auto handle_invalid_operand = [this](const Exec& exec) {
-            context.emplace_diagnostic(exec.span, diag_code::invalid_operand_for_binary_expression,
-                                       diag_type::error);
+        auto handle_invalid_operand = [this, lhs_eid, rhs_eid, &lhs_exec, &rhs_exec](ExecId eid) {
+            auto d0 = context.emplace_diagnostic(context.exec(eid).span,
+                                                 diag_code::invalid_operand_for_binary_expression,
+                                                 diag_type::error);
+            OptId<TypeId> maybe_lhs_tid = infer_type_from_compt_exec(lhs_eid);
+            OptId<TypeId> maybe_rhs_tid = infer_type_from_compt_exec(rhs_eid);
+            if (maybe_lhs_tid.has_value() && maybe_rhs_tid.has_value()) {
+                const auto lhs_tid = maybe_lhs_tid.as_id();
+                const auto rhs_tid = maybe_rhs_tid.as_id();
+                auto d1 = context.emplace_diagnostic_with_message_value(
+                    lhs_exec.span, diag_code::value_is_of_type, diag_type::note,
+                    DiagnosticTypeAfterMessage{.tid = lhs_tid});
+                auto d2 = context.emplace_diagnostic_with_message_value(
+                    rhs_exec.span, diag_code::value_is_of_type, diag_type::note,
+                    DiagnosticTypeAfterMessage{.tid = rhs_tid});
+                context.link_diagnostic(d0, d1);
+                context.link_diagnostic(d1, d2);
+            }
         };
+
+        if (bin_op_is_eq_neq(op) && lhs_exec.holds_same<ExecExprListLiteral>(rhs_exec)) {
+            return solve_list_eq(lhs_exec, rhs_exec, op);
+        }
+
+        if (bin_op_is_eq_neq(op) && lhs_exec.holds_same<ExecExprStructInit>(rhs_exec)) {
+            return solve_struct_eq(lhs_exec, rhs_exec, op);
+        }
 
         bool cooked = false;
         if (!lhs_exec.holds<ExecConst>()) {
-            handle_invalid_operand(lhs_exec);
+            handle_invalid_operand(lhs_eid);
             cooked = true;
         }
         if (!rhs_exec.holds<ExecConst>()) {
-            handle_invalid_operand(rhs_exec);
+            handle_invalid_operand(rhs_eid);
             cooked = true;
         }
         if (cooked) {
@@ -2226,6 +2249,108 @@ template <IsDefVisitor V> class ComptExprSolver {
         return context.emplace_exec(
             ExecConst{context.symbol(str_exec.as<ExecConst>().as<SymbolId>()).size()},
             Span::combine(str_exec.span, len_span), true);
+    }
+    // two Execs holding ExecExprListLiteral and a binary op holding bool_equal or bool_not_equal
+    // should be passed
+    [[nodiscard]] OptId<ExecId> solve_list_eq(const Exec& list1, const Exec& list2,
+                                              binary_op eq_neq) {
+        assert(list1.holds_same<ExecExprListLiteral>(list2));
+        assert(bin_op_is_eq_neq(eq_neq));
+        ExecExprListLiteral l1 = list1.as<ExecExprListLiteral>();
+        ExecExprListLiteral l2 = list2.as<ExecExprListLiteral>();
+
+        // decides true/false for == and != based on equality
+        auto emplace_val_based_on_eq = [this, eq_neq, &list1, &list2](const bool eq) {
+            const bool cond = (eq_neq == binary_op::bool_equal) ? eq : !eq;
+            return context.emplace_compt_exec(ExecConst{cond},
+                                              Span::combine(list1.span, list2.span));
+        };
+
+        if (l1.len() != l2.len()) {
+            emplace_val_based_on_eq(false);
+        }
+        if ((l1.elem_type_id.has_value() && l2.elem_type_id.has_value())
+            && !context.equivalent_type(l1.elem_type_id.as_id(), l2.elem_type_id.as_id())) {
+            auto d0 = context.emplace_diagnostic(Span::combine(list1.span, list2.span),
+                                                 diag_code::invalid_operand_for_binary_expression,
+                                                 diag_type::error);
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                list1.span, diag_code::value_is_a_compt_list_holding_type, diag_type::note,
+                DiagnosticTypeAfterMessage{.tid = l1.elem_type_id.as_id()});
+            auto d2 = context.emplace_diagnostic_with_message_value(
+                list2.span, diag_code::value_is_a_compt_list_holding_type, diag_type::note,
+                DiagnosticTypeAfterMessage{.tid = l2.elem_type_id.as_id()});
+            context.link_diagnostic(d0, d1);
+            context.link_diagnostic(d1, d2);
+        }
+        for (HirSize i = 0; i < l1.len(); i++) {
+            const auto e1 = context.exec_id(l1.elems.get(i));
+            const auto e2 = context.exec_id(l2.elems.get(i));
+            const OptId<ExecId> eid = solve_binary_compt_exec(e1, binary_op::bool_equal, e2);
+            if (eid.empty()) {
+                return std::nullopt;
+            }
+            const Exec& exec = context.exec(eid.as_id());
+            assert(exec.holds<ExecConst>() && exec.as<ExecConst>().holds<bool>());
+            const bool eq = exec.as<ExecConst>().as<bool>();
+            if (!eq) {
+                return emplace_val_based_on_eq(false);
+            }
+        }
+        // all checks passed, fine
+        return emplace_val_based_on_eq(true);
+    }
+
+    [[nodiscard]] OptId<ExecId> solve_struct_eq(const Exec& list1, const Exec& list2,
+                                                binary_op eq_neq) {
+        assert(list1.holds_same<ExecExprStructInit>(list2));
+        assert(bin_op_is_eq_neq(eq_neq));
+        ExecExprStructInit s1 = list1.as<ExecExprStructInit>();
+        ExecExprStructInit s2 = list2.as<ExecExprStructInit>();
+
+        // decides true/false for == and != based on equality
+        auto emplace_val_based_on_eq = [this, eq_neq, &list1, &list2](const bool eq) {
+            const bool cond = (eq_neq == binary_op::bool_equal) ? eq : !eq;
+            return context.emplace_compt_exec(ExecConst{cond},
+                                              Span::combine(list1.span, list2.span));
+        };
+
+        if (s1.struct_def != s2.struct_def) {
+            auto t1 = context.emplace_type(TypeStructure{.definition = s1.struct_def},
+                                           Span::generated(), false);
+            auto t2 = context.emplace_type(TypeStructure{.definition = s2.struct_def},
+                                           Span::generated(), false);
+            auto d0 = context.emplace_diagnostic(Span::combine(list1.span, list2.span),
+                                                 diag_code::invalid_operand_for_binary_expression,
+                                                 diag_type::error);
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                list1.span, diag_code::value_is_of_type, diag_type::note,
+                DiagnosticTypeAfterMessage{.tid = t1});
+            auto d2 = context.emplace_diagnostic_with_message_value(
+                list2.span, diag_code::value_is_of_type, diag_type::note,
+                DiagnosticTypeAfterMessage{.tid = t2});
+            context.link_diagnostic(d0, d1);
+            context.link_diagnostic(d1, d2);
+            return std::nullopt;
+        }
+        for (HirSize i = 0; i < s1.member_inits.len(); i++) {
+            const auto e1
+                = context.exec(s1.member_inits.get(i)).as<ExecExprStructMemberInit>().value;
+            const auto e2
+                = context.exec(s2.member_inits.get(i)).as<ExecExprStructMemberInit>().value;
+            const OptId<ExecId> eid = solve_binary_compt_exec(e1, binary_op::bool_equal, e2);
+            if (eid.empty()) {
+                return std::nullopt;
+            }
+            const Exec& exec = context.exec(eid.as_id());
+            assert(exec.holds<ExecConst>() && exec.as<ExecConst>().holds<bool>());
+            const bool eq = exec.as<ExecConst>().as<bool>();
+            if (!eq) {
+                return emplace_val_based_on_eq(false);
+            }
+        }
+        // all checks passed, fine
+        return emplace_val_based_on_eq(true);
     }
 };
 } // namespace hir

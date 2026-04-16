@@ -117,6 +117,8 @@ enum class diag_code : uint8_t {
     cannot_evaluate_non_pure_expr_fn_at_compt,
     cannot_access_a_member_value,
     tried_to_call_property,
+    value_is_a_compt_list_holding_type,
+    value_is_a_struct_of_type,
 
     count, // this must be last,
 
