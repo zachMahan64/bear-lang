@@ -63,7 +63,7 @@ main quest
     - [ ] handle proper short-circuiting of `||` and `&&` at compt
     - [ ] generalize solving booleqs 
         - [ ] compt list equalities: `[1, 2] == [1, 2]` (elem type, then len, then elems)
-        - [ ] struct equalities, at least ExecId-wise, for now yes
+        - [ ] struct equalities, at least ExecId-wise, for now 
     - [x] subscripts on compt lists and strings (bound check)
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
@@ -80,7 +80,7 @@ main quest
         - handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything
 
-- [ ] fule `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
+- [ ] full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
     - [x] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
 
 - [ ] see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
