@@ -57,3 +57,15 @@ compt &i32 boo2 = &benn; // fine
 var _10 = @static_assert boo2 == 12;
 
 var _11 = @static_assert boo2 == 13; // oops
+
+struct Bin {
+    &mut i32 a;
+}
+
+compt Bin bin = Bin {.a = 12}; // fine
+
+compt mut Bin boops = Bin {.a = 12}; // oops
+
+compt &mut Bin boops1 = Bin {.a = 15}; // oops
+
+var _12 = @static_assert bin.a = 13; // oops, not assignable
