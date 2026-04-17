@@ -684,6 +684,16 @@ ast_expr_t* parse_expr_closure(parser_t* p) {
         // we just have ||
         cl->expr.closure.params = (ast_slice_of_params_t){.start = NULL, .len = 0};
     }
+    cl->expr.closure.return_type = NULL;
+    cl->expr.closure.has_explicit_return_type = false;
+    // allow explicit return type
+    if (parser_match_token(p, TOK_RARROW)) {
+        ast_type_t* type = parse_type(p);
+        if (type->tag != AST_TYPE_INVALID) {
+            cl->expr.closure.return_type = type;
+            cl->expr.closure.has_explicit_return_type = true;
+        }
+    }
     // allow '|thingie| => thing' syntax
     if (parser_match_token(p, TOK_EQ_ARROW)) {
         cl->expr.closure.body = parse_expr_allowing_block_exprs_without_yields(p);

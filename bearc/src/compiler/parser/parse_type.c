@@ -525,9 +525,11 @@ ast_type_t* parse_type_fn_ptr(parser_t* p) {
         return parser_sync_type(p);
     }
     if (parser_match_token(p, TOK_RARROW)) {
-        parser_expect_token(p, TOK_LPAREN);
+        token_t* lparen = parser_match_token(p, TOK_LPAREN);
         fnp->type.fn_ptr.return_type = parse_type(p);
-        parser_expect_token(p, TOK_RPAREN);
+        if (lparen) {
+            parser_expect_token(p, TOK_RPAREN);
+        }
     }
     fnp->type.fn_ptr.param_types = params;
     fnp->canonical_base = fnp;

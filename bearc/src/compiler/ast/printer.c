@@ -550,6 +550,10 @@ void pretty_print_expr(const ast_expr_t* expression) {
         for (size_t i = 0; i < cl.params.len; i++) {
             print_param(cl.params.start[i]);
         }
+        if (cl.has_explicit_return_type) {
+            print_delineator_from_type(TOK_RARROW);
+            print_type(cl.return_type);
+        }
         print_closing_delim_from_type(TOK_BAR);
         pretty_print_expr(cl.body);
         print_closing_green_brace();

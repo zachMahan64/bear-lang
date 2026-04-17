@@ -234,6 +234,12 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "value is a struct of type";
     case diag_code::should_have_explicit_type:
         return "should have an explicit type";
+    case diag_code::non_compt_function_params_must_have_explicit_types:
+        return "non-compt function parameters must have explicit types";
+    case diag_code::type_deduction_not_legal_here:
+        return "type deduction is not legal here";
+    case diag_code::use_a_generic_function_parameter_and_specify_it_as_a_type:
+        return "use a generic function parameter and use it as this parameter's type";
     }
 
     std::unreachable();

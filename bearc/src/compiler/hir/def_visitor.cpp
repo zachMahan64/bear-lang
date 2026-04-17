@@ -321,9 +321,30 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
             llvm::SmallVector<TypeId> type_vec{};
 
+            const bool func_is_runtime = !def.compt;
+
             for (auto didx = params.begin(); didx != params.end(); didx++) {
                 const Def& param_def = context.def(didx);
                 assert(param_def.holds<DefVariable>());
+
+                // guard run-time func with `var` typed params
+                if (func_is_runtime
+                    && TypeTransformer<TypeContainsVar>{context}(
+                        param_def.as<DefVariable>().type)) {
+                    const Span ty_span = context.type(param_def.as<DefVariable>().type).span;
+                    auto d0 = context.emplace_diagnostic(
+                        ty_span, diag_code::type_deduction_not_legal_here, diag_type::note);
+                    auto d1 = context.emplace_diagnostic(
+                        param_def.span,
+                        diag_code::non_compt_function_params_must_have_explicit_types,
+                        diag_type::note);
+                    auto d2 = context.emplace_diagnostic(
+                        ty_span,
+                        diag_code::use_a_generic_function_parameter_and_specify_it_as_a_type,
+                        diag_type::help);
+                    context.link_diagnostic(d0, d1);
+                    context.link_diagnostic(d1, d2);
+                }
                 type_vec.push_back(param_def.as<DefVariable>().type);
             }
 
@@ -343,7 +364,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                       .takes_self = takes_self,
                                       .posioned = params_res.poisoned});
         }
-        // TODO, handle run-time functions
+        // TODO, handle generic functions
         else {
         }
         break;

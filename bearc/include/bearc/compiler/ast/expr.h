@@ -189,7 +189,10 @@ typedef struct ast_expr_match {
 typedef struct ast_expr_closure {
     ast_slice_of_params_t params;
     ast_expr_t* body;
+    // NULLable if no return_type
+    ast_type_t* return_type;
     bool is_move;
+    bool has_explicit_return_type;
 } ast_expr_closure_t;
 
 typedef struct ast_expr_ternary_if {

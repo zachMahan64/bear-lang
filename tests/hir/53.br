@@ -1,6 +1,6 @@
 // tests/hir/53.br
 
-fn square(var a) => a * a
+compt fn square(var a) => a * a
 
 struct Foo {
     i32 a_;

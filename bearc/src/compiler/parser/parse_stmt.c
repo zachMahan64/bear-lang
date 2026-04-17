@@ -652,7 +652,10 @@ ast_stmt_t* parse_stmt_decl(parser_t* p) {
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type)
           || (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN))) {
-        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
+        // if equal, this means we're almost certainly we're trailing a malformed decl
+        if (parser_peek(p)->type != TOK_RBRACE) {
+            compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
+        }
         return parser_sync_stmt(p);
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1306,7 +1309,10 @@ ast_stmt_t* parse_stmt_var_or_fn_decl(parser_t* p) {
     // guard against definitely malformed decls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     if (!(token_is_builtin_type_or_id(next_type) || token_is_non_id_type_idicator(next_type)
           || (next_type == TOK_STAR && parser_peek_n(p, 1)->type == TOK_FN))) {
-        compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
+        // if equal, this means we're almost certainly we're trailing a malformed decl
+        if (parser_peek(p)->type != TOK_RBRACE) {
+            compiler_error_list_emplace(p->error_list, parser_peek(p), ERR_EXPECTED_DECLARTION);
+        }
         return parser_sync_stmt(p);
     }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

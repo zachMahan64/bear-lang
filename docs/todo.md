@@ -70,6 +70,7 @@ main quest
         - [ ] make sure it's branches are exhaustive
             - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
             - [ ] if feasible, add range checking
+    - [ ] compt fn-pointers to allow compt fn composition -> compt closures (pure-expr only) should naturally follow
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
@@ -81,8 +82,7 @@ main quest
     - [x] non-generic types 
     - [ ] generic types (just find/instatiate mentioned generic def and then use that concrete def within the type)
     - [ ] handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
-    - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything
-    - [ ] 
+    - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything 
 
 
 - [ ] preliminary full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)

@@ -120,6 +120,9 @@ enum class diag_code : uint8_t {
     value_is_a_compt_list_holding_type,
     value_is_a_struct_of_type,
     should_have_explicit_type,
+    non_compt_function_params_must_have_explicit_types,
+    type_deduction_not_legal_here,
+    use_a_generic_function_parameter_and_specify_it_as_a_type,
 
     count, // this must be last,
 
