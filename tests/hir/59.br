@@ -85,6 +85,6 @@ var _8 = @static_assert Int..copy(Int..new(12)) == Int{.stored_val = 12}; // met
 
 var _9 = @static_assert my_int1.val_in_list([1, 2, 3, 4, 7, 11, 8, 9, 1000]); // oops
 
-compt ValType v = my_int1.val(1); // oops, too many arguments
+compt ValType v = my_int1.val(0) == Int..new(); // oops, too many and too few arguments
 
-compt Int my_int2 = Int..new(); // oops, too few arguments
+compt i32 v1 = Int..new(42); // oops, not convertible here

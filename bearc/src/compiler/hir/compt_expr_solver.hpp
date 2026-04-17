@@ -267,8 +267,18 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         };
 
-        auto guard_type_mismatch
-            = [this, into_builtin, cannot_conv](OptId<ExecId> maybe_eid) -> OptId<ExecId> {
+        auto cannot_conv_from = [this, fid, expr, into_builtin](TypeId tid) {
+            context.emplace_diagnostic_with_message_value(
+                Span{context, fid, expr}, diag_code::cannot_convert_value_of_type, diag_type::error,
+                DiagnosticTypeToType{
+                    .from = tid,
+                    .to = context.emplace_type(TypeBuiltin{.type = into_builtin.value()},
+                                               Span::generated(), false)});
+            return std::nullopt;
+        };
+
+        auto guard_type_mismatch = [this, into_builtin, &cannot_conv,
+                                    &cannot_conv_from](OptId<ExecId> maybe_eid) -> OptId<ExecId> {
             if (!into_builtin.has_value()) {
                 return maybe_eid;
             }
@@ -284,14 +294,14 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
 
-            const auto inffered_tid = maybe_inferred.as_id();
-            const auto inffered_type = context.type(inffered_tid);
+            const TypeId inffered_tid = maybe_inferred.as_id();
+            const Type& inffered_type = context.type(inffered_tid);
             if (!inffered_type.template holds<TypeBuiltin>()) {
-                cannot_conv();
+                cannot_conv_from(inffered_tid);
                 return std::nullopt;
             }
             if (inffered_type.template as<TypeBuiltin>().type != into_builtin.value()) {
-                cannot_conv();
+                cannot_conv_from(inffered_tid);
                 return std::nullopt;
             }
             return eid;
