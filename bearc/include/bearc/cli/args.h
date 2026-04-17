@@ -14,7 +14,7 @@
 
 #define CLI_ARGS_MAX_FILE_NAME_LENGTH 1024
 #define CLI_ARGS_MAX_FLAG_LENGTH 16
-#define CLI_ARGS_MAX_IMPORT_PATH_COUNT 32
+#define CLI_ARGS_MAX_IMPORT_PATH_COUNT 64
 
 #ifdef __cplusplus
 extern "C" {
