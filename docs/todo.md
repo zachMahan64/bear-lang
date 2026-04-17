@@ -71,6 +71,7 @@ main quest
             - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
             - [ ] if feasible, add range checking
     - [ ] compt fn-pointers to allow compt fn composition -> compt closures (pure-expr only) should naturally follow
+    - [ ] compt unions/variants
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
@@ -160,9 +161,9 @@ side quests
 - [ ] arbitrary source code reconstruction from hir::Context
 
 ##### diagnostics
-- [ ] elipse out diagnostics after like 16 lines
+- [ ] elipse out diagnostics after like 8 lines
 - [ ] add trimming of cwd from file paths in diagnostics reporting?
-- [ ] fully allow cyclical imports? validate full compatibility, add a flag to enable warnings instead of always warning for it
+- [ ] fully allow cyclical imports, add a flag to enable warnings instead of always warning for it
 - [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
 
 ##### debugging 

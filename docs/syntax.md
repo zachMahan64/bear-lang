@@ -24,6 +24,7 @@
     - | Pointer: `*` Type
     - | Variadic: Type `...`
     - | TypeOf: `typeof` Expression 
+    - | Decay: `decay` Type
 
 #### Expressions
 - Expression:
@@ -35,7 +36,7 @@
     - | ListLiteral: `[` Expression `,` Expression `,` ... `]`
     - | BinaryExpression: `Expression` BinaryOp `Expression`
         - BinaryOp: a full precedence chart is in the works, for now refer to the maps in the [parser rules file](bearc/src/compiler/parser/rules.c) 
-    - | Preunary: `--` | `++` | `typeof` Expression
+    - | Preunary: `--` | `++` 
     - | SizeOf: `sizeof` `(` Type `)`
     - | AlignOf: `alignof` `(` Type `)`
     - | AlignAs: `alignas` `(` IntegerLiteral `)`
@@ -48,7 +49,7 @@
     - | Dereference: `*` Expression
     - | StructInitialization: Identifier `{` StructFieldInitialization(s) `}`
        - StructFieldInitialization: `.` Identifier `=` | `<-` Expression 
-    - | Closure: `move`? `|` Parameter(s) `|` \[`->` Expression] | BlockExpression 
+    - | Closure: `move`? `|` Parameter(s) `|` \[`->` Type]? \[`=>` Expression] | BlockExpression 
     - | VariantDecomposition: Identifier `(` Parameter(s) `)`
     - | Match: `match` `(` Expression `)` `{` MatchBranch(s) `}`
     - | TernaryIf: Expression `if` `compt`? Expression `else` Expression
