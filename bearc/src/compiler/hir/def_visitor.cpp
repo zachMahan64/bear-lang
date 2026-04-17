@@ -333,7 +333,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                         param_def.as<DefVariable>().type)) {
                     const Span ty_span = context.type(param_def.as<DefVariable>().type).span;
                     auto d0 = context.emplace_diagnostic(
-                        ty_span, diag_code::type_deduction_not_legal_here, diag_type::note);
+                        ty_span, diag_code::type_deduction_not_legal_here, diag_type::error);
                     auto d1 = context.emplace_diagnostic(
                         param_def.span,
                         diag_code::non_compt_function_params_must_have_explicit_types,
