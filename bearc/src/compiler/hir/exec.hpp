@@ -283,6 +283,11 @@ struct ExecExprStructMemberInit {
     bool move;
 };
 
+struct ExecExprFnPtr {
+    DefId func_def;
+    TypeId fn_ptr_tid;
+};
+
 struct ExecExprClosure {
     IdSlice<DefId> params;
     IdSlice<DefId> captures;
