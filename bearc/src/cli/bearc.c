@@ -153,7 +153,7 @@ void cli_help(void) {
           "        [--compact-diags] print diagnostics that are vertically compact\n";
     const char* flags_w_args_title = "flags with arguments:\n";
     const char* flags_w_args
-        = "        [--import-path | -i] <import_dirs...>  supply import paths\n"
+        = "        [--import-path | -I] <import_dirs...>  supply import paths\n"
           "        [--compile | -c]     <root_file>       compile from a root file\n"
           "        [--output | -o]      <output_file>     specify an output file\n"
 

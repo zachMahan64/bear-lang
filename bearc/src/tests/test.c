@@ -125,7 +125,7 @@ br_test_result_t test_parser(void) {
 
 br_test_result_t test_hir(void) {
     TEST_INIT("hir");
-    char* args1[] = {"bearc", "07.br", "-i", "tests/hir"};
+    char* args1[] = {"bearc", "07.br", "-I", "tests/hir"};
     ASSERT_EQ_ERR_FROM_ARGS(args1, 0);
     char* args2[] = {"bearc", "tests/hir/07.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args2, 2);
@@ -133,11 +133,11 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args3, 10);
     char* args4[] = {"bearc", "tests/hir/00.br", "--compile", "--import-path", "."};
     ASSERT_EQ_ERR_FROM_ARGS(args4, 2);
-    char* args5[] = {"bearc", "-i", "tests/projects/00", "-c", "00.br"};
+    char* args5[] = {"bearc", "-I", "tests/projects/00", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args5, 3, 2);
-    char* args6[] = {"bearc", "-i", "tests/projects/01", "-c", "00.br"};
+    char* args6[] = {"bearc", "-I", "tests/projects/01", "-c", "00.br"};
     ASSERT_EQ_ERR_FROM_ARGSN(args6, 4, 2);
-    char* args7[] = {"bearc", "00.br", "-i", "tests/projects/02"};
+    char* args7[] = {"bearc", "00.br", "-I", "tests/projects/02"};
     ASSERT_EQ_ERR_FROM_ARGSN(args7, 4, 3);
     char* args8[] = {"bearc", "tests/hir/09.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args8, 2);
@@ -175,7 +175,7 @@ br_test_result_t test_hir(void) {
     ASSERT_EQ_ERR_FROM_ARGS(args24, 2);
     char* args25[] = {"bearc", "tests/hir/25.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args25, 8);
-    char* args26[] = {"bearc", "00.br", "-i", "tests/projects/03"};
+    char* args26[] = {"bearc", "00.br", "-I", "tests/projects/03"};
     ASSERT_EQ_ERR_FROM_ARGSN(args26, 9, 3);
     char* args27[] = {"bearc", "tests/hir/26.br"};
     ASSERT_EQ_ERR_FROM_ARGS(args27, 4);

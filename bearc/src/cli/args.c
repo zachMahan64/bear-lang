@@ -18,7 +18,7 @@ cli_flag_e search_cli_long_flags_for_valid_flag(const char* flag);
 
 const cli_flag_e short_flag_map[UCHAR_MAX] = {
     ['h'] = CLI_FLAG_HELP,        ['v'] = CLI_FLAG_VERSION, ['c'] = CLI_FLAG_COMPILE,
-    ['i'] = CLI_FLAG_IMPORT_PATH, ['o'] = CLI_FLAG_OUTPUT,
+    ['I'] = CLI_FLAG_IMPORT_PATH, ['o'] = CLI_FLAG_OUTPUT,
 };
 
 // LONG FLAG NAME MAP
