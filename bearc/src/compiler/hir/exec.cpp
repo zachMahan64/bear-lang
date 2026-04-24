@@ -1066,6 +1066,7 @@ bool Exec::can_be_compt(const Context& ctx) {
         [&](const ExecExprVariantDecomp&) -> bool { return false; },
         [&](const ExecExprMatch&) -> bool { return false; },
         [&](const ExecExprMatchBranch&) -> bool { return false; },
+        [&](const ExecExprFnPtr&) -> bool { return this->compt; },
     };
     return visit(vs);
 }

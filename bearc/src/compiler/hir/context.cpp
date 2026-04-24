@@ -1179,9 +1179,12 @@ ScopeId Context::containing_scope(DefId did) const {
         return root_scope();
     }
     DefId parent_id = maybe_parent.as_id();
-    const Def& defi = def(parent_id);
-    if (defi.holds<DefModule>()) {
-        return defi.as<DefModule>().scope;
+    const Def& par_def = def(parent_id);
+    if (par_def.holds<DefModule>()) {
+        return par_def.as<DefModule>().scope;
+    }
+    if (par_def.holds<DefScopeWrapper>()) {
+        return par_def.as<DefScopeWrapper>().scope;
     }
     auto maybe_structure = try_scope_for_top_level_def(parent_id);
     if (maybe_structure.has_value()) {

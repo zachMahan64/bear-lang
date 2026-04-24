@@ -94,7 +94,7 @@ struct TypePtr {
 
 struct TypeFnPtr {
     IdSlice<TypeId> param_types;
-    TypeId return_type;
+    OptId<TypeId> return_type;
 };
 
 struct TypeVariadic {

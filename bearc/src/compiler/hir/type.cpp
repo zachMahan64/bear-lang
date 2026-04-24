@@ -49,7 +49,13 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             if (!t2.holds<TypeFnPtr>()) {
                 return false;
             }
-            bool rt_match = t.return_type == t2.as<TypeFnPtr>().return_type;
+            bool rt_match = false;
+            if (t.return_type.has_value() && t2.as<TypeFnPtr>().return_type.has_value()) {
+                rt_match = context.equivalent_type(t.return_type.as_id(),
+                                                   t2.as<TypeFnPtr>().return_type.as_id());
+            } else {
+                rt_match = t.return_type.empty() && t2.as<TypeFnPtr>().return_type.empty();
+            }
             bool arity_match = t.param_types.len() == t2.as<TypeFnPtr>().param_types.len();
             if (!rt_match || !arity_match) {
                 return false;

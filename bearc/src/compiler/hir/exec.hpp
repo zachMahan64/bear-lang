@@ -284,8 +284,8 @@ struct ExecExprStructMemberInit {
 };
 
 struct ExecExprFnPtr {
-    DefId func_def;
-    TypeId fn_ptr_tid;
+    DefId func_def_id;
+    OptId<TypeId> fn_ptr_tid;
 };
 
 struct ExecExprClosure {
@@ -322,7 +322,7 @@ using ExecValue = std::variant<
     ExecExprListLiteral, ExecExprAssignMove, ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess,
     ExecExprPointerMemberAccess, ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary,
     ExecExprSubscript, ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprClosure,
-    ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch>;
+    ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch, ExecExprFnPtr>;
 
 /// main exec structure, corresponds to an hir::ExecId
 struct Exec : NodeWithVariantValue<Exec> {

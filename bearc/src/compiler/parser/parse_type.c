@@ -524,6 +524,7 @@ ast_type_t* parse_type_fn_ptr(parser_t* p) {
     if (!parser_expect_token(p, TOK_RPAREN)) {
         return parser_sync_type(p);
     }
+    fnp->type.fn_ptr.return_type = NULL;
     if (parser_match_token(p, TOK_RARROW)) {
         token_t* lparen = parser_match_token(p, TOK_LPAREN);
         fnp->type.fn_ptr.return_type = parse_type(p);

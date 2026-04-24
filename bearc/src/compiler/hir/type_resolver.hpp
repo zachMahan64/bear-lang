@@ -152,7 +152,8 @@ template <IsDefVisitor V> class TypeResolver {
     }
 
     OptId<TypeId> type_fn_ptr(FileId fid, ScopeId scope, const ast_type_t* type) {
-        auto maybe_return_type = resolve_type(fid, scope, type->type.fn_ptr.return_type, false);
+        const auto* rt = type->type.fn_ptr.return_type;
+        auto maybe_return_type = rt ? resolve_type(fid, scope, rt, false) : OptId<TypeId>{};
 
         if (!maybe_return_type.has_value()) {
             return OptId<TypeId>{};
@@ -177,7 +178,7 @@ template <IsDefVisitor V> class TypeResolver {
 
         return context.emplace_type(
             TypeFnPtr{.param_types = param_tid_slice, .return_type = return_type},
-            Span(context, fid, type->first, type->last), type->type.slice.mut);
+            Span(context, fid, type->first, type->last), type->type.fn_ptr.mut);
     }
 
     OptId<TypeId> type_variadic(FileId fid, ScopeId scope, const ast_type_t* type) {

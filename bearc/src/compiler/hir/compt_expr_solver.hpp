@@ -99,6 +99,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                 },
                 Span::generated(), false);
         }
+        if (exec.holds<ExecExprFnPtr>()) {
+            return exec.as<ExecExprFnPtr>().fn_ptr_tid;
+        }
 
         // report issue
         context.emplace_diagnostic(exec.span, diag_code::cannot_infer_type_at_compt,
@@ -222,13 +225,41 @@ template <IsDefVisitor V> class ComptExprSolver {
             return list_eid;
         }
 
+        if (into_type.holds<TypeFnPtr>() && expr->type == AST_EXPR_ID) {
+            OptId<ExecId> maybe_fnp = handle_any_id(fid, scope, expr->expr.id);
+            if (maybe_fnp.empty()) {
+                return std::nullopt; // poisoned
+            }
+
+            auto fnp_eid = maybe_fnp.as_id();
+
+            auto maybe_tnp_tid = infer_type_from_compt_exec(fnp_eid);
+
+            if (maybe_tnp_tid.empty()) {
+                return std::nullopt; // poisoned
+            }
+
+            TypeId fnp_tid = maybe_tnp_tid.as_id();
+
+            // guard diff type
+            if (!context.equivalent_type(into_tid, fnp_tid)) {
+                context.emplace_diagnostic_with_message_value(
+                    Span(fid, context.ast(fid).buffer(), expr->first, expr->last),
+                    diag_code::cannot_convert_value_of_type, diag_type::error,
+                    DiagnosticTypeToType{.from = fnp_tid, .to = into_tid});
+                return std::nullopt;
+            }
+
+            return fnp_eid;
+        }
+
         if (into_type.holds<TypeStructure>()) {
             return solve_struct_compt_expr(fid, scope, expr, into_tid);
         }
 
         // guard against non-builtins
         if (!into_type.holds<TypeBuiltin>()) {
-            context.emplace_diagnostic(into_type.span, diag_code::type_is_not_resolvable_at_compt,
+            context.emplace_diagnostic(Span{context, fid, expr}, diag_code::cannot_resolve_at_compt,
                                        diag_type::error);
             return OptId<ExecId>{};
         }
@@ -1597,6 +1628,17 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto orig_exec = context.exec(def.as<DefVariable>().compt_value.as_id());
             return context.emplace_exec(orig_exec.value, expr_span, true);
         }
+        // TODO this doesn't consider generics
+        if (def.holds<DefFunction>()) {
+            const DefFunction& func_def = def.as<DefFunction>();
+            return context.emplace_exec(
+                ExecExprFnPtr{.func_def_id = did,
+                              .fn_ptr_tid
+                              = context.emplace_type(TypeFnPtr{.param_types = func_def.param_types,
+                                                               .return_type = func_def.return_type},
+                                                     Span::generated(), false)},
+                expr_span, false);
+        }
         auto d0 = context.emplace_diagnostic(
             expr_span, diag_code::cannot_resolve_at_compt, diag_type::error,
             DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
@@ -2362,6 +2404,13 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         // all checks passed, fine
         return emplace_val_based_on_eq(true);
+    }
+
+    [[nodiscard]] OptId<ExecId> solve_compt_closure(FileId fid, ScopeId scope,
+                                                    const ast_expr_t* expr) {
+        assert(expr->type == AST_EXPR_CLOSURE);
+        // TODO
+        return std::nullopt;
     }
 };
 } // namespace hir

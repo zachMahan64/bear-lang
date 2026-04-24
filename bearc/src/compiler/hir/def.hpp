@@ -112,15 +112,19 @@ struct DefDeftype {
     TypeId type;
 };
 
+struct DefScopeWrapper {
+    ScopeId scope;
+};
+
 struct DefUnevaluated {};
 
 // ^^^^^^ struct impls ^^^^^^^^
 
 /// main exec variant
-using DefValue
-    = std::variant<DefModule, DefFunction, DefGenericFunction, DefFunctionPrototype, DefVariable,
-                   DefStruct, DefGenericStruct, DefVariant, DefGenericVariant, DefVariantField,
-                   DefUnion, DefContract, DefDeftype, DefUnevaluated, DefMalformed>;
+using DefValue = std::variant<DefModule, DefFunction, DefGenericFunction, DefFunctionPrototype,
+                              DefVariable, DefStruct, DefGenericStruct, DefVariant,
+                              DefGenericVariant, DefVariantField, DefUnion, DefContract, DefDeftype,
+                              DefScopeWrapper, DefUnevaluated, DefMalformed>;
 
 enum class abi_lang : uint8_t {
     native = 0,

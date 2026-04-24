@@ -1,0 +1,11 @@
+// tests/hir/61.br
+
+*fn(i32)->i32 foo = |i32 a| => a;
+
+compt fn bar(i32 a) -> i32 => a
+
+fn barry(i32 a) {}
+
+*fn(i32)->i32 foo1 = bar;
+
+*fn(i32) foo2 = barry; // TODO inappropriately broken
