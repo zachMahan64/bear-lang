@@ -99,8 +99,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 },
                 Span::generated(), false);
         }
-        if (exec.holds<ExecExprFnPtr>()) {
-            return exec.as<ExecExprFnPtr>().fn_ptr_tid;
+        if (exec.holds<ExecFnPtr>()) {
+            return exec.as<ExecFnPtr>().fn_ptr_tid;
         }
 
         // report issue
@@ -162,7 +162,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             return solve_expr_borrow(fid, scope, expr, into_tid);
         }
 
-        // try to solve str& at comptime
         if (into_type.holds<TypePtr>()) {
             auto inner_tid = into_type.as<TypePtr>().inner;
             auto inner = context.type(inner_tid);
@@ -1631,13 +1630,13 @@ template <IsDefVisitor V> class ComptExprSolver {
         // TODO this doesn't consider generics
         if (def.holds<DefFunction>()) {
             const DefFunction& func_def = def.as<DefFunction>();
-            return context.emplace_exec(
-                ExecExprFnPtr{.func_def_id = did,
-                              .fn_ptr_tid
-                              = context.emplace_type(TypeFnPtr{.param_types = func_def.param_types,
-                                                               .return_type = func_def.return_type},
-                                                     Span::generated(), false)},
-                expr_span, false);
+            return context.emplace_compt_exec(
+                ExecFnPtr{.func_def_id = did,
+                          .fn_ptr_tid
+                          = context.emplace_type(TypeFnPtr{.param_types = func_def.param_types,
+                                                           .return_type = func_def.return_type},
+                                                 Span::generated(), false)},
+                expr_span);
         }
         auto d0 = context.emplace_diagnostic(
             expr_span, diag_code::cannot_resolve_at_compt, diag_type::error,
@@ -1977,7 +1976,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (!func.takes_self) {
                 auto d0 = context.emplace_diagnostic(Span{context, fid, called},
                                                      diag_code::free_function_called_as_a_method,
-                                                     diag_type::error);
+                                                     diag_type::warning);
                 const ast_stmt_t* stmt = context.def_ast_node(func_did);
                 assert(stmt->type == AST_STMT_FN_DECL);
                 Span kw_span{context, fid, stmt->stmt.fn_decl.kw};
@@ -2014,6 +2013,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                                            diag_type::error);
                 return std::nullopt;
             }
+
+            maybe_func_did = context.try_func_did(maybe_func_did.as_id());
+
             const Def& called_def = context.def(maybe_func_did.as_id());
             if (!called_def.holds<DefFunction>()) {
                 context.emplace_diagnostic(

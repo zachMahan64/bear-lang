@@ -33,7 +33,7 @@ enum class diag_code : uint8_t {
     circular_definition,
     circular_definition_passes_thru,
     circular_definition_origin,
-    value_cannot_be_compt,
+    cannot_resolve_value_at_compt,
     cannot_convert_type,
     cannot_resolve_at_compt,
     type_not_defined,

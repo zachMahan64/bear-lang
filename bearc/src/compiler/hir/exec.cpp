@@ -970,7 +970,7 @@ Exec::Exec(Context& ctx, ExecValue value, Span span, bool should_be_compt)
     : value{value}, span{span} {
     bool truely_compt = can_be_compt(ctx);
     if (should_be_compt && !truely_compt) {
-        ctx.emplace_diagnostic(span, diag_code::value_cannot_be_compt, diag_type::error);
+        ctx.emplace_diagnostic(span, diag_code::cannot_resolve_value_at_compt, diag_type::error);
     }
     this->compt = truely_compt && should_be_compt;
 }
@@ -1066,7 +1066,7 @@ bool Exec::can_be_compt(const Context& ctx) {
         [&](const ExecExprVariantDecomp&) -> bool { return false; },
         [&](const ExecExprMatch&) -> bool { return false; },
         [&](const ExecExprMatchBranch&) -> bool { return false; },
-        [&](const ExecExprFnPtr&) -> bool { return this->compt; },
+        [&](const ExecFnPtr&) -> bool { return true; },
     };
     return visit(vs);
 }

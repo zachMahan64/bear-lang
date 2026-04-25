@@ -202,6 +202,13 @@ class Context {
 
     /// accessfor for a def thru a DefId
     Def& def(DefId def_id);
+
+    /// trys to access a direct function def or a compt function ptr
+    /// basically, if a value is a know compt variable pointing to some known function, we will get
+    /// that function's defintion instead of the defintion of the compt variable (of a function
+    /// pointer type)
+    const Def& try_func_def(DefId def_id) const;
+    DefId try_func_did(DefId def_id) const;
     FileId def_to_file_id(DefId def) const;
     Span make_def_name_span(DefId def, const ast_stmt_t* stmt) const;
     Span make_top_level_def_name_span(DefId def) const;

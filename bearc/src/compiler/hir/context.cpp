@@ -625,6 +625,23 @@ void Context::link_diagnostic(DiagnosticId diag, DiagnosticId next) {
 
 Def& Context::def(DefId def_id) { return defs.at(def_id); }
 
+const Def& Context::try_func_def(DefId def_id) const { return def(try_func_did(def_id)); }
+
+DefId Context::try_func_did(DefId def_id) const {
+    const Def& def = this->def(def_id);
+    if (def.holds<DefVariable>()) {
+        DefVariable var = def.as<DefVariable>();
+        if (var.compt_value.has_value()) {
+            ExecId compt_val = var.compt_value.as_id();
+            const Exec& compt_exec = exec(compt_val);
+            if (compt_exec.holds<ExecFnPtr>()) {
+                return compt_exec.as<ExecFnPtr>().func_def_id;
+            }
+        }
+    }
+    return def_id;
+}
+
 FileId Context::file_id(IdIdx<FileId> ididx) const { return file_ids.cat(ididx); }
 
 void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec) {
@@ -989,7 +1006,7 @@ OptId<DefId> Context::look_up_member_function_guarding_hid(const Def& struct_def
         link_diagnostic(d0, d1);
         return std::nullopt;
     }
-    const Def& def = this->def(maybe_def.as_id());
+    const Def& def = this->try_func_def(maybe_def.as_id());
     if (!def.holds<DefFunction>()) {
         auto d0 = emplace_diagnostic_with_message_value(
             id_span, diag_code::id_does_not_name_a_method_of, diag_type::error,
@@ -1020,7 +1037,7 @@ OptId<DefId> Context::look_up_member_function_no_diag_except_hid(const Def& stru
     if (maybe_def.empty()) {
         return std::nullopt;
     }
-    const Def& def = this->def(maybe_def.as_id());
+    const Def& def = this->try_func_def(maybe_def.as_id());
     if (!def.holds<DefFunction>()) {
         return std::nullopt;
     }

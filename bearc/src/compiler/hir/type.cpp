@@ -119,7 +119,10 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
         [&](const TypeRef&) -> size_t { return mix(0x06ULL); },
         [&](const TypePtr&) -> size_t { return mix(0x07ULL); },
         [&](const TypeFnPtr& t) -> size_t {
-            size_t h = mix(0x08ULL ^ static_cast<size_t>(t.return_type.val()));
+            size_t h = 0;
+            if (t.return_type.has_value()) {
+                h = mix(0x08ULL ^ TypeTransformer<TypeHasher>{context}(t.return_type.as_id()));
+            }
             h ^= static_cast<size_t>(t.param_types.len()) * 0x9e3779b97f4a7c15ULL;
             for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
                 auto tid = context.type_id(tidx);
@@ -226,13 +229,16 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             str += '(';
             for (auto tidx = t.param_types.begin(); tidx != t.param_types.end(); tidx++) {
                 auto tid = context.type_id(tidx);
-                TypeToStringValue s = TypeTransformer<TypeToString>{context}(tid);
-                str += s.str;
+                str += TypeTransformer<TypeToString>{context}(tid).str;
                 if (tidx != t.param_types.last_elem()) {
                     str += ", ";
                 }
             }
             str += ')';
+            if (t.return_type.has_value()) {
+                str += "->";
+                str += TypeTransformer<TypeToString>{context}(t.return_type.as_id()).str;
+            }
         },
         [&](const TypeVariadic&) { str += "..."; },
         [&](const TypeVar&) {

@@ -1,11 +1,43 @@
 // tests/hir/61.br
 
-*fn(i32)->i32 foo = |i32 a| => a;
+*fn(i32)->i32 foo = |i32 a| => a; // oops, compt closures not legal (yet)
 
-compt fn bar(i32 a) -> i32 => a
+compt fn inc(i32 a) -> i32 => a + 1
 
-fn barry(i32 a) {}
+fn incy(i32 a) {}
 
-*fn(i32)->i32 foo1 = bar;
+compt *fn(i32)->i32 foo1 = inc;
 
-*fn(i32) foo2 = barry; // TODO inappropriately broken
+compt *fn(i32) foo2 = incy; 
+
+compt *fn(i32)->i32 foo3 = foo1;
+
+compt i32 a = inc(0); 
+
+var _0 = @static_assert a == 1;
+
+compt i32 b = foo3(a);
+
+var _1 = @static_assert b == 2;
+
+var _2 = @static_assert b == 3; // oops
+
+compt fn identity(var iden) => (iden)
+
+compt *fn(var) id = identity;
+
+var _3 = @static_assert id(12) == 12;
+
+var _4 = @static_assert id(42) == 43; // oops
+
+// nice, so we can statically apply some function
+compt fn infinite_power(var my_val, *fn(var) apply) => apply(my_val) * apply(my_val)
+
+compt fn square(var a) => a * a
+
+compt i32 c = infinite_power(5, square);
+
+var _5 = @static_assert c == 5 * 5 * 5 * 5;
+
+var _6 = @static_assert c == 5 * 5 * 5 * 6; // oops
+

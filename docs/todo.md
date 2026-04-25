@@ -50,7 +50,7 @@ main quest
 
 - [x] add `@defined()` expr
 
-- [ ] some `compt` function, struct, and list improvements:
+- [ ] some more `compt` improvements:
     - [x] add compt member accesses ex) `foo.bar`
     - [x] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
     - [x] add `fn foo() [-> Type]? => [{Expr}] | Expr` syntax (easy-ish plugin for compt functions), this makes compt turing complete
@@ -65,14 +65,16 @@ main quest
         - [x] compt list equalities: `[1, 2] == [1, 2]` (elem type, then len, then elems)
         - [x] struct equalities
     - [x] subscripts on compt lists and strings (bound check)
-    - [ ] compt fn-pointers to allow compt fn composition -> compt closures (pure-expr only) should naturally follow
-        - [ ] naturally allow capturing compt variables 
+    - [x] compt fn-pointers to allow compt fn composition 
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive
             - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
-            - [ ] if feasible, add range checking
+            - [ ] if feasible, add range checking 
     - [ ] compt unions/variants
+    - [ ] compt closures (pure-expr only) should naturally follow
+        - [ ] allow capturing compt variables 
+
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table

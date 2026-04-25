@@ -153,13 +153,13 @@ template <IsDefVisitor V> class TypeResolver {
 
     OptId<TypeId> type_fn_ptr(FileId fid, ScopeId scope, const ast_type_t* type) {
         const auto* rt = type->type.fn_ptr.return_type;
+        const bool should_have_rt = rt != nullptr;
         auto maybe_return_type = rt ? resolve_type(fid, scope, rt, false) : OptId<TypeId>{};
 
-        if (!maybe_return_type.has_value()) {
+        // when should have return type, but doesn't, we're poisoned
+        if (should_have_rt && !maybe_return_type.has_value()) {
             return OptId<TypeId>{};
         }
-
-        auto return_type = maybe_return_type.as_id();
 
         llvm::SmallVector<TypeId> tid_vec;
         auto ast_param_type_slice = type->type.fn_ptr.param_types;
@@ -177,7 +177,7 @@ template <IsDefVisitor V> class TypeResolver {
         IdSlice<TypeId> param_tid_slice = context.freeze_id_vec(tid_vec);
 
         return context.emplace_type(
-            TypeFnPtr{.param_types = param_tid_slice, .return_type = return_type},
+            TypeFnPtr{.param_types = param_tid_slice, .return_type = maybe_return_type},
             Span(context, fid, type->first, type->last), type->type.fn_ptr.mut);
     }
 

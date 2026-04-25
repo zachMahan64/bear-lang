@@ -19,6 +19,7 @@
 #include "compiler/parser/token_eaters.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
+#include <iostream>
 #include <optional>
 
 namespace hir {
@@ -129,6 +130,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             span.file_id, scope, var_init_decl.type,
             parent_is_struct()); // needs layout info if parent is struct
         if (!maybe_tid.has_value()) {
+            std::cout << "NO TID:" << context.symbol_id_to_cstr(def.name) << '\n';
             goto cleanup; // maybe set a special value to indicate error differently
         }
         const bool type_contains_var = TypeTransformer<TypeContainsVar>{context}(maybe_tid.as_id());

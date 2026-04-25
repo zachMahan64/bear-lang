@@ -53,7 +53,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "circular definition; layout cannot be resolved";
     case diag_code::circular_definition_passes_thru:
         return "circular definition passes through this definition";
-    case diag_code::value_cannot_be_compt:
+    case diag_code::cannot_resolve_value_at_compt:
         return "cannot resolve value at compile-time";
     case diag_code::cannot_convert_type:
         return "type conversion not possible";
