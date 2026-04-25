@@ -1,0 +1,28 @@
+// tests/hir/62.br 
+
+compt fn transform(var item, *fn(var) apply) => apply(item)
+
+compt fn double(var a) => a + a
+
+compt fn double_with_space(var a) => a + " " + a
+
+compt i32 a = transform(12, double);
+
+var _0 = @static_assert a == 24;
+
+var _1 = @static_assert transform("foo", double_with_space) == "foo foo";
+
+// as to flex:
+
+var _2 = @static_assert transform(@type_to_str(typeof a), double_with_space) == "i32 i32";
+
+[1024][12][&mut]i32 b; 
+
+var _3 = @static_assert transform(@type_to_str(typeof a), double_with_space) == "i32 i32";
+
+var _4 = @static_assert transform(@type_to_str(typeof b), double_with_space) == "[1024][12][&mut]i32 [1024][12][&mut]i32"; // fine
+
+// decay doesn't (and shouldn't) do anything different here
+var _5 = @static_assert transform(@type_to_str(decay typeof b), double) == "[1024][12][&mut]i32[1024][12][&mut]i32"; // fine
+
+var _6 = @static_assert transform(@type_to_str(typeof b), double) == "[1024][12][&mut]i32[1024][12][&mut]i33"; // oops, i33?

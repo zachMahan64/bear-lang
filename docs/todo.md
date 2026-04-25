@@ -5,50 +5,6 @@ main quest
 
 ##### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
-- [x] fix `tests/hir/10.br` falsely reported circular
-- [x] multi-line and more complicated diagnostics handling
-
-- [x] `ast_expr_t*` lowering to `hir::Exec` (minimum constant folding/compt canonical value resolution)
-    - [x] struct compt handling (propagate constants thru member inits)
-    
-    - [x] compt operators: string literal concat, basic operators for integral and floating values -> necessary for canonicalizing variable generic args w/ expressions
-        - [x] implement kind of operator <--> type mapping system for at least builtins
-        - [x] arithmetic
-        - [x] string literal concat 
-        - [x] bitwise
-        - [x] boolean
-        - [x] unary ops
-
-    - [x] compt ternary if
-
-    - [x] refactor compt expr solver for some readibility and factor out some common logic between components
-
-    - [x] compt list literals
-    
-- [x] finish some more ContextDatabase functionality for better testing 
-
-- [x] if compt (in parser/syntax doc, hir impl will come later in body resolution)
-- [x] ternary if: expr `if` `compt`? condition `else` expr (in parser/syntax doc)
-- [x] top level use (in parser/syntax doc, hir logic)
-
-- [x] **substantial refactor**: remove ScopeAnon, just make anonymous scopes have smaller default capacities (doing this since anon scopes should have their own namespace storage for used defs and i'm scrapping the old style anon uses)
-
-- [x] implement Def::mention state in `hir::DefVisitor` thru:
-    - `visit_as_independent(DefId)` -> `unmentioned` (add this method)
-    - `visit_as_dependent(DefId)` & `visit_as_transparent(DefId)` -> `mentioned` (update these methods)
-    - `visit_as_mutator(DefId)` -> `mutated` (add this method)
-
-- [x] fix/impl deftypes by having a direct def -> type forward mechanism (will be needed for generic params too)
-
-- some reflection/compt stuff
-- [x] special expr case `@same_type(expr, expr)` (yields bool) where the types could be say `typeof(foo)` and `Foo<i32>`
-- [x] static_assert (make it a builtin in hir)
-    - perhaps `std..assert..static_assert(bool cond)` wrapping true builtin `@static_assert(bool cond)` 
-- [x] `@type_to_str(<type>)` to get a reflected compt string that is just the type's string representation
-    - since compt strs are just `hir::SymbolId`s just do `context.symbol_id(type_to_str(context, hir::TypeId))` to get them
-- [x] add `fn foo() ~> i32` syntax for discardable return values
-
-- [x] add `@defined()` expr
 
 - [ ] some more `compt` improvements:
     - [x] add compt member accesses ex) `foo.bar`
@@ -79,10 +35,13 @@ main quest
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
     - generic params become either deftypes to type args or simply compt variables for expression value args 
+    - see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
+        1. map to an already instatiated specialized, concrete instance of the def, or:
+        2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
 
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
 
-- [ ] `ast_type_t*` lowering to for generic `hir::Type`s 
+- [ ] `ast_type_t*` lowering to `hir::Type`s 
     - [x] non-generic types 
     - [ ] generic types (just find/instatiate mentioned generic def and then use that concrete def within the type)
     - [ ] handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
@@ -91,10 +50,6 @@ main quest
 
 - [ ] preliminary full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
     - [x] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
-
-- [ ] see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
-    1. map to an already instatiated specialized, concrete instance of the def, or:
-    2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
 
 - [ ] some basic [lsp-compat](/docs/lsp-compat.md), mostly thru building span -> scope search trees (only build these when a flag is enabled, tho; this will need to be added)
 
