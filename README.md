@@ -87,8 +87,6 @@ struct IntWrapper {
     // this can take in any list thru compile-time reflection
     compt mt val_in_list(var list) -> bool => { 
         self.val_in_list_helper(list, list.len - 1)
-        // self.val_in_list_helper(list, list.len) if @defined(list.len) 
-        //    else false // not a list storing value type
     }
     
     // recursive helper
