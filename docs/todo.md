@@ -22,13 +22,15 @@ main quest
         - [x] struct equalities
     - [x] subscripts on compt lists and strings (bound check)
     - [x] compt fn-pointers to allow compt fn composition 
+    - [ ] compt unions/variants
+        - unions should be pretty simpl
+        - variants are just struct {union{types...}, ordinal}
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive
             - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
             - [ ] if feasible, add range checking 
-    - [ ] compt unions/variants
-    - [ ] compt closures (pure-expr only) should naturally follow
+    - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 
 
@@ -56,19 +58,19 @@ main quest
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic for every possible `ast_stmt_t`
     - perhaps consider constexpr-based policies to exhaustively check all possibilities for more combinatorically complex stmts (fn_decls come to mind) 
 
-##### hir phase 2.b:
-- [ ] function body resolution 
-- [x] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
-    - note: already working for arbitrarily scoped modules, types, and variables
+##### hir phase 2.b (function body resolution):
+- [ ] make a system to etch ExecId into a structured linear form within blocks to be naturally connected in a CFG 
+    - [ ] this should be directly conducive to 3AC for all `hir::Exec`s
 - [ ] move checker
 - [ ] a borrow checker should be trivial, however:
     - [ ] allow mutiple immutable and mutable borrows
     - [ ] no lifetimes
     - [ ] strictly ban returning a reference to a local variable
 - [ ] remember: run-time values that are immutable references and have compile-time initializers can just reference static variables that store that compile-time value
+- [ ] either queue structs
 
 #### optimizations
-- [ ] `hir::Context` ctor that takes a stale context and a list of update files, and then based on the stale context's files:
+- [ ] `hir::Context` ctor that takes a stale context and a list of updated files, and then based on the stale context's files:
 ```
     for every file in stale context:
         if red: # stale and already marked as such 
