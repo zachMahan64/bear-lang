@@ -125,8 +125,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return handle_any_id(fid, scope, expr->expr.id);
             }
             if (expr->type == AST_EXPR_STRUCT_INIT) {
-                return solve_struct_compt_expr(
-                    fid, scope, expr, context.emplace_type(TypeVar{}, Span::generated(), false));
+                return solve_struct(fid, scope, expr,
+                                    context.emplace_type(TypeVar{}, Span::generated(), false));
             }
             if (expr->type == AST_EXPR_LIST_LITERAL) {
                 return solve_list(fid, scope, expr, maybe_into_tid);
@@ -147,7 +147,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return handle_any_id(fid, scope, expr->expr.id);
             }
             if (expr->type == AST_EXPR_STRUCT_INIT) {
-                return solve_struct_compt_expr(fid, scope, expr, into_tid);
+                return solve_struct(fid, scope, expr, into_tid);
             }
             if (expr->type == AST_EXPR_LIST_LITERAL) {
                 return solve_list(fid, scope, expr, into_tid);
@@ -253,7 +253,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
 
         if (into_type.holds<TypeStructure>()) {
-            return solve_struct_compt_expr(fid, scope, expr, into_tid);
+            return solve_struct(fid, scope, expr, into_tid);
         }
 
         // guard against non-builtins
@@ -621,8 +621,8 @@ template <IsDefVisitor V> class ComptExprSolver {
      * solve a struct's value at compile-time, this essentially attempts a canonicalization down to
      * a struct-init eexpression where each field is evaluatable at compile-time
      */
-    [[nodiscard]] OptId<ExecId> solve_struct_compt_expr(FileId fid, ScopeId scope,
-                                                        const ast_expr_t* expr, TypeId into_tid) {
+    [[nodiscard]] OptId<ExecId> solve_struct(FileId fid, ScopeId scope, const ast_expr_t* expr,
+                                             TypeId into_tid) {
 
         auto visit_def
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
@@ -681,6 +681,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             return std::nullopt;
         }
         case AST_EXPR_STRUCT_INIT: {
+
+            // TODO doesn't handle generics
 
             auto id_slice = expr->expr.struct_init.id;
             auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
@@ -1627,6 +1629,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto orig_exec = context.exec(def.as<DefVariable>().compt_value.as_id());
             return context.emplace_exec(orig_exec.value, expr_span, true);
         }
+        // we hit a def corresponding to a function, so a compt function pointer is quite helpful
+        // here.
         // TODO this doesn't consider generics
         if (def.holds<DefFunction>()) {
             const DefFunction& func_def = def.as<DefFunction>();

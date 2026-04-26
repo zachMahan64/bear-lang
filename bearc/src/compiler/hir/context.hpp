@@ -320,8 +320,7 @@ class Context {
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
     template <IsId I>
     [[nodiscard]] IdSlice<I> freeze_id_vec(const llvm::SmallVectorImpl<I>& vec)
-        requires is_any_of_v<I, TypeId, ExecId, DefId, GenericParamId, GenericArgId, FileId,
-                             SymbolId>
+        requires is_any_of_v<I, TypeId, ExecId, DefId, GenericArgId, FileId, SymbolId>
     {
         if constexpr (std::is_same_v<I, TypeId>) {
             return type_ids.freeze_small_vec(vec);
@@ -329,8 +328,6 @@ class Context {
             return exec_ids.freeze_small_vec(vec);
         } else if constexpr (std::is_same_v<I, DefId>) {
             return def_ids.freeze_small_vec(vec);
-        } else if constexpr (std::is_same_v<I, GenericParamId>) {
-            return generic_param_ids.freeze_small_vec(vec);
         } else if constexpr (std::is_same_v<I, GenericArgId>) {
             return generic_arg_ids.freeze_small_vec(vec);
         } else if constexpr (std::is_same_v<I, FileId>) {
@@ -408,8 +405,6 @@ class Context {
     CanonicalTypeTable canonical_type_table;
 
     // generics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IdVector<GenericParamId> generic_param_ids;
-    NodeVector<GenericParam> generic_params;
 
     IdVector<GenericArgId> generic_arg_ids;
     NodeVector<GenericArg> generic_args;

@@ -85,9 +85,6 @@ using DefId = Id<Def>;
 /// for addressing type nodes
 using TypeId = Id<Type>;
 
-/// for addressing generic parameter nodes
-using GenericParamId = Id<GenericParam>;
-
 /// for addressing generic argument nodes
 using GenericArgId = Id<GenericArg>;
 

@@ -21,13 +21,6 @@ struct GenericArg : NodeWithVariantValue<GenericArg> {
     GenericArgValue value;
 };
 
-using GenericParamValue = std::variant<ExecId, DefId>;
-struct GenericParam : NodeWithVariantValue<GenericParam> {
-    using id_type = GenericArgId;
-    using value_type = GenericParamValue;
-    GenericParamValue value;
-};
-
 class Context;
 
 // TODO implement

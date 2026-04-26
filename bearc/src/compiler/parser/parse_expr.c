@@ -63,11 +63,35 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
     // if no atoms, try to parse atoms as lhs ~~~~~~~~~~~~~~~~~~~
     if (!lhs) {
         if (token_is_builtin_type_or_id(first_type)) {
+
             lhs = parse_id(p);
-            // try struct init in form Foo{.thing = 1, .bar = 2}
-            if (parser_peek_match(p, TOK_LBRACE) && parser_mode(p) != PARSER_MODE_BAN_STRUCT_INIT) {
-                lhs = parse_expr_struct_init(p, lhs);
+
+            ast_slice_of_generic_args_t gen_args;
+
+            // try generic struct init or function call
+
+            if (try_parse_generic_args(p, &gen_args)) {
+                // struct init in form Foo{.thing = 1, .bar = 2}
+                if (parser_peek_match(p, TOK_LBRACE)
+                    && parser_mode(p) != PARSER_MODE_BAN_STRUCT_INIT) {
+                    lhs = parse_expr_struct_init(p, lhs, &gen_args);
+                }
+                // fn call
+                if (parser_peek_match(p, TOK_LPAREN)) {
+                    lhs = parse_fn_call(p, lhs, &gen_args);
+                }
+            } else {
+                // struct init
+                if (parser_peek_match(p, TOK_LBRACE)
+                    && parser_mode(p) != PARSER_MODE_BAN_STRUCT_INIT) {
+                    lhs = parse_expr_struct_init(p, lhs, NULL); // no generic args
+                }
+                // fn call
+                if (parser_peek_match(p, TOK_LPAREN)) {
+                    lhs = parse_fn_call(p, lhs, NULL); // no generic args
+                }
             }
+
         } else if (token_is_literal(first_type)) {
             lhs = parse_literal(p);
         } else if (first_type == TOK_LPAREN) {
@@ -87,8 +111,8 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
         return parse_postunary(p, lhs);
     }
     // try fn call or variant decomp too
-    if (lhs && (next_type == TOK_LPAREN || next_type == TOK_GENERIC_SEP)) {
-        return parse_fn_call(p, lhs);
+    if (lhs && (next_type == TOK_LPAREN)) {
+        return parse_fn_call(p, lhs, NULL); // no gen args
     }
     // try subscript
     if (lhs && next_type == TOK_LBRACK) {
@@ -369,15 +393,14 @@ ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs) {
     return postunary_expr;
 }
 
-ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs) {
+ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs, ast_slice_of_generic_args_t* gen_args) {
     ast_expr_t* call_expr = parser_alloc_expr(p);
-    if (parser_peek_match(p, TOK_GENERIC_SEP)) {
+    if (gen_args) {
         call_expr->expr.fn_call.is_generic = true;
-        parser_mode_e saved = parser_mode(p);
-        parser_mode_set(p, PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS);
-        call_expr->expr.fn_call.generic_args = parse_slice_of_generic_args(p);
-        parser_mode_set(p, saved);
+        call_expr->expr.fn_call.generic_args = *gen_args;
     } else {
+        call_expr->expr.fn_call.generic_args
+            = (ast_slice_of_generic_args_t){.valid = true, .len = 0, .start = NULL};
         call_expr->expr.fn_call.is_generic = false;
     }
     token_t* lparen = parser_expect_token(p, TOK_LPAREN); // should be verfied legit
@@ -491,9 +514,20 @@ ast_expr_t* parse_expr_struct_member_init(parser_t* p) {
     return s;
 }
 
-ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* opt_id_lhs) {
+ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* opt_id_lhs,
+                                   ast_slice_of_generic_args_t* gen_args) {
     ast_expr_t* s = parser_alloc_expr(p);
     s->type = AST_EXPR_STRUCT_INIT;
+
+    if (gen_args) {
+        s->expr.struct_init.is_generic = true;
+        s->expr.struct_init.generic_args = *gen_args;
+    } else {
+        s->expr.struct_init.generic_args
+            = (ast_slice_of_generic_args_t){.valid = true, .len = 0, .start = NULL};
+        s->expr.struct_init.is_generic = false;
+    }
+
     // if the optional id lhs is NULL, parse an id
     if (!opt_id_lhs) {
         opt_id_lhs = parse_id(p);
@@ -789,4 +823,15 @@ ast_expr_t* parse_expr_compt(parser_t* p) {
     ex->first = compt_tkn;
     ex->last = parser_prev(p);
     return ex;
+}
+
+bool try_parse_generic_args(parser_t* p, ast_slice_of_generic_args_t* args) {
+    if (parser_peek_match(p, TOK_GENERIC_SEP)) {
+        parser_mode_e saved = parser_mode(p);
+        parser_mode_set(p, PARSER_MODE_BAN_ANGLE_BRACKETS_IN_EXPRS);
+        *args = parse_slice_of_generic_args(p);
+        parser_mode_set(p, saved);
+        return true;
+    }
+    return false;
 }

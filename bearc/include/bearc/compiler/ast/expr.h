@@ -121,17 +121,6 @@ typedef struct ast_expr_borrow {
     token_t* mut;
 } ast_expr_borrow_t;
 
-typedef struct ast_expr_struct_member_init {
-    token_t* id;
-    token_t* assign_op;
-    ast_expr_t* value;
-} ast_expr_struct_member_init_t;
-
-typedef struct ast_expr_struct_init {
-    token_ptr_slice_t id;
-    ast_slice_of_exprs_t member_inits;
-} ast_expr_struct_init_t;
-
 // generics ~~~~~~~~~~~~~~~~~~
 typedef union ast_generic_arg_u {
     ast_expr_t* expr;
@@ -155,6 +144,19 @@ typedef struct ast_slice_of_generic_args {
     bool valid;
 } ast_slice_of_generic_args_t;
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+typedef struct ast_expr_struct_member_init {
+    token_t* id;
+    token_t* assign_op;
+    ast_expr_t* value;
+} ast_expr_struct_member_init_t;
+
+typedef struct ast_expr_struct_init {
+    token_ptr_slice_t id;
+    ast_slice_of_generic_args_t generic_args;
+    ast_slice_of_exprs_t member_inits;
+    bool is_generic;
+} ast_expr_struct_init_t;
 
 typedef struct ast_expr_fn_call {
     ast_expr_t* left_expr; // should resolve to a func/func ptr

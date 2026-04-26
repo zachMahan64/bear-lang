@@ -57,13 +57,20 @@ ast_expr_t* parser_sync_expr(parser_t* p);
 
 ast_expr_t* parse_grouping(parser_t* p);
 
-ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs);
+/// parse a function call
+/// lhs - called expr
+/// gen_args - generic args (pass in NULL if they're are none)
+ast_expr_t* parse_fn_call(parser_t* p, ast_expr_t* lhs, ast_slice_of_generic_args_t* gen_args);
 
 ast_expr_t* parse_subscript(parser_t* p, ast_expr_t* lhs);
 
 ast_expr_t* parse_expr_type(parser_t* p);
 
-ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* id_lhs);
+/// parse a struct-init expr
+/// lhs - id expr of the struct (NULLable)
+/// gen_args - generic args (pass in NULL if they're are none)
+ast_expr_t* parse_expr_struct_init(parser_t* p, ast_expr_t* id_lhs,
+                                   ast_slice_of_generic_args_t* gen_args);
 
 ast_expr_t* parse_expr_borrow(parser_t* p);
 
@@ -98,4 +105,7 @@ ast_expr_t* parse_expr_ternary_if(parser_t* p, ast_expr_t* lhs);
 
 ast_expr_t* parse_expr_compt(parser_t* p);
 
+/// sets generic args value
+/// - returns true if generic args are found
+bool try_parse_generic_args(parser_t* p, ast_slice_of_generic_args_t* args);
 #endif

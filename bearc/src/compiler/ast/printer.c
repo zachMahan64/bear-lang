@@ -448,10 +448,21 @@ void pretty_print_expr(const ast_expr_t* expression) {
         break;
     case AST_EXPR_STRUCT_INIT: {
         print_title("struct-init expression");
+        printer_do_indent();
         print_indent();
         printf("name: ");
         print_id_slice(expr.expr.struct_init.id);
         puts(",");
+        printer_deindent();
+        if (expr.expr.struct_init.is_generic) {
+            ast_slice_of_generic_args_t args = expr.expr.struct_init.generic_args;
+            print_delineator_from_type(TOK_GENERIC_SEP);
+            print_opening_delim_from_type(TOK_LT);
+            for (size_t i = 0; i < args.len; i++) {
+                print_generic_type_arg(args.start[i]);
+            }
+            print_closing_delim_from_type(TOK_GT);
+        }
         print_delineator_from_type(TOK_LBRACE);
         ast_slice_of_exprs_t inits = expr.expr.struct_init.member_inits;
         for (size_t i = 0; i < inits.len; i++) {

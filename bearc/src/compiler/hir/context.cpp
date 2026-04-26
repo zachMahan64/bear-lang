@@ -55,7 +55,6 @@ static constexpr size_t DEFAULT_EXEC_VEC_CAP = 0x800;
 static constexpr size_t DEFAULT_DEF_CAP = 0x800;
 static constexpr size_t DEFAULT_TYPE_VEC_CAP = 0x400;
 static constexpr size_t DEFAULT_CANONICAL_TYPE_VEC_CAP = 0x100;
-static constexpr size_t DEFAULT_GENERIC_PARAM_VEC_CAP = 0x80;
 static constexpr size_t DEFAULT_GENERIC_ARG_VEC_CAP = 0x400;
 static constexpr HirSize EXPECTED_HIGH_NUM_IMPORTS = 128;
 static constexpr size_t DEFAULT_DIAG_NUM = 0x100;
@@ -86,9 +85,7 @@ Context::Context(const bearc_args_t& args, instances instances)
       types{DEFAULT_TYPE_VEC_CAP}, canonical_to_type_id(DEFAULT_CANONICAL_TYPE_VEC_CAP),
       canonical_type_table_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_type_table(*this, canonical_type_table_arena, DEFAULT_CANONICAL_TT_CAP),
-      generic_param_ids{DEFAULT_GENERIC_PARAM_VEC_CAP},
-      generic_params{DEFAULT_GENERIC_PARAM_VEC_CAP}, generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP},
-      generic_args{DEFAULT_GENERIC_ARG_VEC_CAP},
+      generic_arg_ids{DEFAULT_GENERIC_ARG_VEC_CAP}, generic_args{DEFAULT_GENERIC_ARG_VEC_CAP},
       generic_args_arena{DEFAULT_CANONICAL_TYPE_ARENA_CAP},
       canonical_generic_args_id_to_def_id_map{DEFAULT_CANONICAL_GEN_ARGS_CAP},
       canonical_generic_args_to_first_instance{DEFAULT_CANONICAL_GEN_ARGS_CAP},

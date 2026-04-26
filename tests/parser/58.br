@@ -1,0 +1,15 @@
+// tests/parser/59.br
+
+// explcit (non-inferred struct inits and function calls)
+fn main() {
+    var f = Foo::i32{.a = 12};
+    var g = Foo::Bar<i32, Foo::i32>{.a = 12};
+
+    var h = bar::<i32>(12345);
+
+    var i = bar<i32>(123);
+
+    var j = fiction::<Foo::Foo::Bar<Foo::Foo, Fooey<i32, i32, i32>>>(123, "hello", 321);
+}
+
+fn bar<T>(T a) => a
