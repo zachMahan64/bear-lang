@@ -67,7 +67,13 @@ main quest
     - [ ] no lifetimes
     - [ ] strictly ban returning a reference to a local variable
 - [ ] remember: run-time values that are immutable references and have compile-time initializers can just reference static variables that store that compile-time value
-- [ ] either queue structs
+- [ ] LLVM lowering prep:
+    - [ ] tighten up mention/mutation tracking for better `unused variable: foo` diagnostics (and top level decls when not a lib build)
+    - [ ] either queue struct and function declarations (cheaper linear lowering to LLVM) or use a scope iterator 
+    - [ ] just find main thru top-level scope; only require it in non-lib builds 
+    - [ ] add a flag for exec/lib build to track diagnostics slightly different (described above)
+    - [ ] finalize `extern {}` and `extern C {}` semantics for cross-TU and FFI compilation respectively
+        - [ ] hand out errors for C-incompatible functions when under a C abi extern, like no references, generics, etc.
 
 #### optimizations
 - [ ] `hir::Context` ctor that takes a stale context and a list of updated files, and then based on the stale context's files:
