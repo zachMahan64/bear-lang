@@ -1,9 +1,9 @@
-#### todos
+### todos
 
 main quest
 ----------
 
-##### hir phase 2.a:
+#### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
 
 - [ ] some more `compt` improvements:
@@ -58,7 +58,7 @@ main quest
 - [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic for every possible `ast_stmt_t`
     - perhaps consider constexpr-based policies to exhaustively check all possibilities for more combinatorically complex stmts (fn_decls come to mind) 
 
-##### hir phase 2.b (function body resolution):
+#### hir phase 2.b (function body resolution):
 - [ ] make a system to etch ExecId into a structured linear form within blocks to be naturally connected in a CFG 
     - [ ] this should be directly conducive to 3AC for all `hir::Exec`s
 - [ ] move checker
@@ -108,27 +108,32 @@ main quest
 side quests
 -----------
 
-##### chores 
-- [x] handle alignas accordingly during ast lowering
-- [x] fix the `HashMap<i32, HashMap<i32, i32>>` parsing case by packing count tracking into `>>` and `>>>` tokens until they hit a value of 2/3
+#### chores
+
+lexer & parser 
+--------------
 - [ ] improve numerical literal handling 
     - [ ] probably just replace strtoll and friends with hand-rolled impls 
     - [ ] add binary integer literals `0b1010101` (keeping dec, hex, and float that we currently already have)
     - [ ] set a tkn to TOK_OVERSIZED_INT_ERR if there's no decimal and it's greater than u64 max or less than i64 min
+- [ ] verify correctness of escape sequences in char and string literals
+
+hir & later 
+----------- 
 - [ ] allow arbitrarily ordered struct members inits, will require mini symbol hashmaps
 - [ ] add an Exec Stringifier (tedious)
 - [ ] add a Def Stringifier (tedious)  
 - [ ] arbitrary source code reconstruction from hir::Context
 
-##### diagnostics
+#### diagnostics
 - [ ] elipse out diagnostics after like 8 lines
 - [ ] add trimming of cwd from file paths in diagnostics reporting?
 - [ ] fully allow cyclical imports, add a flag to enable warnings instead of always warning for it
 - [ ] using a scope iterator, use Levenshtein distance to make a `help: did you mean:` `...`
 
-##### debugging 
+#### debugging 
 - [x] make a scope iterator
 - [ ] debug logger to display context and scope contents
 
-##### lsp-friendly features
+#### lsp-friendly features
 - [lsp compatibility plan here](docs/lsp-compat.md)
