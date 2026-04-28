@@ -57,7 +57,6 @@ struct TypeBuiltin {
     builtin_type type;
 };
 
-// just struct
 struct TypeStruct {
     DefId definition;
 };
