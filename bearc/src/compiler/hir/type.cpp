@@ -23,11 +23,23 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             }
             return t.type == t2.as<TypeBuiltin>().type;
         },
-        [&](const TypeStructure& t) -> bool {
-            if (!t2.holds<TypeStructure>()) {
+        [&](const TypeStruct& t) -> bool {
+            if (!t2.holds<TypeStruct>()) {
                 return false;
             }
-            return t.definition == t2.as<TypeStructure>().definition;
+            return t.definition == t2.as<TypeStruct>().definition;
+        },
+        [&](const TypeVariant& t) -> bool {
+            if (!t2.holds<TypeVariant>()) {
+                return false;
+            }
+            return t.definition == t2.as<TypeVariant>().definition;
+        },
+        [&](const TypeUnion& t) -> bool {
+            if (!t2.holds<TypeUnion>()) {
+                return false;
+            }
+            return t.definition == t2.as<TypeUnion>().definition;
         },
         [&](const TypeGenericStructure& t) -> bool {
             if (!t2.holds<TypeGenericStructure>()) {
@@ -99,7 +111,7 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
 
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> size_t { return mix(0x01ULL ^ static_cast<size_t>(t.type)); },
-        [&](const TypeStructure& t) -> size_t {
+        [&](const TypeStruct& t) -> size_t {
             return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeDeftype&) -> size_t {
@@ -131,7 +143,13 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
             return mix(h);
         },
         [&](const TypeVariadic&) -> size_t { return mix(0x09ULL); },
-        [&](const TypeVar&) -> size_t { return mix(0x10ULL); }};
+        [&](const TypeVar&) -> size_t { return mix(0x10ULL); },
+        [&](const TypeUnion& t) -> size_t {
+            return mix(0x11ULL ^ static_cast<size_t>(t.definition.val()));
+        },
+        [&](const TypeVariant& t) -> size_t {
+            return mix(0x12ULL ^ static_cast<size_t>(t.definition.val()));
+        }};
 
     size_t h = t1.visit(vs);
 
@@ -162,7 +180,23 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
                 }
             }
         },
-        [&](const TypeStructure& t) {
+        [&](const TypeStruct& t) {
+            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+        },
+        [&](const TypeVariant& t) {
+            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            if constexpr (considers_mut()) {
+                if (t1.mut) {
+                    str += " mut";
+                }
+            }
+        },
+        [&](const TypeUnion& t) {
             str += context.symbol_id_to_cstr(context.def(t.definition).name);
             if constexpr (considers_mut()) {
                 if (t1.mut) {
@@ -266,7 +300,9 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
     using OTid = OptId<TypeId>;
     auto vs = Ovld{
         [&](const TypeBuiltin&) -> OTid { return OTid{}; },
-        [&](const TypeStructure&) -> OTid { return OTid{}; },
+        [&](const TypeStruct&) -> OTid { return OTid{}; },
+        [&](const TypeVariant&) -> OTid { return OTid{}; },
+        [&](const TypeUnion&) -> OTid { return OTid{}; },
         [&](const TypeDeftype&) -> OTid { return OTid{}; },
         [&](const TypeGenericStructure&) -> OTid { return OTid{}; },
         [&](const TypeArr& t) -> OTid { return t.inner; },

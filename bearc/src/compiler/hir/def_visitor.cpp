@@ -218,7 +218,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         context.register_generated_deftype(
             structs_scope, context.symbol_id<"Self">(),
-            context.emplace_type(TypeStructure{.definition = did}, Span::generated(), false), did,
+            context.emplace_type(TypeStruct{.definition = did}, Span::generated(), false), did,
             Span{context, def.span.file_id, strct.name});
 
         break;

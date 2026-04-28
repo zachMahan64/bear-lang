@@ -80,7 +80,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         if (exec.holds<ExecExprStructInit>()) {
             auto struct_did = exec.as<ExecExprStructInit>().struct_def;
-            return context.emplace_type(TypeStructure{.definition = struct_did}, Span::generated(),
+            return context.emplace_type(TypeStruct{.definition = struct_did}, Span::generated(),
                                         false);
         }
         if (exec.holds<ExecExprListLiteral>()) {
@@ -167,7 +167,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto inner = context.type(inner_tid);
             auto d0 = context.emplace_diagnostic(
                 into_type.span, diag_code::pointers_are_not_assignable_at_compt, diag_type::error);
-            if (inner.template holds_any_of<TypeStructure, TypeBuiltin>()) {
+            if (inner.template holds_any_of<TypeStruct, TypeBuiltin>()) {
                 auto d1 = context.emplace_diagnostic_with_message_value(
                     into_type.span, diag_code::replace_with, diag_type::help,
                     DiagnosticTypeAfterMessage{.tid = inner_tid});
@@ -252,7 +252,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return fnp_eid;
         }
 
-        if (into_type.holds<TypeStructure>()) {
+        if (into_type.holds<TypeStruct>()) {
             return solve_struct(fid, scope, expr, into_tid);
         }
 
@@ -843,13 +843,13 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             // type check before returning here! but only if the into type isn't var!
             if (!context.type(into_tid).template holds<TypeVar>()) {
-                if (auto into_did = context.type(into_tid).template as<TypeStructure>().definition;
+                if (auto into_did = context.type(into_tid).template as<TypeStruct>().definition;
                     struct_did != into_did) {
                     context.emplace_diagnostic(
                         expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
                         DiagnosticTypeToType{
                             .from = context.emplace_type(
-                                TypeStructure{.definition = struct_did},
+                                TypeStruct{.definition = struct_did},
                                 Span(fid, context.ast(fid).buffer(),
                                      expr->expr.struct_init.id.start[0],
                                      expr->expr.struct_init.id
@@ -911,9 +911,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return eid;
             }
             if (const Exec& exec = context.exec(eid);
-                exec.holds<ExecExprStructInit>() && into_type.holds<TypeStructure>()
+                exec.holds<ExecExprStructInit>() && into_type.holds<TypeStruct>()
                 && (exec.as<ExecExprStructInit>().struct_def
-                    == into_type.as<TypeStructure>().definition)) {
+                    == into_type.as<TypeStruct>().definition)) {
                 return eid;
             }
             OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
@@ -2373,9 +2373,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         };
 
         if (s1.struct_def != s2.struct_def) {
-            auto t1 = context.emplace_type(TypeStructure{.definition = s1.struct_def},
+            auto t1 = context.emplace_type(TypeStruct{.definition = s1.struct_def},
                                            Span::generated(), false);
-            auto t2 = context.emplace_type(TypeStructure{.definition = s2.struct_def},
+            auto t2 = context.emplace_type(TypeStruct{.definition = s2.struct_def},
                                            Span::generated(), false);
             auto d0 = context.emplace_diagnostic(Span::combine(list1.span, list2.span),
                                                  diag_code::invalid_operand_for_binary_expression,

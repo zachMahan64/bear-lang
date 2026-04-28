@@ -698,8 +698,8 @@ OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {
     }
     if (def.holds<DefDeftype>()) {
         const Type& type = this->type(try_decay_ref(def.as<DefDeftype>().type));
-        if (type.holds<TypeStructure>()) {
-            return def_to_scope_for_types.at(type.as<TypeStructure>().definition);
+        if (type.holds<TypeStruct>()) {
+            return def_to_scope_for_types.at(type.as<TypeStruct>().definition);
         }
     }
     // hopefully found
@@ -798,8 +798,8 @@ ExecId Context::exec_id(IdIdx<ExecId> id) const { return exec_ids.cat(id); }
 
     if (d.holds<DefDeftype>()) {
         const Type& t = type(d.as<DefDeftype>().type);
-        if (t.holds<TypeStructure>()) {
-            return t.as<TypeStructure>().definition;
+        if (t.holds<TypeStruct>()) {
+            return t.as<TypeStruct>().definition;
         }
     }
 
@@ -1131,16 +1131,16 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
             if (def.holds<DefVariable>()) {
                 const DefVariable var_def = def.as<DefVariable>();
                 const Type& type = this->type(try_decay_ref(def.as<DefVariable>().type));
-                if (type.holds<TypeStructure>()) {
-                    curr_struct = type.as<TypeStructure>().definition;
+                if (type.holds<TypeStruct>()) {
+                    curr_struct = type.as<TypeStruct>().definition;
                 } else if (var_def.compt_value.has_value()) {
                     TopLevelDefVisitor def_vis{*this};
                     ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
                     const OptId<TypeId> maybe_tid
                         = solver.infer_type_from_compt_exec(var_def.compt_value.as_id());
                     if (maybe_tid.has_value()
-                        && this->type(maybe_tid.as_id()).holds<TypeStructure>()) {
-                        curr_struct = this->type(maybe_tid.as_id()).as<TypeStructure>().definition;
+                        && this->type(maybe_tid.as_id()).holds<TypeStruct>()) {
+                        curr_struct = this->type(maybe_tid.as_id()).as<TypeStruct>().definition;
                     }
                 }
             }
@@ -1219,6 +1219,15 @@ SymbolId Context::symbol_id(IdIdx<SymbolId> sididx) const { return symbol_ids.ca
 
 [[nodiscard]] bool Context::equivalent_type(TypeId tid1, TypeId tid2) const {
     return type(tid1).canonical == type(tid2).canonical;
+}
+
+/// checks if a Def is a struct without resolving it
+bool Context::is_struct(DefId did) const { return def_ast_node(did)->type == AST_STMT_STRUCT_DEF; }
+/// checks if a Def is a struct without resolving it
+bool Context::is_union(DefId did) const { return def_ast_node(did)->type == AST_STMT_UNION_DEF; }
+/// checks if a Def is a struct without resolving it
+bool Context::is_variant(DefId did) const {
+    return def_ast_node(did)->type == AST_STMT_VARIANT_DEF;
 }
 
 } // namespace hir

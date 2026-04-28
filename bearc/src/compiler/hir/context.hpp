@@ -317,6 +317,13 @@ class Context {
 
     [[nodiscard]] DefId end_def_id() const;
 
+    /// checks if a Def is a struct without resolving it
+    bool is_struct(DefId did) const;
+    /// checks if a Def is a struct without resolving it
+    bool is_union(DefId did) const;
+    /// checks if a Def is a struct without resolving it
+    bool is_variant(DefId did) const;
+
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
     template <IsId I>
     [[nodiscard]] IdSlice<I> freeze_id_vec(const llvm::SmallVectorImpl<I>& vec)

@@ -57,9 +57,16 @@ struct TypeBuiltin {
     builtin_type type;
 };
 
-// structure meaning struct, variant, or union
-// TODO: consider something seperate for variants/unions
-struct TypeStructure {
+// just struct
+struct TypeStruct {
+    DefId definition;
+};
+
+struct TypeUnion {
+    DefId definition;
+};
+
+struct TypeVariant {
     DefId definition;
 };
 
@@ -105,8 +112,8 @@ struct TypeVariadic {
 
 /// main exec union
 using TypeValue
-    = std::variant<TypeBuiltin, TypeStructure, TypeDeftype, TypeGenericStructure, TypeArr,
-                   TypeSlice, TypeRef, TypePtr, TypeFnPtr, TypeVariadic, TypeVar>;
+    = std::variant<TypeBuiltin, TypeStruct, TypeDeftype, TypeGenericStructure, TypeArr, TypeSlice,
+                   TypeRef, TypePtr, TypeFnPtr, TypeVariadic, TypeVar, TypeVariant, TypeUnion>;
 
 struct Type : NodeWithVariantValue<Type> {
     using id_type = TypeId;

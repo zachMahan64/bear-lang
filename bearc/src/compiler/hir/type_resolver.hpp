@@ -12,8 +12,10 @@
 #include "compiler/ast/type.h"
 #include "compiler/hir/compt_expr_solver.hpp"
 #include "compiler/hir/context.hpp"
+#include "compiler/hir/def.hpp"
 #include "compiler/hir/def_visitor.hpp"
 #include "compiler/hir/diagnostic.hpp"
+#include "compiler/hir/type.hpp"
 #include "compiler/token.h"
 #include <optional>
 
@@ -79,7 +81,15 @@ template <IsDefVisitor V> class TypeResolver {
                                             span, mut);
             }
 
-            return context.emplace_type(TypeStructure{did}, span, mut);
+            if (context.is_struct(did)) {
+                return context.emplace_type(TypeStruct{did}, span, mut);
+            }
+            if (context.is_variant(did)) {
+                return context.emplace_type(TypeVariant{did}, span, mut);
+            }
+            if (context.is_union(did)) {
+                return context.emplace_type(TypeUnion{did}, span, mut);
+            }
         }
 
         context.emplace_diagnostic(span, diag_code::type_not_defined, diag_type::error);
