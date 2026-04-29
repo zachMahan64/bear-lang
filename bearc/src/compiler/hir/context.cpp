@@ -1264,11 +1264,7 @@ bool Context::compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2
     // if first arg isn't the same and neither arg is TypeVar (this will be the case for contract
     // methods, `mt`), then that's not equivalent
     if (!equivalent_type(t1, t2)) {
-        const auto ty1 = type(s1.get(0));
-        const auto ty2 = type(s2.get(0));
-        if (!ty1.holds<TypeVar>() && !ty2.holds<TypeVar>()) {
-            return false;
-        }
+        return inferable_as(t1, t2);
     }
 
     if (s1.len() == 1) {
@@ -1349,10 +1345,25 @@ OptId<TypeId> Context::self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t*
         if (maybe_did.has_value()) {
             auto def = this->def(maybe_did.as_id());
             maybe_self_type = def.as<DefDeftype>().type;
+            // if mut then we actually need to ensure we're mut
+            if (fn_decl->is_mut) {
+                const auto& ty = type(maybe_self_type.as_id());
+                // we have to emplace a new type in this case since we can't mutate the original
+                if (!ty.mut) {
+                    maybe_self_type = emplace_type(ty.value, ty.span, true); // mut
+                }
+            }
         }
     }
 
     return maybe_self_type;
+}
+
+bool Context::inferable_as(TypeId tid1, TypeId tid2) const {
+    const auto& t1 = type(tid1);
+    const auto& t2 = type(tid2);
+
+    return (t1.holds<TypeVar>() || t2.holds<TypeVar>()) && t1.mut == t2.mut;
 }
 
 } // namespace hir

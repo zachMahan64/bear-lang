@@ -331,6 +331,10 @@ class Context {
     /// checks if a Def is a struct without resolving it
     [[nodiscard]] bool is_variant(DefId did) const;
 
+    /// checks if a type can be inferred as another
+    /// - ordering of the arguments doesn't matter
+    [[nodiscard]] bool inferable_as(TypeId tid1, TypeId tid2) const;
+
     /// checks if two functions signatures match
     /// returns true on match, else false (also returns false if either DefId does not correspond to
     /// a function)

@@ -463,7 +463,7 @@ ast_param_t* parse_param(parser_t* p) {
     param->type = parse_type(p);
     // try set name
     token_t* next = parser_peek(p);
-    bool match = next->type == TOK_IDENTIFIER;
+    bool match = next->type == TOK_IDENTIFIER || next->type == TOK_SELF_ID;
     if (!match) {
         compiler_error_list_emplace(p->error_list, next, ERR_EXPECTED_PARAMETER_IDENTIFIER);
         param->name = NULL;
