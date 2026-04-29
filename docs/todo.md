@@ -20,6 +20,10 @@ main quest
         - [ ] allow capturing compt variables 
 
 - [x] contract resolution
+    - [ ] issue diagnostics that say exactly what's wrong
+        - [ ] `mt` and `Self` related stuff 
+        - [ ] param count mismatch
+        - [ ] return-type mismatch
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
