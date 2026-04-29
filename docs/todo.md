@@ -23,6 +23,7 @@ main quest
     - [x] subscripts on compt lists and strings (bound check)
     - [x] compt fn-pointers to allow compt fn composition 
     - [ ] compt unions/variants
+        - [ ] union and variant def lowering/resol
         - unions should be pretty simpl
         - variants are just struct {union{types...}, ordinal}
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
@@ -49,6 +50,7 @@ main quest
     - [ ] handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything 
 
+- [ ] tighten up abi related stuff with hir::LayoutRules or something similar
 
 - [ ] preliminary full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
     - [x] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
