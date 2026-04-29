@@ -1,0 +1,39 @@
+// tests/hir/63.br 
+
+contract Foo {
+    fn foo();
+    fn oops();
+    fn oopsie();
+}
+
+struct Fooey has Foo, Bar, Cat {
+    i32 oopsie; // oops, not a function
+
+    compt 
+        bool 
+            ben = true; // oops not a function, also weird formatting
+
+    fn foo() {
+    }
+    fn bar(i32 b, i32 a, i32 r) -> i32 => (b + a + r) // fine
+    fn boo(u32 a) -> u8 => (a as u8) // oops wrong param type
+    fn booie(i32 a) -> i16 => (a as i16) // oops wrong return type
+
+    mt babadaba(i32 a) -> i32 => {42 + a }
+
+    mt meow(i32 a) { // oops, shouldn't take an i32 as a param
+
+    }
+}
+
+contract Bar {
+    fn bar(i32 b, i32 a, i32 r) -> i32;
+    fn boo(u64 a) -> u8;
+    fn booie(i32 a) -> i8;
+    fn ben();
+    mt babadaba(i32 a) -> i32;
+}
+
+contract Cat {
+    mt meow();
+}

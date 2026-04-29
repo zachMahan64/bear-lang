@@ -123,6 +123,9 @@ enum class diag_code : uint8_t {
     non_compt_function_params_must_have_explicit_types,
     type_deduction_not_legal_here,
     use_a_generic_function_parameter_and_specify_it_as_a_type,
+    function_signature_does_not_match_contract,
+    not_a_contract,
+    invalid_contract,
 
     count, // this must be last,
 
@@ -195,6 +198,12 @@ struct DiagnosticStructMemberSymBeforeMsg {
     SymbolId mem_sid;
 };
 
+struct DiagnosticStructDoesNotDefineBlankForContract {
+    SymbolId struct_name;
+    SymbolId func_name;
+    SymbolId contract_name;
+};
+
 using DiagnosticMessageValue
     = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
                    DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
@@ -202,7 +211,8 @@ using DiagnosticMessageValue
                    DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
                    DiagnosticTypeAndTypeForBinaryOp, DiagnosticIdentifierBeforeMessageAndTypeAfter,
                    DiagnosticSymButGotSym, DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds,
-                   DiagnosticStructMemberSymBeforeMsg>;
+                   DiagnosticStructMemberSymBeforeMsg,
+                   DiagnosticStructDoesNotDefineBlankForContract>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
@@ -250,7 +260,7 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     static const char* message_for_code(enum diag_code c);
     static const char* name_for_type(enum diag_type t);
     static const char* accent_color_for_type(enum diag_type t);
-    void print_info_value(Context& context, HirSize min_width) const;
+    void print_info_value(Context& context, HirSize min_width, bool more_than_one_line) const;
     void print_multiline(Context& context, bool print_file) const;
     void print_line(const auto& printable) const;
     void print_line_with_number(HirSize line, const auto& printable) const;
@@ -258,6 +268,17 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     [[nodiscard]] std::string diag(int min_width) const;
     [[nodiscard]] std::string line_with_number(HirSize line, int min_width) const;
     static int width(HirSize line);
+};
+
+/// helper class that makes linking chains of diagnostics easier by internally tracking the previous
+/// diagnostic
+class DiagLinker {
+    Context& ctx;
+    OptId<DiagnosticId> prev;
+
+  public:
+    DiagLinker(Context& ctx) : ctx{ctx} {}
+    void link(DiagnosticId d);
 };
 
 } // namespace hir

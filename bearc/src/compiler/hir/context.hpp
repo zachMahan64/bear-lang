@@ -162,6 +162,8 @@ class Context {
 
     [[nodiscard]] OptId<ScopeId> func_to_scope(DefId did);
 
+    [[nodiscard]] Span name_span_for_def(DefId did) const;
+
     /// record ordered definitions to be frozen as an IdSlice<DefId> corresponding to a DefId
     /// (particularly requiring ordered members, like a struct)
     void register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec);
@@ -193,7 +195,8 @@ class Context {
     void link_diagnostic(DiagnosticId diag, DiagnosticId next);
     void print_diagnostic(DiagnosticId diag, bool print_file = true);
     // type emplacer
-    /// emplaces and gets the id from a new CanonicalTypeId corresponding to a TypeId which points
+    /// emplaces and gets the id from a new CanonicalTypeId c
+    /// orresponding to a TypeId which points
     /// to the first structural representation of the canonical type
     [[nodiscard]] CanonicalTypeId
     emplace_and_get_canonical_type_id(TypeId first_structural_type_id);
@@ -293,6 +296,10 @@ class Context {
 
     [[nodiscard]] bool equivalent_type(TypeId tid1, TypeId tid2) const;
 
+    [[nodiscard]] bool equivalent_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const;
+
+    [[nodiscard]] bool compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const;
+
     [[nodiscard]] const Def& def(DefId id) const;
 
     [[nodiscard]] const Def& def(IdIdx<DefId> id) const;
@@ -318,11 +325,19 @@ class Context {
     [[nodiscard]] DefId end_def_id() const;
 
     /// checks if a Def is a struct without resolving it
-    bool is_struct(DefId did) const;
+    [[nodiscard]] bool is_struct(DefId did) const;
     /// checks if a Def is a struct without resolving it
-    bool is_union(DefId did) const;
+    [[nodiscard]] bool is_union(DefId did) const;
     /// checks if a Def is a struct without resolving it
-    bool is_variant(DefId did) const;
+    [[nodiscard]] bool is_variant(DefId did) const;
+
+    /// checks if two functions signatures match
+    /// returns true on match, else false (also returns false if either DefId does not correspond to
+    /// a function)
+    [[nodiscard]] bool function_signatures_match(DefId did1, DefId did2);
+
+    [[nodiscard]] OptId<TypeId> self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
+                                                 Def& def);
 
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
     template <IsId I>

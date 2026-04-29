@@ -240,6 +240,12 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "type deduction is not legal here";
     case diag_code::use_a_generic_function_parameter_and_specify_it_as_a_type:
         return "use a generic function parameter and use it as this parameter's type";
+    case diag_code::function_signature_does_not_match_contract:
+        return "function signature does not match contract's function";
+    case diag_code::not_a_contract:
+        return "not a contract";
+    case diag_code::invalid_contract:
+        return "invalid contract";
     }
 
     std::unreachable();
@@ -308,7 +314,8 @@ int Diagnostic::width(HirSize line) {
     return w;
 }
 
-void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
+void Diagnostic::print_info_value(Context& context, HirSize min_width,
+                                  bool more_than_one_line) const {
 
     auto import_stack_helper = [&](IdSlice<FileId> files) {
         auto stream_trace = [&](FileId id, int idx) {
@@ -326,15 +333,25 @@ void Diagnostic::print_info_value(Context& context, HirSize min_width) const {
         print_line(stream_trace(context.file_id(files.first()), idx).str());
     };
 
+    auto arrow_helper = [this, min_width, more_than_one_line]() {
+        if (more_than_one_line) {
+            std::cout << '\n'
+                      << line(static_cast<int>(min_width)) << ansi_bold_reset() << "--> "
+                      << ansi_reset();
+        }
+    };
+
     const auto vs = Ovld{
         [&](DiagnosticNoOtherInfo) { std::cout << '\n'; },
         [&](DiagnosticTypeToType t) {
+            arrow_helper();
             std::cout << accent_color_for_type(type) << "cannot convert value of type `"
                       << type_to_string_with_akas(context, t.from) << "` to `"
                       << type_to_string_with_akas(context, t.to) << '`' << ansi_reset() << '\n';
         },
         [&](DiagnosticImportStack import_stack) { import_stack_helper(import_stack.files); },
         [&](DiagnosticSubCode sc) {
+            arrow_helper();
             std::cout << accent_color_for_type(type) << message_for_code(sc.sub_code)
                       << ansi_reset() << '\n';
         },
@@ -545,12 +562,11 @@ void Diagnostic::print_multiline(Context& context, bool print_file) const {
             std::cout << ' ';
         }
 
+        print_info_value(context, min_width, false); // more than one line
     } else {
         std::cout << '\n' << line(min_width);
+        print_info_value(context, min_width, true); // more than one line
     }
-    // else if truly multiline
-
-    print_info_value(context, min_width);
 }
 
 bool Diagnostic::has_complex_message() const {
@@ -577,6 +593,13 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
         str += '`';
     };
 
+    auto sid_helper = [this, &ctx, &str](SymbolId sid) {
+        str += '`';
+        str += accent_color_for_type(type);
+        str += ctx.symbol(sid);
+        str += ansi_bold_reset();
+        str += '`';
+    };
     auto vs = Ovld{
         [](DiagnosticNoOtherInfo) {},
         [&](DiagnosticIdentifierAfterMessage d) {
@@ -717,9 +740,25 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += message_for_code(code);
             str += ansi_bold_reset();
         },
+        [&](DiagnosticStructDoesNotDefineBlankForContract d) {
+            str += "struct ";
+            sid_helper(d.struct_name);
+            str += " does not provide function ";
+            sid_helper(d.func_name);
+            str += " for contract ";
+            sid_helper(d.contract_name);
+            str += ansi_bold_reset();
+        },
 
     };
     std::visit(vs, message_value);
+}
+
+void DiagLinker::link(DiagnosticId d) {
+    if (prev.has_value()) {
+        ctx.link_diagnostic(prev.as_id(), d);
+    }
+    prev = d;
 }
 
 } // namespace hir

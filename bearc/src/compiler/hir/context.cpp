@@ -556,7 +556,9 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
                                          OptId<DiagnosticId> next) {
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, next);
     diagnostics_used.bump();
-    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    if (!span.is_generated()) {
+        file_to_diagnostics.at(span.file_id).emplace_back(id);
+    }
     handle_bump_diag_counts(code, type);
     return id;
 }
@@ -565,7 +567,9 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
                                          DiagnosticInfoValue value, OptId<DiagnosticId> next) {
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, value, next);
     diagnostics_used.bump();
-    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    if (!span.is_generated()) {
+        file_to_diagnostics.at(span.file_id).emplace_back(id);
+    }
     handle_bump_diag_counts(code, type);
     return id;
 }
@@ -575,7 +579,9 @@ DiagnosticId Context::emplace_diagnostic(Span span, diag_code code, diag_type ty
                                          DiagnosticInfoValue value, OptId<DiagnosticId> next) {
     DiagnosticId id = diagnostics.emplace_and_get_id(span, code, type, message_value, value, next);
     diagnostics_used.bump();
-    file_to_diagnostics.at(span.file_id).emplace_back(id);
+    if (!span.is_generated()) {
+        file_to_diagnostics.at(span.file_id).emplace_back(id);
+    }
     handle_bump_diag_counts(code, type);
     return id;
 }
@@ -1215,10 +1221,69 @@ void Context::register_func_to_scope(DefId did, ScopeId scope_id) {
 
 OptId<ScopeId> Context::func_to_scope(DefId did) { return def_to_scope_for_funcs.at(did); }
 
+Span Context::name_span_for_def(DefId did) const {
+    const Def& def = this->def(did);
+    return Span{*this, def.span.file_id,
+                FileAstVisitor::name_of_ast_decl(def_ast_node(did)).value()};
+}
+
 SymbolId Context::symbol_id(IdIdx<SymbolId> sididx) const { return symbol_ids.cat(sididx); }
 
-[[nodiscard]] bool Context::equivalent_type(TypeId tid1, TypeId tid2) const {
+bool Context::equivalent_type(TypeId tid1, TypeId tid2) const {
     return type(tid1).canonical == type(tid2).canonical;
+}
+
+bool Context::equivalent_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const {
+    if (s1.len() != s2.len()) {
+        return false;
+    }
+
+    for (HirSize i = 0; i < s1.len(); i++) {
+        TypeId t1 = type_id(s1.get(i));
+        TypeId t2 = type_id(s2.get(i));
+        if (!equivalent_type(t1, t2)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Context::compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const {
+    if (s1.len() != s2.len()) {
+        return false;
+    }
+
+    if (s1.len() == 0) {
+        return true;
+    }
+
+    const auto t1 = type_id(s1.get(0));
+    const auto t2 = type_id(s2.get(0));
+
+    // if first arg isn't the same and neither arg is TypeVar (this will be the case for contract
+    // methods, `mt`), then that's not equivalent
+    if (!equivalent_type(t1, t2)) {
+        const auto ty1 = type(s1.get(0));
+        const auto ty2 = type(s2.get(0));
+        if (!ty1.holds<TypeVar>() && !ty2.holds<TypeVar>()) {
+            return false;
+        }
+    }
+
+    if (s1.len() == 1) {
+        return true;
+    }
+
+    for (HirSize i = 1; i < s1.len(); i++) {
+        TypeId t1 = type_id(s1.get(i));
+        TypeId t2 = type_id(s2.get(i));
+        if (!equivalent_type(t1, t2)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /// checks if a Def is a struct without resolving it
@@ -1228,6 +1293,66 @@ bool Context::is_union(DefId did) const { return def_ast_node(did)->type == AST_
 /// checks if a Def is a struct without resolving it
 bool Context::is_variant(DefId did) const {
     return def_ast_node(did)->type == AST_STMT_VARIANT_DEF;
+}
+
+bool Context::function_signatures_match(DefId did1, DefId did2) {
+    const Def& def1 = def(did1);
+    const Def& def2 = def(did2);
+
+    IdSlice<TypeId> param_tids1;
+    OptId<TypeId> return_tid1;
+    IdSlice<TypeId> param_tids2;
+    OptId<TypeId> return_tid2;
+
+    if (def1.holds<DefFunction>()) {
+        param_tids1 = def1.as<DefFunction>().param_types;
+        return_tid1 = def1.as<DefFunction>().return_type;
+    } else if (def1.holds<DefFunctionPrototype>()) {
+        param_tids1 = def1.as<DefFunctionPrototype>().param_types;
+        return_tid1 = def1.as<DefFunctionPrototype>().return_type;
+    } else {
+        return false;
+    }
+    if (def2.holds<DefFunction>()) {
+        param_tids2 = def2.as<DefFunction>().param_types;
+        return_tid2 = def2.as<DefFunction>().return_type;
+    } else if (def2.holds<DefFunctionPrototype>()) {
+        param_tids2 = def2.as<DefFunctionPrototype>().param_types;
+        return_tid2 = def2.as<DefFunctionPrototype>().return_type;
+    } else {
+        return false;
+    }
+
+    if (param_tids1.len() != param_tids2.len()) {
+        return false;
+    }
+
+    if ((return_tid1.has_value() && return_tid2.empty())
+        || (return_tid1.empty() && return_tid2.has_value())) {
+        return false;
+    }
+
+    if (return_tid1.has_value() && return_tid2.has_value()
+        && !equivalent_type(return_tid1.as_id(), return_tid2.as_id())) {
+        return false;
+    }
+
+    return compatible_param_type_slice(param_tids1, param_tids2);
+}
+
+OptId<TypeId> Context::self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
+                                        Def& def) {
+    OptId<TypeId> maybe_self_type{};
+    if (token_is_mt_or_dt(fn_decl->kw->type)) {
+        auto maybe_did = look_up_type(scope, symbol_id<"Self">());
+
+        if (maybe_did.has_value()) {
+            auto def = this->def(maybe_did.as_id());
+            maybe_self_type = def.as<DefDeftype>().type;
+        }
+    }
+
+    return maybe_self_type;
 }
 
 } // namespace hir

@@ -317,6 +317,10 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
     if (info.is_orderable_var && !statik && !compt) {
         return def;
     }
+    // always order contract fields
+    if (parent.has_value() && context.def_ast_node(parent.as_id())->type == AST_STMT_CONTRACT_DEF) {
+        return def;
+    }
     return OptId<DefId>{};
 }
 

@@ -16,7 +16,6 @@
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/hir/type_resolver.hpp"
-#include "compiler/parser/token_eaters.h"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <iostream>
@@ -33,7 +32,8 @@ void TopLevelDefVisitor::resolve_top_level_definitions() {
     }
 }
 DefId TopLevelDefVisitor::visit_and_resolve_if_needed(DefId def) {
-    if (context.resol_state_of(def) == Def::resol_state::resolved) {
+    const auto resol_st = context.resol_state_of(def);
+    if (resol_st == Def::resol_state::resolved || resol_st == Def::resol_state::in_progress) {
         return def;
     }
     def_stack.push_back(def);
@@ -94,7 +94,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         return (def.parent.has_value()) ? context.is_struct_def(def.parent.as_id()) : false;
     };
 
-    //  TODO write handlers
+    //  TODO finish handlers
     switch (stmt->type) {
     case AST_STMT_VAR_DECL: {
         OptId<TypeId> maybe_tid = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
@@ -120,7 +120,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         };
         def.set_value(DefVariable{.type = maybe_tid.as_id(), .compt_value = std::nullopt});
         // TODO handle invalid non-initialized statements
-        // search for default value/ddefault method
+        // search for default value/default method
         break;
     }
     case AST_STMT_VAR_INIT_DECL: {
@@ -130,7 +130,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             span.file_id, scope, var_init_decl.type,
             parent_is_struct()); // needs layout info if parent is struct
         if (!maybe_tid.has_value()) {
-            std::cout << "NO TID:" << context.symbol_id_to_cstr(def.name) << '\n';
             goto cleanup; // maybe set a special value to indicate error differently
         }
         const bool type_contains_var = TypeTransformer<TypeContainsVar>{context}(maybe_tid.as_id());
@@ -180,7 +179,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 context.link_diagnostic(d0, d1);
             }
         }
-        // TODO only issue this if expr is a valid run-time statement, but not compt statement
+        // TODO only issue this if expr is a valid run-time statement, but not compt statement, this
+        // will require trying to do a run-time expr lowering on the init expression, which isn't
+        // impl'd yet
         if (!maybe_compt_eid.has_value()) {
             if (!def.compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
                 context.emplace_diagnostic(
@@ -198,28 +199,64 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         if (strct.is_generic) {
             goto cleanup;
         }
+
+        ScopeId structs_scope = context.scope_for_top_level_def(did);
+        context.register_generated_deftype(
+            structs_scope, context.symbol_id<"Self">(),
+            context.emplace_type(TypeStruct{.definition = did}, Span::generated(), false), did,
+            Span{context, def.span.file_id, strct.name});
+
         IdSlice<DefId> ordered_defs = context.ordered_defs_for(did);
         // visit each orderer member (variable), since the struct is actually dependent on those
         // defs
         for (auto didx = ordered_defs.begin(); didx != ordered_defs.end(); didx++) {
             visit_as_dependent(context.def_id(didx));
         }
-        // TODO handle member functions and contracts
 
-        ScopeId structs_scope = context.scope_for_top_level_def(did);
+        llvm::SmallVector<DefId> contract_dids{};
+        DiagLinker dlinker{context};
+        for (HirSize i = 0; i < strct.contracts.len; i++) {
+            const ast_expr_t* contract = strct.contracts.start[i];
+            if (contract->type != AST_EXPR_ID) {
+                continue;
+            }
+            Span ctr_span{context, def.span.file_id, contract->expr.id.slice};
+            auto maybe_contract_did = context.look_up_scoped_type(
+                scope, context.symbol_slice(contract->expr.id.slice), ctr_span);
+            if (maybe_contract_did.empty()) {
+                auto d = context.emplace_diagnostic(
+                    ctr_span, diag_code::use_of_undeclared_identifier, diag_type::error,
+                    DiagnosticSubCode{.sub_code = diag_code::not_a_contract});
+                dlinker.link(d);
+                continue;
+            }
+            auto contract_did = visit_and_resolve_if_needed(maybe_contract_did.as_id());
+            const Def& contract_def = context.def(contract_did);
+
+            if (!contract_def.holds<DefContract>()) {
+                auto d = context.emplace_diagnostic(
+                    ctr_span, diag_code::invalid_contract, diag_type::error,
+                    DiagnosticSubCode{.sub_code = diag_code::not_a_contract});
+                dlinker.link(d);
+                auto d1 = context.emplace_diagnostic(def.span, diag_code::declared_here,
+                                                     diag_type::note);
+                dlinker.link(d1);
+                continue;
+            }
+            contract_dids.push_back(contract_did);
+        }
+
+        auto contracts = context.freeze_id_vec(contract_dids);
 
         def.set_value(DefStruct{
             .scope = structs_scope,
             .ordered_members = ordered_defs,
             /* .contracts = */
-            .contracts = {},
+            .contracts = contracts,
             .orginal = {},
         });
 
-        context.register_generated_deftype(
-            structs_scope, context.symbol_id<"Self">(),
-            context.emplace_type(TypeStruct{.definition = did}, Span::generated(), false), did,
-            Span{context, def.span.file_id, strct.name});
+        try_satisfy_contracts(did, contracts);
 
         break;
     }
@@ -277,9 +314,65 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         break;
     }
+    case AST_STMT_FN_PROTOTYPE: {
+        const ast_stmt_fn_decl fn_decl = stmt->stmt.fn_prototype;
+        const auto fid = def.span.file_id;
+
+        OptId<TypeId> maybe_self_type = context.self_type_for_fn(scope, &fn_decl, def);
+        DefFunction::ParamResolResult params_res
+            = resolve_params(fid, scope, did, fn_decl.params, maybe_self_type);
+
+        auto params = params_res.params;
+
+        llvm::SmallVector<TypeId> type_vec{};
+
+        const bool func_is_runtime = !def.compt;
+
+        auto parent_is_contract = [&def, this]() -> bool {
+            if (def.parent.empty()) {
+                return false;
+            }
+            if (context.def(visit_and_resolve_if_needed(def.parent.as_id())).holds<DefContract>()) {
+                return true;
+            }
+            return false;
+        };
+
+        for (auto didx = params.begin(); didx != params.end(); didx++) {
+            const Def& param_def = context.def(didx);
+            assert(param_def.holds<DefVariable>());
+
+            // guard run-time func with `var` typed params
+            if (func_is_runtime && !(parent_is_contract() && (didx == params.begin()))
+                && TypeTransformer<TypeContainsVar>{context}(param_def.as<DefVariable>().type)) {
+                const Span ty_span = context.type(param_def.as<DefVariable>().type).span;
+                auto d0 = context.emplace_diagnostic(
+                    ty_span, diag_code::type_deduction_not_legal_here, diag_type::error);
+                auto d1 = context.emplace_diagnostic(
+                    param_def.span, diag_code::non_compt_function_params_must_have_explicit_types,
+                    diag_type::note);
+                context.link_diagnostic(d0, d1);
+            }
+            type_vec.push_back(param_def.as<DefVariable>().type);
+        }
+
+        auto param_types = context.freeze_id_vec(type_vec);
+
+        auto return_type
+            = (fn_decl.return_type)
+                  ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
+                  : std::nullopt;
+
+        def.set_value(DefFunctionPrototype{.params = params,
+                                           .param_types = param_types,
+                                           .return_type = return_type,
+                                           .takes_self = maybe_self_type.has_value()});
+
+        break;
+    }
     case AST_STMT_FN_DECL: {
-        ast_stmt_fn_decl fn_decl = stmt->stmt.fn_decl;
-        auto fid = def.span.file_id;
+        const ast_stmt_fn_decl fn_decl = stmt->stmt.fn_decl;
+        const auto fid = def.span.file_id;
 
         if (def.compt && fn_decl.is_mut) {
             Span span = Span::find_between_tokens(context, fid, fn_decl.kw, fn_decl.name.start[0]);
@@ -305,17 +398,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             context.link_diagnostic(d0, d1);
         }
         if (!def.generic) {
-            OptId<TypeId> maybe_self_type;
-            bool takes_self = false;
-            if (token_is_mt_or_dt(fn_decl.kw->type)) {
-                takes_self = true;
-                auto maybe_did = context.look_up_type(scope, context.symbol_id<"Self">());
-
-                if (maybe_did.has_value()) {
-                    auto def = context.def(maybe_did.as_id());
-                    maybe_self_type = def.as<DefDeftype>().type;
-                }
-            }
+            OptId<TypeId> maybe_self_type = context.self_type_for_fn(scope, &fn_decl, def);
             DefFunction::ParamResolResult params_res
                 = resolve_params(fid, scope, did, fn_decl.params, maybe_self_type);
 
@@ -363,7 +446,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                       .return_type = return_type,
                                       .body = std::nullopt,
                                       .original = std::nullopt,
-                                      .takes_self = takes_self,
+                                      .takes_self = maybe_self_type.has_value(),
                                       .posioned = params_res.poisoned});
         }
         // TODO, handle generic functions
@@ -371,12 +454,23 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         break;
     }
-        // TODO, need to lower these
-    case AST_STMT_CONTRACT_DEF:
+    case AST_STMT_CONTRACT_DEF: {
+        ScopeId contract_scope = context.scope_for_top_level_def(did);
+        context.register_generated_deftype(
+            contract_scope, context.symbol_id<"Self">(),
+            context.emplace_type(TypeVar{}, Span::generated(), false), did,
+            Span{context, def.span.file_id, stmt->stmt.contract_decl.name});
+        IdSlice<DefId> ordered_fns = context.ordered_defs_for(did);
+        for (auto didx = ordered_fns.begin(); didx != ordered_fns.end(); ++didx) {
+            visit_as_transparent(context.def_id(didx));
+        }
+        def.set_value(DefContract{.funcs = ordered_fns, .scope = contract_scope});
+        break;
+    }
+    // TODO, need to lower these
     case AST_STMT_UNION_DEF:
     case AST_STMT_VARIANT_DEF:
     case AST_STMT_VARIANT_FIELD_DECL:
-    case AST_STMT_FN_PROTOTYPE:
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level
     case AST_STMT_FILE:
@@ -507,6 +601,94 @@ TopLevelDefVisitor::resolve_params(FileId fid, ScopeId scope, DefId func_def,
     }
 
     return freeze_params(false); // not poisoned
+}
+
+bool TopLevelDefVisitor::try_satisfy_contract(DefId struct_did, DefId contract_did) {
+
+    const Def& struct_def = context.def(struct_did);
+    assert(struct_def.holds<DefStruct>());
+    DefStruct strukt = struct_def.as<DefStruct>();
+    const Def& contract_def = context.def(contract_did);
+    assert(contract_def.holds<DefContract>());
+    DefContract contract = contract_def.as<DefContract>();
+
+    ScopeId struct_scope = strukt.scope;
+
+    DiagLinker dlinker{context};
+
+    bool cooked = false;
+
+    for (auto didx = contract.funcs.begin(); didx != contract.funcs.end(); ++didx) {
+
+        DefId func_did = visit_and_resolve_if_needed(context.def_id(didx));
+        const Def& func_def = context.def(func_did);
+
+        OptId<DefId> maybe_matching_named_func_in_struct
+            = context.look_up_variable(struct_scope, func_def.name);
+
+        if (maybe_matching_named_func_in_struct.empty()) {
+            auto d = context.emplace_diagnostic_with_message_value(
+                context.name_span_for_def(struct_did), diag_code::only_message_value_is_meaning,
+                diag_type::error,
+                DiagnosticStructDoesNotDefineBlankForContract{.struct_name = struct_def.name,
+                                                              .func_name = func_def.name,
+                                                              .contract_name = contract_def.name});
+            dlinker.link(d);
+            dlinker.link(context.emplace_diagnostic_with_message_value(
+                func_def.span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = func_def.name}));
+            cooked = true;
+            continue;
+        }
+
+        // make sure fn is resolved
+        auto matched_fn_did
+            = visit_and_resolve_if_needed(maybe_matching_named_func_in_struct.as_id());
+
+        const Def& matching_def = context.def(matched_fn_did);
+
+        if (!matching_def.holds<DefFunction>()) {
+            auto d = context.emplace_diagnostic(
+                matching_def.span, diag_code::only_message_value_is_meaning, diag_type::error,
+                DiagnosticStructDoesNotDefineBlankForContract{.struct_name = struct_def.name,
+                                                              .func_name = func_def.name,
+                                                              .contract_name = contract_def.name},
+                DiagnosticSubCode{.sub_code = diag_code::not_a_function});
+            dlinker.link(d);
+            cooked = true;
+            continue;
+        }
+
+        if (!context.function_signatures_match(func_did, matched_fn_did)) {
+            auto d = context.emplace_diagnostic(
+                context.name_span_for_def(matched_fn_did), diag_code::only_message_value_is_meaning,
+                diag_type::error,
+                DiagnosticStructDoesNotDefineBlankForContract{.struct_name = struct_def.name,
+                                                              .func_name = func_def.name,
+                                                              .contract_name = contract_def.name},
+                DiagnosticSubCode{.sub_code
+                                  = diag_code::function_signature_does_not_match_contract});
+            dlinker.link(d);
+            dlinker.link(context.emplace_diagnostic_with_message_value(
+                func_def.span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = func_def.name}));
+            cooked = true;
+        }
+    }
+    if (cooked) {
+        dlinker.link(context.emplace_diagnostic_with_message_value(
+            contract_def.span, diag_code::declared_here, diag_type::note,
+            DiagnosticSymbolBeforeMessage{.sid = contract_def.name}));
+    }
+    return cooked;
+}
+
+bool TopLevelDefVisitor::try_satisfy_contracts(DefId struct_did, IdSlice<DefId> contract_dids) {
+    bool cooked = false;
+    for (auto didx = contract_dids.begin(); didx != contract_dids.end(); ++didx) {
+        cooked |= try_satisfy_contract(struct_did, context.def_id(didx));
+    }
+    return cooked;
 }
 
 DefId InsideBodyDefVisitor::visit_as_dependent(DefId def) {

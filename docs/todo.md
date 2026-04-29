@@ -7,21 +7,6 @@ main quest
 - all while in the process of *resolivng* top-level declarations:
 
 - [ ] some more `compt` improvements:
-    - [x] add compt member accesses ex) `foo.bar`
-    - [x] handle `pub` / `hid` statements properly when looking up member variables(/functions) 
-    - [x] add `fn foo() [-> Type]? => [{Expr}] | Expr` syntax (easy-ish plugin for compt functions), this makes compt turing complete
-        - ex) `compt fn foo() -> i32 => 42`
-        - ex) `compt fn foo() => 42` (return type inferred here)
-        - ex) `compt fn foo() => {42}` (return type inferred here, braces allowed if desired)
-    - [x] add lowering of pure expr functions 
-        - [x] ban `compt mt mut` funcs
-        - [x] add compt member calls: `foo.bar()` 
-    - [x] handle proper short-circuiting of `||` and `&&` at compt
-    - [x] generalize solving booleqs 
-        - [x] compt list equalities: `[1, 2] == [1, 2]` (elem type, then len, then elems)
-        - [x] struct equalities
-    - [x] subscripts on compt lists and strings (bound check)
-    - [x] compt fn-pointers to allow compt fn composition 
     - [ ] compt unions/variants
         - [ ] union and variant def lowering/resol
         - unions should be pretty simpl
@@ -34,6 +19,7 @@ main quest
     - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 
+- [x] contract resolution
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table

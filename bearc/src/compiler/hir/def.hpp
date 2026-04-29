@@ -58,7 +58,9 @@ struct DefGenericFunction {
 
 struct DefFunctionPrototype {
     IdSlice<DefId> params;
+    IdSlice<TypeId> param_types;
     OptId<TypeId> return_type;
+    bool takes_self;
 };
 
 struct DefVariable {
@@ -102,6 +104,7 @@ struct DefUnion {
 };
 
 struct DefContract {
+    IdSlice<DefId> funcs;
     ScopeId scope;
 };
 

@@ -57,7 +57,13 @@ class TopLevelDefVisitor {
     DefId visit_as_mutator(DefId def);
 
     /// visit when not all info is need (i.e. just validate existence for pointers/references)
-    [[nodiscard]] DefId visit_as_transparent(DefId def) noexcept;
+    DefId visit_as_transparent(DefId def) noexcept;
+
+    /// try to satisfy a contract for a struct upon construction
+    bool try_satisfy_contract(DefId struct_did, DefId contract_did);
+
+    /// try to satisfy contracts for a struct upon construction
+    bool try_satisfy_contracts(DefId struct_did, IdSlice<DefId> contract_dids);
 
     [[nodiscard]] OptId<DefId> resolve_param(FileId fid, ScopeId scope, DefId func_def,
                                              const ast_param_t* param);
