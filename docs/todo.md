@@ -21,8 +21,8 @@ main quest
 
 - [x] contract resolution
     - [ ] issue diagnostics that say exactly what's wrong
-        - [ ] `mt` and `Self` related stuff 
-        - [ ] param count mismatch
+        - [ ] `mt` and `Self` related stuff (particularly with mut disagreements)
+        - [ ] param count mismatch, and if same count, then per-type mismatches
         - [ ] return-type mismatch
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
@@ -35,9 +35,9 @@ main quest
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
 
 - [ ] `ast_type_t*` lowering to `hir::Type`s 
-    - [x] non-generic types 
+    - [x] all non-generic types 
     - [ ] generic types (just find/instatiate mentioned generic def and then use that concrete def within the type)
-    - [ ] handle type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
+    - [ ] handle all-encompassing type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything 
 
 - [ ] tighten up abi related stuff with hir::LayoutRules or something similar
