@@ -1,5 +1,5 @@
 ### Bear syntax
-- **Work In Progress:** This document is the primary grammar reference for Bear.
+- **Work In Progress:** This document is the primary grammar reference for use during the development of Bear.
 
 #### Grammar Diagrams
 - Bear is comprised of a few distinct syntax constructs: Expressions, Statements, Types, (and Clauses, which are subcomponents of certain statements)
@@ -39,7 +39,6 @@
     - | Preunary: `--` | `++` 
     - | SizeOf: `sizeof` `(` Type `)`
     - | AlignOf: `alignof` `(` Type `)`
-    - | AlignAs: `alignas` `(` IntegerLiteral `)`
     - | Postunary: Expression `++` | `--`
     - | Subscript: Expression `[` Expression `]`
     - | Grouping: `(` Expression `)`
@@ -56,6 +55,11 @@
     - | MatchBranch: VariantDecomposition | Expression `=>` Expression | BlockExpression
        - BlockExpression: `{` Statement(s) | YieldStatement(s) `}` 
             - YieldStatement: `yield` Expression
+    - Reflection:
+        - `@same_type` `(` Type `,` Type `)` 
+        - `@type_to_str` `(` Type `)` 
+        - `@static_assert` `(` Expression `)` 
+        - `@defined` `(` Identifier | MemberAccess(es)... `)`
 
 #### Statements
 - *File*: TopLevelStatement(s)
@@ -79,7 +83,7 @@
     - | *TopLevelVariableDeclaration*: Visibility \[Type | `var`] Identifier `;` | \[`=` | `<-`] Expression `;`
 
 - *BodyStatement*: 
-    - | VariableDeclaration: Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;`
+    - | VariableDeclaration: `static`? `compt`? \[`alignas` `(` IntegerLiteral `)`]? Type | `var` Identifier `;` | \[`=` | `<-`] Expression `;` 
     - | *UseStatement*: `use` Identifier `;`
     - | BlockStatement: `{` BodyStatement(s) `}`
     - | IfStatement: `if` `compt`? Expression `{` BodyStatement(s) `}` \[`else` `{` BodyStatement(s) `}`]?
