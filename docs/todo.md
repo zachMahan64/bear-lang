@@ -21,9 +21,10 @@ main quest
 
 - [x] contract resolution
     - [ ] issue diagnostics that say exactly what's wrong
+        - [x] param count mismatch
+        - [x] return-type mismatch
+        - [ ] per-param disagreements
         - [ ] `mt` and `Self` related stuff (particularly with mut disagreements)
-        - [ ] param count mismatch, and if same count, then per-type mismatches
-        - [ ] return-type mismatch
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
@@ -68,7 +69,8 @@ main quest
         - [ ] hand out errors for C-incompatible functions when under a C abi extern, like no references, generics, etc.
 
 #### optimizations
-- [ ] `hir::Context` ctor that takes a stale context and a list of updated files, and then based on the stale context's files:
+- [ ] `hir::Context` ctor that takes a stale c
+- ontext and a list of updated files, and then based on the stale context's files:
 ```
     for every file in stale context:
         if red: # stale and already marked as such 

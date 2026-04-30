@@ -246,6 +246,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "not a contract";
     case diag_code::invalid_contract:
         return "invalid contract";
+    case diag_code::has_return_type_but_contracts_function_does_not:
+        return "has a return type but contract's function does not";
+    case diag_code::does_not_have_return_type_but_contracts_function_does:
+        return "does not have a return type but contract's function does";
     }
 
     std::unreachable();
@@ -600,6 +604,7 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
         str += ansi_bold_reset();
         str += '`';
     };
+
     auto vs = Ovld{
         [](DiagnosticNoOtherInfo) {},
         [&](DiagnosticIdentifierAfterMessage d) {
@@ -749,6 +754,20 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             sid_helper(d.contract_name);
             str += ansi_bold_reset();
         },
+        [&](DiagnosticContractFnExpectedButGotNumParams d) {
+            str += "contract function ";
+            sid_helper(d.contract_fn_name);
+            str += " expected ";
+            str += ansi_bold_green();
+            str += ctx.symbol_id_to_cstr(d.expected_sid);
+            str += ansi_bold_reset();
+            str += " params but got ";
+            str += ansi_bold_red();
+            str += ctx.symbol_id_to_cstr(d.got_sid);
+            str += ansi_bold_reset();
+            str += " params";
+            str += ansi_bold_reset();
+        },
 
     };
     std::visit(vs, message_value);
@@ -757,6 +776,13 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
 void DiagLinker::link(DiagnosticId d) {
     if (prev.has_value()) {
         ctx.link_diagnostic(prev.as_id(), d);
+    }
+    prev = d;
+}
+
+void DiagLinker::link(OptId<DiagnosticId> d) {
+    if (prev.has_value() && d.has_value()) {
+        ctx.link_diagnostic(prev.as_id(), d.as_id());
     }
     prev = d;
 }

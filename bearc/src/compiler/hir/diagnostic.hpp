@@ -126,6 +126,8 @@ enum class diag_code : uint8_t {
     function_signature_does_not_match_contract,
     not_a_contract,
     invalid_contract,
+    has_return_type_but_contracts_function_does_not,
+    does_not_have_return_type_but_contracts_function_does,
 
     count, // this must be last,
 
@@ -204,15 +206,20 @@ struct DiagnosticStructDoesNotDefineBlankForContract {
     SymbolId contract_name;
 };
 
-using DiagnosticMessageValue
-    = std::variant<DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage,
-                   DiagnosticSymbolAfterMessage, DiagnosticSymbolAfterMessageNoQuotes,
-                   DiagnosticIdentifierBeforeMessage, DiagnosticTypeAfterMessage,
-                   DiagnosticSymbolBeforeMessage, DiagnosticTypeToType, DiagnosticTypeAndType,
-                   DiagnosticTypeAndTypeForBinaryOp, DiagnosticIdentifierBeforeMessageAndTypeAfter,
-                   DiagnosticSymButGotSym, DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds,
-                   DiagnosticStructMemberSymBeforeMsg,
-                   DiagnosticStructDoesNotDefineBlankForContract>;
+struct DiagnosticContractFnExpectedButGotNumParams {
+    SymbolId contract_fn_name;
+    SymbolId expected_sid;
+    SymbolId got_sid;
+};
+
+using DiagnosticMessageValue = std::variant<
+    DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage, DiagnosticSymbolAfterMessage,
+    DiagnosticSymbolAfterMessageNoQuotes, DiagnosticIdentifierBeforeMessage,
+    DiagnosticTypeAfterMessage, DiagnosticSymbolBeforeMessage, DiagnosticTypeToType,
+    DiagnosticTypeAndType, DiagnosticTypeAndTypeForBinaryOp,
+    DiagnosticIdentifierBeforeMessageAndTypeAfter, DiagnosticSymButGotSym,
+    DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds, DiagnosticStructMemberSymBeforeMsg,
+    DiagnosticStructDoesNotDefineBlankForContract, DiagnosticContractFnExpectedButGotNumParams>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
@@ -279,6 +286,7 @@ class DiagLinker {
   public:
     DiagLinker(Context& ctx) : ctx{ctx} {}
     void link(DiagnosticId d);
+    void link(OptId<DiagnosticId> d);
 };
 
 } // namespace hir

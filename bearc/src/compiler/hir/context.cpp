@@ -626,6 +626,14 @@ void Context::link_diagnostic(DiagnosticId diag, DiagnosticId next) {
     diagnostics.at(diag).set_next(next);
 }
 
+void Context::force_link_diagnostic(DiagnosticId diag) {
+    HirId prev_val = diag.val() - 1;
+    if (prev_val == HIR_ID_NONE) {
+        return;
+    }
+    diagnostics.at(DiagnosticId{prev_val}).set_next(diag);
+}
+
 Def& Context::def(DefId def_id) { return defs.at(def_id); }
 
 const Def& Context::try_func_def(DefId def_id) const { return def(try_func_did(def_id)); }
@@ -1334,6 +1342,77 @@ bool Context::function_signatures_match(DefId did1, DefId did2) {
     }
 
     return compatible_param_type_slice(param_tids1, param_tids2);
+}
+
+OptId<DiagnosticId> Context::report_function_disagreement_with_contract(DefId contract_fn_proto_did,
+                                                                        DefId function_did) {
+    const Def& contracts_def = def(contract_fn_proto_did);
+    const Def& fn_def = def(function_did);
+
+    OptId<DiagnosticId> first{};
+
+    auto try_set_first = [&first](DiagnosticId did) {
+        if (first.empty()) {
+            first = did;
+        }
+    };
+
+    // contract's stuff
+    IdSlice<TypeId> ct_param_tids;
+    OptId<TypeId> ct_return_tid;
+
+    // function's stuff
+    IdSlice<TypeId> fn_param_tids;
+    OptId<TypeId> fn_return_tid;
+
+    if (contracts_def.holds<DefFunction>()) {
+        ct_param_tids = contracts_def.as<DefFunction>().param_types;
+        ct_return_tid = contracts_def.as<DefFunction>().return_type;
+    } else if (contracts_def.holds<DefFunctionPrototype>()) {
+        ct_param_tids = contracts_def.as<DefFunctionPrototype>().param_types;
+        ct_return_tid = contracts_def.as<DefFunctionPrototype>().return_type;
+    } else {
+        return {};
+    }
+    if (fn_def.holds<DefFunction>()) {
+        fn_param_tids = fn_def.as<DefFunction>().param_types;
+        fn_return_tid = fn_def.as<DefFunction>().return_type;
+    } else if (fn_def.holds<DefFunctionPrototype>()) {
+        fn_param_tids = fn_def.as<DefFunctionPrototype>().param_types;
+        fn_return_tid = fn_def.as<DefFunctionPrototype>().return_type;
+    } else {
+        return {};
+    }
+
+    if (ct_param_tids.len() != fn_param_tids.len()) {
+        try_set_first(emplace_diagnostic_with_message_value(
+            name_span_for_def(function_did), diag_code::only_message_value_is_meaning,
+            diag_type::note,
+            DiagnosticContractFnExpectedButGotNumParams{
+                .contract_fn_name = contracts_def.name,
+                .expected_sid = symbol_id(std::to_string(ct_param_tids.len())),
+                .got_sid = symbol_id(std::to_string(fn_param_tids.len())),
+            }));
+    }
+
+    if (ct_return_tid.has_value() && fn_return_tid.empty()) {
+        try_set_first(emplace_diagnostic_with_message_value(
+            name_span_for_def(function_did),
+            diag_code::does_not_have_return_type_but_contracts_function_does, diag_type::note,
+            DiagnosticSymbolBeforeMessage{fn_def.name}));
+    }
+
+    if (ct_return_tid.empty() && fn_return_tid.has_value()) {
+        try_set_first(emplace_diagnostic_with_message_value(
+            type(fn_return_tid.as_id()).span,
+            diag_code::has_return_type_but_contracts_function_does_not, diag_type::note,
+            DiagnosticSymbolBeforeMessage{fn_def.name}));
+    }
+
+    if (ct_return_tid.has_value() && fn_return_tid.has_value()
+        && !equivalent_type(ct_return_tid.as_id(), fn_return_tid.as_id())) {
+    }
+    return first;
 }
 
 OptId<TypeId> Context::self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,

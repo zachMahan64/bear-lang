@@ -6,7 +6,7 @@ contract Foo {
     fn oopsie();
 }
 
-struct Fooey has Foo, Bar, Cat {
+struct Fooey has Foo, Bar, Cat, Bob {
     i32 oopsie; // oops, not a function
 
     compt 
@@ -18,6 +18,9 @@ struct Fooey has Foo, Bar, Cat {
     fn bar(i32 b, i32 a, i32 r) -> i32 => (b + a + r) // fine
     fn boo(u32 a) -> u8 => (a as u8) // oops wrong param type
     fn booie(i32 a) -> i16 => (a as i16) // oops wrong return type
+
+    fn bobret() {} // oops no return 
+    fn bob() -> i32 => 42 // oops ret 
 
     mt babadaba(i32 a) -> i32 => {42 + a }
 
@@ -59,4 +62,9 @@ struct Persian3 has Cat {
 
 struct Persian4 has Cat {
     mt meow() {}
+}
+
+contract Bob {
+    fn bobret() -> i32;
+    fn bob();
 }

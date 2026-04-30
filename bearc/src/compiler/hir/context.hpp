@@ -193,6 +193,10 @@ class Context {
                                                        OptId<DiagnosticId> next
                                                        = OptId<DiagnosticId>{});
     void link_diagnostic(DiagnosticId diag, DiagnosticId next);
+
+    // only use when this diagnostic is known to follow another diagnostic but the previous
+    // diagnostic's id is unavailable
+    void force_link_diagnostic(DiagnosticId diag);
     void print_diagnostic(DiagnosticId diag, bool print_file = true);
     // type emplacer
     /// emplaces and gets the id from a new CanonicalTypeId c
@@ -339,6 +343,12 @@ class Context {
     /// returns true on match, else false (also returns false if either DefId does not correspond to
     /// a function)
     [[nodiscard]] bool function_signatures_match(DefId did1, DefId did2);
+
+    /// does nothing if either passed in DefId isn't a DefFunction or DefFunctionPrototype
+    /// - emplaces notes and assumes that an initial primary error has already been emplaced
+    /// - returns the first DiagnosticId (to be linked) if it exists
+    OptId<DiagnosticId> report_function_disagreement_with_contract(DefId contract_fn_proto_did,
+                                                                   DefId function_did);
 
     [[nodiscard]] OptId<TypeId> self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
                                                  Def& def);

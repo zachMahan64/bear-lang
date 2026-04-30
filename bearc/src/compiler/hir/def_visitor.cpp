@@ -18,7 +18,6 @@
 #include "compiler/hir/type_resolver.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
-#include <iostream>
 #include <optional>
 
 namespace hir {
@@ -446,6 +445,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                       .return_type = return_type,
                                       .body = std::nullopt,
                                       .original = std::nullopt,
+                                      .discardable = fn_decl.discardable,
                                       .takes_self = maybe_self_type.has_value(),
                                       .posioned = params_res.poisoned});
         }
@@ -620,8 +620,8 @@ bool TopLevelDefVisitor::try_satisfy_contract(DefId struct_did, DefId contract_d
 
     for (auto didx = contract.funcs.begin(); didx != contract.funcs.end(); ++didx) {
 
-        DefId func_did = visit_and_resolve_if_needed(context.def_id(didx));
-        const Def& func_def = context.def(func_did);
+        DefId ct_func_did = visit_and_resolve_if_needed(context.def_id(didx));
+        const Def& func_def = context.def(ct_func_did);
 
         OptId<DefId> maybe_matching_named_func_in_struct
             = context.look_up_variable(struct_scope, func_def.name);
@@ -659,19 +659,23 @@ bool TopLevelDefVisitor::try_satisfy_contract(DefId struct_did, DefId contract_d
             continue;
         }
 
-        if (!context.function_signatures_match(func_did, matched_fn_did)) {
-            auto d = context.emplace_diagnostic(
+        if (!context.function_signatures_match(ct_func_did, matched_fn_did)) {
+            dlinker.link(context.emplace_diagnostic(
                 context.name_span_for_def(matched_fn_did), diag_code::only_message_value_is_meaning,
                 diag_type::error,
                 DiagnosticStructDoesNotDefineBlankForContract{.struct_name = struct_def.name,
                                                               .func_name = func_def.name,
                                                               .contract_name = contract_def.name},
                 DiagnosticSubCode{.sub_code
-                                  = diag_code::function_signature_does_not_match_contract});
-            dlinker.link(d);
+                                  = diag_code::function_signature_does_not_match_contract}));
+
+            dlinker.link(
+                context.report_function_disagreement_with_contract(ct_func_did, matched_fn_did));
+
             dlinker.link(context.emplace_diagnostic_with_message_value(
                 func_def.span, diag_code::declared_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = func_def.name}));
+
             cooked = true;
         }
     }

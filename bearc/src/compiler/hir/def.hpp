@@ -39,6 +39,7 @@ struct DefFunction {
     OptId<ExecId> body;
     /// if this function was derived from an original generic function
     OptId<DefId> original;
+    bool discardable = false;
     bool takes_self = false;
     bool posioned = false;
     bool infinite_recursion = false;
