@@ -784,7 +784,9 @@ void DiagLinker::link(OptId<DiagnosticId> d) {
     if (prev.has_value() && d.has_value()) {
         ctx.link_diagnostic(prev.as_id(), d.as_id());
     }
-    prev = d;
+    if (d.has_value()) {
+        prev = d;
+    }
 }
 
 } // namespace hir
