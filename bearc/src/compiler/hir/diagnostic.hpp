@@ -263,7 +263,7 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
 
   private:
     bool has_complex_message() const;
-    void build_complex_message(const Context& ctx, std::string& message_str) const;
+    void build_complex_message(Context& ctx, std::string& message_str) const;
     static const char* message_for_code(enum diag_code c);
     static const char* name_for_type(enum diag_type t);
     static const char* accent_color_for_type(enum diag_type t);

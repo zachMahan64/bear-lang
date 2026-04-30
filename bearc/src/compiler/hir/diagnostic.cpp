@@ -577,7 +577,7 @@ bool Diagnostic::has_complex_message() const {
     return !std::holds_alternative<DiagnosticNoOtherInfo>(message_value);
 }
 
-void Diagnostic::build_complex_message(const Context& ctx, std::string& str) const {
+void Diagnostic::build_complex_message(Context& ctx, std::string& str) const {
     str.reserve(64); // decent size
 
     auto type_helper = [this, &ctx, &str](TypeId tid) {
@@ -604,6 +604,9 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
         str += ansi_bold_reset();
         str += '`';
     };
+
+    auto plural_helper
+        = [&ctx](SymbolId d) -> const char* { return (ctx.symbol_id<"1">() == d) ? "" : "s"; };
 
     auto vs = Ovld{
         [](DiagnosticNoOtherInfo) {},
@@ -761,11 +764,14 @@ void Diagnostic::build_complex_message(const Context& ctx, std::string& str) con
             str += ansi_bold_green();
             str += ctx.symbol_id_to_cstr(d.expected_sid);
             str += ansi_bold_reset();
-            str += " params but got ";
+            str += " parameter";
+            str += plural_helper(d.expected_sid);
+            str += " but got ";
             str += ansi_bold_red();
             str += ctx.symbol_id_to_cstr(d.got_sid);
             str += ansi_bold_reset();
-            str += " params";
+            str += " parameter";
+            str += plural_helper(d.got_sid);
             str += ansi_bold_reset();
         },
 
