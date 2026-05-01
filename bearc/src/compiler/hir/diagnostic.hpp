@@ -129,6 +129,11 @@ enum class diag_code : uint8_t {
     has_return_type_but_contracts_function_does_not,
     does_not_have_return_type_but_contracts_function_does,
     declared_in_contract_here,
+    invalid_return_type,
+    return_type_must_be_an_explicit_type,
+    void_is_not_a_valid_return_type,
+    to_return_nothing_omit_the_return_type_entirely,
+    replace_occurences_of_var_with_an_explicit_type,
 
     count, // this must be last,
 

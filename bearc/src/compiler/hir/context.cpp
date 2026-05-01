@@ -1257,7 +1257,8 @@ bool Context::equivalent_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) cons
     return true;
 }
 
-bool Context::compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const {
+bool Context::compatible_contract_params(IdSlice<TypeId> s1, IdSlice<TypeId> s2,
+                                         DefId struct_id) const {
     if (s1.len() != s2.len()) {
         return false;
     }
@@ -1272,7 +1273,7 @@ bool Context::compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2
     // if first arg isn't the same and neither arg is TypeVar (this will be the case for contract
     // methods, `mt`), then that's not equivalent
     if (!equivalent_type(t1, t2)) {
-        return inferable_as(t1, t2);
+        return inferable_as(t1, t2, struct_id);
     }
 
     if (s1.len() == 1) {
@@ -1290,6 +1291,30 @@ bool Context::compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2
     return true;
 }
 
+bool Context::validate_return_type(TypeId return_tid) {
+    const Type& ty = type(try_decay_ref(return_tid));
+    DiagLinker dlinker{*this};
+    if (TypeTransformer<TypeContainsVar>{*this}(return_tid)) {
+        dlinker.link(emplace_diagnostic_with_message_value(
+            ty.span, diag_code::invalid_return_type, diag_type::error,
+            DiagnosticTypeAfterMessage{.tid = return_tid}));
+        dlinker.link(emplace_diagnostic(ty.span, diag_code::return_type_must_be_an_explicit_type,
+                                        diag_type::note));
+        dlinker.link(emplace_diagnostic(
+            ty.span, diag_code::replace_occurences_of_var_with_an_explicit_type, diag_type::help));
+        return true;
+    }
+    if (ty.holds<TypeBuiltin>() && ty.as<TypeBuiltin>().type == builtin_type::voidd) {
+        dlinker.link(emplace_diagnostic_with_message_value(
+            ty.span, diag_code::invalid_return_type, diag_type::error,
+            DiagnosticTypeAfterMessage{.tid = return_tid}));
+        dlinker.link(emplace_diagnostic(
+            ty.span, diag_code::to_return_nothing_omit_the_return_type_entirely, diag_type::help));
+        return true;
+    }
+    return false;
+}
+
 /// checks if a Def is a struct without resolving it
 bool Context::is_struct(DefId did) const { return def_ast_node(did)->type == AST_STMT_STRUCT_DEF; }
 /// checks if a Def is a struct without resolving it
@@ -1299,7 +1324,7 @@ bool Context::is_variant(DefId did) const {
     return def_ast_node(did)->type == AST_STMT_VARIANT_DEF;
 }
 
-bool Context::function_signatures_match(DefId did1, DefId did2) {
+bool Context::func_sigs_match_for_contract(DefId did1, DefId did2) {
     const Def& def1 = def(did1);
     const Def& def2 = def(did2);
 
@@ -1308,9 +1333,11 @@ bool Context::function_signatures_match(DefId did1, DefId did2) {
     IdSlice<TypeId> param_tids2;
     OptId<TypeId> return_tid2;
 
+    OptId<DefId> struct_did{};
     if (def1.holds<DefFunction>()) {
         param_tids1 = def1.as<DefFunction>().param_types;
         return_tid1 = def1.as<DefFunction>().return_type;
+        struct_did = def1.parent; // since the function's parent_should be a struct
     } else if (def1.holds<DefFunctionPrototype>()) {
         param_tids1 = def1.as<DefFunctionPrototype>().param_types;
         return_tid1 = def1.as<DefFunctionPrototype>().return_type;
@@ -1320,6 +1347,7 @@ bool Context::function_signatures_match(DefId did1, DefId did2) {
     if (def2.holds<DefFunction>()) {
         param_tids2 = def2.as<DefFunction>().param_types;
         return_tid2 = def2.as<DefFunction>().return_type;
+        struct_did = def2.parent; // since the function's parent_should be a struct
     } else if (def2.holds<DefFunctionPrototype>()) {
         param_tids2 = def2.as<DefFunctionPrototype>().param_types;
         return_tid2 = def2.as<DefFunctionPrototype>().return_type;
@@ -1341,7 +1369,10 @@ bool Context::function_signatures_match(DefId did1, DefId did2) {
         return false;
     }
 
-    return compatible_param_type_slice(param_tids1, param_tids2);
+    if (struct_did.empty()) {
+        return false;
+    }
+    return compatible_contract_params(param_tids1, param_tids2, struct_did.as_id());
 }
 
 DiagRange Context::report_function_disagreement_with_contract(DefId contract_fn_proto_did,
@@ -1426,26 +1457,55 @@ OptId<TypeId> Context::self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t*
 
         if (maybe_did.has_value()) {
             auto def = this->def(maybe_did.as_id());
-            maybe_self_type = def.as<DefDeftype>().type;
+            TypeId self_tid = def.as<DefDeftype>().type;
+            const auto& ty = type(self_tid);
             // if mut then we actually need to ensure we're mut
             if (fn_decl->is_mut) {
-                const auto& ty = type(maybe_self_type.as_id());
                 // we have to emplace a new type in this case since we can't mutate the original
                 if (!ty.mut) {
-                    maybe_self_type = emplace_type(ty.value, ty.span, true); // mut
+                    self_tid = emplace_type(ty.value, ty.span, true); // mut
                 }
             }
+            // make a reference
+            maybe_self_type = emplace_type(TypeRef{.inner = self_tid}, ty.span, fn_decl->is_mut);
         }
     }
 
     return maybe_self_type;
 }
 
-bool Context::inferable_as(TypeId tid1, TypeId tid2) const {
-    const auto& t1 = type(tid1);
-    const auto& t2 = type(tid2);
+bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
+    const Type& t1 = type(tid1);
+    const Type& t2 = type(tid2);
+    if (t1.mut != t2.mut) {
+        return false;
+    }
 
-    return (t1.holds<TypeVar>() || t2.holds<TypeVar>()) && t1.mut == t2.mut;
+    // guard mismatched references
+    if ((t1.holds<TypeRef>() || t2.holds<TypeRef>()) && !t1.holds_same_variant_type(t2)) {
+        return false;
+    }
+    const TypeId tid1_canonical = try_decay_ref(tid1);
+    const TypeId tid2_canonical = try_decay_ref(tid2);
+    if (t1.holds<TypeVar>()) {
+        const Type& t2 = type(tid2_canonical);
+        if (!t2.holds<TypeStruct>()) {
+            return false;
+        }
+        if (t2.as<TypeStruct>().definition != struct_did) {
+            return false;
+        }
+    }
+    if (t2.holds<TypeVar>()) {
+        const Type& t1 = type(tid1_canonical);
+        if (!t1.holds<TypeStruct>()) {
+            return false;
+        }
+        if (t1.as<TypeStruct>().definition != struct_did) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace hir

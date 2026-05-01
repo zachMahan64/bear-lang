@@ -6,9 +6,9 @@ main quest
 #### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
 
-- [ ] some more `compt` improvements:
+- [ ] some more `compt` improvements and general resolution/lowering logic:
+    - [ ] **union and variant def lowering/resol**
     - [ ] compt unions/variants
-        - [ ] **union and variant def lowering/resol**
         - unions should be pretty simple
         - variants are essentially just struct {union{types...}, ordinal}
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)

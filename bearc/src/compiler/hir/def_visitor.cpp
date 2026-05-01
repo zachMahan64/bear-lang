@@ -358,14 +358,18 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         auto param_types = context.freeze_id_vec(type_vec);
 
-        auto return_type
+        auto return_tid
             = (fn_decl.return_type)
                   ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
                   : std::nullopt;
 
+        if (return_tid.has_value()) {
+            context.validate_return_type(return_tid.as_id());
+        }
+
         def.set_value(DefFunctionPrototype{.params = params,
                                            .param_types = param_types,
-                                           .return_type = return_type,
+                                           .return_type = return_tid,
                                            .takes_self = maybe_self_type.has_value()});
 
         break;
@@ -433,17 +437,20 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 type_vec.push_back(param_def.as<DefVariable>().type);
             }
 
-            auto param_types = context.freeze_id_vec(type_vec);
+            const IdSlice<TypeId> param_types = context.freeze_id_vec(type_vec);
 
-            auto return_type
+            const OptId<TypeId> return_tid
                 = (fn_decl.return_type)
                       ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
                       : std::nullopt;
+            if (return_tid.has_value()) {
+                context.validate_return_type(return_tid.as_id());
+            }
 
             // handle methods explicitly
             def.set_value(DefFunction{.params = params,
                                       .param_types = param_types,
-                                      .return_type = return_type,
+                                      .return_type = return_tid,
                                       .body = std::nullopt,
                                       .original = std::nullopt,
                                       .discardable = fn_decl.discardable,
@@ -660,7 +667,7 @@ bool TopLevelDefVisitor::try_satisfy_contract(DefId struct_did, DefId contract_d
             continue;
         }
 
-        if (!context.function_signatures_match(ct_func_did, matched_fn_did)) {
+        if (!context.func_sigs_match_for_contract(ct_func_did, matched_fn_did)) {
             dlinker.link(context.emplace_diagnostic(
                 context.name_span_for_def(matched_fn_did),
                 diag_code::only_message_value_is_meaningful, diag_type::error,

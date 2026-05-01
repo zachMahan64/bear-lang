@@ -302,7 +302,11 @@ class Context {
 
     [[nodiscard]] bool equivalent_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const;
 
-    [[nodiscard]] bool compatible_param_type_slice(IdSlice<TypeId> s1, IdSlice<TypeId> s2) const;
+    [[nodiscard]] bool compatible_contract_params(IdSlice<TypeId> s1, IdSlice<TypeId> s2,
+                                                  DefId struct_id) const;
+
+    // returns true on an invalid return type
+    bool validate_return_type(TypeId return_tid);
 
     [[nodiscard]] const Def& def(DefId id) const;
 
@@ -337,12 +341,12 @@ class Context {
 
     /// checks if a type can be inferred as another
     /// - ordering of the arguments doesn't matter
-    [[nodiscard]] bool inferable_as(TypeId tid1, TypeId tid2) const;
+    [[nodiscard]] bool inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const;
 
     /// checks if two functions signatures match
     /// returns true on match, else false (also returns false if either DefId does not correspond to
     /// a function)
-    [[nodiscard]] bool function_signatures_match(DefId did1, DefId did2);
+    [[nodiscard]] bool func_sigs_match_for_contract(DefId did1, DefId did2);
 
     /// does nothing if either passed in DefId isn't a DefFunction or DefFunctionPrototype
     /// - emplaces notes and assumes that an initial primary error has already been emplaced

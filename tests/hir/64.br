@@ -1,0 +1,40 @@
+// tests/hir/64.br
+
+contract Bar {
+    mt bar();
+    fn self_bar(Self self);
+    fn self_mut_bar(mut Self self);
+    fn self_ref_bar(&Self self);
+    fn self_mut_ref_bar(&mut Self self);
+    mt purely_mt();
+    mt mut purely_mt_but_mut();
+    mt just_mt() -> i32;
+    mt mut babada() -> Self;
+
+    mt do_work();
+}
+
+struct Foo has Bar {
+
+    fn oops() -> var {} // not legal
+
+    fn oopsie_daisy() -> [&][&][10]var {
+        [10][10][10]i32 thingies;
+        return thingies[0...10][0...10];
+    }
+
+    fn bar(i32 b) { // oops
+    }
+
+    mt do_work() -> void {} // oops, should've ommitted instead of returning void
+
+    // ~~~~~~~~~~~~~ all fine ~~~~~~~~~~~~~~~~
+    fn self_bar(Foo self) {}
+    fn self_mut_bar(mut Self self) {}
+    fn self_ref_bar(&Self self) {}
+    fn self_mut_ref_bar(&mut Self self) {}
+    fn purely_mt(&Foo self) {}
+    fn purely_mt_but_mut(&mut Foo self) {}
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    fn just_mt() -> i32 { return 12; } // oops
+}

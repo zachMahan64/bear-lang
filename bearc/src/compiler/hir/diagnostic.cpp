@@ -252,6 +252,16 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "does not have a return type but contract's function does";
     case diag_code::declared_in_contract_here:
         return "declared in contract here";
+    case diag_code::invalid_return_type:
+        return "invalid return type";
+    case diag_code::return_type_must_be_an_explicit_type:
+        return "return type must be an explicit type";
+    case diag_code::void_is_not_a_valid_return_type:
+        return "void is not a valid return type";
+    case diag_code::to_return_nothing_omit_the_return_type_entirely:
+        return "omit the return type entirely to return nothing from a function";
+    case diag_code::replace_occurences_of_var_with_an_explicit_type:
+        return "replace occurences of `var` with an explicit type";
     }
 
     std::unreachable();
