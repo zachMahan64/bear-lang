@@ -196,6 +196,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         auto strct = stmt->stmt.struct_decl;
         // delay resolution/instantiation until specialization
         if (strct.is_generic) {
+            // TODO: proper set up for generic logic goes here
             goto cleanup;
         }
 
