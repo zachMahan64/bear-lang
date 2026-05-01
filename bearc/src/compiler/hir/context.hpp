@@ -347,8 +347,8 @@ class Context {
     /// does nothing if either passed in DefId isn't a DefFunction or DefFunctionPrototype
     /// - emplaces notes and assumes that an initial primary error has already been emplaced
     /// - returns the first DiagnosticId (to be linked) if it exists
-    OptId<DiagnosticId> report_function_disagreement_with_contract(DefId contract_fn_proto_did,
-                                                                   DefId function_did);
+    DiagRange report_function_disagreement_with_contract(DefId contract_fn_proto_did,
+                                                         DefId function_did);
 
     [[nodiscard]] OptId<TypeId> self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
                                                  Def& def);

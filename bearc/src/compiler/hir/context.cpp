@@ -1344,18 +1344,12 @@ bool Context::function_signatures_match(DefId did1, DefId did2) {
     return compatible_param_type_slice(param_tids1, param_tids2);
 }
 
-OptId<DiagnosticId> Context::report_function_disagreement_with_contract(DefId contract_fn_proto_did,
-                                                                        DefId function_did) {
+DiagRange Context::report_function_disagreement_with_contract(DefId contract_fn_proto_did,
+                                                              DefId function_did) {
     const Def& contracts_def = def(contract_fn_proto_did);
     const Def& fn_def = def(function_did);
 
-    OptId<DiagnosticId> first{};
-
-    auto try_set_first = [&first](DiagnosticId did) {
-        if (first.empty()) {
-            first = did;
-        }
-    };
+    DiagLinker dlinker{*this};
 
     // contract's stuff
     IdSlice<TypeId> ct_param_tids;
@@ -1385,8 +1379,8 @@ OptId<DiagnosticId> Context::report_function_disagreement_with_contract(DefId co
     }
 
     if (ct_param_tids.len() != fn_param_tids.len()) {
-        try_set_first(emplace_diagnostic_with_message_value(
-            name_span_for_def(function_did), diag_code::only_message_value_is_meaning,
+        dlinker.link(emplace_diagnostic_with_message_value(
+            name_span_for_def(function_did), diag_code::only_message_value_is_meaningful,
             diag_type::note,
             DiagnosticContractFnExpectedButGotNumParams{
                 .contract_fn_name = contracts_def.name,
@@ -1396,14 +1390,14 @@ OptId<DiagnosticId> Context::report_function_disagreement_with_contract(DefId co
     }
 
     if (ct_return_tid.has_value() && fn_return_tid.empty()) {
-        try_set_first(emplace_diagnostic_with_message_value(
+        dlinker.link(emplace_diagnostic_with_message_value(
             name_span_for_def(function_did),
             diag_code::does_not_have_return_type_but_contracts_function_does, diag_type::note,
             DiagnosticSymbolBeforeMessage{fn_def.name}));
     }
 
     if (ct_return_tid.empty() && fn_return_tid.has_value()) {
-        try_set_first(emplace_diagnostic_with_message_value(
+        dlinker.link(emplace_diagnostic_with_message_value(
             type(fn_return_tid.as_id()).span,
             diag_code::has_return_type_but_contracts_function_does_not, diag_type::note,
             DiagnosticSymbolBeforeMessage{fn_def.name}));
@@ -1411,8 +1405,17 @@ OptId<DiagnosticId> Context::report_function_disagreement_with_contract(DefId co
 
     if (ct_return_tid.has_value() && fn_return_tid.has_value()
         && !equivalent_type(ct_return_tid.as_id(), fn_return_tid.as_id())) {
+        dlinker.link(emplace_diagnostic_with_message_value(
+            type(fn_return_tid.as_id()).span, diag_code::only_message_value_is_meaningful,
+            diag_type::note,
+            DiagnosticContractFnExpectedRetTyButGot{.contract_fn_name = contracts_def.name,
+                                                    .expected_return_tid = ct_return_tid.as_id(),
+                                                    .got_return_tid = fn_return_tid.as_id()}));
+        dlinker.link(emplace_diagnostic_with_message_value(
+            type(fn_return_tid.as_id()).span, diag_code::replace_with, diag_type::help,
+            DiagnosticTypeAfterMessage{.tid = ct_return_tid.as_id()}));
     }
-    return first;
+    return dlinker.range();
 }
 
 OptId<TypeId> Context::self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,

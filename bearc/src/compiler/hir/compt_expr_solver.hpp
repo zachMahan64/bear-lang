@@ -2109,7 +2109,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         enter_compt_fn();
         if (call_depth > MAX_COMPT_CALL_FRAMES) {
             auto d0 = context.emplace_diagnostic_with_message_value(
-                Span{context, fid, expr}, diag_code::only_message_value_is_meaning,
+                Span{context, fid, expr}, diag_code::only_message_value_is_meaningful,
                 diag_type::error, DiagnosticComptStackOverflow{.function_sid = func_symbol});
             auto d1 = context.emplace_diagnostic_with_message_value(
                 func_span, diag_code::declared_here, diag_type::note,
@@ -2250,7 +2250,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (idx >= list.len()) {
                 context.emplace_diagnostic_with_message_value(
                     Span{context, fid, expr->expr.subscript.subexpr},
-                    diag_code::only_message_value_is_meaning, diag_type::error,
+                    diag_code::only_message_value_is_meaningful, diag_type::error,
                     DiagnosticIdxOutOfBounds{.idx_sid = context.symbol_id(std::to_string(idx)),
                                              .length_sid
                                              = context.symbol_id(std::to_string(list.len()))});
@@ -2277,7 +2277,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (idx >= sv.size()) {
                 context.emplace_diagnostic_with_message_value(
                     Span{context, fid, expr->expr.subscript.subexpr},
-                    diag_code::only_message_value_is_meaning, diag_type::error,
+                    diag_code::only_message_value_is_meaningful, diag_type::error,
                     DiagnosticIdxOutOfBounds{.idx_sid = context.symbol_id(std::to_string(idx)),
                                              .length_sid
                                              = context.symbol_id(std::to_string(sv.size()))});

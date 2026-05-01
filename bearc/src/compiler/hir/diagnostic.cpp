@@ -208,7 +208,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "expected";
     case diag_code::free_function_called_as_a_method:
         return "free function declared `fn` called as a method";
-    case diag_code::only_message_value_is_meaning:
+    case diag_code::only_message_value_is_meaningful:
         return "";
     case diag_code::compt_vars_should_not_be_move_initialized:
         return "compile-time variables should not be move-initialized";
@@ -250,6 +250,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "has a return type but contract's function does not";
     case diag_code::does_not_have_return_type_but_contracts_function_does:
         return "does not have a return type but contract's function does";
+    case diag_code::declared_in_contract_here:
+        return "declared in contract here";
     }
 
     std::unreachable();
@@ -580,21 +582,25 @@ bool Diagnostic::has_complex_message() const {
 void Diagnostic::build_complex_message(Context& ctx, std::string& str) const {
     str.reserve(64); // decent size
 
-    auto type_helper = [this, &ctx, &str](TypeId tid) {
+    auto type_helper_color = [&ctx, &str](TypeId tid, const char* color) {
         if (contains_deftype(ctx, tid)) {
             str += ansi_bold_reset();
             str += '`';
-            str += accent_color_for_type(type);
+            str += color;
             str += type_to_string_as_mentioned(ctx, tid);
             str += ansi_bold_reset();
             str += '`';
             str += " aka ";
         }
         str += '`';
-        str += accent_color_for_type(type);
+        str += color;
         str += type_to_string(ctx, tid);
         str += ansi_bold_reset();
         str += '`';
+    };
+
+    auto type_helper = [this, &type_helper_color](TypeId tid) {
+        type_helper_color(tid, accent_color_for_type(type));
     };
 
     auto sid_helper = [this, &ctx, &str](SymbolId sid) {
@@ -774,6 +780,18 @@ void Diagnostic::build_complex_message(Context& ctx, std::string& str) const {
             str += plural_helper(d.got_sid);
             str += ansi_bold_reset();
         },
+        [&](DiagnosticContractFnExpectedRetTyButGot d) {
+            str += "contract function ";
+            sid_helper(d.contract_fn_name);
+            str += " expected return type ";
+            str += ansi_bold_green();
+            type_helper_color(d.expected_return_tid, ansi_bold_green());
+            str += ansi_bold_reset();
+            str += " but got ";
+            str += ansi_bold_red();
+            type_helper_color(d.got_return_tid, ansi_bold_red());
+            str += ansi_bold_reset();
+        },
 
     };
     std::visit(vs, message_value);
@@ -784,6 +802,9 @@ void DiagLinker::link(DiagnosticId d) {
         ctx.link_diagnostic(prev.as_id(), d);
     }
     prev = d;
+    if (first.empty()) {
+        first = d;
+    }
 }
 
 void DiagLinker::link(OptId<DiagnosticId> d) {
@@ -793,6 +814,24 @@ void DiagLinker::link(OptId<DiagnosticId> d) {
     if (d.has_value()) {
         prev = d;
     }
+    if (d.has_value() && first.empty()) {
+        first = d;
+    }
 }
+
+void DiagLinker::link(DiagRange range) {
+    if (range.first.has_value()) {
+        link(range.first.as_id());
+    }
+    if (range.last.has_value()) {
+        prev = range.last.as_id();
+    }
+}
+
+OptId<DiagnosticId> DiagLinker::last_in_chain() const { return prev; }
+
+OptId<DiagnosticId> DiagLinker::first_in_chain() const { return first; }
+
+DiagRange DiagLinker::range() const { return {first_in_chain(), last_in_chain()}; }
 
 } // namespace hir

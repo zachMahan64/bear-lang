@@ -107,7 +107,7 @@ enum class diag_code : uint8_t {
     not_a_function,
     expected,
     free_function_called_as_a_method,
-    only_message_value_is_meaning,
+    only_message_value_is_meaningful,
     compt_vars_should_not_be_move_initialized,
     compile_time_constant_cannot_be_moved,
     value_is_a_compile_time_constant,
@@ -128,6 +128,7 @@ enum class diag_code : uint8_t {
     invalid_contract,
     has_return_type_but_contracts_function_does_not,
     does_not_have_return_type_but_contracts_function_does,
+    declared_in_contract_here,
 
     count, // this must be last,
 
@@ -212,6 +213,12 @@ struct DiagnosticContractFnExpectedButGotNumParams {
     SymbolId got_sid;
 };
 
+struct DiagnosticContractFnExpectedRetTyButGot {
+    SymbolId contract_fn_name;
+    TypeId expected_return_tid;
+    TypeId got_return_tid;
+};
+
 using DiagnosticMessageValue = std::variant<
     DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage, DiagnosticSymbolAfterMessage,
     DiagnosticSymbolAfterMessageNoQuotes, DiagnosticIdentifierBeforeMessage,
@@ -219,7 +226,8 @@ using DiagnosticMessageValue = std::variant<
     DiagnosticTypeAndType, DiagnosticTypeAndTypeForBinaryOp,
     DiagnosticIdentifierBeforeMessageAndTypeAfter, DiagnosticSymButGotSym,
     DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds, DiagnosticStructMemberSymBeforeMsg,
-    DiagnosticStructDoesNotDefineBlankForContract, DiagnosticContractFnExpectedButGotNumParams>;
+    DiagnosticStructDoesNotDefineBlankForContract, DiagnosticContractFnExpectedButGotNumParams,
+    DiagnosticContractFnExpectedRetTyButGot>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
@@ -277,16 +285,26 @@ struct Diagnostic : NodeWithVariantValue<Diagnostic> {
     static int width(HirSize line);
 };
 
+struct DiagRange {
+    OptId<DiagnosticId> first;
+    OptId<DiagnosticId> last;
+};
+
 /// helper class that makes linking chains of diagnostics easier by internally tracking the previous
 /// diagnostic
 class DiagLinker {
     Context& ctx;
+    OptId<DiagnosticId> first;
     OptId<DiagnosticId> prev;
 
   public:
     DiagLinker(Context& ctx) : ctx{ctx} {}
     void link(DiagnosticId d);
     void link(OptId<DiagnosticId> d);
+    void link(DiagRange range);
+    OptId<DiagnosticId> last_in_chain() const;
+    OptId<DiagnosticId> first_in_chain() const;
+    DiagRange range() const;
 };
 
 } // namespace hir
