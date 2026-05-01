@@ -8,9 +8,9 @@ main quest
 
 - [ ] some more `compt` improvements:
     - [ ] compt unions/variants
-        - [ ] union and variant def lowering/resol
-        - unions should be pretty simpl
-        - variants are just struct {union{types...}, ordinal}
+        - [ ] **union and variant def lowering/resol**
+        - unions should be pretty simple
+        - variants are essentially just struct {union{types...}, ordinal}
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive
@@ -28,10 +28,11 @@ main quest
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
-    - generic params become either deftypes to type args or simply compt variables for expression value args 
-    - see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generi args for a given def needs to either:
+    - write ExecId hasher akin to the TypeTransformer/TypeHasher construct
+    - all generic params become either deftypes to type args or simply compt variables for expression value args 
+    - see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generic args for a given def needs to either:
         1. map to an already instatiated specialized, concrete instance of the def, or:
-        2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into the scope 
+        2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into a new scope for the concrete type 
 
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
 
@@ -42,9 +43,10 @@ main quest
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything 
 
 - [ ] tighten up abi related stuff with hir::LayoutRules or something similar
+    - [ ] properly impl `sizeof` and `alignof`, make them generalized as a primitive query in `hir::Context` and then plug into `hir::ComptExprSolver` and later the runtime expr solver
 
 - [ ] preliminary full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
-    - [x] improve `use` statements to allow single-def usages in named scopes (not just modules in anon scopes)
+    - this should be entirely done after full type lowering
 
 - [ ] some basic [lsp-compat](/docs/lsp-compat.md), mostly thru building span -> scope search trees (only build these when a flag is enabled, tho; this will need to be added)
 
