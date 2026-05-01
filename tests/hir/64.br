@@ -15,7 +15,7 @@ contract Bar {
 }
 
 struct Foo has Bar {
-
+    *void thingie_mabob = null;
     fn oops() -> var {} // not legal
 
     fn oopsie_daisy() -> [&][&][10]var {
@@ -27,6 +27,10 @@ struct Foo has Bar {
     }
 
     mt do_work() -> void {} // oops, should've ommitted instead of returning void
+
+    mt oh_no() -> &void {} //oops
+
+    mt oops_again() -> &var {} // oops
 
     // ~~~~~~~~~~~~~ all fine ~~~~~~~~~~~~~~~~
     fn self_bar(Foo self) {}

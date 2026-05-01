@@ -306,7 +306,7 @@ class Context {
                                                   DefId struct_id) const;
 
     // returns true on an invalid return type
-    bool validate_return_type(TypeId return_tid);
+    bool report_invalid_return_type(TypeId return_tid);
 
     [[nodiscard]] const Def& def(DefId id) const;
 

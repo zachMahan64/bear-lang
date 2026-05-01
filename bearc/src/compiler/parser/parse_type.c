@@ -245,9 +245,9 @@ ast_type_t* parse_type(parser_t* p) {
 
 ast_type_t* parse_type_ref(parser_t* p) {
     ast_type_t* outer = parser_alloc_type(p);
-    outer->type.ptr_ref.modifier
-        = parser_eat(p); // definitely fine because we know to be in this func
+    token_t* modifier = parser_eat(p); // definitely fine because we know to be in this func
 
+    outer->type.ptr_ref.modifier = modifier;
     outer->type.ptr_ref.mut = parser_peek_match(
         p, TOK_MUT); // peek match into bool, since we want a mut reference to
                      // correspond to a mut inner as well
@@ -258,7 +258,7 @@ ast_type_t* parse_type_ref(parser_t* p) {
     outer->canonical_base = inner->canonical_base;
     outer->type.ptr_ref.inner = inner;
     outer->tag = AST_TYPE_REF_PTR;
-    outer->first = inner->first;
+    outer->first = modifier; // always first since we have *ty or &ty
     outer->last = parser_prev(p);
     if (outer->type.ptr_ref.inner->tag == AST_TYPE_REF_PTR
         && outer->type.ptr_ref.inner->type.ptr_ref.modifier->type == TOK_AMPER) {

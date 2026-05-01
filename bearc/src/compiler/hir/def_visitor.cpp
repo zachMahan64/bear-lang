@@ -364,7 +364,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                   : std::nullopt;
 
         if (return_tid.has_value()) {
-            context.validate_return_type(return_tid.as_id());
+            context.report_invalid_return_type(return_tid.as_id());
         }
 
         def.set_value(DefFunctionPrototype{.params = params,
@@ -444,7 +444,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                       ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
                       : std::nullopt;
             if (return_tid.has_value()) {
-                context.validate_return_type(return_tid.as_id());
+                context.report_invalid_return_type(return_tid.as_id());
             }
 
             // handle methods explicitly

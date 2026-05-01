@@ -115,8 +115,8 @@ static ast_expr_t* parse_primary_expr_impl(parser_t* p, ast_expr_t* opt_atom) {
         return parse_fn_call(p, lhs, NULL); // no gen args
     }
     // try subscript
-    if (lhs && next_type == TOK_LBRACK) {
-        return parse_subscript(p, lhs);
+    while (parser_peek_match(p, TOK_LBRACK)) {
+        lhs = parse_subscript(p, lhs);
     }
     // try ++x, etc.
     if (!lhs && is_preunary_op(first_type)) {

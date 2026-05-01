@@ -1291,20 +1291,21 @@ bool Context::compatible_contract_params(IdSlice<TypeId> s1, IdSlice<TypeId> s2,
     return true;
 }
 
-bool Context::validate_return_type(TypeId return_tid) {
-    const Type& ty = type(try_decay_ref(return_tid));
+bool Context::report_invalid_return_type(TypeId return_tid) {
+    const Type& ty = type(return_tid);
+    const Type& canon_ty = type(try_decay_ref(return_tid));
     DiagLinker dlinker{*this};
     if (TypeTransformer<TypeContainsVar>{*this}(return_tid)) {
         dlinker.link(emplace_diagnostic_with_message_value(
             ty.span, diag_code::invalid_return_type, diag_type::error,
             DiagnosticTypeAfterMessage{.tid = return_tid}));
         dlinker.link(emplace_diagnostic(ty.span, diag_code::return_type_must_be_an_explicit_type,
-                                        diag_type::note));
+                                        diag_type::note, DiagnosticInfoNoPreview{}));
         dlinker.link(emplace_diagnostic(
             ty.span, diag_code::replace_occurences_of_var_with_an_explicit_type, diag_type::help));
         return true;
     }
-    if (ty.holds<TypeBuiltin>() && ty.as<TypeBuiltin>().type == builtin_type::voidd) {
+    if (canon_ty.holds<TypeBuiltin>() && canon_ty.as<TypeBuiltin>().type == builtin_type::voidd) {
         dlinker.link(emplace_diagnostic_with_message_value(
             ty.span, diag_code::invalid_return_type, diag_type::error,
             DiagnosticTypeAfterMessage{.tid = return_tid}));

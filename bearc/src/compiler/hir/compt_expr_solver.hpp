@@ -163,6 +163,17 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
 
         if (into_type.holds<TypePtr>()) {
+            OptId<ExecId> maybe_eid = solve_builtin_compt_expr(fid, scope, expr, {}, {});
+            if (maybe_eid.has_value()) {
+                OptId<TypeId> maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+                if (maybe_tid.has_value()) {
+                    const Type& ty = context.type(maybe_tid.as_id());
+                    if (ty.holds<TypeBuiltin>()
+                        and ty.as<TypeBuiltin>().type == builtin_type::nullpointer) {
+                        return maybe_eid.as_id();
+                    }
+                }
+            }
             auto inner_tid = into_type.as<TypePtr>().inner;
             auto inner = context.type(inner_tid);
             auto d0 = context.emplace_diagnostic(
