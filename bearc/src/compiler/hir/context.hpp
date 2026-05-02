@@ -358,6 +358,13 @@ class Context {
     /// checks if a (decayed) type matches a struct def
     [[nodiscard]] bool type_matches_struct_def(TypeId tid, DefId did);
 
+    /// checks if a struct has a contract
+    /// - defaults to returning false if struct_did does not correspond to a struct and same with
+    /// contract_did
+    [[nodiscard]] bool struct_has_contract(DefId struct_did, DefId contract_did);
+
+    [[nodiscard]] bool type_has_contract(TypeId tid, DefId contract_did);
+
     [[nodiscard]] OptId<TypeId> self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
                                                  Def& def);
 

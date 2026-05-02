@@ -1480,6 +1480,29 @@ OptId<TypeId> Context::self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t*
     return maybe_self_type;
 }
 
+bool Context::struct_has_contract(DefId struct_did, DefId contract_did) {
+    const Def& struct_def = def(struct_did);
+    const Def& contract_def = def(contract_did);
+    if (!struct_def.holds<DefStruct>() || !contract_def.holds<DefContract>()) {
+        return false;
+    }
+    const SymbolId contract_sid = contract_def.name;
+    auto maybe_corresponding_contract_did
+        = Scope::look_up_local_type(*this, struct_def.as<DefStruct>().scope, contract_sid);
+
+    return maybe_corresponding_contract_did.has_value()
+           && contract_did == maybe_corresponding_contract_did.as_id();
+}
+
+bool Context::type_has_contract(TypeId tid, DefId contract_did) {
+    TypeId canon_tid = try_decay_ref(tid);
+    const Type& ty = type(canon_tid);
+    if (!ty.holds<TypeStruct>()) {
+        return false;
+    }
+    return struct_has_contract(ty.as<TypeStruct>().definition, contract_did);
+}
+
 bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
     const Type& t1 = type(tid1);
     const Type& t2 = type(tid2);
