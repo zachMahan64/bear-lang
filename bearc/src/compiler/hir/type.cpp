@@ -241,7 +241,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             str += '&';
             if constexpr (considers_mut()) {
                 if (t1.mut) {
-                    str += "mut";
+                    str += "mut ";
                 }
             }
         },
@@ -249,7 +249,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             str += '*';
             if constexpr (considers_mut()) {
                 if (t1.mut) {
-                    str += "mut";
+                    str += "mut ";
                 }
             }
         },

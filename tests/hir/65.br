@@ -1,0 +1,21 @@
+// tests/hir/65.br
+
+// these are fine since these literals can be given static addresses
+&mut i32 foo = 15;
+&mut i32 mut foo1 = 17;
+
+contract Foo {
+    fn foo(&mut Self self) -> &i32;
+}
+
+struct Fooer has Foo {
+    mut i32 a;
+    fn foo(&mut Self self) -> &mut i32 { // oops, signature mismatch
+        a++;
+        return &mut a;
+    }
+    fn fooey(&mut Self self) -> &i32 mut { // oops, malformed
+        a++;
+        return &a;
+    }
+}

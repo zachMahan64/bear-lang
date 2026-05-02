@@ -134,6 +134,8 @@ enum class diag_code : uint8_t {
     void_is_not_a_valid_return_type,
     to_return_nothing_omit_the_return_type_entirely,
     replace_occurences_of_var_with_an_explicit_type,
+    immutable_reference_to_mut_value_is_malformed,
+    redundant_mut_reference_to_mut_value,
 
     count, // this must be last,
 

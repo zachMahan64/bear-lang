@@ -98,22 +98,67 @@ template <IsDefVisitor V> class TypeResolver {
     }
 
     OptId<TypeId> type_ptr_ref(FileId fid, ScopeId scope, const ast_type_t* type) {
-        auto maybe_inner
+        const OptId<TypeId> maybe_inner
             = resolve_type(fid, scope, type->type.ptr_ref.inner, false); // don't need layout info
 
         if (!maybe_inner.has_value()) {
             return OptId<TypeId>{};
         }
 
+        const TypeId inner_tid = maybe_inner.as_id();
+
+        // when this is a pointer, *ty:
         if (type->type.ptr_ref.modifier->type == TOK_STAR) {
-            return context.emplace_type(TypePtr{.inner = maybe_inner.as_id()},
+            return context.emplace_type(TypePtr{.inner = inner_tid},
                                         Span(context, fid, type->first, type->last),
                                         type->type.ptr_ref.mut);
         }
+        // when this is a ref, &ty:
+        const bool outer_mut_as_written = type->type.ptr_ref.mut;
+        const bool inner_mut_as_written = context.type(inner_tid).mut;
+        context.type(inner_tid).mut
+            = false; // always make inner not mut since outer mut carries necessary mut info
 
-        return context.emplace_type(TypeRef{.inner = maybe_inner.as_id()},
-                                    Span(context, fid, type->first, type->last),
-                                    type->type.ptr_ref.mut);
+        const TypeId outer_tid = context.emplace_type(TypeRef{.inner = inner_tid},
+                                                      Span(context, fid, type->first, type->last),
+                                                      outer_mut_as_written);
+
+        // this is actually malformed, but correctable (and was already corrected above)
+        if (!outer_mut_as_written && inner_mut_as_written) {
+            const auto outer = context.type(outer_tid);
+            const auto d0 = context.emplace_diagnostic(
+                outer.span, diag_code::immutable_reference_to_mut_value_is_malformed,
+                diag_type::error);
+
+            // give options for replacing help:
+
+            // replace with &mut ty
+            const TypeId other_option_tid = context.emplace_type(
+                TypeRef{.inner = inner_tid}, Span(context, fid, type->first, type->last), true);
+            const auto d1 = context.emplace_diagnostic_with_message_value(
+                outer.span, diag_code::replace_with, diag_type::help,
+                DiagnosticTypeAfterMessage{.tid = other_option_tid});
+
+            // replace with &ty
+            const auto d2 = context.emplace_diagnostic_with_message_value(
+                outer.span, diag_code::replace_with, diag_type::help,
+                DiagnosticTypeAfterMessage{.tid = outer_tid});
+
+            context.link_diagnostic(d0, d1);
+            context.link_diagnostic(d1, d2);
+        }
+        // this is just silly but not as bad, so warn
+        if (outer_mut_as_written && inner_mut_as_written) {
+            const auto outer = context.type(outer_tid);
+            const auto d0 = context.emplace_diagnostic(
+                outer.span, diag_code::redundant_mut_reference_to_mut_value, diag_type::warning);
+            // replace with &mut ty
+            const auto d1 = context.emplace_diagnostic_with_message_value(
+                outer.span, diag_code::replace_with, diag_type::help,
+                DiagnosticTypeAfterMessage{.tid = outer_tid});
+            context.link_diagnostic(d0, d1);
+        }
+        return outer_tid;
     }
 
     OptId<TypeId> type_arr(FileId fid, ScopeId scope, const ast_type_t* type,

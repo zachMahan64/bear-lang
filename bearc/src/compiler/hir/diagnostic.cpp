@@ -262,6 +262,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "omit the return type entirely to return nothing from a function";
     case diag_code::replace_occurences_of_var_with_an_explicit_type:
         return "replace occurences of `var` with an explicit type";
+    case diag_code::immutable_reference_to_mut_value_is_malformed:
+        return "immutable reference to mutable value type is malformed as written";
+    case diag_code::redundant_mut_reference_to_mut_value:
+        return "redundant mutable reference to mutable value type";
     }
 
     std::unreachable();

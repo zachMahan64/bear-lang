@@ -54,6 +54,8 @@ main quest
     - perhaps consider constexpr-based policies to exhaustively check all possibilities for more combinatorically complex stmts (fn_decls come to mind) 
 
 #### hir phase 2.b (function body resolution):
+- [ ] make sure assignment type checking is properly rigid especially around mutable references.
+    - the way mutable references are strucutured is that HIR stores all references types as mut/immut on the reference layer and then the next inner value type is always stored as immut since the mutability only binds to the reference logically. So, be sure to take this into account. 
 - [ ] make a system to etch ExecId into a structured linear form within blocks to be naturally connected in a CFG 
     - [ ] this should be directly conducive to 3AC for all `hir::Exec`s
 - [ ] move checker
