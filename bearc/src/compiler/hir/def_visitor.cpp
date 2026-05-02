@@ -248,13 +248,17 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 = Scope::look_up_local_type(context, structs_scope, contract_def.name);
             if (already_defined.has_value()) {
                 // do diagnostics for the redefinition
-                auto d0 = context.emplace_diagnostic(ctr_span, diag_code::redefinition,
-                                                     diag_type::error);
-                dlinker.link(d0);
-                auto d1
-                    = context.emplace_diagnostic(context.name_span_for_def(already_defined.as_id()),
-                                                 diag_code::previous_def_here, diag_type::note);
-                dlinker.link(d1);
+                if (context.def(already_defined.as_id()).holds<DefContract>()) {
+                    dlinker.link(context.emplace_diagnostic_with_message_value(
+                        ctr_span, diag_code::struct_already_has_contract, diag_type::error,
+                        DiagnosticSymbolAfterMessage{contract_def.name}));
+                } else {
+                    dlinker.link(context.emplace_diagnostic(ctr_span, diag_code::redefinition,
+                                                            diag_type::error));
+                    dlinker.link(context.emplace_diagnostic(
+                        context.name_span_for_def(already_defined.as_id()),
+                        diag_code::previous_def_here, diag_type::note));
+                }
                 continue;
             }
             context.insert_type(structs_scope, contract_def.name, contract_did);

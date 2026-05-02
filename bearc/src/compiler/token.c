@@ -120,6 +120,7 @@ static void string_to_token_map_init(void) {
     strimap_emplace(&string_to_token_map, "@type_to_str", TOK_TYPE_TO_STR);
     strimap_emplace(&string_to_token_map, "@static_assert", TOK_STATIC_ASSERT);
     strimap_emplace(&string_to_token_map, "@defined", TOK_DEFINED);
+    strimap_emplace(&string_to_token_map, "@has_contract", TOK_HAS_CONTRACT);
 
     strimap_emplace(&string_to_token_map, "decay", TOK_DECAY);
 
@@ -304,11 +305,12 @@ static const char* token_to_string_map_impl[TOK__NUM] = {
     [TOK_MOVE] = "move",
     [TOK_AS] = "as",
     [TOK_IS] = "is",
+    [TOK_DECAY] = "decay",
     [TOK_STATIC_ASSERT] = "@static_assert",
     [TOK_SAME_TYPE] = "@same_type",
     [TOK_TYPE_TO_STR] = "@type_to_str",
     [TOK_DEFINED] = "@defined",
-    [TOK_DECAY] = "decay",
+    [TOK_HAS_CONTRACT] = "@has_contract",
 
     // structures
     [TOK_VARIANT] = "variant",

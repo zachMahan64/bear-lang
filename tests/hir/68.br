@@ -1,1 +1,26 @@
 // tests/hir/68.br
+
+contract Bar {
+
+}
+
+struct Foo has Bar {
+    
+}
+
+var _0 = @static_assert @has_contract(Foo, Bar); 
+
+var _1 = @static_assert @has_contract(Foo, Foo); // oops
+
+struct Fooey has Bar, Bar {
+    
+}
+
+struct Boeey has Bar {
+
+    struct Bar { // also not allowed since a contract is applied to the struct's scope
+                 // this is a bit of edge case but is done this way for constant look-ups
+                 // for a struct having a given contract
+
+    }
+}

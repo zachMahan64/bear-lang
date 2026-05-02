@@ -563,8 +563,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_SUBSCRIPT: {
             OptId<ExecId> maybe_eid = solve_expr_subscript(fid, scope, expr);
             return guard_type_mismatch(maybe_eid);
-            break;
         }
+        case AST_EXPR_HAS_CONTRACT:
+            return handle_has_contract(fid, scope, expr);
         case AST_EXPR_LIST_LITERAL:
         case AST_EXPR_STRUCT_INIT:
             if (into_builtin.has_value()) {
@@ -900,6 +901,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             maybe_eid = solve_expr(fid, scope, expr);
             break;
         case AST_EXPR_SAME_TYPE:
+        case AST_EXPR_HAS_CONTRACT:
         case AST_EXPR_DEFINED:
         case AST_EXPR_TYPE_TO_STR:
         case AST_EXPR_STATIC_ASSERT:
@@ -1490,6 +1492,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_INVALID:
         case AST_EXPR_SAME_TYPE:
         case AST_EXPR_TYPE_TO_STR:
+        case AST_EXPR_HAS_CONTRACT:
         case AST_EXPR_STATIC_ASSERT:
             break;
         }
@@ -2433,6 +2436,48 @@ template <IsDefVisitor V> class ComptExprSolver {
         assert(expr->type == AST_EXPR_CLOSURE);
         // TODO
         return std::nullopt;
+    }
+    [[nodiscard]] OptId<ExecId> handle_has_contract(FileId fid, ScopeId scope,
+                                                    const ast_expr_t* expr) {
+        assert(expr->type == AST_EXPR_HAS_CONTRACT);
+        Span span{context, fid, expr};
+
+        const ast_expr_has_contract_t has_ctr = expr->expr.has_contract;
+        OptId<TypeId> maybe_tid = resolve_type(fid, scope, has_ctr.type);
+
+        if (maybe_tid.empty()) {
+            return std::nullopt; // poisoned
+        }
+
+        const auto tid = maybe_tid.as_id();
+
+        token_ptr_slice_t id_slice = has_ctr.contract_id_slice;
+
+        Span contract_id_span{context, fid, id_slice};
+
+        OptId<DefId> maybe_did
+            = context.look_up_scoped_type(scope, context.symbol_slice(id_slice), contract_id_span);
+
+        if (maybe_did.empty()) {
+            context.emplace_diagnostic(span, diag_code::use_of_undeclared_identifier,
+                                       diag_type::error);
+            return std::nullopt;
+        }
+
+        const auto did = maybe_did.as_id();
+        const Def& def = context.def(did);
+        if (!def.holds<DefContract>()) {
+            auto d0 = context.emplace_diagnostic(
+                contract_id_span, diag_code::invalid_contract, diag_type::error,
+                DiagnosticSubCode{.sub_code = diag_code::not_a_contract});
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                def.span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = def.name});
+            context.link_diagnostic(d0, d1);
+            return std::nullopt;
+        }
+
+        return context.emplace_exec(ExecConst{context.type_has_contract(tid, did)}, span, true);
     }
 };
 } // namespace hir

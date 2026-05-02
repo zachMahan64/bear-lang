@@ -126,6 +126,7 @@ typedef enum token_type {
     TOK_TYPE_TO_STR,   // @type_to_str
     TOK_STATIC_ASSERT, // @static_assert
     TOK_DEFINED,       // @defined
+    TOK_HAS_CONTRACT,  // @has_contract
 
     // constructs
     TOK_REQUIRES,

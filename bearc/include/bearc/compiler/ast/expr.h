@@ -46,6 +46,7 @@ typedef enum ast_expr_type {
     AST_EXPR_TYPE_TO_STR,
     AST_EXPR_STATIC_ASSERT,
     AST_EXPR_DEFINED,
+    AST_EXPR_HAS_CONTRACT,
 
     // structs
     AST_EXPR_STRUCT_INIT,
@@ -227,6 +228,11 @@ typedef struct ast_expr_defined {
     bool member;
 } ast_expr_defined_t;
 
+typedef struct ast_expr_has_contract {
+    ast_type_t* type;
+    token_ptr_slice_t contract_id_slice;
+} ast_expr_has_contract_t;
+
 // ^^^^^^^^^^^^^^^^^^^^^^^^
 
 typedef union ast_expr_u {
@@ -253,6 +259,7 @@ typedef union ast_expr_u {
     ast_expr_type_t type_to_str;
     ast_expr_two_types_t same_type;
     ast_expr_defined_t defined;
+    ast_expr_has_contract_t has_contract;
 } ast_expr_u;
 
 /// underlying expr is 0-offset aligned so this struct can be safely downcasted

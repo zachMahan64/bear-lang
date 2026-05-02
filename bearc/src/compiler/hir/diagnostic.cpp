@@ -266,6 +266,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "immutable reference to mutable value type is malformed as written";
     case diag_code::redundant_mut_reference_to_mut_value:
         return "redundant mutable reference to mutable value type";
+    case diag_code::struct_already_has_contract:
+        return "struct already has contract";
     }
 
     std::unreachable();

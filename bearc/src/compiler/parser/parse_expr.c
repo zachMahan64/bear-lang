@@ -165,6 +165,8 @@ ast_expr_t* parse_preunary_expr(parser_t* p) {
         return parse_expr_compt(p);
     case TOK_SAME_TYPE:
         return parse_expr_same_type(p);
+    case TOK_HAS_CONTRACT:
+        return parse_expr_has_contract(p);
     case TOK_STATIC_ASSERT:
         return parse_expr_static_assert(p);
     case TOK_TYPE_TO_STR:
@@ -253,6 +255,44 @@ ast_expr_t* parse_expr_defined(parser_t* p) {
         return ex;
     }
     ex->expr.defined.id = id_slice;
+
+    if (lparen) {
+        parser_expect_token(p, TOK_RPAREN);
+    }
+
+    ex->first = tts_tkn;
+    ex->last = parser_prev(p);
+    return ex;
+}
+
+ast_expr_t* parse_expr_has_contract(parser_t* p) {
+    ast_expr_t* ex = parser_alloc_expr(p);
+    ex->type = AST_EXPR_HAS_CONTRACT;
+
+    token_t* tts_tkn = parser_expect_token(p, TOK_HAS_CONTRACT);
+    if (!tts_tkn) {
+        return parser_sync_expr(p);
+    }
+
+    token_t* lparen = parser_expect_token(p, TOK_LPAREN);
+
+    ex->expr.has_contract.type = parse_type(p);
+
+    parser_expect_token(p, TOK_COMMA);
+
+    ast_expr_t* id_expr = parse_id(p);
+
+    if (id_expr->type != AST_EXPR_ID) {
+        return parser_sync_expr(p);
+    }
+
+    token_ptr_slice_t id_slice = id_expr->expr.id.slice;
+
+    if (id_slice.len == 0) {
+        ex->type = AST_EXPR_INVALID;
+        return ex;
+    }
+    ex->expr.has_contract.contract_id_slice = id_slice;
 
     if (lparen) {
         parser_expect_token(p, TOK_RPAREN);
