@@ -893,14 +893,18 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_SUBSCRIPT:
             maybe_eid = solve_expr_subscript(fid, scope, expr);
             break;
+        case AST_EXPR_BINARY:
+            maybe_eid = solve_expr_binary(fid, scope, expr);
+            break;
+        case AST_EXPR_GROUPING:
+            maybe_eid = solve_expr(fid, scope, expr);
+            break;
         case AST_EXPR_SAME_TYPE:
         case AST_EXPR_DEFINED:
         case AST_EXPR_TYPE_TO_STR:
         case AST_EXPR_STATIC_ASSERT:
         case AST_EXPR_LITERAL:
         case AST_EXPR_LIST_LITERAL:
-        case AST_EXPR_BINARY:
-        case AST_EXPR_GROUPING:
         case AST_EXPR_PRE_UNARY:
         case AST_EXPR_POST_UNARY:
         case AST_EXPR_TYPE:
@@ -1759,6 +1763,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 cooked = true;
             }
             if (maybe_bin_op.as<is_as_op>() == is_as_op::is) {
+                // TODO handle variant logic once variant lowering logic is impl'd
                 context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
                     diag_code::is_operator_requires_run_time_values, diag_type::error);

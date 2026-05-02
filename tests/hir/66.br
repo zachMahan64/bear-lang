@@ -1,0 +1,29 @@
+// tests/hir/66.br
+
+contract Copy {
+    fn copy(&Self self) -> Self;
+}
+
+struct Foo has Copy {
+    struct Copy {} // oops
+}
+
+struct Bar has Copy {
+    i32 bar;
+    fn copy(&Self self) -> Self => Self{.bar = self.bar};
+}
+
+compt Bar a = Bar{.bar = 12};
+compt Bar b = Bar..copy(a);
+
+var _0 = @static_assert b.bar == 12; // fine
+
+var _1 = @static_assert b.bar == 13; // oops
+
+var _2 = @static_assert b.copy().bar == 12; // fine
+
+var _3 = @static_assert Bar{.bar = 123}.copy().bar == 123; // fine
+
+compt Bar c = Bar{.bar = 12}.copy();
+
+var _4 = @static_assert c.bar == 12;

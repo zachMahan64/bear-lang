@@ -243,6 +243,21 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 dlinker.link(d1);
                 continue;
             }
+            // try to insert contract into struct's scope
+            auto already_defined
+                = Scope::look_up_local_type(context, structs_scope, contract_def.name);
+            if (already_defined.has_value()) {
+                // do diagnostics for the redefinition
+                auto d0 = context.emplace_diagnostic(ctr_span, diag_code::redefinition,
+                                                     diag_type::error);
+                dlinker.link(d0);
+                auto d1
+                    = context.emplace_diagnostic(context.name_span_for_def(already_defined.as_id()),
+                                                 diag_code::previous_def_here, diag_type::note);
+                dlinker.link(d1);
+                continue;
+            }
+            context.insert_type(structs_scope, contract_def.name, contract_did);
             contract_dids.push_back(contract_did);
         }
 
@@ -363,7 +378,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                   ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
                   : std::nullopt;
 
-        if (return_tid.has_value()) {
+        if (return_tid.has_value() && !parent_is_contract()) {
             context.report_invalid_return_type(return_tid.as_id());
         }
 
@@ -377,6 +392,16 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     case AST_STMT_FN_DECL: {
         const ast_stmt_fn_decl fn_decl = stmt->stmt.fn_decl;
         const auto fid = def.span.file_id;
+
+        auto parent_is_struct = [&def, this]() -> bool {
+            if (def.parent.empty()) {
+                return false;
+            }
+            if (context.def(visit_and_resolve_if_needed(def.parent.as_id())).holds<DefStruct>()) {
+                return true;
+            }
+            return false;
+        };
 
         if (def.compt && fn_decl.is_mut) {
             Span span = Span::find_between_tokens(context, fid, fn_decl.kw, fn_decl.name.start[0]);
@@ -403,6 +428,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
         if (!def.generic) {
             OptId<TypeId> maybe_self_type = context.self_type_for_fn(scope, &fn_decl, def);
+
+            bool takes_self = maybe_self_type.has_value();
+
             DefFunction::ParamResolResult params_res
                 = resolve_params(fid, scope, did, fn_decl.params, maybe_self_type);
 
@@ -415,6 +443,12 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             for (auto didx = params.begin(); didx != params.end(); didx++) {
                 const Def& param_def = context.def(didx);
                 assert(param_def.holds<DefVariable>());
+
+                if (didx == params.begin() && !takes_self && parent_is_struct()
+                    && context.type_matches_struct_def(param_def.as<DefVariable>().type,
+                                                       def.parent.as_id())) {
+                    takes_self = true;
+                }
 
                 // guard run-time func with `var` typed params
                 if (func_is_runtime
@@ -454,7 +488,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                       .body = std::nullopt,
                                       .original = std::nullopt,
                                       .discardable = fn_decl.discardable,
-                                      .takes_self = maybe_self_type.has_value(),
+                                      .takes_self = takes_self,
                                       .posioned = params_res.poisoned});
         }
         // TODO, handle generic functions

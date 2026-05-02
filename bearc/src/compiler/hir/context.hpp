@@ -234,6 +234,7 @@ class Context {
                                DefValue value = DefUnevaluated{});
 
     void insert_variable(ScopeId scope_id, SymbolId sid, DefId did);
+    void insert_type(ScopeId scope_id, SymbolId sid, DefId did);
 
     // should only be used for types
     [[nodiscard]] IdHashMap<DefId, ScopeId>& defs_to_scopes_for_types();
@@ -353,6 +354,9 @@ class Context {
     /// - returns the first DiagnosticId (to be linked) if it exists
     DiagRange report_function_disagreement_with_contract(DefId contract_fn_proto_did,
                                                          DefId function_did);
+
+    /// checks if a (decayed) type matches a struct def
+    [[nodiscard]] bool type_matches_struct_def(TypeId tid, DefId did);
 
     [[nodiscard]] OptId<TypeId> self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
                                                  Def& def);

@@ -447,6 +447,10 @@ void Context::insert_variable(ScopeId scope_id, SymbolId sid, DefId did) {
     scopes.at(scope_id).insert_variable(sid, did);
 }
 
+void Context::insert_type(ScopeId scope_id, SymbolId sid, DefId did) {
+    scopes.at(scope_id).insert_type(sid, did);
+}
+
 [[nodiscard]] IdHashMap<DefId, ScopeId>& Context::defs_to_scopes_for_types() {
     return def_to_scope_for_types;
 }
@@ -1365,14 +1369,15 @@ bool Context::func_sigs_match_for_contract(DefId did1, DefId did2) {
         return false;
     }
 
-    if (return_tid1.has_value() && return_tid2.has_value()
-        && !equivalent_type(return_tid1.as_id(), return_tid2.as_id())) {
-        return false;
-    }
-
     if (struct_did.empty()) {
         return false;
     }
+
+    if (return_tid1.has_value() && return_tid2.has_value()
+        && !inferable_as(return_tid1.as_id(), return_tid2.as_id(), struct_did.as_id())) {
+        return false;
+    }
+
     return compatible_contract_params(param_tids1, param_tids2, struct_did.as_id());
 }
 
@@ -1507,6 +1512,15 @@ bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
         }
     }
     return true;
+}
+
+bool Context::type_matches_struct_def(TypeId tid, DefId did) {
+    const TypeId canon_tid = this->try_decay_ref(tid);
+    const Type& ty = type(canon_tid);
+    if (!ty.holds<TypeStruct>()) {
+        return false;
+    }
+    return ty.as<TypeStruct>().definition == did; // only matches if did is also a struct, of course
 }
 
 } // namespace hir
