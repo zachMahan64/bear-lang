@@ -46,4 +46,7 @@ incoming `{line, character}` request handling
 outgoing `{line, character}` diagnostics handling
 ------------------------------------------------- 
 - already cleanly handled with diagnostics that track source Spans that contain `{FileId, start, len line, col}` which can easily be converted to `{uri, line, col, len}`
-    - any necssary info can be attached to diagnostics at those locations 
+    - any necssary info can be attached to diagnostics at those locations
+    - code actions will be limited to `replace with` or `remove` to begin with, and it needs to work with:
+        - `DiagnosticSymbolAfterMessage` -> just rip the `SymbolId`'s string value
+        - `DiagnosticTypeAfterMessage` -> just get the type_to_str_as_mentioned 

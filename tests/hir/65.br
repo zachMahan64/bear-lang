@@ -18,4 +18,14 @@ struct Fooer has Foo {
         a++;
         return &a;
     }
+    fn foogie(&mut Self mut self) {} // oops
+    fn foogiey(&Self mut self) {} // oops 
+
+    deftype Shelf = Self;
+    deftype Elf = Self;
+    deftype Belf = Elf;
+    deftype Melf = Belf;
+
+    fn fogie() -> & Melf mut {} // oops 
+
 }

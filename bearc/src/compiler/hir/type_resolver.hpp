@@ -116,8 +116,9 @@ template <IsDefVisitor V> class TypeResolver {
         // when this is a ref, &ty:
         const bool outer_mut_as_written = type->type.ptr_ref.mut;
         const bool inner_mut_as_written = context.type(inner_tid).mut;
-        context.type(inner_tid).mut
-            = false; // always make inner not mut since outer mut carries necessary mut info
+        // always make inner not mut since outer mut carries necessary mut info
+        context.type(inner_tid).mut = false;
+        context.type_as_mentioned(inner_tid).mut = false; // this corrects deftypes too
 
         const TypeId outer_tid = context.emplace_type(TypeRef{.inner = inner_tid},
                                                       Span(context, fid, type->first, type->last),
