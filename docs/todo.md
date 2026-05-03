@@ -54,8 +54,7 @@ main quest
 
 - [ ] some basic [lsp-compat](/docs/lsp-compat.md), mostly thru building span -> scope search trees (only build these when a flag is enabled, tho; this will need to be added)
 
-- [ ] finish internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic for every possible `ast_stmt_t`
-    - perhaps consider constexpr-based policies to exhaustively check all possibilities for more combinatorically complex stmts (fn_decls come to mind) 
+- [ ] finalize internal resolution logic on `hir::TopLevelVisitor` using all the lowering logic for every possible `ast_stmt_t`
 
 #### hir phase 2.b (function body resolution):
 - [ ] make sure assignment type checking is properly rigid especially around mutable references.
