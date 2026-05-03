@@ -19,6 +19,7 @@ __*
 # tools
 perf.data*
 .gdbinit
+vgcore*
 
 # llvm
 llvm/
