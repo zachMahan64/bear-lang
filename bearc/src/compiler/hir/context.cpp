@@ -1121,23 +1121,44 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                                     bool member) {
 
     if (member) {
-        OptId<DefId> curr_struct;
+        OptId<DefId> curr_did;
         for (HirSize i = 0; i < id_slice.len(); i++) {
             SymbolId sid = symbol_id(id_slice.get(i));
             OptId<DefId> maybe_did;
-            if (curr_struct.empty()) {
+            if (curr_did.empty()) {
                 maybe_did = look_up_variable(scope, sid);
             } else {
-                maybe_did = look_up_member_function_no_diag_except_hid(def(curr_struct.as_id()),
-                                                                       sid, id_span, scope);
+                maybe_did = look_up_member_function_no_diag_except_hid(def(curr_did.as_id()), sid,
+                                                                       id_span, scope);
                 if (maybe_did.empty()) {
-                    maybe_did = look_up_member_var_no_diag_except_hid(def(curr_struct.as_id()), sid,
+                    maybe_did = look_up_member_var_no_diag_except_hid(def(curr_did.as_id()), sid,
                                                                       id_span, scope);
                 }
             }
 
             if (maybe_did.has_value() && i == id_slice.len() - 1) {
                 return true;
+            }
+
+            // handle thing.len specifically, kinda work-aroundy
+            if (i == 0 && maybe_did.has_value() && id_slice.len() == 2
+                && symbol_id<"len">() == symbol_id(id_slice.get(1))) {
+                const auto did = maybe_did.as_id();
+                const Def& d = def(did);
+                if (d.holds<DefVariable>() && d.as<DefVariable>().compt_value.has_value()) {
+                    TopLevelDefVisitor def_vis{*this};
+                    ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
+                    const OptId<TypeId> maybe_tid = solver.infer_type_from_compt_exec(
+                        d.as<DefVariable>().compt_value.as_id());
+                    if (maybe_tid.has_value()) {
+                        const auto ty = type(maybe_tid.as_id());
+                        // this is a compt list literal
+                        if (ty.holds<TypeArr>()) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
 
             if (maybe_did.empty()) {
@@ -1150,7 +1171,7 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                 const DefVariable var_def = def.as<DefVariable>();
                 const Type& type = this->type(try_decay_ref(def.as<DefVariable>().type));
                 if (type.holds<TypeStruct>()) {
-                    curr_struct = type.as<TypeStruct>().definition;
+                    curr_did = type.as<TypeStruct>().definition;
                 } else if (var_def.compt_value.has_value()) {
                     TopLevelDefVisitor def_vis{*this};
                     ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
@@ -1158,8 +1179,12 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                         = solver.infer_type_from_compt_exec(var_def.compt_value.as_id());
                     if (maybe_tid.has_value()
                         && this->type(maybe_tid.as_id()).holds<TypeStruct>()) {
-                        curr_struct = this->type(maybe_tid.as_id()).as<TypeStruct>().definition;
+                        curr_did = this->type(maybe_tid.as_id()).as<TypeStruct>().definition;
+                    } else {
+                        return false;
                     }
+                } else {
+                    return false;
                 }
             }
         }
