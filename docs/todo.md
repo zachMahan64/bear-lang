@@ -77,8 +77,8 @@ main quest
         - [ ] hand out errors for C-incompatible functions when under a C abi extern, like no references, generics, etc.
 
 #### optimizations
-- [ ] `hir::Context` ctor that takes a stale c
-- ontext and a list of updated files, and then based on the stale context's files:
+- [ ] add a `-i` flag to specify specific files for parallel builds
+- [ ] `hir::Context` ctor that takes a stale context and a list of updated files, and then based on the stale context's files (necessary for above flag and also AST reuse for the future LSP):
 ```
     for every file in stale context:
         if red: # stale and already marked as such 
