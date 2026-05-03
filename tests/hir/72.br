@@ -23,7 +23,8 @@ compt fn list_helper(var list, var i) -> str => {
 }
 
 compt fn maybe_comma(var len, var i) => "" if (i >= len - 1) else ", "
-}
+
+} // mod util
 
 compt [2]i32 a = [1, 2];
 
@@ -48,4 +49,8 @@ compt Vec2 my_vec2 = Vec2..new(3, 3);
 var _4 = @static_assert my_vec2.to_compt_str() == "[3, 3]";
 
 var _5 = @static_assert my_vec2.to_compt_str() == "[3, 4]"; // oops
+
+compt [1][2][2]i64 b = [[[1, 0], [0, 1]]];
+
+var _6 = @static_assert util..to_compt_str(b) == "[[[1, 0], [0, 1]]]";
 
