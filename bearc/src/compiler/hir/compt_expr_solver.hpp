@@ -2459,7 +2459,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             = context.look_up_scoped_type(scope, context.symbol_slice(id_slice), contract_id_span);
 
         if (maybe_did.empty()) {
-            context.emplace_diagnostic(span, diag_code::use_of_undeclared_identifier,
+            context.emplace_diagnostic(contract_id_span, diag_code::use_of_undeclared_identifier,
                                        diag_type::error);
             return std::nullopt;
         }

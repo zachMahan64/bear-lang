@@ -176,7 +176,7 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
     case diag_code::value_does_not_refer_to_a_named_mem:
         return "value does not refer to a named member variable or method";
     case diag_code::id_does_not_name_a_member_variable_of:
-        return "identifer does not name a member variable";
+        return "identifer does not name a member variable of";
     case diag_code::id_names_a_static_mem_thru_dot_for:
         return "identifer name a static member varirable through the `.` operator for";
     case diag_code::scoped_identifer_not_allowed_here:

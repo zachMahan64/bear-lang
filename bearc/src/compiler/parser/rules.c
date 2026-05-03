@@ -49,6 +49,8 @@ static uint8_t binary_prec_map[TOK__NUM] = {
     [TOK_AS] = 3,
     [TOK_IS] = 3,
 
+    [TOK_IF] = 4,
+
     [TOK_PLUS] = 6,
     [TOK_MINUS] = 6,
 

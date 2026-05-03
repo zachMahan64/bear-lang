@@ -2,6 +2,8 @@
 
 mod demo;
 
+mod util {
+
 contract ToComptStr {
     compt mt to_compt_str() -> str;
 }
@@ -21,11 +23,29 @@ compt fn list_helper(var list, var i) -> str => {
 }
 
 compt fn maybe_comma(var len, var i) => "" if (i >= len - 1) else ", "
+}
 
 compt [2]i32 a = [1, 2];
 
 var _0 = @static_assert @defined(a.len);
 
-var _1 = @static_assert to_compt_str(a) == "[1, 2]";
+var _1 = @static_assert util..to_compt_str(a) == "[1, 2]";
 
-var _2 = @static_assert !@has_contract(typeof a, ToComptStr);
+var _2 = @static_assert !@has_contract(typeof a, util..ToComptStr);
+
+struct IntVec2 has util..ToComptStr {
+    [2]i32 vals = [4, 2];
+    fn new(i32 a, i32 b) -> Self => Self{.vals = [a, b]}
+    compt mt to_compt_str() -> str => util..to_compt_str(self.vals)
+}
+
+var _3 = @static_assert IntVec2..new(1, 2).to_compt_str() == "[1, 2]";
+
+deftype Vec2 = IntVec2;
+
+compt Vec2 my_vec2 = Vec2..new(3, 3);
+
+var _4 = @static_assert my_vec2.to_compt_str() == "[3, 3]";
+
+var _5 = @static_assert my_vec2.to_compt_str() == "[3, 4]"; // oops
+

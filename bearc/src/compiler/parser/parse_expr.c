@@ -146,9 +146,6 @@ ast_expr_t* parse_expr_prec(parser_t* p, ast_expr_t* lhs, uint8_t prec) {
     if (is_legal_binary_op(p, parser_peek(p)->type)) {
         return parse_binary(p, lhs, prec);
     }
-    if (parser_peek_match(p, TOK_IF)) {
-        return parse_expr_ternary_if(p, lhs);
-    }
     if (!lhs) {
         return parse_expr(p);
     }
@@ -394,6 +391,9 @@ static bool binary_bind_right(token_type_e curr_op, token_type_e next_op) {
 
 ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     ast_expr_t* binary_expr = parser_alloc_expr(p);
+    if (parser_peek_match(p, TOK_IF)) {
+        return parse_expr_ternary_if(p, lhs);
+    }
     token_t* op_tkn = parser_eat(p); // already verfied legit
     binary_expr->type = AST_EXPR_BINARY;
     binary_expr->expr.binary.lhs = lhs;
