@@ -207,7 +207,7 @@ static ast_type_t* parse_type_impl(parser_t* p, token_ptr_slice_t leading_id, bo
         inner = parser_invalid_type_and_toss_next_tkn(p);
     }
 
-    else {
+    else if (token_is_builtin_type_or_id(first_type)) {
         leading_id = parse_id_token_slice(p, TOK_SCOPE_RES);
         inner = parse_type_base_with_leading_id(p, leading_id);
     }

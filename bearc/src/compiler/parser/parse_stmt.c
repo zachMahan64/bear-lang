@@ -10,6 +10,7 @@
 #include "compiler/ast/expr.h"
 #include "compiler/ast/stmt.h"
 #include "compiler/ast/stmt_slice.h"
+#include "compiler/ast/type.h"
 #include "compiler/diagnostics/error_codes.h"
 #include "compiler/diagnostics/error_list.h"
 #include "compiler/parser/parse_expr.h"
@@ -368,7 +369,11 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
         if (rarrow->type == TOK_DISCARD_RARROW) {
             decl->stmt.fn_decl.discardable = true;
         }
-        decl->stmt.fn_decl.return_type = parse_type(p);
+        ast_type_t* return_type = parse_type(p);
+        if (return_type->tag == AST_TYPE_INVALID) {
+            cooked = true;
+        }
+        decl->stmt.fn_decl.return_type = return_type;
     } else {
         decl->stmt.fn_decl.ret_arrow = NULL;
         decl->stmt.fn_decl.return_type = NULL;
@@ -1102,7 +1107,11 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
         if (rarrow->type == TOK_DISCARD_RARROW) {
             decl->stmt.fn_prototype.discardable = true;
         }
-        decl->stmt.fn_prototype.return_type = parse_type(p);
+        ast_type_t* return_type = parse_type(p);
+        if (return_type->tag == AST_TYPE_INVALID) {
+            cooked = true;
+        }
+        decl->stmt.fn_prototype.return_type = return_type;
     } else {
         decl->stmt.fn_prototype.ret_arrow = NULL;
         decl->stmt.fn_prototype.return_type = NULL;

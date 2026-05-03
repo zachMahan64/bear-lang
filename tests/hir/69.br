@@ -1,4 +1,6 @@
-// tests/hir/69.br, TODO crashes diagnostics
+// tests/hir/69.br
+
+// in truth, this is as more so a parser test than an hir test
 
 contract ToStr {
     compt mt to_str() -> str
