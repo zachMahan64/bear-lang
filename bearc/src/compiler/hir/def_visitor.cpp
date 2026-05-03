@@ -86,18 +86,18 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
     const ast_stmt* stmt = context.def_ast_node(did);
     ScopeId scope = context.containing_scope(did);
-    Def& def = context.def(did);
-    Span span = def.span;
+    Span span = context.def(did).span;
 
-    auto parent_is_struct = [this, &def]() {
+    auto parent_is_struct = [this](const Def& def) {
         return (def.parent.has_value()) ? context.is_struct_def(def.parent.as_id()) : false;
     };
 
     //  TODO finish handlers
     switch (stmt->type) {
     case AST_STMT_VAR_DECL: {
+        Def& def = context.def(did);
         OptId<TypeId> maybe_tid = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
-            span.file_id, scope, stmt->stmt.var_decl.type, parent_is_struct());
+            span.file_id, scope, stmt->stmt.var_decl.type, parent_is_struct(def));
         if (!maybe_tid.has_value()) {
             goto cleanup;
         }
@@ -111,7 +111,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         // error when struct member does not have an explicit type
 
         const bool type_contains_var = TypeTransformer<TypeContainsVar>{context}(maybe_tid.as_id());
-        if (!def.statik && parent_is_struct() && type_contains_var) {
+        if (!def.statik && parent_is_struct(def) && type_contains_var) {
             const Type& type = context.type(maybe_tid.as_id());
             context.emplace_diagnostic_with_message_value(
                 type.span, diag_code::should_have_explicit_type, diag_type::error,
@@ -124,32 +124,31 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
     }
     case AST_STMT_VAR_INIT_DECL: {
         const auto var_init_decl = stmt->stmt.var_init_decl;
-
         OptId<TypeId> maybe_tid = TypeResolver<TopLevelDefVisitor>{context, *this}.resolve_type(
             span.file_id, scope, var_init_decl.type,
-            parent_is_struct()); // needs layout info if parent is struct
+            parent_is_struct(context.def(did))); // needs layout info if parent is struct
         if (!maybe_tid.has_value()) {
             goto cleanup; // maybe set a special value to indicate error differently
         }
         const bool type_contains_var = TypeTransformer<TypeContainsVar>{context}(maybe_tid.as_id());
-        if (def.compt && type_contains_var) {
+        if (context.def(did).compt && type_contains_var) {
             context.emplace_diagnostic(context.type(maybe_tid.as_id()).span,
                                        diag_code::compt_variable_should_have_an_explicit_type,
                                        diag_type::error);
         }
         // compt =/= mut guard
-        check_to_err_when_compt_is_not_mut(maybe_tid.as_id(), def);
+        check_to_err_when_compt_is_not_mut(maybe_tid.as_id(), context.def(did));
 
         auto maybe_compt_eid
             = ComptExprSolver(context, *this)
                   .solve_expr(span.file_id, scope, stmt->stmt.var_init_decl.rhs, maybe_tid.as_id());
 
         // error when struct member does not have an explicit type
-        if (!def.statik && parent_is_struct() && type_contains_var) {
+        if (!context.def(did).statik && parent_is_struct(context.def(did)) && type_contains_var) {
             const Type& type = context.type(maybe_tid.as_id());
             auto d0 = context.emplace_diagnostic_with_message_value(
                 type.span, diag_code::should_have_explicit_type, diag_type::error,
-                DiagnosticStructMemberSymBeforeMsg{.mem_sid = def.name});
+                DiagnosticStructMemberSymBeforeMsg{.mem_sid = context.def(did).name});
 
             // if type is inferable from its compt default value, suggest changing type to said type
             if (maybe_compt_eid.has_value()) {
@@ -165,11 +164,12 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             }
         };
 
-        def.set_value(DefVariable{.type = maybe_tid.as_id(), .compt_value = maybe_compt_eid});
+        context.def(did).set_value(
+            DefVariable{.type = maybe_tid.as_id(), .compt_value = maybe_compt_eid});
         // check poison /not init
-        if (def.compt && var_init_decl.assign_op->type == TOK_ASSIGN_MOVE) {
+        if (context.def(did).compt && var_init_decl.assign_op->type == TOK_ASSIGN_MOVE) {
             auto d0 = context.emplace_diagnostic(
-                Span{context, def.span.file_id, var_init_decl.assign_op},
+                Span{context, context.def(did).span.file_id, var_init_decl.assign_op},
                 diag_code::compt_vars_should_not_be_move_initialized, diag_type::error);
             if (maybe_compt_eid.has_value()) {
                 auto d1 = context.emplace_diagnostic(
@@ -182,9 +182,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         // will require trying to do a run-time expr lowering on the init expression, which isn't
         // impl'd yet
         if (!maybe_compt_eid.has_value()) {
-            if (!def.compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
+            if (!context.def(did).compt && var_init_decl.rhs->type != AST_EXPR_STATIC_ASSERT) {
                 context.emplace_diagnostic(
-                    Span{context, def.span.file_id, stmt->stmt.var_init_decl.rhs},
+                    Span{context, context.def(did).span.file_id, stmt->stmt.var_init_decl.rhs},
                     diag_code::all_runtime_glob_and_mem_vars_need_compt_init, diag_type::note,
                     DiagnosticInfoDontDisplayFile{});
             }
@@ -201,6 +201,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
 
         ScopeId structs_scope = context.scope_for_top_level_def(did);
+        Def& def = context.def(did);
         context.register_generated_deftype(
             structs_scope, context.symbol_id<"Self">(),
             context.emplace_type(TypeStruct{.definition = did}, Span::generated(), false), did,
@@ -329,15 +330,15 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             goto cleanup;
         }
 
-        def.set_value(DefDeftype{.type = maybe_type.as_id()});
+        context.def(did).set_value(DefDeftype{.type = maybe_type.as_id()});
 
         break;
     }
     case AST_STMT_FN_PROTOTYPE: {
         const ast_stmt_fn_decl fn_decl = stmt->stmt.fn_prototype;
-        const auto fid = def.span.file_id;
+        const auto fid = context.def(did).span.file_id;
 
-        OptId<TypeId> maybe_self_type = context.self_type_for_fn(scope, &fn_decl, def);
+        OptId<TypeId> maybe_self_type = context.self_type_for_fn(scope, &fn_decl, context.def(did));
         DefFunction::ParamResolResult params_res
             = resolve_params(fid, scope, did, fn_decl.params, maybe_self_type);
 
@@ -345,9 +346,9 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         llvm::SmallVector<TypeId> type_vec{};
 
-        const bool func_is_runtime = !def.compt;
+        const bool func_is_runtime = !context.def(did).compt;
 
-        auto parent_is_contract = [&def, this]() -> bool {
+        auto parent_is_contract = [this](const Def& def) -> bool {
             if (def.parent.empty()) {
                 return false;
             }
@@ -362,7 +363,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             assert(param_def.holds<DefVariable>());
 
             // guard run-time func with `var` typed params
-            if (func_is_runtime && !(parent_is_contract() && (didx == params.begin()))
+            if (func_is_runtime
+                && !(parent_is_contract(context.def(did)) && (didx == params.begin()))
                 && TypeTransformer<TypeContainsVar>{context}(param_def.as<DefVariable>().type)) {
                 const Span ty_span = context.type(param_def.as<DefVariable>().type).span;
                 auto d0 = context.emplace_diagnostic(
@@ -382,30 +384,21 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                   ? TypeResolver{context, *this}.resolve_type(fid, scope, fn_decl.return_type)
                   : std::nullopt;
 
-        if (return_tid.has_value() && !parent_is_contract()) {
+        if (return_tid.has_value() && !parent_is_contract(context.def(did))) {
             context.report_invalid_return_type(return_tid.as_id());
         }
 
-        def.set_value(DefFunctionPrototype{.params = params,
-                                           .param_types = param_types,
-                                           .return_type = return_tid,
-                                           .takes_self = maybe_self_type.has_value()});
+        context.def(did).set_value(DefFunctionPrototype{.params = params,
+                                                        .param_types = param_types,
+                                                        .return_type = return_tid,
+                                                        .takes_self = maybe_self_type.has_value()});
 
         break;
     }
     case AST_STMT_FN_DECL: {
         const ast_stmt_fn_decl fn_decl = stmt->stmt.fn_decl;
+        Def& def = context.def(did);
         const auto fid = def.span.file_id;
-
-        auto parent_is_struct = [&def, this]() -> bool {
-            if (def.parent.empty()) {
-                return false;
-            }
-            if (context.def(visit_and_resolve_if_needed(def.parent.as_id())).holds<DefStruct>()) {
-                return true;
-            }
-            return false;
-        };
 
         if (def.compt && fn_decl.is_mut) {
             Span span = Span::find_between_tokens(context, fid, fn_decl.kw, fn_decl.name.start[0]);
@@ -448,7 +441,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 const Def& param_def = context.def(didx);
                 assert(param_def.holds<DefVariable>());
 
-                if (didx == params.begin() && !takes_self && parent_is_struct()
+                if (didx == params.begin() && !takes_self && parent_is_struct(context.def(did))
                     && context.type_matches_struct_def(param_def.as<DefVariable>().type,
                                                        def.parent.as_id())) {
                     takes_self = true;
@@ -505,12 +498,12 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         context.register_generated_deftype(
             contract_scope, context.symbol_id<"Self">(),
             context.emplace_type(TypeVar{}, Span::generated(), false), did,
-            Span{context, def.span.file_id, stmt->stmt.contract_decl.name});
+            Span{context, context.def(did).span.file_id, stmt->stmt.contract_decl.name});
         IdSlice<DefId> ordered_fns = context.ordered_defs_for(did);
         for (auto didx = ordered_fns.begin(); didx != ordered_fns.end(); ++didx) {
             visit_as_transparent(context.def_id(didx));
         }
-        def.set_value(DefContract{.funcs = ordered_fns, .scope = contract_scope});
+        context.def(did).set_value(DefContract{.funcs = ordered_fns, .scope = contract_scope});
         break;
     }
     // TODO, need to lower these

@@ -2155,7 +2155,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             const auto param = context.register_compt_param(
                 param_def.name, param_def.span, func_did,
                 DefVariable{.type = param_var.type, .compt_value = eid});
-            context.insert_variable(temp_scope, param_def.name, param);
+            context.insert_variable(temp_scope, context.def(params.get(i)).name, param);
         }
 
         if (!fn_stmt->stmt.fn_decl.only_expr) {

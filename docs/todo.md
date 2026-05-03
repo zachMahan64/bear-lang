@@ -5,6 +5,10 @@ main quest
 
 #### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
+    
+- [ ] clean up any remaining dangling reference issues (made evident in test cases with very large compt param counts)
+    - should be fixed for now, but this could come up in the future
+    - factor out def visitor logic in seperate functions to help here
 
 - [ ] some more `compt` improvements and general resolution/lowering logic:
     - [ ] **union and variant def lowering/resol**
