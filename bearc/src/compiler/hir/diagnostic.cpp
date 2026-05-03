@@ -270,6 +270,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "struct already has contract";
     case diag_code::should_be_declared_compt:
         return "should be declared `compt`";
+    case diag_code::should_not_be_declared_compt:
+        return "should not be declared `compt`";
     }
 
     std::unreachable();

@@ -331,12 +331,15 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
 
     parser_shed_visibility_qualis_with_error(p);
 
-    decl->stmt.fn_decl.name = parse_id_token_slice(p, TOK_SCOPE_RES);
-    size_t len = decl->stmt.fn_decl.name.len;
+    token_ptr_slice_t id_slice = parse_id_token_slice(p, TOK_SCOPE_RES);
+    decl->stmt.fn_decl.name = id_slice;
+    size_t len = id_slice.len;
     // if the Name..method chain is too long OR the function is an fn
     if (len > 2) {
-        compiler_error_list_emplace(p->error_list, decl->stmt.fn_decl.name.start[0],
+        compiler_error_list_emplace(p->error_list, id_slice.start[0],
                                     ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION);
+        cooked = true;
+    } else if (len == 0) {
         cooked = true;
     }
     decl->stmt.fn_decl.is_generic = false;
@@ -386,7 +389,11 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
 
         token_t* lbrace = parser_match_token(p, TOK_LBRACE);
 
-        decl->stmt.fn_decl.expr = parse_expr(p);
+        ast_expr_t* expr = parse_expr(p);
+        if (expr->type == AST_EXPR_INVALID) {
+            cooked = true;
+        }
+        decl->stmt.fn_decl.expr = expr;
 
         if (lbrace && !parser_expect_token(p, TOK_RBRACE)) {
             if (parser_prev(p)->type == TOK_SEMICOLON) {
@@ -400,7 +407,11 @@ ast_stmt_t* parse_fn_decl(parser_t* p) {
             p, TOK_SEMICOLON); // allow a trailing semicolon so we don't later emit a warning for it
 
     } else {
-        decl->stmt.fn_decl.block = parse_stmt_block(p);
+        ast_stmt_t* block = parse_stmt_block(p);
+        if (block->type == AST_STMT_INVALID) {
+            cooked = true;
+        }
+        decl->stmt.fn_decl.block = block;
         decl->stmt.fn_decl.expr = NULL;
     }
 
@@ -1071,10 +1082,13 @@ ast_stmt_t* parse_fn_prototype(parser_t* p) {
 
     parser_shed_visibility_qualis_with_error(p);
 
-    decl->stmt.fn_prototype.name = parse_id_token_slice(p, TOK_SCOPE_RES);
-    if (decl->stmt.fn_prototype.name.len > 1) {
-        compiler_error_list_emplace(p->error_list, decl->stmt.fn_prototype.name.start[0],
+    token_ptr_slice_t id_slice = parse_id_token_slice(p, TOK_SCOPE_RES);
+    decl->stmt.fn_prototype.name = id_slice;
+    if (id_slice.len > 1) {
+        compiler_error_list_emplace(p->error_list, id_slice.start[0],
                                     ERR_TOO_MANY_QUALIFICATIONS_ON_FUNCTION);
+        cooked = true;
+    } else if (id_slice.len == 0) {
         cooked = true;
     }
     parser_match_token(p, TOK_GENERIC_SEP); // this is fine

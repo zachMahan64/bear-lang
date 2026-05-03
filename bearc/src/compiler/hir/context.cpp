@@ -1360,6 +1360,10 @@ bool Context::func_sigs_match_for_contract(DefId did1, DefId did2) {
         return false;
     }
 
+    if (def1.compt != def2.compt) {
+        return false;
+    }
+
     if (param_tids1.len() != param_tids2.len()) {
         return false;
     }
@@ -1413,6 +1417,17 @@ DiagRange Context::report_function_disagreement_with_contract(DefId contract_fn_
         fn_return_tid = fn_def.as<DefFunctionPrototype>().return_type;
     } else {
         return {};
+    }
+
+    if (contracts_def.compt && !fn_def.compt) {
+        dlinker.link(emplace_diagnostic_with_message_value(
+            name_span_for_def(function_did), diag_code::should_be_declared_compt, diag_type::help,
+            DiagnosticSymbolBeforeMessage{.sid = fn_def.name}));
+    }
+    if (!contracts_def.compt && fn_def.compt) {
+        dlinker.link(emplace_diagnostic_with_message_value(
+            name_span_for_def(function_did), diag_code::should_not_be_declared_compt,
+            diag_type::help, DiagnosticSymbolBeforeMessage{.sid = fn_def.name}));
     }
 
     if (ct_param_tids.len() != fn_param_tids.len()) {

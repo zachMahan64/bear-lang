@@ -138,6 +138,7 @@ enum class diag_code : uint8_t {
     redundant_mut_reference_to_mut_value,
     struct_already_has_contract,
     should_be_declared_compt,
+    should_not_be_declared_compt,
 
     count, // this must be last,
 

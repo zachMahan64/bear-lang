@@ -1,0 +1,15 @@
+// tests/hir/71.br
+
+contract Bar {
+    compt fn bar();
+    fn boo();
+}
+
+struct Foo has Bar {
+    fn bar() {} // oops, not compt
+    compt fn boo() {} // oops, compt
+}
+
+contract Barry {
+    compt barry() // oops
+}
