@@ -2471,7 +2471,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 contract_id_span, diag_code::invalid_contract, diag_type::error,
                 DiagnosticSubCode{.sub_code = diag_code::not_a_contract});
             auto d1 = context.emplace_diagnostic_with_message_value(
-                def.span, diag_code::declared_here, diag_type::note,
+                context.name_span_for_def(did), diag_code::declared_here, diag_type::note,
                 DiagnosticSymbolBeforeMessage{.sid = def.name});
             context.link_diagnostic(d0, d1);
             return std::nullopt;

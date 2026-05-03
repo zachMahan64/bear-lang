@@ -137,6 +137,7 @@ enum class diag_code : uint8_t {
     immutable_reference_to_mut_value_is_malformed,
     redundant_mut_reference_to_mut_value,
     struct_already_has_contract,
+    should_be_declared_compt,
 
     count, // this must be last,
 

@@ -268,6 +268,8 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "redundant mutable reference to mutable value type";
     case diag_code::struct_already_has_contract:
         return "struct already has contract";
+    case diag_code::should_be_declared_compt:
+        return "should be declared `compt`";
     }
 
     std::unreachable();

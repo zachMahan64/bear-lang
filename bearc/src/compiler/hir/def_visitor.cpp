@@ -705,6 +705,15 @@ bool TopLevelDefVisitor::try_satisfy_contract(DefId struct_did, DefId contract_d
             continue;
         }
 
+        if (contract_def.compt && !matching_def.compt) {
+            dlinker.link(context.emplace_diagnostic_with_message_value(
+                matching_def.span, diag_code::should_be_declared_compt, diag_type::error,
+                DiagnosticSymbolBeforeMessage{.sid = matching_def.name}));
+            dlinker.link(context.emplace_diagnostic_with_message_value(
+                ct_func_def.span, diag_code::declared_in_contract_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = ct_func_def.name}));
+        }
+
         if (!context.func_sigs_match_for_contract(ct_func_did, matched_fn_did)) {
             dlinker.link(context.emplace_diagnostic(
                 context.name_span_for_def(matched_fn_did),

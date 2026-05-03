@@ -1043,6 +1043,10 @@ ast_stmt_t* parse_stmt_struct_decl(parser_t* p) {
 }
 
 ast_stmt_t* parse_fn_prototype(parser_t* p) {
+    // allow compt
+    if (parser_peek_match(p, TOK_COMPT)) {
+        return parse_stmt_compt_modifier(p, parse_fn_prototype);
+    }
     bool cooked = false;
     ast_stmt_t* decl = parser_alloc_stmt(p);
     decl->type = AST_STMT_FN_PROTOTYPE;

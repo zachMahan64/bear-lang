@@ -1,0 +1,13 @@
+// tests/hir/69.br, TODO crashes diagnostics
+
+contract ToStr {
+    compt mt to_str() -> str
+}
+
+struct IntWrapper {
+    i64 val;
+    mt new
+    mt get() -> typeof val => val
+    mt mut set(typeof(val) set_to) => self.val = set_to
+    mt copy() -> 
+}

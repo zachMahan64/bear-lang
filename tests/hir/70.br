@@ -1,0 +1,21 @@
+// tests/hir/70.br
+contract ToComptStr {
+    compt mt to_compt_str() -> str;
+}
+
+struct IntWrapper has ToComptStr {
+    i64 val = 0;
+    mt get() -> typeof val => val
+    mt mut set(typeof(val) set_to) => self.val = set_to
+
+    fn new(i64 val) -> Self => IntWrapper{.val = val}
+    compt mt to_compt_str() -> str => self.val as str
+}
+
+var _0 = @static_assert IntWrapper..new(42).to_compt_str() == "42";
+
+IntWrapper a = IntWrapper{};
+
+var _1 = @static_assert @has_contract(typeof a, ToComptStr);
+
+var _2 = @static_assert @has_contract(IntWrapper, IntWrapper);
