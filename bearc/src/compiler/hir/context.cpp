@@ -1586,4 +1586,18 @@ bool Context::type_matches_struct_def(TypeId tid, DefId did) {
     return ty.as<TypeStruct>().def_id == did; // only matches if did is also a struct, of course
 }
 
+OptId<CanonicalComptArgsId> Context::generic_args_for_def(DefId did) {
+    const Def& d = def(did);
+    if (d.holds<DefFunction>()) {
+        return d.as<DefFunction>().maybe_generic_args;
+    }
+    if (d.holds<DefVariant>()) {
+        return d.as<DefVariant>().maybe_generic_args;
+    }
+    if (d.holds<DefStruct>()) {
+        return d.as<DefStruct>().maybe_generic_args;
+    }
+    return {};
+}
+
 } // namespace hir

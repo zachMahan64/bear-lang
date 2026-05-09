@@ -204,8 +204,12 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         Def& def = context.def(did);
         context.register_generated_deftype(
             structs_scope, context.symbol_id<"Self">(),
-            context.emplace_type(TypeStruct{.def_id = did}, Span::generated(), false), did,
-            Span{context, def.span.file_id, strct.name});
+            // TODO properly handle generic args here
+            context.emplace_type(
+                TypeStruct{.def_id = did, .gen_args_slice = {}, .maybe_canon_gen_args_id = {}},
+                Span::generated(), false),
+            did, Span{context, def.span.file_id, strct.name});
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         IdSlice<DefId> ordered_defs = context.ordered_defs_for(did);
         // visit each orderer member (variable), since the struct is actually dependent on those
@@ -274,6 +278,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             /* .contracts = */
             .contracts = contracts,
             .orginal = {},
+            .maybe_generic_args = {}, // not generic
         });
 
         try_satisfy_contracts(did, contracts);
@@ -483,7 +488,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                                       .param_types = param_types,
                                       .return_type = return_tid,
                                       .body = std::nullopt,
-                                      .original = std::nullopt,
+                                      .original = std::nullopt, // not generic
+                                      .maybe_generic_args = {}, // not generic
                                       .discardable = fn_decl.discardable,
                                       .takes_self = takes_self,
                                       .posioned = params_res.poisoned});

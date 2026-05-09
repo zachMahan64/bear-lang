@@ -173,7 +173,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
         },
         [&](const TypeStruct& t) {
             str += context.symbol_id_to_cstr(context.def(t.def_id).name);
-            if (t.gen_args_slice.len() != 0) {
+            if (t.maybe_canon_gen_args_id.has_value()) {
                 str += "::<>"; // TODO properly handle gen args
             }
             if constexpr (considers_mut()) {
@@ -184,7 +184,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
         },
         [&](const TypeVariant& t) {
             str += context.symbol_id_to_cstr(context.def(t.def_id).name);
-            if (t.gen_args_slice.len() != 0) {
+            if (t.maybe_canon_gen_args_id.has_value()) {
                 str += "::<>"; // TODO properly handle gen args
             }
             if constexpr (considers_mut()) {

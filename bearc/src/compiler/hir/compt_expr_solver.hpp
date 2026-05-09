@@ -81,11 +81,11 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (exec.holds<ExecExprStructInit>()) {
             auto struct_did = exec.as<ExecExprStructInit>().struct_def;
 
-            // TODO handle generic args
-            return context.emplace_type(TypeStruct{.def_id = struct_did,
-                                                   .gen_args_slice = {},
-                                                   .maybe_canon_gen_args_id = {}},
-                                        Span::generated(), false);
+            return context.emplace_type(
+                TypeStruct{.def_id = struct_did,
+                           .gen_args_slice = {},
+                           .maybe_canon_gen_args_id = context.generic_args_for_def(struct_did)},
+                Span::generated(), false);
         }
         if (exec.holds<ExecExprListLiteral>()) {
             auto list_exec = exec.as<ExecExprListLiteral>();
@@ -375,8 +375,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                         return std::nullopt;
                     }
                     if (!def.as<DefVariable>().compt_value.has_value()) {
-                        return std::nullopt; // this is already malformed (already been reported, so
-                                             // just return none)
+                        return std::nullopt; // this is already malformed (already been
+                                             // reported, so just return none)
                     }
                     auto exec = context.exec(def.as<DefVariable>().compt_value.as_id());
 
@@ -634,8 +634,8 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
 
     /**
-     * solve a struct's value at compile-time, this essentially attempts a canonicalization down to
-     * a struct-init eexpression where each field is evaluatable at compile-time
+     * solve a struct's value at compile-time, this essentially attempts a canonicalization down
+     * to a struct-init eexpression where each field is evaluatable at compile-time
      */
     [[nodiscard]] OptId<ExecId> solve_struct(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                              TypeId into_tid) {
@@ -681,8 +681,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
             if (!def_variable.compt_value.has_value()) {
-                // this means that this definition must have had an issue, and it was thus already
-                // reported, so just return a nullopt
+                // this means that this definition must have had an issue, and it was thus
+                // already reported, so just return a nullopt
                 return std::nullopt;
             }
             if (context.equivalent_type(def_variable.type, into_tid)) {
@@ -1528,9 +1528,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             const ast_expr_t* expr = list_slice.start[i];
             OptId<ExecId> maybe_exec
                 = solve_expr(fid, scope, expr,
-                             maybe_elem_into_type); // this inner part runs at compt and thus will
-                                                    // recursive check that sub exprs are compt
-                                                    // and will error out when appropriate
+                             maybe_elem_into_type); // this inner part runs at compt and thus
+                                                    // will recursive check that sub exprs are
+                                                    // compt and will error out when appropriate
             if (maybe_exec.empty()) {
                 return std::nullopt; // poisoned
             }
@@ -1568,8 +1568,8 @@ template <IsDefVisitor V> class ComptExprSolver {
 
                 const Exec& curr_exec = context.exec(eid);
 
-                // check if it's own first hetero-rodeo, and, if so, emplace the once diagnostic for
-                // the whole list before emplacing the per-exec diagnostics
+                // check if it's own first hetero-rodeo, and, if so, emplace the once diagnostic
+                // for the whole list before emplacing the per-exec diagnostics
                 if (homo_type) {
                     prev_diag = context.emplace_diagnostic(
                         whole_list_span, diag_code::mismatched_types_in_list_literal,
@@ -1637,8 +1637,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto orig_exec = context.exec(def.as<DefVariable>().compt_value.as_id());
             return context.emplace_exec(orig_exec.value, expr_span, true);
         }
-        // we hit a def corresponding to a function, so a compt function pointer is quite helpful
-        // here.
+        // we hit a def corresponding to a function, so a compt function pointer is quite
+        // helpful here.
         // TODO this doesn't consider generics
         if (def.holds<DefFunction>()) {
             const DefFunction& func_def = def.as<DefFunction>();
@@ -2316,8 +2316,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             ExecConst{context.symbol(str_exec.as<ExecConst>().as<SymbolId>()).size()},
             Span::combine(str_exec.span, len_span), true);
     }
-    // two Execs holding ExecExprListLiteral and a binary op holding bool_equal or bool_not_equal
-    // should be passed
+    // two Execs holding ExecExprListLiteral and a binary op holding bool_equal or
+    // bool_not_equal should be passed
     [[nodiscard]] OptId<ExecId> solve_list_eq(const Exec& list1, const Exec& list2,
                                               binary_op eq_neq) {
         assert(list1.holds_same<ExecExprListLiteral>(list2));

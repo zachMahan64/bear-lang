@@ -358,6 +358,8 @@ class Context {
     /// checks if a (decayed) type matches a struct def
     [[nodiscard]] bool type_matches_struct_def(TypeId tid, DefId did);
 
+    [[nodiscard]] OptId<CanonicalComptArgsId> generic_args_for_def(DefId did);
+
     /// checks if a struct has a contract
     /// - defaults to returning false if struct_did does not correspond to a struct and same with
     /// contract_did

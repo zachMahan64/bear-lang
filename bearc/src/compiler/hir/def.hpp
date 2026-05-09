@@ -39,6 +39,8 @@ struct DefFunction {
     OptId<ExecId> body;
     /// if this function was derived from an original generic function
     OptId<DefId> original;
+    // generic args, if any
+    OptId<CanonicalComptArgsId> maybe_generic_args;
     bool discardable = false;
     bool takes_self = false;
     bool posioned = false;
@@ -77,6 +79,8 @@ struct DefStruct {
     IdSlice<DefId> contracts;
     /// if this struct was derived from an original generic struct
     OptId<DefId> orginal;
+    // generic args, if any
+    OptId<CanonicalComptArgsId> maybe_generic_args;
 };
 
 struct DefGenericStruct {
@@ -86,8 +90,12 @@ struct DefGenericStruct {
 
 struct DefVariant {
     ScopeId scope;
+    /// variant possiblities
+    IdSlice<DefId> ordered_members;
     /// if this variant was derived from an original generic variant
     OptId<DefId> orginal;
+    // generic args, if any
+    OptId<CanonicalComptArgsId> maybe_generic_args;
 };
 
 struct DefGenericVariant {
@@ -102,6 +110,8 @@ struct DefVariantField {
 
 struct DefUnion {
     ScopeId scope;
+    // members, in order (although order doesn't matter much)
+    IdSlice<DefId> ordered_members;
 };
 
 struct DefContract {

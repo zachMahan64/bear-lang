@@ -59,7 +59,9 @@ struct TypeBuiltin {
 
 struct TypeStruct {
     DefId def_id;
+    // can be empty even if generic if this type was generated
     IdSlice<GenericArgId> gen_args_slice;
+    // use this to determine if generic
     OptId<CanonicalComptArgsId> maybe_canon_gen_args_id;
 };
 
@@ -69,7 +71,9 @@ struct TypeUnion {
 
 struct TypeVariant {
     DefId def_id;
+    // can be empty even if generic if this type was generated
     IdSlice<GenericArgId> gen_args_slice;
+    // use this to determine if generic
     OptId<CanonicalComptArgsId> maybe_canon_gen_args_id;
 };
 
