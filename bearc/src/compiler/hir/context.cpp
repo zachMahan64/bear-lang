@@ -717,7 +717,7 @@ OptId<ScopeId> Context::try_scope_for_top_level_def(DefId def_id) const {
     if (def.holds<DefDeftype>()) {
         const Type& type = this->type(try_decay_ref(def.as<DefDeftype>().type));
         if (type.holds<TypeStruct>()) {
-            return def_to_scope_for_types.at(type.as<TypeStruct>().definition);
+            return def_to_scope_for_types.at(type.as<TypeStruct>().def_id);
         }
     }
     // hopefully found
@@ -817,7 +817,7 @@ ExecId Context::exec_id(IdIdx<ExecId> id) const { return exec_ids.cat(id); }
     if (d.holds<DefDeftype>()) {
         const Type& t = type(d.as<DefDeftype>().type);
         if (t.holds<TypeStruct>()) {
-            return t.as<TypeStruct>().definition;
+            return t.as<TypeStruct>().def_id;
         }
     }
 
@@ -1171,7 +1171,7 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                 const DefVariable var_def = def.as<DefVariable>();
                 const Type& type = this->type(try_decay_ref(def.as<DefVariable>().type));
                 if (type.holds<TypeStruct>()) {
-                    curr_did = type.as<TypeStruct>().definition;
+                    curr_did = type.as<TypeStruct>().def_id;
                 } else if (var_def.compt_value.has_value()) {
                     TopLevelDefVisitor def_vis{*this};
                     ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
@@ -1179,7 +1179,7 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                         = solver.infer_type_from_compt_exec(var_def.compt_value.as_id());
                     if (maybe_tid.has_value()
                         && this->type(maybe_tid.as_id()).holds<TypeStruct>()) {
-                        curr_did = this->type(maybe_tid.as_id()).as<TypeStruct>().definition;
+                        curr_did = this->type(maybe_tid.as_id()).as<TypeStruct>().def_id;
                     } else {
                         return false;
                     }
@@ -1540,7 +1540,7 @@ bool Context::type_has_contract(TypeId tid, DefId contract_did) {
     if (!ty.holds<TypeStruct>()) {
         return false;
     }
-    return struct_has_contract(ty.as<TypeStruct>().definition, contract_did);
+    return struct_has_contract(ty.as<TypeStruct>().def_id, contract_did);
 }
 
 bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
@@ -1561,7 +1561,7 @@ bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
         if (!t2.holds<TypeStruct>()) {
             return false;
         }
-        if (t2.as<TypeStruct>().definition != struct_did) {
+        if (t2.as<TypeStruct>().def_id != struct_did) {
             return false;
         }
     }
@@ -1570,7 +1570,7 @@ bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
         if (!t1.holds<TypeStruct>()) {
             return false;
         }
-        if (t1.as<TypeStruct>().definition != struct_did) {
+        if (t1.as<TypeStruct>().def_id != struct_did) {
             return false;
         }
     }
@@ -1583,7 +1583,7 @@ bool Context::type_matches_struct_def(TypeId tid, DefId did) {
     if (!ty.holds<TypeStruct>()) {
         return false;
     }
-    return ty.as<TypeStruct>().definition == did; // only matches if did is also a struct, of course
+    return ty.as<TypeStruct>().def_id == did; // only matches if did is also a struct, of course
 }
 
 } // namespace hir

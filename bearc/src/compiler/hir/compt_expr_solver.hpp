@@ -80,8 +80,12 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         if (exec.holds<ExecExprStructInit>()) {
             auto struct_did = exec.as<ExecExprStructInit>().struct_def;
-            return context.emplace_type(TypeStruct{.definition = struct_did}, Span::generated(),
-                                        false);
+
+            // TODO handle generic args
+            return context.emplace_type(TypeStruct{.def_id = struct_did,
+                                                   .gen_args_slice = {},
+                                                   .maybe_canon_gen_args_id = {}},
+                                        Span::generated(), false);
         }
         if (exec.holds<ExecExprListLiteral>()) {
             auto list_exec = exec.as<ExecExprListLiteral>();
@@ -714,22 +718,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             const auto did = def_visitor.visit_as_dependent(maybe_def_of_struct.as_id());
             auto maybe_struct_did = context.try_struct_def(did);
 
-            if (context.type(into_tid).template holds<TypeGenericStructure>()) {
-                auto did0 = context.emplace_diagnostic(
-                    expr_span, diag_code::compt_generic_structs_not_possible, diag_type::error);
-                auto did1
-                    = context.emplace_diagnostic(expr_span, diag_code::this_feature_is_planned,
-                                                 diag_type::note, DiagnosticInfoNoPreview{});
-                auto did2
-                    = context.emplace_diagnostic(expr_span, diag_code::remove, diag_type::help,
-                                                 DiagnosticSymbolAfterMessageNoQuotes{
-                                                     context.symbol_id<"the struct initializer">()},
-                                                 DiagnosticNoOtherInfo{});
-
-                context.link_diagnostic(did0, did1);
-                context.link_diagnostic(did1, did2);
-                return std::nullopt;
-            }
             if (maybe_struct_did.empty()) {
                 auto did0 = context.emplace_diagnostic(
                     Span(fid, context.ast(fid).buffer(), id_slice.start[0],
@@ -855,13 +843,15 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             // type check before returning here! but only if the into type isn't var!
             if (!context.type(into_tid).template holds<TypeVar>()) {
-                if (auto into_did = context.type(into_tid).template as<TypeStruct>().definition;
+                if (auto into_did = context.type(into_tid).template as<TypeStruct>().def_id;
                     struct_did != into_did) {
                     context.emplace_diagnostic(
                         expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
                         DiagnosticTypeToType{
                             .from = context.emplace_type(
-                                TypeStruct{.definition = struct_did},
+                                TypeStruct{.def_id = struct_did,
+                                           .gen_args_slice = {},
+                                           .maybe_canon_gen_args_id = {}},
                                 Span(fid, context.ast(fid).buffer(),
                                      expr->expr.struct_init.id.start[0],
                                      expr->expr.struct_init.id
@@ -927,10 +917,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (into_type.holds<TypeVar>()) {
                 return eid;
             }
-            if (const Exec& exec = context.exec(eid);
-                exec.holds<ExecExprStructInit>() && into_type.holds<TypeStruct>()
-                && (exec.as<ExecExprStructInit>().struct_def
-                    == into_type.as<TypeStruct>().definition)) {
+            if (const Exec& exec = context.exec(eid); exec.holds<ExecExprStructInit>()
+                                                      && into_type.holds<TypeStruct>()
+                                                      && (exec.as<ExecExprStructInit>().struct_def
+                                                          == into_type.as<TypeStruct>().def_id)) {
                 return eid;
             }
             OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
@@ -2392,10 +2382,17 @@ template <IsDefVisitor V> class ComptExprSolver {
         };
 
         if (s1.struct_def != s2.struct_def) {
-            auto t1 = context.emplace_type(TypeStruct{.definition = s1.struct_def},
+
+            // TODO properly set gen args here! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            auto t1 = context.emplace_type(TypeStruct{.def_id = s1.struct_def,
+                                                      .gen_args_slice = {},
+                                                      .maybe_canon_gen_args_id = {}},
                                            Span::generated(), false);
-            auto t2 = context.emplace_type(TypeStruct{.definition = s2.struct_def},
+            auto t2 = context.emplace_type(TypeStruct{.def_id = s2.struct_def,
+                                                      .gen_args_slice = {},
+                                                      .maybe_canon_gen_args_id = {}},
                                            Span::generated(), false);
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             auto d0 = context.emplace_diagnostic(Span::combine(list1.span, list2.span),
                                                  diag_code::invalid_operand_for_binary_expression,
                                                  diag_type::error);

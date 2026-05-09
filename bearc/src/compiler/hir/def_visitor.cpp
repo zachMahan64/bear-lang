@@ -204,7 +204,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         Def& def = context.def(did);
         context.register_generated_deftype(
             structs_scope, context.symbol_id<"Self">(),
-            context.emplace_type(TypeStruct{.definition = did}, Span::generated(), false), did,
+            context.emplace_type(TypeStruct{.def_id = did}, Span::generated(), false), did,
             Span{context, def.span.file_id, strct.name});
 
         IdSlice<DefId> ordered_defs = context.ordered_defs_for(did);

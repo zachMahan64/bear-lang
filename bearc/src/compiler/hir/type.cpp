@@ -27,25 +27,19 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             if (!t2.holds<TypeStruct>()) {
                 return false;
             }
-            return t.definition == t2.as<TypeStruct>().definition;
+            return t.def_id == t2.as<TypeStruct>().def_id;
         },
         [&](const TypeVariant& t) -> bool {
             if (!t2.holds<TypeVariant>()) {
                 return false;
             }
-            return t.definition == t2.as<TypeVariant>().definition;
+            return t.def_id == t2.as<TypeVariant>().def_id;
         },
         [&](const TypeUnion& t) -> bool {
             if (!t2.holds<TypeUnion>()) {
                 return false;
             }
-            return t.definition == t2.as<TypeUnion>().definition;
-        },
-        [&](const TypeGenericStructure& t) -> bool {
-            if (!t2.holds<TypeGenericStructure>()) {
-                return false;
-            }
-            return t.definition == t2.as<TypeGenericStructure>().definition;
+            return t.def_id == t2.as<TypeUnion>().def_id;
         },
         [&](const TypeDeftype&) -> bool { return t2.holds<TypeDeftype>(); },
         [&](const TypeArr& t) -> bool {
@@ -112,7 +106,7 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
     auto vs = Ovld{
         [&](const TypeBuiltin& t) -> size_t { return mix(0x01ULL ^ static_cast<size_t>(t.type)); },
         [&](const TypeStruct& t) -> size_t {
-            return mix(0x02ULL ^ static_cast<size_t>(t.definition.val()));
+            return mix(0x02ULL ^ static_cast<size_t>(t.def_id.val()));
         },
         [&](const TypeDeftype&) -> size_t {
             std::cout << ("tried to directly hash a deftype, do not use `as_mentioned` invocations "
@@ -120,9 +114,6 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
                       << '\n';
             std::unreachable();
             return 0ULL;
-        },
-        [&](const TypeGenericStructure& t) -> size_t {
-            return mix(0x03ULL ^ static_cast<size_t>(t.definition.val()));
         },
         [&](const TypeArr& t) -> size_t {
             return mix(0x04ULL ^ static_cast<size_t>(t.canonical_size));
@@ -145,10 +136,10 @@ template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const 
         [&](const TypeVariadic&) -> size_t { return mix(0x09ULL); },
         [&](const TypeVar&) -> size_t { return mix(0x10ULL); },
         [&](const TypeUnion& t) -> size_t {
-            return mix(0x11ULL ^ static_cast<size_t>(t.definition.val()));
+            return mix(0x11ULL ^ static_cast<size_t>(t.def_id.val()));
         },
         [&](const TypeVariant& t) -> size_t {
-            return mix(0x12ULL ^ static_cast<size_t>(t.definition.val()));
+            return mix(0x12ULL ^ static_cast<size_t>(t.def_id.val()));
         }};
 
     size_t h = t1.visit(vs);
@@ -181,7 +172,10 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             }
         },
         [&](const TypeStruct& t) {
-            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            str += context.symbol_id_to_cstr(context.def(t.def_id).name);
+            if (t.gen_args_slice.len() != 0) {
+                str += "::<>"; // TODO properly handle gen args
+            }
             if constexpr (considers_mut()) {
                 if (t1.mut) {
                     str += " mut";
@@ -189,7 +183,10 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             }
         },
         [&](const TypeVariant& t) {
-            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            str += context.symbol_id_to_cstr(context.def(t.def_id).name);
+            if (t.gen_args_slice.len() != 0) {
+                str += "::<>"; // TODO properly handle gen args
+            }
             if constexpr (considers_mut()) {
                 if (t1.mut) {
                     str += " mut";
@@ -197,7 +194,7 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             }
         },
         [&](const TypeUnion& t) {
-            str += context.symbol_id_to_cstr(context.def(t.definition).name);
+            str += context.symbol_id_to_cstr(context.def(t.def_id).name);
             if constexpr (considers_mut()) {
                 if (t1.mut) {
                     str += " mut";
@@ -209,16 +206,6 @@ template <ConsiderMut C> TypeToStringValue TypeToString<C>::operator()(const Typ
             if constexpr (considers_mut()) {
                 if (t1.mut) {
                     str += " mut";
-                }
-            }
-        },
-        [&](const TypeGenericStructure& t) {
-            // TODO properly handle internal values
-            str += context.symbol_id_to_cstr(context.def(t.definition).name);
-            str += "::<>";
-            if constexpr (considers_mut()) {
-                if (t1.mut) {
-                    str += "mut";
                 }
             }
         },
@@ -304,7 +291,6 @@ template <TypeTransformerFunctor F> OptId<TypeId> TypeTransformer<F>::try_inner(
         [&](const TypeVariant&) -> OTid { return OTid{}; },
         [&](const TypeUnion&) -> OTid { return OTid{}; },
         [&](const TypeDeftype&) -> OTid { return OTid{}; },
-        [&](const TypeGenericStructure&) -> OTid { return OTid{}; },
         [&](const TypeArr& t) -> OTid { return t.inner; },
         [&](const TypeSlice& t) -> OTid { return t.inner; },
         [&](const TypeRef& t) -> OTid { return t.inner; },

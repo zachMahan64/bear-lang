@@ -58,26 +58,24 @@ struct TypeBuiltin {
 };
 
 struct TypeStruct {
-    DefId definition;
+    DefId def_id;
+    IdSlice<GenericArgId> gen_args_slice;
+    OptId<CanonicalComptArgsId> maybe_canon_gen_args_id;
 };
 
 struct TypeUnion {
-    DefId definition;
+    DefId def_id;
 };
 
 struct TypeVariant {
-    DefId definition;
+    DefId def_id;
+    IdSlice<GenericArgId> gen_args_slice;
+    OptId<CanonicalComptArgsId> maybe_canon_gen_args_id;
 };
 
 struct TypeDeftype {
     TypeId true_type;
     DefId definition;
-};
-
-struct TypeGenericStructure {
-    DefId definition;
-    IdSlice<GenericArgId> slice;
-    CanonicalComptArgsId canonical_generic_args_id;
 };
 
 struct TypeArr {
@@ -110,9 +108,8 @@ struct TypeVariadic {
 // ^^^^^^ struct impls ^^^^^^^^
 
 /// main exec union
-using TypeValue
-    = std::variant<TypeBuiltin, TypeStruct, TypeDeftype, TypeGenericStructure, TypeArr, TypeSlice,
-                   TypeRef, TypePtr, TypeFnPtr, TypeVariadic, TypeVar, TypeVariant, TypeUnion>;
+using TypeValue = std::variant<TypeBuiltin, TypeStruct, TypeDeftype, TypeArr, TypeSlice, TypeRef,
+                               TypePtr, TypeFnPtr, TypeVariadic, TypeVar, TypeVariant, TypeUnion>;
 
 struct Type : NodeWithVariantValue<Type> {
     using id_type = TypeId;

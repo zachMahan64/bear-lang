@@ -82,13 +82,21 @@ template <IsDefVisitor V> class TypeResolver {
             }
 
             if (context.is_struct(did)) {
-                return context.emplace_type(TypeStruct{did}, span, mut);
+                return context.emplace_type(
+                    TypeStruct{
+                        .def_id = did,
+                        .gen_args_slice = {},
+                        .maybe_canon_gen_args_id = {},
+                    },
+                    span, mut); // not generic
             }
             if (context.is_variant(did)) {
-                return context.emplace_type(TypeVariant{did}, span, mut);
+                return context.emplace_type(
+                    TypeVariant{.def_id = did, .gen_args_slice = {}, .maybe_canon_gen_args_id = {}},
+                    span, mut); // not generic
             }
             if (context.is_union(did)) {
-                return context.emplace_type(TypeUnion{did}, span, mut);
+                return context.emplace_type(TypeUnion{.def_id = did}, span, mut);
             }
         }
 
