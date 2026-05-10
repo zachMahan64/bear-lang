@@ -67,7 +67,7 @@ struct DefFunctionPrototype {
 };
 
 struct DefVariable {
-    TypeId type;
+    TypeId type_id;
     OptId<ExecId> compt_value;
     bool moved = false;
 };

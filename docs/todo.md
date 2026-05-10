@@ -11,7 +11,10 @@ main quest
     - factor out def visitor logic in seperate functions to help here
 
 - [ ] some more `compt` improvements and general resolution/lowering logic:
-    - [ ] **union and variant def lowering/resol**
+    - [x] union def resol
+    - [ ] union inits (wip)
+    - [ ] union member accesses (checked)
+    - [ ] variant def resol
     - [ ] compt unions/variants
         - unions should be pretty simple
         - variants are essentially just struct {union{types...}, ordinal}

@@ -58,7 +58,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (!def.holds<DefVariable>()) {
                 return std::nullopt;
             }
-            return def.as<DefVariable>().type;
+            return def.as<DefVariable>().type_id;
         }
 
         OptId<ExecId> maybe_eid = solve_expr(fid, scope, expr);
@@ -689,14 +689,14 @@ template <IsDefVisitor V> class ComptExprSolver {
                 // already reported, so just return a nullopt
                 return {};
             }
-            if (context.equivalent_type(def_variable.type, into_tid)) {
+            if (context.equivalent_type(def_variable.type_id, into_tid)) {
                 // since it's compt (immutable, it's perfectly fine to just share the
                 // original exec value here)
                 return def_variable.compt_value;
             }
             context.emplace_diagnostic(
                 expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
-                DiagnosticTypeToType{.from = def_variable.type, .to = into_tid},
+                DiagnosticTypeToType{.from = def_variable.type_id, .to = into_tid},
                 DiagnosticNoOtherInfo{});
             return std::nullopt;
         }
@@ -863,6 +863,12 @@ template <IsDefVisitor V> class ComptExprSolver {
             return {};
         }
         DefId matched_did = maybe_match.as_id();
+        if (!context.def(def_visitor.visit_as_transparent(matched_did))) {
+            return {}; // poisoned
+        }
+        TypeId needed_tid = context.def(matched_did).as<DefVariable>().type_id;
+        // TODO finish resolving
+
         return {};
     }
     [[nodiscard]] OptId<ExecId> handle_struct_init(FileId fid, ScopeId scope, DefId struct_did,
@@ -896,7 +902,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             assert(member.holds<DefVariable>());
             const auto& member_as_var = member.as<DefVariable>();
 
-            const TypeId member_type = member_as_var.type;
+            const TypeId member_type = member_as_var.type_id;
             const OptId<ExecId> default_val = member_as_var.compt_value;
 
             // handle too few
@@ -2117,7 +2123,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             OptId<TypeId> maybe_into_tid = (param_index < params.len())
                                                ? OptId<TypeId>{context.def(params.get(param_index))
                                                                    .template as<DefVariable>()
-                                                                   .type}
+                                                                   .type_id}
                                                : std::nullopt;
 
             OptId<ExecId> maybe_arg_eid = solve_expr(fid, scope, arg, maybe_into_tid);
@@ -2204,7 +2210,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             ExecId eid = arg_vec[i];
             const auto param = context.register_compt_param(
                 param_def.name, param_def.span, func_did,
-                DefVariable{.type = param_var.type, .compt_value = eid});
+                DefVariable{.type_id = param_var.type_id, .compt_value = eid});
             context.insert_variable(temp_scope, context.def(params.get(i)).name, param);
         }
 

@@ -1194,7 +1194,7 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
             // try get chained structs
             if (def.holds<DefVariable>()) {
                 const DefVariable var_def = def.as<DefVariable>();
-                const Type& type = this->type(try_decay_ref(def.as<DefVariable>().type));
+                const Type& type = this->type(try_decay_ref(def.as<DefVariable>().type_id));
                 if (type.holds<TypeStruct>()) {
                     curr_did = type.as<TypeStruct>().def_id;
                 } else if (var_def.compt_value.has_value()) {

@@ -117,7 +117,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 type.span, diag_code::should_have_explicit_type, diag_type::error,
                 DiagnosticStructMemberSymBeforeMsg{.mem_sid = def.name});
         };
-        def.set_value(DefVariable{.type = maybe_tid.as_id(), .compt_value = std::nullopt});
+        def.set_value(DefVariable{.type_id = maybe_tid.as_id(), .compt_value = std::nullopt});
         // TODO handle invalid non-initialized statements
         // search for default value/default method
         break;
@@ -165,7 +165,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         };
 
         context.def(did).set_value(
-            DefVariable{.type = maybe_tid.as_id(), .compt_value = maybe_compt_eid});
+            DefVariable{.type_id = maybe_tid.as_id(), .compt_value = maybe_compt_eid});
         // check poison /not init
         if (context.def(did).compt && var_init_decl.assign_op->type == TOK_ASSIGN_MOVE) {
             auto d0 = context.emplace_diagnostic(
@@ -370,8 +370,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             // guard run-time func with `var` typed params
             if (func_is_runtime
                 && !(parent_is_contract(context.def(did)) && (didx == params.begin()))
-                && TypeTransformer<TypeContainsVar>{context}(param_def.as<DefVariable>().type)) {
-                const Span ty_span = context.type(param_def.as<DefVariable>().type).span;
+                && TypeTransformer<TypeContainsVar>{context}(param_def.as<DefVariable>().type_id)) {
+                const Span ty_span = context.type(param_def.as<DefVariable>().type_id).span;
                 auto d0 = context.emplace_diagnostic(
                     ty_span, diag_code::type_deduction_not_legal_here, diag_type::error);
                 auto d1 = context.emplace_diagnostic(
@@ -379,7 +379,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                     diag_type::note);
                 context.link_diagnostic(d0, d1);
             }
-            type_vec.push_back(param_def.as<DefVariable>().type);
+            type_vec.push_back(param_def.as<DefVariable>().type_id);
         }
 
         auto param_types = context.freeze_id_vec(type_vec);
@@ -447,7 +447,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 assert(param_def.holds<DefVariable>());
 
                 if (didx == params.begin() && !takes_self && parent_is_struct(context.def(did))
-                    && context.type_matches_struct_def(param_def.as<DefVariable>().type,
+                    && context.type_matches_struct_def(param_def.as<DefVariable>().type_id,
                                                        def.parent.as_id())) {
                     takes_self = true;
                 }
@@ -455,8 +455,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 // guard run-time func with `var` typed params
                 if (func_is_runtime
                     && TypeTransformer<TypeContainsVar>{context}(
-                        param_def.as<DefVariable>().type)) {
-                    const Span ty_span = context.type(param_def.as<DefVariable>().type).span;
+                        param_def.as<DefVariable>().type_id)) {
+                    const Span ty_span = context.type(param_def.as<DefVariable>().type_id).span;
                     auto d0 = context.emplace_diagnostic(
                         ty_span, diag_code::type_deduction_not_legal_here, diag_type::error);
                     auto d1 = context.emplace_diagnostic(
@@ -470,7 +470,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                     context.link_diagnostic(d0, d1);
                     context.link_diagnostic(d1, d2);
                 }
-                type_vec.push_back(param_def.as<DefVariable>().type);
+                type_vec.push_back(param_def.as<DefVariable>().type_id);
             }
 
             const IdSlice<TypeId> param_types = context.freeze_id_vec(type_vec);
@@ -618,7 +618,7 @@ OptId<DefId> TopLevelDefVisitor::resolve_param(FileId fid, ScopeId scope, DefId 
                                                TypeId tid, SymbolId name, Span span) {
     auto param_did = context.register_compt_param(name, span, func_def);
 
-    context.def(param_did).set_value(DefVariable{.type = tid, .compt_value = std::nullopt});
+    context.def(param_did).set_value(DefVariable{.type_id = tid, .compt_value = std::nullopt});
 
     return param_did;
 }
