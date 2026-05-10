@@ -12,12 +12,11 @@ main quest
 
 - [ ] some more `compt` improvements and general resolution/lowering logic:
     - [x] union def resol
-    - [ ] union inits (wip)
-    - [ ] union member accesses (checked)
+    - [x] union inits
+    - [x] union member accesses (checked)
     - [ ] variant def resol
-    - [ ] compt unions/variants
-        - unions should be pretty simple
-        - variants are essentially just struct {union{types...}, ordinal}
+    - [ ] variant inits 
+    - [ ] sort out variant decomps at compt
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive
