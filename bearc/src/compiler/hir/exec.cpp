@@ -12,11 +12,9 @@
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/type.hpp"
-#include <cfloat>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -1067,6 +1065,7 @@ bool Exec::can_be_compt(const Context& ctx) {
         [&](const ExecExprMatch&) -> bool { return false; },
         [&](const ExecExprMatchBranch&) -> bool { return false; },
         [&](const ExecFnPtr&) -> bool { return true; },
+        [&](const ExecExprUnionInit&) -> bool { return true; },
     };
     return visit(vs);
 }

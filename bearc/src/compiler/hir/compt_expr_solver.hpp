@@ -79,7 +79,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return context.emplace_type(TypeBuiltin{.type = bin_type}, Span::generated(), false);
         }
         if (exec.holds<ExecExprStructInit>()) {
-            auto struct_did = exec.as<ExecExprStructInit>().struct_def;
+            auto struct_did = exec.as<ExecExprStructInit>().struct_def_id;
 
             return context.emplace_type(
                 TypeStruct{.def_id = struct_did,
@@ -106,6 +106,10 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (exec.holds<ExecFnPtr>()) {
             return exec.as<ExecFnPtr>().fn_ptr_tid;
         }
+        if (exec.holds<ExecExprUnionInit>()) {
+            return context.emplace_type(TypeUnion{.def_id = exec.as<ExecExprUnionInit>().union_def},
+                                        Span::generated(), false);
+        }
 
         // report issue
         context.emplace_diagnostic(exec.span, diag_code::cannot_infer_type_at_compt,
@@ -129,8 +133,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return handle_any_id(fid, scope, expr->expr.id);
             }
             if (expr->type == AST_EXPR_STRUCT_INIT) {
-                return solve_struct(fid, scope, expr,
-                                    context.emplace_type(TypeVar{}, Span::generated(), false));
+                return solve_struct_or_union(
+                    fid, scope, expr, context.emplace_type(TypeVar{}, Span::generated(), false));
             }
             if (expr->type == AST_EXPR_LIST_LITERAL) {
                 return solve_list(fid, scope, expr, maybe_into_tid);
@@ -151,7 +155,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return handle_any_id(fid, scope, expr->expr.id);
             }
             if (expr->type == AST_EXPR_STRUCT_INIT) {
-                return solve_struct(fid, scope, expr, into_tid);
+                return solve_struct_or_union(fid, scope, expr, into_tid);
             }
             if (expr->type == AST_EXPR_LIST_LITERAL) {
                 return solve_list(fid, scope, expr, into_tid);
@@ -267,8 +271,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             return fnp_eid;
         }
 
-        if (into_type.holds<TypeStruct>()) {
-            return solve_struct(fid, scope, expr, into_tid);
+        if (into_type.holds<TypeStruct>() || into_type.holds<TypeUnion>()) {
+            return solve_struct_or_union(fid, scope, expr, into_tid);
         }
 
         // guard against non-builtins
@@ -637,8 +641,8 @@ template <IsDefVisitor V> class ComptExprSolver {
      * solve a struct's value at compile-time, this essentially attempts a canonicalization down
      * to a struct-init eexpression where each field is evaluatable at compile-time
      */
-    [[nodiscard]] OptId<ExecId> solve_struct(FileId fid, ScopeId scope, const ast_expr_t* expr,
-                                             TypeId into_tid) {
+    [[nodiscard]] OptId<ExecId> solve_struct_or_union(FileId fid, ScopeId scope,
+                                                      const ast_expr_t* expr, TypeId into_tid) {
 
         auto visit_def
             = [this](DefId did) { return context.def(def_visitor.visit_as_dependent(did)); };
@@ -666,24 +670,24 @@ template <IsDefVisitor V> class ComptExprSolver {
             const Def& def = visit_def(did);
             if (!def.holds<DefVariable>()) {
                 context.emplace_diagnostic(
-                    expr_span, diag_code::cannot_convert_expression_to_type, diag_type::error,
+                    expr_span, diag_code::not_a_compile_time_constant, diag_type::error,
                     DiagnosticTypeAfterMessage{.tid = into_tid}, DiagnosticNoOtherInfo{});
                 return std::nullopt;
             }
             const auto& def_variable = def.as<DefVariable>();
             if (!def.compt) {
-                auto diag_id = context.emplace_diagnostic(
+                auto d0 = context.emplace_diagnostic(
                     expr_span, diag_code::cannot_init_with_non_compt_value, diag_type::error,
                     DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});
-                auto sub_diag_id = context.emplace_diagnostic(
+                auto d1 = context.emplace_diagnostic(
                     def.span, diag_code::declared_here_without_compt, diag_type::note);
-                context.link_diagnostic(diag_id, sub_diag_id);
-                return std::nullopt;
+                context.link_diagnostic(d0, d1);
+                return {};
             }
             if (!def_variable.compt_value.has_value()) {
                 // this means that this definition must have had an issue, and it was thus
                 // already reported, so just return a nullopt
-                return std::nullopt;
+                return {};
             }
             if (context.equivalent_type(def_variable.type, into_tid)) {
                 // since it's compt (immutable, it's perfectly fine to just share the
@@ -704,10 +708,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
             Span id_span{fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
                          expr->expr.struct_init.id.start[expr->expr.id.slice.len - 1]};
-            OptId<DefId> maybe_def_of_struct
-                = context.look_up_scoped_type(scope, sid_slice, id_span);
+            OptId<DefId> maybe_did = context.look_up_scoped_type(scope, sid_slice, id_span);
 
-            if (!maybe_def_of_struct.has_value()) {
+            if (!maybe_did.has_value()) {
                 context.emplace_diagnostic(
                     expr_span, diag_code::use_of_undeclared_identifier, diag_type::error,
                     DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice},
@@ -715,7 +718,14 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
 
-            const auto did = def_visitor.visit_as_dependent(maybe_def_of_struct.as_id());
+            const auto did = def_visitor.visit_as_dependent(maybe_did.as_id());
+
+            // try as union
+            auto maybe_union_def = context.try_union_def(did);
+            if (maybe_union_def.has_value()) {
+                return handle_union_init(fid, scope, maybe_union_def.as_id(), expr);
+            }
+
             auto maybe_struct_did = context.try_struct_def(did);
 
             if (maybe_struct_did.empty()) {
@@ -734,140 +744,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
 
             DefId struct_did = maybe_struct_did.as_id();
-
-            const Def& struct_def = context.def(struct_did);
-
-            const auto defs = context.ordered_defs_for(struct_did);
-
-            const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
-
-            enum class relative_arity : uint8_t { too_few, same, too_many };
-
-            relative_arity rel_arity = relative_arity::same;
-            if (init_slice.len < defs.len()) {
-                rel_arity = relative_arity::too_few;
-            } else if (init_slice.len > defs.len()) {
-                rel_arity = relative_arity::too_many;
+            maybe_eid = handle_struct_init(fid, scope, struct_did, expr, into_tid);
+            if (maybe_eid.empty()) {
+                return {}; // poisoned
             }
-
-            llvm::SmallVector<ExecId> member_init_execs;
-            bool cooked = false;
-            for (auto i = 0u; i < defs.len(); i++) {
-                auto didx = defs.get(i);
-                const auto member_did = context.def_id(didx);
-                const Def& member = context.def(didx);
-
-                if (member.holds<DefUnevaluated>()) {
-                    continue; // must be poisoned
-                }
-
-                assert(member.holds<DefVariable>());
-                const auto& member_as_var = member.as<DefVariable>();
-
-                const TypeId member_type = member_as_var.type;
-                const OptId<ExecId> default_val = member_as_var.compt_value;
-
-                // handle too few
-                if (i >= init_slice.len) {
-                    // get default value for the member field
-                    if (default_val.has_value()) {
-                        ExecExprStructMemberInit init{
-                            .field_def = member_did, .value = default_val.as_id(), .move = false};
-                        member_init_execs.emplace_back(
-                            context.register_exec(context, init, Span::generated(), true));
-                    } else {
-                        cooked = true;
-                        context.emplace_diagnostic(
-                            Span(fid, context.ast(fid).buffer(), expr->last),
-                            diag_code::struct_field_not_initialized, diag_type::error,
-                            DiagnosticSymbolAfterMessage{.sid = context.def(defs.get(i)).name},
-                            DiagnosticNoOtherInfo{});
-                    }
-                    continue; // guard overflow
-                }
-                assert(i < init_slice.len);
-                const ast_expr_t* member_init_expr = init_slice.start[i];
-
-                if (member_init_expr->type != AST_EXPR_STRUCT_MEMBER_INIT) {
-                    return std::nullopt; // malformed, so was already reported by parser
-                }
-                const token_t* proposed_member_name_tkn
-                    = member_init_expr->expr.struct_member_init.id;
-                const token_t* assign_op = member_init_expr->expr.struct_member_init.id;
-
-                if (assign_op->type == TOK_ASSIGN_MOVE) {
-                    context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), assign_op),
-                                               diag_code::compt_values_cannot_be_moved,
-                                               diag_type::error);
-                }
-                const ast_expr_t* proposed_val = member_init_expr->expr.struct_member_init.value;
-                const Span proposed_member_span
-                    = Span(fid, context.ast(fid).buffer(), member_init_expr->first,
-                           member_init_expr->last);
-
-                const SymbolId true_name = member.name;
-                if (context.symbol_id(proposed_member_name_tkn) != true_name) {
-                    cooked = true;
-                    context.emplace_diagnostic(
-                        proposed_member_span, diag_code::field_initializer_does_not_match_field,
-                        diag_type::error, DiagnosticSymbolAfterMessage{member.name},
-                        DiagnosticNoOtherInfo{});
-                    continue;
-                }
-                OptId<ExecId> hopefully_exec = solve_expr(fid, scope, proposed_val, member_type);
-                if (!hopefully_exec.has_value()) {
-                    cooked = true;
-                    // just continue, caused by other so must have already been reported
-                    continue;
-                }
-                // emplace the init execs
-                member_init_execs.emplace_back(context.emplace_exec(
-                    ExecExprStructMemberInit{
-                        .field_def = member_did, .value = hopefully_exec.as_id(), .move = false},
-                    proposed_member_span, true));
-            }
-            if (rel_arity == relative_arity::too_many) {
-                cooked = true;
-                const token_t* first = init_slice.start[defs.len()]->first;
-                const token_t* last = init_slice.start[init_slice.len - 1]->last;
-                context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), first, last),
-                                           diag_code::too_many_initializers_given_for_struct_init,
-                                           diag_type::error);
-            }
-            if (cooked) {
-                context.emplace_diagnostic(
-                    struct_def.span, diag_code::declared_here, diag_type::note,
-                    DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice},
-                    DiagnosticNoOtherInfo{});
-                return std::nullopt;
-            }
-            // type check before returning here! but only if the into type isn't var!
-            if (!context.type(into_tid).template holds<TypeVar>()) {
-                if (auto into_did = context.type(into_tid).template as<TypeStruct>().def_id;
-                    struct_did != into_did) {
-                    context.emplace_diagnostic(
-                        expr_span, diag_code::cannot_convert_value_of_type, diag_type::error,
-                        DiagnosticTypeToType{
-                            .from = context.emplace_type(
-                                TypeStruct{.def_id = struct_did,
-                                           .gen_args_slice = {},
-                                           .maybe_canon_gen_args_id = {}},
-                                Span(fid, context.ast(fid).buffer(),
-                                     expr->expr.struct_init.id.start[0],
-                                     expr->expr.struct_init.id
-                                         .start[expr->expr.struct_init.id.len - 1]),
-                                false),
-                            .to = into_tid},
-                        DiagnosticNoOtherInfo{});
-                    return std::nullopt;
-                }
-            }
-
-            // all good, set the exec
-            maybe_eid = context.emplace_exec(
-                ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
-                                   .struct_def = struct_did},
-                expr_span, true);
             break;
         }
 
@@ -917,10 +797,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (into_type.holds<TypeVar>()) {
                 return eid;
             }
-            if (const Exec& exec = context.exec(eid); exec.holds<ExecExprStructInit>()
-                                                      && into_type.holds<TypeStruct>()
-                                                      && (exec.as<ExecExprStructInit>().struct_def
-                                                          == into_type.as<TypeStruct>().def_id)) {
+            if (const Exec& exec = context.exec(eid);
+                exec.holds<ExecExprStructInit>() && into_type.holds<TypeStruct>()
+                && (exec.as<ExecExprStructInit>().struct_def_id
+                    == into_type.as<TypeStruct>().def_id)) {
                 return eid;
             }
             OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
@@ -938,6 +818,186 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
 
   private:
+    [[nodiscard]] OptId<ExecId> handle_union_init(FileId fid, ScopeId scope, DefId union_did,
+                                                  const ast_expr_t* expr) {
+        assert(context.def(union_did).holds<DefUnion>());
+        const auto member_dids = context.def(union_did).as<DefUnion>().ordered_members;
+        auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
+        Span id_span{fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
+                     expr->expr.struct_init.id.start[expr->expr.id.slice.len - 1]};
+        const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
+        if (init_slice.len > 1) {
+            Span mem_span{context, fid, init_slice.start[0]->first,
+                          init_slice.start[init_slice.len - 1]->last};
+            auto d0 = context.emplace_diagnostic_with_message_value(
+                Span{context, fid, expr}, diag_code::too_many_initializers_for_union,
+                diag_type::error, DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice});
+            auto d1 = context.emplace_diagnostic(
+                mem_span, diag_code::union_initializers_must_only_set_one_field, diag_type::note);
+            context.link_diagnostic(d0, d1);
+            return {};
+        }
+        if (init_slice.len < 1) {
+            auto d0 = context.emplace_diagnostic_with_message_value(
+                Span{context, fid, expr}, diag_code::too_few_inits_for_union, diag_type::error,
+                DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice});
+            auto d1 = context.emplace_diagnostic(
+                Span{context, fid, expr}, diag_code::union_initializers_must_only_set_one_field,
+                diag_type::note);
+            context.link_diagnostic(d0, d1);
+            return {};
+        }
+        const ast_expr_t* member_init = expr->expr.struct_init.member_inits.start[0];
+        SymbolId member_name = context.symbol_id(member_init->expr.struct_member_init.id);
+        OptId<DefId> maybe_match = context.linear_name_match_in_def_slice(member_dids, member_name);
+        if (maybe_match.empty()) {
+            auto d0 = context.emplace_diagnostic(
+                Span{context, fid, member_init->expr.struct_member_init.id},
+                diag_code::does_not_name_a_field_of_union, diag_type::error,
+                DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice},
+                DiagnosticSubCode{.sub_code = diag_code::use_of_undeclared_identifier});
+            auto d1 = context.emplace_diagnostic_with_message_value(
+                context.def(union_did).span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolAfterMessage{.sid = context.def(union_did).name});
+            context.link_diagnostic(d0, d1);
+            return {};
+        }
+        DefId matched_did = maybe_match.as_id();
+        return {};
+    }
+    [[nodiscard]] OptId<ExecId> handle_struct_init(FileId fid, ScopeId scope, DefId struct_did,
+                                                   const ast_expr_t* expr, TypeId into_tid) {
+        const auto member_dids = context.ordered_defs_for(struct_did);
+        auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
+        Span id_span{fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
+                     expr->expr.struct_init.id.start[expr->expr.id.slice.len - 1]};
+        const ast_slice_of_exprs_t init_slice = expr->expr.struct_init.member_inits;
+
+        enum class relative_arity : uint8_t { too_few, same, too_many };
+
+        relative_arity rel_arity = relative_arity::same;
+        if (init_slice.len < member_dids.len()) {
+            rel_arity = relative_arity::too_few;
+        } else if (init_slice.len > member_dids.len()) {
+            rel_arity = relative_arity::too_many;
+        }
+
+        llvm::SmallVector<ExecId> member_init_execs;
+        bool cooked = false;
+        for (auto i = 0u; i < member_dids.len(); i++) {
+            auto didx = member_dids.get(i);
+            const auto member_did = context.def_id(didx);
+            const Def& member = context.def(didx);
+
+            if (member.holds<DefUnevaluated>()) {
+                continue; // must be poisoned
+            }
+
+            assert(member.holds<DefVariable>());
+            const auto& member_as_var = member.as<DefVariable>();
+
+            const TypeId member_type = member_as_var.type;
+            const OptId<ExecId> default_val = member_as_var.compt_value;
+
+            // handle too few
+            if (i >= init_slice.len) {
+                // get default value for the member field
+                if (default_val.has_value()) {
+                    ExecExprStructMemberInit init{
+                        .field_def = member_did, .value = default_val.as_id(), .move = false};
+                    member_init_execs.emplace_back(
+                        context.register_exec(context, init, Span::generated(), true));
+                } else {
+                    cooked = true;
+                    context.emplace_diagnostic(
+                        Span(fid, context.ast(fid).buffer(), expr->last),
+                        diag_code::struct_field_not_initialized, diag_type::error,
+                        DiagnosticSymbolAfterMessage{.sid = context.def(member_dids.get(i)).name},
+                        DiagnosticNoOtherInfo{});
+                }
+                continue; // guard overflow
+            }
+            assert(i < init_slice.len);
+            const ast_expr_t* member_init_expr = init_slice.start[i];
+
+            if (member_init_expr->type != AST_EXPR_STRUCT_MEMBER_INIT) {
+                return std::nullopt; // malformed, so was already reported by parser
+            }
+            const token_t* proposed_member_name_tkn = member_init_expr->expr.struct_member_init.id;
+            const token_t* assign_op = member_init_expr->expr.struct_member_init.id;
+
+            if (assign_op->type == TOK_ASSIGN_MOVE) {
+                context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), assign_op),
+                                           diag_code::compt_values_cannot_be_moved,
+                                           diag_type::error);
+            }
+            const ast_expr_t* proposed_val = member_init_expr->expr.struct_member_init.value;
+            const Span proposed_member_span = Span(fid, context.ast(fid).buffer(),
+                                                   member_init_expr->first, member_init_expr->last);
+
+            const SymbolId true_name = member.name;
+            if (context.symbol_id(proposed_member_name_tkn) != true_name) {
+                cooked = true;
+                context.emplace_diagnostic(
+                    proposed_member_span, diag_code::field_initializer_does_not_match_field,
+                    diag_type::error, DiagnosticSymbolAfterMessage{member.name},
+                    DiagnosticNoOtherInfo{});
+                continue;
+            }
+            OptId<ExecId> hopefully_exec = solve_expr(fid, scope, proposed_val, member_type);
+            if (!hopefully_exec.has_value()) {
+                cooked = true;
+                // just continue, caused by other so must have already been reported
+                continue;
+            }
+            // emplace the init execs
+            member_init_execs.emplace_back(context.emplace_exec(
+                ExecExprStructMemberInit{
+                    .field_def = member_did, .value = hopefully_exec.as_id(), .move = false},
+                proposed_member_span, true));
+        }
+        if (rel_arity == relative_arity::too_many) {
+            cooked = true;
+            const token_t* first = init_slice.start[member_dids.len()]->first;
+            const token_t* last = init_slice.start[init_slice.len - 1]->last;
+            context.emplace_diagnostic(Span(fid, context.ast(fid).buffer(), first, last),
+                                       diag_code::too_many_initializers_given_for_struct_init,
+                                       diag_type::error);
+        }
+        if (cooked) {
+            context.emplace_diagnostic(
+                context.def(struct_did).span, diag_code::declared_here, diag_type::note,
+                DiagnosticIdentifierBeforeMessage{.sid_slice = sid_slice}, DiagnosticNoOtherInfo{});
+            return std::nullopt;
+        }
+        // type check before returning here! but only if the into type isn't var!
+        if (!context.type(into_tid).template holds<TypeVar>()) {
+            if (auto into_did = context.type(into_tid).template as<TypeStruct>().def_id;
+                struct_did != into_did) {
+                context.emplace_diagnostic(
+                    Span{context, fid, expr}, diag_code::cannot_convert_value_of_type,
+                    diag_type::error,
+                    DiagnosticTypeToType{
+                        .from = context.emplace_type(
+                            TypeStruct{.def_id = struct_did,
+                                       .gen_args_slice = {},
+                                       .maybe_canon_gen_args_id = {}},
+                            Span(
+                                fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
+                                expr->expr.struct_init.id.start[expr->expr.struct_init.id.len - 1]),
+                            false),
+                        .to = into_tid},
+                    DiagnosticNoOtherInfo{});
+                return std::nullopt;
+            }
+        }
+
+        // all good, set the exec
+        return context.emplace_exec(
+            ExecExprStructInit{.member_inits = context.freeze_id_vec(member_init_execs),
+                               .struct_def_id = struct_did},
+            Span{context, fid, expr}, true);
+    }
     [[nodiscard]] OptId<ExecId> solve_compt_cast(FileId fid, ScopeId scope, ExecId eid,
                                                  const ast_expr_t* into_expr) {
         if (into_expr->type != AST_EXPR_TYPE) {
@@ -1844,7 +1904,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
             const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
-            const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def);
+            const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def_id);
 
             Span rhs_span{context, fid, rhs_expr};
             if (rhs_expr->type == AST_EXPR_ID) {
@@ -1975,7 +2035,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             const Span fn_name_span{context, fid, id_tok};
 
             maybe_func_did = context.look_up_member_function_guarding_hid(
-                context.def(exec.as<ExecExprStructInit>().struct_def), func_name, fn_name_span,
+                context.def(exec.as<ExecExprStructInit>().struct_def_id), func_name, fn_name_span,
                 scope);
             if (maybe_func_did.empty()) {
                 return std::nullopt;
@@ -2381,14 +2441,14 @@ template <IsDefVisitor V> class ComptExprSolver {
                                               Span::combine(list1.span, list2.span));
         };
 
-        if (s1.struct_def != s2.struct_def) {
+        if (s1.struct_def_id != s2.struct_def_id) {
 
             // TODO properly set gen args here! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            auto t1 = context.emplace_type(TypeStruct{.def_id = s1.struct_def,
+            auto t1 = context.emplace_type(TypeStruct{.def_id = s1.struct_def_id,
                                                       .gen_args_slice = {},
                                                       .maybe_canon_gen_args_id = {}},
                                            Span::generated(), false);
-            auto t2 = context.emplace_type(TypeStruct{.def_id = s2.struct_def,
+            auto t2 = context.emplace_type(TypeStruct{.def_id = s2.struct_def_id,
                                                       .gen_args_slice = {},
                                                       .maybe_canon_gen_args_id = {}},
                                            Span::generated(), false);

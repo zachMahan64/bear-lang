@@ -272,6 +272,14 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "should be declared `compt`";
     case diag_code::should_not_be_declared_compt:
         return "should not be declared `compt`";
+    case diag_code::too_many_initializers_for_union:
+        return "too many field initializers for union";
+    case diag_code::union_initializers_must_only_set_one_field:
+        return "union initializers must only set one field";
+    case diag_code::too_few_inits_for_union:
+        return "too few field initializers for union";
+    case diag_code::does_not_name_a_field_of_union:
+        return "field initializer does not name a field of union";
     }
 
     std::unreachable();

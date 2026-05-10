@@ -221,7 +221,8 @@ class Context {
     Span make_top_level_def_name_span(DefId def) const;
 
     bool is_top_level_def_with_associated_scope(DefId def_id) const;
-    /// gets the named scope for a certainly top level def
+    /// gets the named scope for a top level def
+    /// - note: NOT the containing scope for a given def.
     [[nodiscard]] ScopeId scope_for_top_level_def(DefId def) const;
     /// trys to look up the scope for a top level def
     [[nodiscard]] OptId<ScopeId> try_scope_for_top_level_def(DefId def) const;
@@ -315,6 +316,12 @@ class Context {
     /// try to get a struct DefId, bypassing deftypes
     [[nodiscard]] OptId<DefId> try_struct_def(DefId did) const;
 
+    /// try to get a union DefId, bypassing deftypes
+    [[nodiscard]] OptId<DefId> try_union_def(DefId did) const;
+
+    /// try to get a variant DefId, bypassing deftypes
+    [[nodiscard]] OptId<DefId> try_variant_def(DefId did) const;
+
     [[nodiscard]] DefId def_id(IdIdx<DefId> id) const;
 
     [[nodiscard]] const Exec& exec(ExecId id) const;
@@ -369,6 +376,11 @@ class Context {
 
     [[nodiscard]] OptId<TypeId> self_type_for_fn(ScopeId scope, const ast_stmt_fn_decl_t* fn_decl,
                                                  Def& def);
+
+    // linearly scans that a name to see if it is contained in a slice of defs
+    // - return an empty optional on miss
+    [[nodiscard]] OptId<DefId> linear_name_match_in_def_slice(IdSlice<DefId> defs,
+                                                              SymbolId name) const;
 
     // freeze a vector (llvm::SmallVector) into an IdSlice for leaner storage
     template <IsId I>

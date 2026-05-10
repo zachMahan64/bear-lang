@@ -1,0 +1,29 @@
+// tests/hir/73.br 
+
+union Foo {
+    i32 a;
+    i32 b;
+    i32 c;
+}
+
+union Boo {
+
+}
+
+compt Foo my_foo = 12; // oops
+
+var _0 = @static_assert ! @same_type(Foo, Foo); // oops
+
+compt Foo A = Foo{.a = 12, .b = 13}; // oops
+
+compt Foo B = Foo{}; // oops
+
+var C = Foo{}; // oops
+
+struct Cat {
+    i32 a;
+}
+
+compt Cat D = Cat{.b = 12}; // oops
+
+var _1 = Foo{.d = 12}; // oops

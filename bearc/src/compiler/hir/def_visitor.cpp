@@ -513,7 +513,17 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         break;
     }
     // TODO, need to lower these
-    case AST_STMT_UNION_DEF:
+    case AST_STMT_UNION_DEF: {
+        // visit children
+        auto members = context.ordered_defs_for(did);
+        for (auto didx = members.begin(); didx != members.end(); didx++) {
+            visit_as_dependent(context.def_id(didx));
+        }
+        context.def(did).set_value(
+            DefUnion{.scope = context.scope_for_top_level_def(did), .ordered_members = members});
+
+        break;
+    }
     case AST_STMT_VARIANT_DEF:
     case AST_STMT_VARIANT_FIELD_DECL:
 

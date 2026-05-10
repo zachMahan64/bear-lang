@@ -139,6 +139,10 @@ enum class diag_code : uint8_t {
     struct_already_has_contract,
     should_be_declared_compt,
     should_not_be_declared_compt,
+    too_many_initializers_for_union,
+    union_initializers_must_only_set_one_field,
+    too_few_inits_for_union,
+    does_not_name_a_field_of_union,
 
     count, // this must be last,
 

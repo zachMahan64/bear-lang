@@ -665,8 +665,8 @@ void Context::register_ordered_defs(DefId def, llvm::SmallVectorImpl<DefId>& vec
     def_to_ordered_def_slice_id.insert(def, ord_def_slice_id);
 }
 
-IdSlice<DefId> Context::ordered_defs_for(DefId def) {
-    auto maybe_odef_slice_id = def_to_ordered_def_slice_id.at(def);
+IdSlice<DefId> Context::ordered_defs_for(DefId def_id) {
+    auto maybe_odef_slice_id = def_to_ordered_def_slice_id.at(def_id);
     if (!maybe_odef_slice_id.has_value()) {
         // empty slice
         return IdSlice<DefId>{};
@@ -809,19 +809,44 @@ ExecId Context::exec_id(IdIdx<ExecId> id) const { return exec_ids.cat(id); }
 
 [[nodiscard]] OptId<DefId> Context::try_struct_def(DefId did) const {
     const Def& d = def(did);
-
     if (d.holds<DefStruct>()) {
         return did;
     }
-
     if (d.holds<DefDeftype>()) {
         const Type& t = type(d.as<DefDeftype>().type);
         if (t.holds<TypeStruct>()) {
             return t.as<TypeStruct>().def_id;
         }
     }
+    return {};
+}
 
-    return std::nullopt;
+[[nodiscard]] OptId<DefId> Context::try_union_def(DefId did) const {
+    const Def& d = def(did);
+    if (d.holds<DefUnion>()) {
+        return did;
+    }
+    if (d.holds<DefDeftype>()) {
+        const Type& t = type(d.as<DefDeftype>().type);
+        if (t.holds<TypeUnion>()) {
+            return t.as<TypeUnion>().def_id;
+        }
+    }
+    return {};
+}
+
+[[nodiscard]] OptId<DefId> Context::try_variant_def(DefId did) const {
+    const Def& d = def(did);
+    if (d.holds<DefVariant>()) {
+        return did;
+    }
+    if (d.holds<DefDeftype>()) {
+        const Type& t = type(d.as<DefDeftype>().type);
+        if (t.holds<TypeVariant>()) {
+            return t.as<TypeVariant>().def_id;
+        }
+    }
+    return {};
 }
 
 [[nodiscard]] DefId Context::def_id(IdIdx<DefId> id) const { return def_ids.cat(id); }
@@ -1600,4 +1625,12 @@ OptId<CanonicalComptArgsId> Context::generic_args_for_def(DefId did) {
     return {};
 }
 
+OptId<DefId> Context::linear_name_match_in_def_slice(IdSlice<DefId> defs, SymbolId name) const {
+    for (auto didx = defs.begin(); didx != defs.end(); didx++) {
+        if (def(didx).name == name) {
+            return def_id(didx);
+        }
+    }
+    return {};
+}
 } // namespace hir
