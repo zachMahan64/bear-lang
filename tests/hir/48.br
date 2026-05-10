@@ -16,7 +16,7 @@ compt i32 b = 10;
 
 var _1 = @static_assert Foo..bar(a, b) == ((a + b) * a * b); // fine
 
-var _2 = @static_assert Foo..bar(a, b) == 220 * 12 && Foo..bar(a,b) == 2640; // oops
+var _2 = @static_assert Foo..bar(a, b) == 220 * 12 && Foo..bar(a,b) == 2640; // fine
 
 var _3 = @static_assert (Foo..bar(a, b) == 220 * 12) && (Foo..bar(a,b) == 2640); // fine
 

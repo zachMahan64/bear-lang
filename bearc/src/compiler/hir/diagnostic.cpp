@@ -280,6 +280,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "too few field initializers for union";
     case diag_code::does_not_name_a_field_of_union:
         return "field initializer does not name a field of union";
+    case diag_code::compt_union_does_not_hold_field:
+        return "compile-time union does not hold field";
+    case diag_code::compt_union_holds_field:
+        return "compile-time union holds field";
     }
 
     std::unreachable();

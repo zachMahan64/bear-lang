@@ -398,7 +398,6 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     binary_expr->type = AST_EXPR_BINARY;
     binary_expr->expr.binary.lhs = lhs;
     binary_expr->expr.binary.op = op_tkn;
-    max_prec = (max_prec >= prec_binary(op_tkn->type)) ? max_prec : prec_binary(op_tkn->type);
     ast_expr_t* middle_expr = NULL;
     // handle special binary ops
     if (op_tkn->type == TOK_AS) {
@@ -412,14 +411,19 @@ ast_expr_t* parse_binary(parser_t* p, ast_expr_t* lhs, uint8_t max_prec) {
     token_type_e next_op = parser_peek(p)->type;
 
     while (binary_bind_right(curr_op, next_op)) {
-        middle_expr = parse_expr_prec(p, middle_expr, prec_binary(next_op));
+        middle_expr = parse_expr_prec(p, middle_expr, prec_binary(curr_op));
         curr_op = next_op;
         next_op = parser_peek(p)->type;
     }
     binary_expr->expr.binary.rhs = middle_expr;
     binary_expr->first = binary_expr->expr.binary.lhs->first;
     binary_expr->last = binary_expr->expr.binary.rhs->last;
-    return parse_expr_prec(p, binary_expr, prec_binary(curr_op));
+
+    if (is_legal_binary_op(p, parser_peek(p)->type)
+        && prec_binary(parser_peek(p)->type) < max_prec) {
+        return parse_binary(p, binary_expr, max_prec);
+    }
+    return binary_expr;
 }
 
 ast_expr_t* parse_postunary(parser_t* p, ast_expr_t* lhs) {

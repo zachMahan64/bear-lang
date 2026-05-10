@@ -986,6 +986,7 @@ OptId<DefId> Context::look_up_scoped_namespace_bypassing_visibility(ScopeId scop
 
 OptId<DefId> Context::look_up_member_var_guarding_hid(const Def& struct_def, SymbolId symbol_id,
                                                       Span id_span, ScopeId local_scope) {
+    assert(struct_def.holds<DefStruct>());
     auto maybe_def
         = Scope::look_up_local_variable(*this, struct_def.as<DefStruct>().scope, symbol_id);
     if (maybe_def.empty()) {

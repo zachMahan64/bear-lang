@@ -1,0 +1,49 @@
+// tests/hir/74.br 
+
+union Foo {
+    i32 fuzz;
+}
+
+compt Foo a = Foo{.fuzz = 12};
+
+compt Foo b = a;
+
+var _0 = a;
+
+var _1 = b;
+
+var _2 = @static_assert a.fuzz == b.fuzz;
+
+var _3 = @static_assert a.fuzz != b.fuzz; // oops
+
+var _4 = @static_assert a.oops == 12; // oops 
+
+var _5 = @static_assert b.fuzz == 12;
+
+compt i32 c = b.fuzz;
+
+compt fn square(var n) => n * n
+
+var _6 = @static_assert c * 4 == a.fuzz * square(2);
+
+union Bar {
+    u64 a;
+    u8 b;
+    i16 c;
+}
+
+compt Bar d = Bar{.a = 12};
+
+compt u8 e = d.b; // oops, holds a not b
+
+mod boo {
+    mod boo {
+        mod boo {
+            use Bar; // export Bar here
+        }
+    }
+}
+
+compt boo..boo..boo..Bar f = d;
+
+var _7 = @static_assert f.a == d.a && f.a == 12;

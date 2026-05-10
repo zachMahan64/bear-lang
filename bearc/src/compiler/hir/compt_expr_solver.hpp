@@ -107,8 +107,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             return exec.as<ExecFnPtr>().fn_ptr_tid;
         }
         if (exec.holds<ExecExprUnionInit>()) {
-            return context.emplace_type(TypeUnion{.def_id = exec.as<ExecExprUnionInit>().union_def},
-                                        Span::generated(), false);
+            return context.emplace_type(
+                TypeUnion{.def_id = exec.as<ExecExprUnionInit>().union_def_id}, Span::generated(),
+                false);
         }
 
         // report issue
@@ -863,13 +864,27 @@ template <IsDefVisitor V> class ComptExprSolver {
             return {};
         }
         DefId matched_did = maybe_match.as_id();
-        if (!context.def(def_visitor.visit_as_transparent(matched_did))) {
+        if (!context.def(def_visitor.visit_as_transparent(matched_did))
+                 .template holds<DefVariable>()) {
             return {}; // poisoned
         }
-        TypeId needed_tid = context.def(matched_did).as<DefVariable>().type_id;
         // TODO finish resolving
-
-        return {};
+        if (member_init->expr.struct_member_init.assign_op->type == TOK_ASSIGN_MOVE) {
+            context.emplace_diagnostic(
+                Span{context, fid, member_init->expr.struct_member_init.assign_op},
+                diag_code::compt_values_cannot_be_moved, diag_type::error);
+        }
+        TypeId needed_tid = context.def(matched_did).as<DefVariable>().type_id;
+        OptId<ExecId> maybe_val
+            = solve_expr(fid, scope, member_init->expr.struct_member_init.value, needed_tid);
+        if (maybe_val.empty()) {
+            return {}; // poisoned
+        }
+        return context.emplace_compt_exec(
+            ExecExprUnionInit{.member_init = maybe_val.as_id(),
+                              .union_def_id = union_did,
+                              .active_member_idx = context.def(matched_did).member_idx},
+            Span{context, fid, expr});
     }
     [[nodiscard]] OptId<ExecId> handle_struct_init(FileId fid, ScopeId scope, DefId struct_did,
                                                    const ast_expr_t* expr, TypeId into_tid) {
@@ -1899,6 +1914,71 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
             }
 
+            const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
+            Span rhs_span{context, fid, rhs_expr};
+
+            if (lhs_exec.holds<ExecExprUnionInit>()) {
+                {
+                    const Def& union_def = context.def(def_visitor.visit_as_transparent(
+                        lhs_exec.as<ExecExprUnionInit>().union_def_id));
+                    assert(union_def.holds<DefUnion>());
+                }
+                token_ptr_slice_t id_slice = rhs_expr->expr.id.slice;
+                if (id_slice.len > 1) {
+                    context.emplace_diagnostic(
+                        rhs_span, diag_code::scoped_identifer_not_allowed_here, diag_type::error);
+                }
+
+                auto maybe_mem_var = context.look_up_variable(
+                    context.def(lhs_exec.as<ExecExprUnionInit>().union_def_id).as<DefUnion>().scope,
+                    context.symbol_id(id_slice.start[0]));
+
+                if (maybe_mem_var.empty()) {
+                    const Def& union_def
+                        = context.def(lhs_exec.as<ExecExprUnionInit>().union_def_id);
+                    Span spn{context, fid, id_slice};
+                    auto d0 = context.emplace_diagnostic_with_message_value(
+                        spn, diag_code::does_not_name_a_field_of_union, diag_type::error,
+                        DiagnosticSymbolAfterMessage{.sid = union_def.name});
+                    auto d1 = context.emplace_diagnostic_with_message_value(
+                        union_def.span, diag_code::declared_here, diag_type::note,
+                        DiagnosticSymbolBeforeMessage{.sid = union_def.name});
+                    context.link_diagnostic(d0, d1);
+                    return {};
+                }
+
+                const Def& union_def = context.def(lhs_exec.as<ExecExprUnionInit>().union_def_id);
+                const Def& var_def = context.def(maybe_mem_var.as_id());
+                if (var_def.member_idx != lhs_exec.as<ExecExprUnionInit>().active_member_idx) {
+                    const Def& curr_member
+                        = context.def(union_def.as<DefUnion>().ordered_members.get(
+                            lhs_exec.as<ExecExprUnionInit>().active_member_idx));
+                    auto d0 = context.emplace_diagnostic_with_message_value(
+                        Span{context, fid, id_slice}, diag_code::compt_union_does_not_hold_field,
+                        diag_type::error, DiagnosticSymbolAfterMessage{var_def.name});
+                    auto d1 = context.emplace_diagnostic_with_message_value(
+                        Span{context, fid, id_slice}, diag_code::compt_union_holds_field,
+                        diag_type::note, DiagnosticSymbolAfterMessage{curr_member.name});
+                    auto d2 = context.emplace_diagnostic_with_message_value(
+                        union_def.span, diag_code::declared_here, diag_type::note,
+                        DiagnosticSymbolBeforeMessage{.sid = union_def.name});
+                    context.link_diagnostic(d0, d1);
+                    context.link_diagnostic(d0, d2);
+                    return {};
+                }
+
+                const Exec& mem_exec = context.exec(lhs_exec.as<ExecExprUnionInit>().member_init);
+
+                if (!exec_is_compt_viable(mem_exec)) {
+
+                    context.emplace_diagnostic(Span{context, fid, expr},
+                                               diag_code::cannot_resolve_at_compt,
+                                               diag_type::error);
+                    return std::nullopt;
+                }
+                return context.emplace_exec(mem_exec.value, Span{context, fid, expr}, true);
+            }
+
             if (!lhs_exec.holds<ExecExprStructInit>()) {
                 auto d0 = context.emplace_diagnostic(Span{context, fid, expr->expr.binary.op},
                                                      diag_code::cannot_access_a_member_value,
@@ -1909,10 +1989,8 @@ template <IsDefVisitor V> class ComptExprSolver {
                 context.link_diagnostic(d0, d1);
                 return std::nullopt;
             }
-            const ast_expr_t* rhs_expr = expr->expr.binary.rhs;
             const Def& struct_def = context.def(lhs_exec.as<ExecExprStructInit>().struct_def_id);
 
-            Span rhs_span{context, fid, rhs_expr};
             if (rhs_expr->type == AST_EXPR_ID) {
                 assert(struct_def.holds<DefStruct>());
                 token_ptr_slice_t id_slice = rhs_expr->expr.id.slice;
@@ -2007,7 +2085,7 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
     [[nodiscard]] bool exec_is_compt_viable(const Exec& exec) {
         return exec.holds<ExecConst>() || exec.holds<ExecExprStructInit>()
-               || exec.holds<ExecExprListLiteral>();
+               || exec.holds<ExecExprListLiteral>() || exec.holds<ExecExprUnionInit>();
     }
     [[nodiscard]] OptId<ExecId> solve_fn_call(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                               OptId<ExecId> maybe_self_val = std::nullopt) {

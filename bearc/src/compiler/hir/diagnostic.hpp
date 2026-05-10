@@ -143,6 +143,8 @@ enum class diag_code : uint8_t {
     union_initializers_must_only_set_one_field,
     too_few_inits_for_union,
     does_not_name_a_field_of_union,
+    compt_union_does_not_hold_field,
+    compt_union_holds_field,
 
     count, // this must be last,
 

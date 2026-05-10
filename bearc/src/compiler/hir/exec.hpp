@@ -274,7 +274,7 @@ struct ExecExprDeref {
 
 struct ExecExprUnionInit {
     ExecId member_init;
-    DefId union_def;
+    DefId union_def_id;
     HirSize active_member_idx;
 };
 

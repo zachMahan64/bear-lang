@@ -1,0 +1,2 @@
+// tests/parser/59.br
+var a = f.a == d.a && f.a == 12 && f.a.a.a.a.a.a.a.a.a && 2 == 2 || 2 == 2;
