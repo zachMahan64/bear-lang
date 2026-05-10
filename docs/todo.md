@@ -22,6 +22,7 @@ main quest
         - [ ] make sure it's branches are exhaustive
             - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
             - [ ] if feasible, add range checking 
+        - [ ] variant decomp
     - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 
