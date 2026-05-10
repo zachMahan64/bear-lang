@@ -105,6 +105,7 @@ struct DefGenericVariant {
 
 struct DefVariantField {
     /// pointing to DefVariables which containg type and name info
+    ScopeId scope;
     IdSlice<DefId> members;
 };
 

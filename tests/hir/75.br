@@ -1,0 +1,13 @@
+// tests/hie/75.br
+
+variant Foo {
+    Bar(i32 a),
+    Ben(i32 b),
+    Bork,
+}
+
+compt Foo a = Foo..Bork;
+
+compt Foo b = Foo..Bar(12);
+
+var _0 = Foo..Bork(42);

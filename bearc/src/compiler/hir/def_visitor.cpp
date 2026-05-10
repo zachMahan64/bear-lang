@@ -201,14 +201,13 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         }
 
         ScopeId structs_scope = context.scope_for_top_level_def(did);
-        Def& def = context.def(did);
         context.register_generated_deftype(
             structs_scope, context.symbol_id<"Self">(),
             // TODO properly handle generic args here
             context.emplace_type(
                 TypeStruct{.def_id = did, .gen_args_slice = {}, .maybe_canon_gen_args_id = {}},
                 Span::generated(), false),
-            did, Span{context, def.span.file_id, strct.name});
+            did, Span{context, context.def(did).span.file_id, strct.name});
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         IdSlice<DefId> ordered_defs = context.ordered_defs_for(did);
@@ -225,7 +224,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             if (contract->type != AST_EXPR_ID) {
                 continue;
             }
-            Span ctr_span{context, def.span.file_id, contract->expr.id.slice};
+            Span ctr_span{context, context.def(did).span.file_id, contract->expr.id.slice};
             auto maybe_contract_did = context.look_up_scoped_type(
                 scope, context.symbol_slice(contract->expr.id.slice), ctr_span);
             if (maybe_contract_did.empty()) {
@@ -243,8 +242,8 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                     ctr_span, diag_code::invalid_contract, diag_type::error,
                     DiagnosticSubCode{.sub_code = diag_code::not_a_contract});
                 dlinker.link(d);
-                auto d1 = context.emplace_diagnostic(def.span, diag_code::declared_here,
-                                                     diag_type::note);
+                auto d1 = context.emplace_diagnostic(context.def(did).span,
+                                                     diag_code::declared_here, diag_type::note);
                 dlinker.link(d1);
                 continue;
             }
@@ -272,7 +271,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         auto contracts = context.freeze_id_vec(contract_dids);
 
-        def.set_value(DefStruct{
+        context.def(did).set_value(DefStruct{
             .scope = structs_scope,
             .ordered_members = ordered_defs,
             /* .contracts = */
@@ -524,8 +523,33 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
 
         break;
     }
-    case AST_STMT_VARIANT_DEF:
-    case AST_STMT_VARIANT_FIELD_DECL:
+    case AST_STMT_VARIANT_DEF: {
+        // TODO properly handle generics
+        if (context.def(did).generic) {
+            goto cleanup;
+        }
+        auto members = context.ordered_defs_for(did);
+        for (auto didx = members.begin(); didx != members.end(); didx++) {
+            visit_as_dependent(context.def_id(didx));
+        }
+        context.def(did).set_value(DefVariant{
+            .scope = context.scope_for_top_level_def(did),
+            .ordered_members = members,
+            .orginal = {},
+            .maybe_generic_args = {} // not generic
+        });
+
+        break;
+    }
+    case AST_STMT_VARIANT_FIELD_DECL: {
+        auto members = context.ordered_defs_for(did);
+        for (auto didx = members.begin(); didx != members.end(); didx++) {
+            visit_as_dependent(context.def_id(didx));
+        }
+        context.def(did).set_value(
+            DefVariantField{.scope = context.scope_for_top_level_def(did), .members = members});
+        break;
+    }
 
         // the rest are not possible (already handled)/shouldn't be resolved at top level
     case AST_STMT_FILE:
