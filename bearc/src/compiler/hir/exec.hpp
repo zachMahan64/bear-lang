@@ -276,6 +276,13 @@ struct ExecExprUnionInit {
     ExecId member_init;
     DefId union_def_id;
     HirSize active_member_idx;
+    bool move;
+};
+
+struct ExecExprVariantInit {
+    ExecId payload_init;
+    DefId variant_def_id;
+    HirSize active_member_idx;
 };
 
 struct ExecExprStructInit {
@@ -324,12 +331,12 @@ using ExecValue = std::variant<
     ExecBlock, ExecExprStmt, ExecBreakStmt, ExecIfStmt, ExecLoopStmt, ExecReturnStmt, ExecYieldStmt,
 
     // expressions
-    ExecExprUnionInit, ExecExprStructInit, ExecExprStructMemberInit, ExecExprIdentifier,
-    ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove, ExecExprAssignEqual, ExecExprIs,
-    ExecExprMemberAccess, ExecExprPointerMemberAccess, ExecExprBinary, ExecExprCast,
-    ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript, ExecExprFnCall, ExecExprBorrow,
-    ExecExprDeref, ExecExprClosure, ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch,
-    ExecFnPtr>;
+    ExecExprUnionInit, ExecExprVariantInit, ExecExprStructInit, ExecExprStructMemberInit,
+    ExecExprIdentifier, ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove,
+    ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
+    ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
+    ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprClosure, ExecExprVariantDecomp,
+    ExecExprMatch, ExecExprMatchBranch, ExecFnPtr>;
 
 /// main exec structure, corresponds to an hir::ExecId
 struct Exec : NodeWithVariantValue<Exec> {

@@ -883,7 +883,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return context.emplace_compt_exec(
             ExecExprUnionInit{.member_init = maybe_val.as_id(),
                               .union_def_id = union_did,
-                              .active_member_idx = context.def(matched_did).member_idx},
+                              .active_member_idx = context.def(matched_did).member_idx,
+                              .move = false},
             Span{context, fid, expr});
     }
     [[nodiscard]] OptId<ExecId> handle_struct_init(FileId fid, ScopeId scope, DefId struct_did,
@@ -2084,8 +2085,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         return context.emplace_exec(ExecConst{defined}, span, true);
     }
     [[nodiscard]] bool exec_is_compt_viable(const Exec& exec) {
-        return exec.holds<ExecConst>() || exec.holds<ExecExprStructInit>()
-               || exec.holds<ExecExprListLiteral>() || exec.holds<ExecExprUnionInit>();
+        return exec.holds_any_of<ExecConst, ExecExprStructInit, ExecExprListLiteral,
+                                 ExecExprUnionInit, ExecExprVariantInit>();
     }
     [[nodiscard]] OptId<ExecId> solve_fn_call(FileId fid, ScopeId scope, const ast_expr_t* expr,
                                               OptId<ExecId> maybe_self_val = std::nullopt) {
