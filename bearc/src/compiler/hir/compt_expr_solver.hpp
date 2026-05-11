@@ -1954,17 +1954,16 @@ template <IsDefVisitor V> class ComptExprSolver {
                     const Def& curr_member
                         = context.def(union_def.as<DefUnion>().ordered_members.get(
                             lhs_exec.as<ExecExprUnionInit>().active_member_idx));
-                    auto d0 = context.emplace_diagnostic_with_message_value(
+                    DiagLinker dlinker{context};
+                    dlinker.link(context.emplace_diagnostic_with_message_value(
                         Span{context, fid, id_slice}, diag_code::compt_union_does_not_hold_field,
-                        diag_type::error, DiagnosticSymbolAfterMessage{var_def.name});
-                    auto d1 = context.emplace_diagnostic_with_message_value(
+                        diag_type::error, DiagnosticSymbolAfterMessage{var_def.name}));
+                    dlinker.link(context.emplace_diagnostic_with_message_value(
                         Span{context, fid, id_slice}, diag_code::compt_union_holds_field,
-                        diag_type::note, DiagnosticSymbolAfterMessage{curr_member.name});
-                    auto d2 = context.emplace_diagnostic_with_message_value(
+                        diag_type::note, DiagnosticSymbolAfterMessage{curr_member.name}));
+                    dlinker.link(context.emplace_diagnostic_with_message_value(
                         union_def.span, diag_code::declared_here, diag_type::note,
-                        DiagnosticSymbolBeforeMessage{.sid = union_def.name});
-                    context.link_diagnostic(d0, d1);
-                    context.link_diagnostic(d0, d2);
+                        DiagnosticSymbolBeforeMessage{.sid = union_def.name}));
                     return {};
                 }
 
