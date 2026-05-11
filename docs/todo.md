@@ -16,6 +16,7 @@ main quest
     - [x] union member accesses (checked)
     - [ ] variant def resol
         - [ ] make variant fields implicitly `hid` Structs -> will require some (simple) means to force hid in the ast_visitor
+            - [ ] make sure there's a special-case diagnostic for this too
     - [ ] variant inits 
         - [ ] (see above bullet) find the variant field by doing `context.look_up_scoped_type_bypassing_hid` 
         - [ ] special-case for plain `Variant..VariantField` (check that it indeed has no members)
