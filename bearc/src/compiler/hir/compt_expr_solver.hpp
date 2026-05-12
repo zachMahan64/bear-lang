@@ -820,8 +820,8 @@ template <IsDefVisitor V> class ComptExprSolver {
   private:
     [[nodiscard]] OptId<ExecId> handle_union_init(FileId fid, ScopeId scope, DefId union_did,
                                                   const ast_expr_t* expr) {
-        assert(context.def(union_did).holds<DefUnion>());
-        const auto member_dids = context.def(union_did).as<DefUnion>().ordered_members;
+        assert(context.def(union_did).template holds<DefUnion>());
+        const auto member_dids = context.def(union_did).template as<DefUnion>().ordered_members;
         auto sid_slice = context.symbol_slice(expr->expr.struct_init.id);
         Span id_span{fid, context.ast(fid).buffer(), expr->expr.struct_init.id.start[0],
                      expr->expr.struct_init.id.start[expr->expr.id.slice.len - 1]};
@@ -873,7 +873,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                 Span{context, fid, member_init->expr.struct_member_init.assign_op},
                 diag_code::compt_values_cannot_be_moved, diag_type::error);
         }
-        TypeId needed_tid = context.def(matched_did).as<DefVariable>().type_id;
+        TypeId needed_tid = context.def(matched_did).template as<DefVariable>().type_id;
         OptId<ExecId> maybe_val
             = solve_expr(fid, scope, member_init->expr.struct_member_init.value, needed_tid);
         if (maybe_val.empty()) {
@@ -1931,7 +1931,9 @@ template <IsDefVisitor V> class ComptExprSolver {
                 }
 
                 auto maybe_mem_var = context.look_up_variable(
-                    context.def(lhs_exec.as<ExecExprUnionInit>().union_def_id).as<DefUnion>().scope,
+                    context.def(lhs_exec.as<ExecExprUnionInit>().union_def_id)
+                        .template as<DefUnion>()
+                        .scope,
                     context.symbol_id(id_slice.start[0]));
 
                 if (maybe_mem_var.empty()) {
