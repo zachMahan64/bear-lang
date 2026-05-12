@@ -1322,23 +1322,12 @@ bool Context::compatible_contract_params(IdSlice<TypeId> s1, IdSlice<TypeId> s2,
         return true;
     }
 
-    const auto t1 = type_id(s1.get(0));
-    const auto t2 = type_id(s2.get(0));
-
-    // if first arg isn't the same and neither arg is TypeVar (this will be the case for contract
-    // methods, `mt`), then that's not equivalent
-    if (!equivalent_type(t1, t2)) {
-        return inferable_as(t1, t2, struct_id);
-    }
-
-    if (s1.len() == 1) {
-        return true;
-    }
-
-    for (HirSize i = 1; i < s1.len(); i++) {
+    for (HirSize i = 0; i < s1.len(); i++) {
         TypeId t1 = type_id(s1.get(i));
         TypeId t2 = type_id(s2.get(i));
-        if (!equivalent_type(t1, t2)) {
+        // the inferable_as use lets structs supply themselves as `Self` for contracts, since
+        // contract forward a Self as a deftype to var
+        if (!inferable_as_struct(t1, t2, struct_id)) {
             return false;
         }
     }
@@ -1429,7 +1418,7 @@ bool Context::func_sigs_match_for_contract(DefId did1, DefId did2) {
     }
 
     if (return_tid1.has_value() && return_tid2.has_value()
-        && !inferable_as(return_tid1.as_id(), return_tid2.as_id(), struct_did.as_id())) {
+        && !inferable_as_struct(return_tid1.as_id(), return_tid2.as_id(), struct_did.as_id())) {
         return false;
     }
 
@@ -1569,7 +1558,7 @@ bool Context::type_has_contract(TypeId tid, DefId contract_did) {
     return struct_has_contract(ty.as<TypeStruct>().def_id, contract_did);
 }
 
-bool Context::inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const {
+bool Context::inferable_as_struct(TypeId tid1, TypeId tid2, DefId struct_did) const {
     const Type& t1 = type(tid1);
     const Type& t2 = type(tid2);
     if (t1.mut != t2.mut) {

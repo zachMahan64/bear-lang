@@ -23,6 +23,7 @@ struct TopLevelInfo {
     bool is_orderable_var = false;
     bool is_generic = false;
     bool do_not_insert_in_scope = false;
+    bool force_hid = false;
 };
 /**
  * class to traverse the entirety of the namespaces of a file, filling in top level declarations

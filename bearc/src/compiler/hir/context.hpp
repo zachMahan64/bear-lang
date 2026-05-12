@@ -349,7 +349,7 @@ class Context {
 
     /// checks if a type can be inferred as another
     /// - ordering of the arguments doesn't matter
-    [[nodiscard]] bool inferable_as(TypeId tid1, TypeId tid2, DefId struct_did) const;
+    [[nodiscard]] bool inferable_as_struct(TypeId tid1, TypeId tid2, DefId struct_did) const;
 
     /// checks if two functions signatures match
     /// returns true on match, else false (also returns false if either DefId does not correspond to

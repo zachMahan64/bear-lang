@@ -23,7 +23,6 @@
 #include "compiler/token.h"
 #include "def_visitor.hpp"
 #include <cassert>
-#include <cstdint>
 #include <optional>
 #include <utility>
 namespace hir {
@@ -1701,7 +1700,8 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
         auto did = maybe_did.as_id();
         const Def& def = context.def(did);
-        if (def.holds<DefVariable>() && def.as<DefVariable>().compt_value.has_value()) {
+        if (def.holds<DefVariable>() && def.as<DefVariable>().compt_value.has_value()
+            && def.compt) {
 
             if (!def.compt) {
                 auto d0 = context.emplace_diagnostic(

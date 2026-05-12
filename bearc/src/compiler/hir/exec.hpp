@@ -285,6 +285,11 @@ struct ExecExprVariantInit {
     HirSize active_member_idx;
 };
 
+struct ExecVariantFieldInit {
+    IdSlice<ExecId> member_inits;
+    DefId variant_field_def_id;
+};
+
 struct ExecExprStructInit {
     IdSlice<ExecId> member_inits;
     DefId struct_def_id;
