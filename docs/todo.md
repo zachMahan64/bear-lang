@@ -15,8 +15,9 @@ main quest
     - [x] union inits
     - [x] union member accesses (checked)
     - [ ] variant def resol
-        - [ ] make variant fields implicitly `hid` Structs -> will require some (simple) means to force hid in the ast_visitor
-            - [ ] make sure there's a special-case diagnostic for this too
+        - [x] make variant fields implicitly `hid` Structs -> will require some (simple) means to force hid in the ast_visitor
+        - [ ] make sure there's a special-case diagnostic for running into this case ^ (on hid DefVariantField)
+    - [ ] fix id tracing in `handle_struct_or_contract`
     - [ ] variant inits 
         - [ ] (see above bullet) find the variant field by doing `context.look_up_scoped_type_bypassing_hid` 
         - [ ] special-case for plain `Variant..VariantField` (check that it indeed has no members)
