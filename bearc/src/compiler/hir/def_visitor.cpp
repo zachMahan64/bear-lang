@@ -511,7 +511,6 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         context.def(did).set_value(DefContract{.funcs = ordered_fns, .scope = contract_scope});
         break;
     }
-    // TODO, need to lower these
     case AST_STMT_UNION_DEF: {
         // visit children
         auto members = context.ordered_defs_for(did);

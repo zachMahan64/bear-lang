@@ -867,7 +867,6 @@ template <IsDefVisitor V> class ComptExprSolver {
                  .template holds<DefVariable>()) {
             return {}; // poisoned
         }
-        // TODO finish resolving
         if (member_init->expr.struct_member_init.assign_op->type == TOK_ASSIGN_MOVE) {
             context.emplace_diagnostic(
                 Span{context, fid, member_init->expr.struct_member_init.assign_op},
