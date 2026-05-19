@@ -147,6 +147,7 @@ enum class diag_code : uint8_t {
     compt_union_holds_field,
     raw_use_of_variant_field,
     variant_fields_cannot_be_used_outside_of_a_variant,
+    invalid_variant_init,
 
     count, // this must be last,
 
@@ -237,6 +238,12 @@ struct DiagnosticContractFnExpectedRetTyButGot {
     TypeId got_return_tid;
 };
 
+struct DiagnosticVariantInitExpectedButGotNumArgs {
+    SymbolId variant_field_name;
+    SymbolId expected_sid;
+    SymbolId got_sid;
+};
+
 using DiagnosticMessageValue = std::variant<
     DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage, DiagnosticSymbolAfterMessage,
     DiagnosticSymbolAfterMessageNoQuotes, DiagnosticIdentifierBeforeMessage,
@@ -245,7 +252,7 @@ using DiagnosticMessageValue = std::variant<
     DiagnosticIdentifierBeforeMessageAndTypeAfter, DiagnosticSymButGotSym,
     DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds, DiagnosticStructMemberSymBeforeMsg,
     DiagnosticStructDoesNotDefineBlankForContract, DiagnosticContractFnExpectedButGotNumParams,
-    DiagnosticContractFnExpectedRetTyButGot>;
+    DiagnosticContractFnExpectedRetTyButGot, DiagnosticVariantInitExpectedButGotNumArgs>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;

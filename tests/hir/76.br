@@ -1,0 +1,15 @@
+// tests/hir/76.br
+
+struct Boo {
+
+}
+
+variant Foo {
+    Bar(Boo b),
+    Booey(i32 b),
+    Buh
+}
+
+compt Foo _0 = Foo..Bar(Boo{});
+
+compt Foo _1 = Fo..Buh;

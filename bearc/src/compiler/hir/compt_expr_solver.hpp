@@ -1731,6 +1731,14 @@ template <IsDefVisitor V> class ComptExprSolver {
                                                  Span::generated(), false)},
                 expr_span);
         }
+        // TODO this doesn't consider generics
+        if (def.holds<DefVariantField>()) {
+
+            const DefVariantField var_field = def.as<DefVariantField>();
+
+            if (var_field.members.len() != 0) {
+            }
+        }
         auto d0 = context.emplace_diagnostic(
             expr_span, diag_code::cannot_resolve_at_compt, diag_type::error,
             DiagnosticSubCode{.sub_code = diag_code::not_a_compile_time_constant});

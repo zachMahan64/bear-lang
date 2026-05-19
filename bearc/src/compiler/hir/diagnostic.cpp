@@ -816,6 +816,23 @@ void Diagnostic::build_complex_message(Context& ctx, std::string& str) const {
             str += plural_helper(d.got_sid);
             str += ansi_bold_reset();
         },
+        [&](DiagnosticVariantInitExpectedButGotNumArgs d) {
+            str += "variant initializer for ";
+            sid_helper(d.variant_field_name);
+            str += " expected ";
+            str += ansi_bold_green();
+            str += ctx.symbol_id_to_cstr(d.expected_sid);
+            str += ansi_bold_reset();
+            str += " argument";
+            str += plural_helper(d.expected_sid);
+            str += " but got ";
+            str += ansi_bold_red();
+            str += ctx.symbol_id_to_cstr(d.got_sid);
+            str += ansi_bold_reset();
+            str += " argument";
+            str += plural_helper(d.got_sid);
+            str += ansi_bold_reset();
+        },
         [&](DiagnosticContractFnExpectedRetTyButGot d) {
             str += "contract function ";
             sid_helper(d.contract_fn_name);
