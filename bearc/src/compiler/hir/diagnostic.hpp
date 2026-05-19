@@ -145,6 +145,8 @@ enum class diag_code : uint8_t {
     does_not_name_a_field_of_union,
     compt_union_does_not_hold_field,
     compt_union_holds_field,
+    raw_use_of_variant_field,
+    variant_fields_cannot_be_used_outside_of_a_variant,
 
     count, // this must be last,
 

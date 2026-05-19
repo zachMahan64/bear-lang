@@ -11,3 +11,18 @@ compt Foo a = Foo..Bork;
 compt Foo b = Foo..Bar(12);
 
 var _0 = Foo..Bork(42);
+
+compt Foo..Bork bork = Foo..Bork; // oops
+
+fn borky() -> Foo..Bork { // oops
+
+}
+
+use Foo..Bork;
+
+compt Bork borkador = Bork; // oops 
+
+fn borkkk() -> Bork { // oops
+    return Foo..Bork;
+}
+

@@ -117,7 +117,7 @@ template <hir::IsId T> class IdIdx {
   public:
     using id_tag = Id<T>;
     using self_type = IdIdx<T>;
-    IdIdx() : value(HIR_ID_NONE) {}
+    constexpr IdIdx() : value(HIR_ID_NONE) {}
     explicit IdIdx(HirId value) : value(value) {};
     constexpr HirId val() const noexcept { return value; }
     constexpr self_type operator++() { return IdIdx{++value}; }
@@ -164,17 +164,29 @@ template <hir::IsId T> class IdSlice {
     HirSize len_;
 
   public:
-    IdSlice() : first_(IdIdx<T>{}), len_{0} {}
-    IdSlice(IdIdx<T> first, HirSize len) : first_(first), len_(len) {}
-    constexpr IdIdx<T> first() const noexcept { return first_; }
-    constexpr IdIdx<T> last_elem() const noexcept { return IdIdx<T>{first_.val() + len_ - 1}; }
-    constexpr IdIdx<T> get(HirSize i) const noexcept { return IdIdx<T>{first_.val() + i}; }
-    constexpr HirSize len() const noexcept { return len_; }
-    constexpr bool is_empty() const noexcept { return len_ == 0; }
+    constexpr IdSlice() : first_(IdIdx<T>{}), len_{0} {}
+    constexpr IdSlice(IdIdx<T> first, HirSize len) : first_(first), len_(len) {}
+    [[nodiscard]] constexpr IdIdx<T> first() const noexcept { return first_; }
+    [[nodiscard]] constexpr IdIdx<T> last_elem() const noexcept {
+        return IdIdx<T>{first_.val() + len_ - 1};
+    }
+    [[nodiscard]] constexpr IdIdx<T> get(HirSize i) const noexcept {
+        return IdIdx<T>{first_.val() + i};
+    }
+    [[nodiscard]] constexpr HirSize len() const noexcept { return len_; }
+    [[nodiscard]] constexpr bool is_empty() const noexcept { return len_ == 0; }
 
-    constexpr IdIdx<T> begin() const noexcept { return first_; }
+    [[nodiscard]] constexpr IdSlice sub_slice_n(HirSize end_index) const noexcept {
+        return IdSlice{first_, end_index};
+    }
+    [[nodiscard]] constexpr IdSlice sub_slice(HirSize begin_index,
+                                              HirSize end_index) const noexcept {
+        return IdSlice{first_ + begin_index, end_index};
+    }
 
-    constexpr IdIdx<T> end() const noexcept { return IdIdx<T>{first_.val() + len_}; }
+    [[nodiscard]] constexpr IdIdx<T> begin() const noexcept { return first_; }
+
+    [[nodiscard]] constexpr IdIdx<T> end() const noexcept { return IdIdx<T>{first_.val() + len_}; }
 };
 
 using OrderedDefSliceId = Id<IdSlice<DefId>>;

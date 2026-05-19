@@ -1369,6 +1369,10 @@ bool Context::is_variant(DefId did) const {
     return def_ast_node(did)->type == AST_STMT_VARIANT_DEF;
 }
 
+bool Context::is_variant_field(DefId did) const {
+    return def_ast_node(did)->type == AST_STMT_VARIANT_FIELD_DECL;
+}
+
 bool Context::func_sigs_match_for_contract(DefId did1, DefId did2) {
     const Def& def1 = def(did1);
     const Def& def2 = def(did2);

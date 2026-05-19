@@ -284,6 +284,10 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "compile-time union does not hold field";
     case diag_code::compt_union_holds_field:
         return "compile-time union holds field";
+    case diag_code::raw_use_of_variant_field:
+        return "raw use of variant field";
+    case diag_code::variant_fields_cannot_be_used_outside_of_a_variant:
+        return "variant fields cannot be used outside of their parent variant";
     }
 
     std::unreachable();

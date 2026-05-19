@@ -59,8 +59,10 @@ template <IsDefVisitor V> class TypeResolver {
 
         Span id_span{fid, context.ast(fid).buffer(), type->type.base.id.start[0],
                      type->type.base.id.start[type->type.base.id.len - 1]};
-        OptId<DefId> maybe_type
-            = context.look_up_scoped_type(scope, context.symbol_slice(type->type.base.id), id_span);
+
+        const auto sid_slice = context.symbol_slice(type->type.base.id);
+
+        OptId<DefId> maybe_type = context.look_up_scoped_type(scope, sid_slice, id_span);
 
         Span span{context, fid, type->first, type->last};
 
@@ -98,11 +100,29 @@ template <IsDefVisitor V> class TypeResolver {
             if (context.is_union(did)) {
                 return context.emplace_type(TypeUnion{.def_id = did}, span, mut);
             }
+
+            // special case diagnostic for bare variant fields
+            if (context.is_variant_field(did)) {
+                DiagLinker dl{context};
+                dl.link(context.emplace_diagnostic_with_message_value(
+                    span, diag_code::raw_use_of_variant_field, diag_type::error,
+                    DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice}));
+                dl.link(context.emplace_diagnostic(
+                    span, diag_code::variant_fields_cannot_be_used_outside_of_a_variant,
+                    diag_type::note, DiagnosticInfoNoPreview{}));
+                if (sid_slice.len() > 1) {
+                    const auto ssl = sid_slice.sub_slice_n(sid_slice.len() - 1);
+                    dl.link(context.emplace_diagnostic_with_message_value(
+                        span, diag_code::replace_with, diag_type::help,
+                        DiagnosticIdentifierAfterMessage{.sid_slice = ssl}));
+                }
+                return {};
+            }
         }
 
         context.emplace_diagnostic(span, diag_code::type_not_defined, diag_type::error);
 
-        return OptId<TypeId>{};
+        return {};
     }
 
     OptId<TypeId> type_ptr_ref(FileId fid, ScopeId scope, const ast_type_t* type) {

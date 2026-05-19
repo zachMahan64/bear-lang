@@ -273,8 +273,6 @@ OptId<DefId> FileAstVisitor::register_top_level_stmt(ScopeId scope, ast_stmt_t* 
         return OptId<DefId>{};
     }
 
-    pub = (info.force_hid) ? false : pub; // force hid, if needed
-
     // no issues, so register definition
     DefId def = context.register_top_level_def(
         name, pub, compt, statik, is_generic,
@@ -382,7 +380,6 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
     bool is_orderable_field = false;
     bool is_generic = false;
     bool do_not_insert_in_scope = false;
-    bool force_hid = false;
     switch (stmt->type) {
     // internal scopes are deffered -----------------------------------
     case AST_STMT_STRUCT_DEF: {
@@ -418,7 +415,6 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
         name_tkn = stmt->stmt.variant_field_decl.name;
         kind = scope_kind::type;
         is_orderable_field = true;
-        force_hid = true;
         break;
     }
     case AST_STMT_VAR_DECL: {
@@ -497,8 +493,7 @@ TopLevelInfo FileAstVisitor::top_level_info_for(const ast_stmt_t* stmt) {
                         .kind = kind,
                         .is_orderable_var = is_orderable_field,
                         .is_generic = is_generic,
-                        .do_not_insert_in_scope = do_not_insert_in_scope,
-                        .force_hid = force_hid};
+                        .do_not_insert_in_scope = do_not_insert_in_scope};
 }
 
 std::optional<const token_t*> FileAstVisitor::name_of_ast_decl(const ast_stmt_t* stmt) {

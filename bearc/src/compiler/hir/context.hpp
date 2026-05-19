@@ -342,10 +342,12 @@ class Context {
 
     /// checks if a Def is a struct without resolving it
     [[nodiscard]] bool is_struct(DefId did) const;
-    /// checks if a Def is a struct without resolving it
+    /// checks if a Def is a union without resolving it
     [[nodiscard]] bool is_union(DefId did) const;
-    /// checks if a Def is a struct without resolving it
+    /// checks if a Def is a variant without resolving it
     [[nodiscard]] bool is_variant(DefId did) const;
+    /// checks if a Def is a variant field without resolving it
+    [[nodiscard]] bool is_variant_field(DefId did) const;
 
     /// checks if a type can be inferred as another
     /// - ordering of the arguments doesn't matter
