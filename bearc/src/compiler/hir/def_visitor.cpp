@@ -19,6 +19,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <optional>
+#include <stddef.h>
 
 namespace hir {
 
@@ -541,10 +542,30 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
         break;
     }
     case AST_STMT_VARIANT_FIELD_DECL: {
-        auto members = context.ordered_defs_for(did);
-        for (auto didx = members.begin(); didx != members.end(); didx++) {
-            visit_as_dependent(context.def_id(didx));
+        const ast_stmt_variant_field_decl_t vf = stmt->stmt.variant_field_decl;
+        const ast_slice_of_params_t params = vf.params;
+
+        llvm::SmallVector<DefId> param_vec;
+
+        for (size_t i = 0; i != params.len; i++) {
+            const ast_param_t* param = params.start[i];
+            if (!param->valid) {
+                continue;
+            }
+            const auto fid = context.def(did).span.file_id;
+            const auto maybe_tid
+                = TypeResolver{context, *this}.resolve_type(fid, scope, param->type);
+            if (maybe_tid.empty()) {
+                continue;
+            }
+            const auto tid = maybe_tid.as_id();
+            param_vec.push_back(context.register_param(
+                context.symbol_id(param->name), Span{context, fid, param->first, param->last},
+                context.def(did).parent.as_id(), DefVariable{.type_id = tid}));
         }
+
+        IdSlice<DefId> members = context.freeze_id_vec(param_vec);
+
         context.def(did).set_value(
             DefVariantField{.scope = context.scope_for_top_level_def(did), .members = members});
         break;

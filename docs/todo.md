@@ -16,10 +16,10 @@ main quest
     - [x] union member accesses (checked)
     - [x] variant def resol
     - [ ] variant inits 
-        - [ ] special-case for plain `Variant..VariantField` (check that it indeed has no members)
+        - [x] special-case for plain `Variant..VariantField` (check that it indeed has no members)
         - [ ] special-case for variant ctor, `Variant..Field(a, b, c)`
             - this is parsed as a function so just adapt it to a variant init 
-    - [ ] sort out variant decomps at compt (prevent unexpected decomps)
+    - [ ] sort out variant decomps at compt (prevent unexpected decomps), only allow in match at compt
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure it's branches are exhaustive

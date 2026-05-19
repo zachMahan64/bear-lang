@@ -341,7 +341,7 @@ using ExecValue = std::variant<
     ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
     ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
     ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprClosure, ExecExprVariantDecomp,
-    ExecExprMatch, ExecExprMatchBranch, ExecFnPtr>;
+    ExecExprMatch, ExecExprMatchBranch, ExecFnPtr, ExecVariantFieldInit>;
 
 /// main exec structure, corresponds to an hir::ExecId
 struct Exec : NodeWithVariantValue<Exec> {

@@ -110,6 +110,15 @@ template <IsDefVisitor V> class ComptExprSolver {
                 TypeUnion{.def_id = exec.as<ExecExprUnionInit>().union_def_id}, Span::generated(),
                 false);
         }
+        if (exec.holds<ExecExprVariantInit>()) {
+            return context.emplace_type(
+                TypeVariant{
+                    .def_id = exec.as<ExecExprVariantInit>().variant_def_id,
+                    .gen_args_slice = {},
+                    .maybe_canon_gen_args_id = {},
+                },
+                Span::generated(), false);
+        }
 
         // report issue
         context.emplace_diagnostic(exec.span, diag_code::cannot_infer_type_at_compt,
@@ -273,6 +282,50 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         if (into_type.holds<TypeStruct>() || into_type.holds<TypeUnion>()) {
             return solve_struct_or_union(fid, scope, expr, into_tid);
+        }
+
+        // handle MyVariant..Thingy(var a)
+        if (into_type.holds<TypeVariant>() && expr->type == AST_EXPR_FN_CALL) {
+            const auto maybe_eid = solve_fn_call(fid, scope, expr);
+            if (maybe_eid.empty()) {
+                return std::nullopt; // poison
+            }
+            auto maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            if (maybe_tid.empty()) {
+                return std::nullopt; // poison
+            }
+
+            // guard diff type
+            if (!context.equivalent_type(into_tid, maybe_tid.as_id())) {
+                context.emplace_diagnostic_with_message_value(
+                    Span{context, fid, expr}, diag_code::cannot_convert_value_of_type,
+                    diag_type::error,
+                    DiagnosticTypeToType{.from = maybe_tid.as_id(), .to = into_tid});
+                return std::nullopt;
+            }
+            return maybe_eid.as_id();
+        }
+
+        // handle MyThingy..ThingyField
+        if (into_type.holds<TypeVariant>() && expr->type == AST_EXPR_ID) {
+            const auto maybe_eid = handle_any_id(fid, scope, expr->expr.id);
+            if (maybe_eid.empty()) {
+                return std::nullopt; // poison
+            }
+            auto maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            if (maybe_tid.empty()) {
+                return std::nullopt; // poison
+            }
+
+            // guard diff type
+            if (!context.equivalent_type(into_tid, maybe_tid.as_id())) {
+                context.emplace_diagnostic_with_message_value(
+                    Span{context, fid, expr}, diag_code::cannot_convert_value_of_type,
+                    diag_type::error,
+                    DiagnosticTypeToType{.from = maybe_tid.as_id(), .to = into_tid});
+                return std::nullopt;
+            }
+            return maybe_eid.as_id();
         }
 
         // guard against non-builtins
@@ -1692,13 +1745,18 @@ template <IsDefVisitor V> class ComptExprSolver {
         const auto sid_slice = context.symbol_slice(id_slice);
         const Span expr_span{context, fid, id_slice};
         OptId<DefId> maybe_did = context.look_up_scoped_variable(scope, sid_slice, expr_span);
+        // try to look up scoped type if needed so we can find variant fields
         if (maybe_did.empty()) {
+            maybe_did = context.look_up_scoped_type(scope, sid_slice, expr_span);
+        }
+        if (maybe_did.empty()) {
+
             context.emplace_diagnostic(Span{context, fid, id_slice},
                                        diag_code::use_of_undeclared_identifier, diag_type::error);
             return std::nullopt;
         }
         auto did = maybe_did.as_id();
-        const Def& def = context.def(did);
+        const Def& def = context.def(def_visitor.visit_as_transparent(did));
         if (def.holds<DefVariable>() && def.as<DefVariable>().compt_value.has_value()
             && def.compt) {
 
@@ -1737,7 +1795,21 @@ template <IsDefVisitor V> class ComptExprSolver {
             const DefVariantField var_field = def.as<DefVariantField>();
 
             if (var_field.members.len() != 0) {
+                context.emplace_diagnostic_with_message_value(
+                    expr_span, diag_code::only_message_value_is_meaningful, diag_type::error,
+                    DiagnosticVariantInitExpectedButGotNumArgs{
+                        .variant_field_name = def.name,
+                        .expected_sid = context.symbol_id(std::to_string(var_field.members.len())),
+                        .got_sid = context.symbol_id(std::to_string(0))});
+                return {};
             }
+            ExecId payload = context.emplace_compt_exec(
+                ExecVariantFieldInit{.member_inits = {}, .variant_field_def_id = did}, expr_span);
+            return context.emplace_compt_exec(
+                ExecExprVariantInit{.payload_init = payload,
+                                    .variant_def_id = def.parent.as_id(),
+                                    .active_member_idx = def.member_idx},
+                expr_span);
         }
         auto d0 = context.emplace_diagnostic(
             expr_span, diag_code::cannot_resolve_at_compt, diag_type::error,

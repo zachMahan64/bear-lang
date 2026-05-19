@@ -1,5 +1,7 @@
 // tests/hir/76.br
 
+mod test;
+
 struct Boo {
 
 }
@@ -7,9 +9,19 @@ struct Boo {
 variant Foo {
     Bar(Boo b),
     Booey(i32 b),
-    Buh
+    Buh,
 }
 
-compt Foo _0 = Foo..Bar(Boo{});
+compt Foo _0 = Foo..Booey; // oops
 
-compt Foo _1 = Fo..Buh;
+compt Foo _1 = Foo..Buh; // fine
+
+use Foo..Bar;
+
+compt Foo _2 = Bar; // oops
+
+use Foo..Buh;
+
+compt Foo _3 = Buh; // fine
+
+var _4 = Buh; // fine

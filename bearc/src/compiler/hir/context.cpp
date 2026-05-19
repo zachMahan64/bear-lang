@@ -443,6 +443,14 @@ DefId Context::register_compt_param(SymbolId name, Span span, DefId parent, DefV
     return def;
 }
 
+DefId Context::register_param(SymbolId name, Span span, DefId parent, DefValue value) {
+    DefId def = defs.emplace_and_get_id(value, name, true, false, false, false, span, parent);
+    def_resol_states.bump(Def::resol_state::resolved);
+    def_ast_nodes.bump();
+    def_mention_states.bump(Def::mention_state::unmentioned);
+    return def;
+}
+
 void Context::insert_variable(ScopeId scope_id, SymbolId sid, DefId did) {
     scopes.at(scope_id).insert_variable(sid, did);
 }

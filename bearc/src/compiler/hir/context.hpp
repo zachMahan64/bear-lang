@@ -234,6 +234,8 @@ class Context {
     DefId register_compt_param(SymbolId name, Span span, DefId parent,
                                DefValue value = DefUnevaluated{});
 
+    DefId register_param(SymbolId name, Span span, DefId parent, DefValue value = DefUnevaluated{});
+
     void insert_variable(ScopeId scope_id, SymbolId sid, DefId did);
     void insert_type(ScopeId scope_id, SymbolId sid, DefId did);
 
