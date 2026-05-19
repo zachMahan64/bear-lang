@@ -43,6 +43,8 @@ class Context {
 
     Context(const bearc_args_t& args);
     Context(const bearc_args_t& args, instances instances);
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
     int diagnostic_count() const noexcept;
     int error_count() const noexcept;
     int warning_count() const noexcept;
