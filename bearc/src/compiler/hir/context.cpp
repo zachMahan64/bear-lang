@@ -1381,6 +1381,15 @@ bool Context::is_variant_field(DefId did) const {
     return def_ast_node(did)->type == AST_STMT_VARIANT_FIELD_DECL;
 }
 
+bool Context::def_id_slice_contains_def_id(IdSlice<DefId> def_id_slice, DefId def_id) const {
+    for (auto didx = def_id_slice.begin(); didx != def_id_slice.end(); didx++) {
+        if (this->def_id(didx) == def_id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Context::func_sigs_match_for_contract(DefId did1, DefId did2) {
     const Def& def1 = def(did1);
     const Def& def2 = def(did2);

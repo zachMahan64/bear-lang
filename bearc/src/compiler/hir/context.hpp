@@ -353,6 +353,9 @@ class Context {
     /// checks if a Def is a variant field without resolving it
     [[nodiscard]] bool is_variant_field(DefId did) const;
 
+    [[nodiscard]] bool def_id_slice_contains_def_id(IdSlice<DefId> def_id_slice,
+                                                    DefId def_id) const;
+
     /// checks if a type can be inferred as another
     /// - ordering of the arguments doesn't matter
     [[nodiscard]] bool inferable_as_struct(TypeId tid1, TypeId tid2, DefId struct_did) const;

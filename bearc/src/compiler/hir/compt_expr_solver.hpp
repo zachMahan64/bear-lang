@@ -663,8 +663,6 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             auto maybe_converted = maybe_value.value().try_safe_convert_to(into_builtin.value());
 
-            // TODO give str cast hints here!
-
             if (!maybe_converted.has_value()) {
                 auto from_builtin = maybe_value.value().type_builtin();
                 TypeId from = context.emplace_type(TypeBuiltin{.type = from_builtin},
@@ -1916,13 +1914,10 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (!lhs.has_value()) {
                 cooked = true;
             }
-            if (maybe_bin_op.as<is_as_op>() == is_as_op::is) {
-                // TODO handle variant logic once variant lowering logic is impl'd
-                context.emplace_diagnostic(
-                    Span(fid, context.ast(fid).buffer(), expr->expr.binary.op),
-                    diag_code::is_operator_requires_run_time_values, diag_type::error);
-                cooked = true;
-            } else if (lhs.has_value()) {
+            if (lhs.has_value()) {
+                if (maybe_bin_op.as<is_as_op>() == is_as_op::is) {
+                    return solve_is(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
+                }
                 assert(maybe_bin_op.as<is_as_op>() == is_as_op::as);
                 return solve_compt_cast(fid, scope, lhs.as_id(), expr->expr.binary.rhs);
             }
@@ -2730,20 +2725,117 @@ template <IsDefVisitor V> class ComptExprSolver {
         DefVariantField var_field_def = def.as<DefVariantField>();
         const ast_slice_of_exprs_t args = fn_call_expr->expr.fn_call.args;
         if (args.len != var_field_def.members.len()) {
-            context.emplace_diagnostic_with_message_value(
+            const auto d0 = context.emplace_diagnostic_with_message_value(
                 Span{context, fid, fn_call_expr}, diag_code::only_message_value_is_meaningful,
                 diag_type::error,
                 DiagnosticVariantInitExpectedButGotNumArgs{
                     .variant_field_name = def.name,
                     .expected_sid = context.symbol_id(std::to_string(var_field_def.members.len())),
                     .got_sid = context.symbol_id(std::to_string(args.len))});
+            const auto d1 = context.emplace_diagnostic_with_message_value(
+                context.def(variant_field_did).span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = context.def(variant_field_did).name});
+            context.link_diagnostic(d0, d1);
             return {};
         }
+        llvm::SmallVector<ExecId> member_init_vec;
         for (size_t i = 0; i < args.len; i++) {
             const ast_expr_t* arg = args.start[i];
-            // TODO;
+            TypeId tid = context.def(var_field_def.members.get(i)).as<DefVariable>().type_id;
+            OptId<ExecId> maybe_eid = solve_expr(fid, scope, arg, tid);
+            if (maybe_eid.empty()) {
+                continue; // poisoned
+            }
+            member_init_vec.push_back(maybe_eid.as_id());
         }
-        return {};
+        const auto member_inits = context.freeze_id_vec(member_init_vec);
+        const Span span{context, fid, fn_call_expr};
+        ExecId field_init = context.emplace_compt_exec(
+            ExecVariantFieldInit{.member_inits = member_inits,
+                                 .variant_field_def_id = variant_field_did},
+            span);
+
+        return context.emplace_compt_exec(
+            ExecExprVariantInit{.payload_init = field_init,
+                                .variant_def_id = context.def(variant_field_did).parent.as_id(),
+                                .active_member_idx = context.def(variant_field_did).member_idx},
+            span);
+    }
+
+    // TODO: doesn't handle generics
+    [[nodiscard]] OptId<ExecId> solve_is(FileId fid, ScopeId scope, ExecId eid,
+                                         const ast_expr_t* pattern_expr) {
+        const Exec& exec = context.exec(eid);
+        if (!exec.holds<ExecExprVariantInit>()) {
+            context.emplace_diagnostic(exec.span, diag_code::cannot_use_is_for_non_variant_values,
+                                       diag_type::error,
+                                       DiagnosticSubCode{.sub_code = diag_code::not_a_variant});
+            return {};
+        }
+        const ExecExprVariantInit var_init = exec.as<ExecExprVariantInit>();
+        const auto ordered_variant_fields
+            = context.def(var_init.variant_def_id).as<DefVariant>().ordered_members;
+        if (pattern_expr->type != AST_EXPR_VARIANT_DECOMP) {
+            return {}; // poisoned
+        }
+        const auto sid_slice = context.symbol_slice(pattern_expr->expr.variant_decomp.id);
+        const auto maybe_var_field
+            = context.look_up_scoped_type(scope, sid_slice, Span{context, fid, pattern_expr});
+        if (maybe_var_field.empty()) {
+            context.emplace_diagnostic(
+                Span{context, fid, pattern_expr},
+                diag_code::identifer_does_not_name_a_valid_pattern, diag_type::error,
+                DiagnosticSubCode{.sub_code = diag_code::not_a_variant_field});
+            return {};
+        }
+
+        const auto hopefully_var_field = maybe_var_field.as_id();
+
+        if (!context.def(hopefully_var_field).holds<DefVariantField>()) {
+            context.emplace_diagnostic(
+                Span{context, fid, pattern_expr},
+                diag_code::identifer_does_not_name_a_valid_pattern, diag_type::error,
+                DiagnosticSubCode{.sub_code = diag_code::not_a_variant_field});
+            return {};
+        }
+
+        if (pattern_expr->expr.variant_decomp.vars.len != 0) {
+            Span span{context, fid, pattern_expr};
+            const auto d0 = context.emplace_diagnostic(
+                span, diag_code::variant_decomposition_not_allowed_here, diag_type::error);
+            const auto d1 = context.emplace_diagnostic_with_message_value(
+                span, diag_code::replace_with, diag_type::help,
+                DiagnosticIdentifierAfterMessage{.sid_slice = sid_slice});
+            context.link_diagnostic(d0, d1);
+            // don't return here, since we can safely just move on here
+        }
+
+        if (context.def(hopefully_var_field).parent.as_id() != var_init.variant_def_id) {
+            Span span{context, fid, pattern_expr};
+            const auto d0 = context.emplace_diagnostic_with_message_value(
+                span, diag_code::has_no_such_variant_field, diag_type::error,
+                DiagnosticSymbolBeforeMessage{.sid = context.def(var_init.variant_def_id).name});
+            const auto d1 = context.emplace_diagnostic(
+                span, diag_code::is_a_field_of_variant, diag_type::note,
+                DiagnosticSymbolBeforeAndAfterMessage{
+                    .before_sid = context.def(hopefully_var_field).name,
+                    .after_sid = context.def(context.def(hopefully_var_field).parent.as_id()).name},
+                DiagnosticInfoNoPreview{});
+            const auto d2 = context.emplace_diagnostic_with_message_value(
+                context.def(context.def(hopefully_var_field).parent.as_id()).span,
+                diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{
+                    .sid = context.def(context.def(hopefully_var_field).parent.as_id()).name});
+            context.link_diagnostic(d0, d1);
+            context.link_diagnostic(d1, d2);
+            return {};
+        }
+        const auto active_member
+            = context.def_id(ordered_variant_fields.get(var_init.active_member_idx));
+
+        return context.emplace_compt_exec(
+            ExecConst{active_member == hopefully_var_field},
+            Span::combine(context.exec(eid).span, Span{context, fid, pattern_expr}));
     }
 };
 } // namespace hir

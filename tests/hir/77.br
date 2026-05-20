@@ -21,3 +21,34 @@ compt Boogie _3 = Boogie(12); // oops
 
 use Foo..A;
 var _4 = A(); // oops
+
+typeof (Foo..A(123)) _5 = Foo..A(123);
+
+typeof (Foo..A(123)) _6 = Foo..B(123); 
+
+variant Bar {
+    A(i32 a),
+    B(i32 b),
+    C,
+    D
+}
+
+compt Foo _7 = Bar..A(12); // oops
+
+compt Foo _8 = Bar..C; // oops 
+
+use Bar..A; // oops
+
+compt Foo f0 = Foo..C;
+
+compt Foo f1 = Foo..D;
+
+var _9 = @static_assert f0 is Foo..C;
+
+var _10 = @static_assert f0 is Foo..B; // oops
+
+var _11 = @static_assert f1 is Bar..D; // oops
+
+var _12 = @static_assert f1 is Foo..A(var a); // oops
+
+compt Foo f2 = Foo..A(123, 321); // oops

@@ -122,8 +122,6 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "cannot convert value of type";
     case diag_code::cannot_mutate_compt_const:
         return "cannot mutate compile-time constant";
-    case diag_code::is_operator_requires_run_time_values:
-        return "`is` operator requires run-time values";
     case diag_code::cannot_cast_expr_to_type:
         return "cannot cast expression to type";
     case diag_code::guaranteed_narrowing_of_compt_value:
@@ -290,6 +288,22 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "variant fields cannot be used outside of their parent variant";
     case diag_code::invalid_variant_init_for_field:
         return "invalid variant initializer for field";
+    case diag_code::not_a_variant:
+        return "not a variant";
+    case diag_code::cannot_use_is_for_non_variant_values:
+        return "cannot use `is` for non-variant values";
+    case diag_code::value_does_not_name_a_valid_pattern:
+        return "value does not name a valid pattern";
+    case diag_code::not_a_variant_field:
+        return "not a variant field";
+    case diag_code::identifer_does_not_name_a_valid_pattern:
+        return "identifier does not name a valid pattern";
+    case diag_code::has_no_such_variant_field:
+        return "has no such variant field";
+    case diag_code::is_a_field_of_variant:
+        return "is a field of variant";
+    case diag_code::variant_decomposition_not_allowed_here:
+        return "variant decomposition not allowed here";
     }
 
     std::unreachable();
@@ -652,203 +666,207 @@ void Diagnostic::build_complex_message(Context& ctx, std::string& str) const {
     auto plural_helper
         = [&ctx](SymbolId d) -> const char* { return (ctx.symbol_id<"1">() == d) ? "" : "s"; };
 
-    auto vs = Ovld{
-        [](DiagnosticNoOtherInfo) {},
-        [&](DiagnosticIdentifierAfterMessage d) {
-            str += message_for_code(code);
-            str += " `";
-            str += accent_color_for_type(type);
-            for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
-                str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
-                if (sidx != d.sid_slice.last_elem()) {
-                    str += "..";
-                }
-            }
-            str += ansi_bold_reset();
-            str += '`';
-        },
-        [&](DiagnosticTypeAfterMessage d) {
-            str += message_for_code(code);
-            str += " ";
-            type_helper(d.tid);
-        },
-        [&](DiagnosticIdentifierBeforeMessage d) {
-            str += '`';
-            str += accent_color_for_type(type);
-            for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
-                str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
-                if (sidx != d.sid_slice.last_elem()) {
-                    str += "..";
-                }
-            }
-            str += ansi_bold_reset();
-            str += "` ";
-            str += message_for_code(code);
-        },
-        [&](DiagnosticIdentifierBeforeMessageAndTypeAfter d) {
-            str += '`';
-            str += accent_color_for_type(type);
-            for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
-                str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
-                if (sidx != d.sid_slice.last_elem()) {
-                    str += "..";
-                }
-            }
-            str += ansi_bold_reset();
-            str += "` ";
-            str += message_for_code(code);
-            str += " ";
-            type_helper(d.tid);
-        },
-        [&](DiagnosticSymbolAfterMessage d) {
-            str += message_for_code(code);
-            str += " `";
-            str += accent_color_for_type(type);
-            str += ctx.symbol_id_to_cstr(d.sid);
-            str += ansi_bold_reset();
-            str += '`';
-        },
-        [&](DiagnosticSymbolBeforeMessage d) {
-            str += '`';
-            str += accent_color_for_type(type);
-            str += ctx.symbol_id_to_cstr(d.sid);
-            str += ansi_bold_reset();
-            str += "` ";
-            str += message_for_code(code);
-        },
-        [&](DiagnosticSymbolAfterMessageNoQuotes d) {
-            str += message_for_code(code);
-            str += ' ';
-            str += ctx.symbol_id_to_cstr(d.sid);
-        },
-        [&](DiagnosticTypeToType t) {
-            str += message_for_code(code);
-            str += " ";
-            type_helper(t.from);
-            str += " to ";
-            type_helper(t.to);
-            str += ansi_reset();
-        },
-        [&](DiagnosticTypeAndType t) {
-            str += message_for_code(code);
-            str += " ";
-            type_helper(t.lhs_tid);
-            str += " and ";
-            type_helper(t.rhs_tid);
-            str += ansi_reset();
-        },
-        [&](DiagnosticTypeAndTypeForBinaryOp t) {
-            str += message_for_code(code);
-            str += " ";
-            type_helper(t.lhs_tid);
-            str += " and ";
-            type_helper(t.rhs_tid);
-            str += " for binary operator ";
-            str += '`';
-            str += accent_color_for_type(type);
-            str += binary_op_to_cstr(t.op);
-            str += ansi_bold_reset();
-            str += '`';
-            str += ansi_reset();
-        },
-        [&](DiagnosticSymButGotSym d) {
-            str += "function `";
-            str += ctx.symbol_id_to_cstr(d.leading);
-            str += "` ";
-            str += message_for_code(code);
-            str += " ";
-            str += ansi_bold_green();
-            str += ctx.symbol_id_to_cstr(d.sid1);
-            str += ansi_bold_reset();
-            str += " arguments but got ";
-            str += accent_color_for_type(type);
-            str += ctx.symbol_id_to_cstr(d.sid2);
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticComptStackOverflow d) {
-            str += "maximum call stack size exceeded when calling function `";
-            str += accent_color_for_type(type);
-            str += ctx.symbol_id_to_cstr(d.function_sid);
-            str += ansi_bold_reset();
-            str += "` ";
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticIdxOutOfBounds d) {
-            str += "index with value ";
-            str += accent_color_for_type(type);
-            str += ctx.symbol(d.idx_sid);
-            str += ansi_bold_reset();
-            str += " is out of bounds for ordered value with length ";
-            str += ansi_bold_cyan();
-            str += ctx.symbol_id_to_cstr(d.length_sid);
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticStructMemberSymBeforeMsg d) {
-            str += "struct member `";
-            str += accent_color_for_type(type);
-            str += ctx.symbol(d.mem_sid);
-            str += ansi_bold_reset();
-            str += "` ";
-            str += message_for_code(code);
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticStructDoesNotDefineBlankForContract d) {
-            str += "struct ";
-            sid_helper(d.struct_name);
-            str += " does not provide function ";
-            sid_helper(d.func_name);
-            str += " for contract ";
-            sid_helper(d.contract_name);
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticContractFnExpectedButGotNumParams d) {
-            str += "contract function ";
-            sid_helper(d.contract_fn_name);
-            str += " expected ";
-            str += ansi_bold_green();
-            str += ctx.symbol_id_to_cstr(d.expected_sid);
-            str += ansi_bold_reset();
-            str += " parameter";
-            str += plural_helper(d.expected_sid);
-            str += " but got ";
-            str += ansi_bold_red();
-            str += ctx.symbol_id_to_cstr(d.got_sid);
-            str += ansi_bold_reset();
-            str += " parameter";
-            str += plural_helper(d.got_sid);
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticVariantInitExpectedButGotNumArgs d) {
-            str += "variant initializer for ";
-            sid_helper(d.variant_field_name);
-            str += " expected ";
-            str += ansi_bold_green();
-            str += ctx.symbol_id_to_cstr(d.expected_sid);
-            str += ansi_bold_reset();
-            str += " argument";
-            str += plural_helper(d.expected_sid);
-            str += " but got ";
-            str += ansi_bold_red();
-            str += ctx.symbol_id_to_cstr(d.got_sid);
-            str += ansi_bold_reset();
-            str += " argument";
-            str += plural_helper(d.got_sid);
-            str += ansi_bold_reset();
-        },
-        [&](DiagnosticContractFnExpectedRetTyButGot d) {
-            str += "contract function ";
-            sid_helper(d.contract_fn_name);
-            str += " expected return type ";
-            str += ansi_bold_green();
-            type_helper_color(d.expected_return_tid, ansi_bold_green());
-            str += ansi_bold_reset();
-            str += " but got ";
-            str += ansi_bold_red();
-            type_helper_color(d.got_return_tid, ansi_bold_red());
-            str += ansi_bold_reset();
-        },
-
-    };
+    auto vs = Ovld{[](DiagnosticNoOtherInfo) {},
+                   [&](DiagnosticIdentifierAfterMessage d) {
+                       str += message_for_code(code);
+                       str += " `";
+                       str += accent_color_for_type(type);
+                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                           if (sidx != d.sid_slice.last_elem()) {
+                               str += "..";
+                           }
+                       }
+                       str += ansi_bold_reset();
+                       str += '`';
+                   },
+                   [&](DiagnosticTypeAfterMessage d) {
+                       str += message_for_code(code);
+                       str += " ";
+                       type_helper(d.tid);
+                   },
+                   [&](DiagnosticIdentifierBeforeMessage d) {
+                       str += '`';
+                       str += accent_color_for_type(type);
+                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                           if (sidx != d.sid_slice.last_elem()) {
+                               str += "..";
+                           }
+                       }
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += message_for_code(code);
+                   },
+                   [&](DiagnosticIdentifierBeforeMessageAndTypeAfter d) {
+                       str += '`';
+                       str += accent_color_for_type(type);
+                       for (auto sidx = d.sid_slice.begin(); sidx != d.sid_slice.end(); sidx++) {
+                           str += ctx.symbol_id_to_cstr(ctx.symbol_id(sidx));
+                           if (sidx != d.sid_slice.last_elem()) {
+                               str += "..";
+                           }
+                       }
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += message_for_code(code);
+                       str += " ";
+                       type_helper(d.tid);
+                   },
+                   [&](DiagnosticSymbolAfterMessage d) {
+                       str += message_for_code(code);
+                       str += " `";
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol_id_to_cstr(d.sid);
+                       str += ansi_bold_reset();
+                       str += '`';
+                   },
+                   [&](DiagnosticSymbolBeforeMessage d) {
+                       str += '`';
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol_id_to_cstr(d.sid);
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += message_for_code(code);
+                   },
+                   [&](DiagnosticSymbolAfterMessageNoQuotes d) {
+                       str += message_for_code(code);
+                       str += ' ';
+                       str += ctx.symbol_id_to_cstr(d.sid);
+                   },
+                   [&](DiagnosticTypeToType t) {
+                       str += message_for_code(code);
+                       str += " ";
+                       type_helper(t.from);
+                       str += " to ";
+                       type_helper(t.to);
+                       str += ansi_reset();
+                   },
+                   [&](DiagnosticTypeAndType t) {
+                       str += message_for_code(code);
+                       str += " ";
+                       type_helper(t.lhs_tid);
+                       str += " and ";
+                       type_helper(t.rhs_tid);
+                       str += ansi_reset();
+                   },
+                   [&](DiagnosticTypeAndTypeForBinaryOp t) {
+                       str += message_for_code(code);
+                       str += " ";
+                       type_helper(t.lhs_tid);
+                       str += " and ";
+                       type_helper(t.rhs_tid);
+                       str += " for binary operator ";
+                       str += '`';
+                       str += accent_color_for_type(type);
+                       str += binary_op_to_cstr(t.op);
+                       str += ansi_bold_reset();
+                       str += '`';
+                       str += ansi_reset();
+                   },
+                   [&](DiagnosticSymButGotSym d) {
+                       str += "function `";
+                       str += ctx.symbol_id_to_cstr(d.leading);
+                       str += "` ";
+                       str += message_for_code(code);
+                       str += " ";
+                       str += ansi_bold_green();
+                       str += ctx.symbol_id_to_cstr(d.sid1);
+                       str += ansi_bold_reset();
+                       str += " arguments but got ";
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol_id_to_cstr(d.sid2);
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticComptStackOverflow d) {
+                       str += "maximum call stack size exceeded when calling function `";
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol_id_to_cstr(d.function_sid);
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticIdxOutOfBounds d) {
+                       str += "index with value ";
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol(d.idx_sid);
+                       str += ansi_bold_reset();
+                       str += " is out of bounds for ordered value with length ";
+                       str += ansi_bold_cyan();
+                       str += ctx.symbol_id_to_cstr(d.length_sid);
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticStructMemberSymBeforeMsg d) {
+                       str += "struct member `";
+                       str += accent_color_for_type(type);
+                       str += ctx.symbol(d.mem_sid);
+                       str += ansi_bold_reset();
+                       str += "` ";
+                       str += message_for_code(code);
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticStructDoesNotDefineBlankForContract d) {
+                       str += "struct ";
+                       sid_helper(d.struct_name);
+                       str += " does not provide function ";
+                       sid_helper(d.func_name);
+                       str += " for contract ";
+                       sid_helper(d.contract_name);
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticContractFnExpectedButGotNumParams d) {
+                       str += "contract function ";
+                       sid_helper(d.contract_fn_name);
+                       str += " expected ";
+                       str += ansi_bold_green();
+                       str += ctx.symbol_id_to_cstr(d.expected_sid);
+                       str += ansi_bold_reset();
+                       str += " parameter";
+                       str += plural_helper(d.expected_sid);
+                       str += " but got ";
+                       str += ansi_bold_red();
+                       str += ctx.symbol_id_to_cstr(d.got_sid);
+                       str += ansi_bold_reset();
+                       str += " parameter";
+                       str += plural_helper(d.got_sid);
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticVariantInitExpectedButGotNumArgs d) {
+                       str += "variant initializer for ";
+                       sid_helper(d.variant_field_name);
+                       str += " expected ";
+                       str += ansi_bold_green();
+                       str += ctx.symbol_id_to_cstr(d.expected_sid);
+                       str += ansi_bold_reset();
+                       str += " argument";
+                       str += plural_helper(d.expected_sid);
+                       str += " but got ";
+                       str += ansi_bold_red();
+                       str += ctx.symbol_id_to_cstr(d.got_sid);
+                       str += ansi_bold_reset();
+                       str += " argument";
+                       str += plural_helper(d.got_sid);
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticContractFnExpectedRetTyButGot d) {
+                       str += "contract function ";
+                       sid_helper(d.contract_fn_name);
+                       str += " expected return type ";
+                       str += ansi_bold_green();
+                       type_helper_color(d.expected_return_tid, ansi_bold_green());
+                       str += ansi_bold_reset();
+                       str += " but got ";
+                       str += ansi_bold_red();
+                       type_helper_color(d.got_return_tid, ansi_bold_red());
+                       str += ansi_bold_reset();
+                   },
+                   [&](DiagnosticSymbolBeforeAndAfterMessage d) {
+                       sid_helper(d.before_sid);
+                       str += " ";
+                       str += message_for_code(code);
+                       str += " ";
+                       sid_helper(d.after_sid);
+                   }};
     std::visit(vs, message_value);
 }
 

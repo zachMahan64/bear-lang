@@ -66,7 +66,6 @@ enum class diag_code : uint8_t {
     compt_variable_should_have_an_explicit_type,
     cannot_convert_value_of_type,
     cannot_mutate_compt_const,
-    is_operator_requires_run_time_values,
     cannot_cast_expr_to_type,
     guaranteed_narrowing_of_compt_value,
     invalid_operand_for_binary_expression,
@@ -148,6 +147,14 @@ enum class diag_code : uint8_t {
     raw_use_of_variant_field,
     variant_fields_cannot_be_used_outside_of_a_variant,
     invalid_variant_init_for_field,
+    not_a_variant,
+    cannot_use_is_for_non_variant_values,
+    value_does_not_name_a_valid_pattern,
+    identifer_does_not_name_a_valid_pattern,
+    not_a_variant_field,
+    has_no_such_variant_field,
+    is_a_field_of_variant,
+    variant_decomposition_not_allowed_here,
 
     count, // this must be last,
 
@@ -244,6 +251,11 @@ struct DiagnosticVariantInitExpectedButGotNumArgs {
     SymbolId got_sid;
 };
 
+struct DiagnosticSymbolBeforeAndAfterMessage {
+    SymbolId before_sid;
+    SymbolId after_sid;
+};
+
 using DiagnosticMessageValue = std::variant<
     DiagnosticNoOtherInfo, DiagnosticIdentifierAfterMessage, DiagnosticSymbolAfterMessage,
     DiagnosticSymbolAfterMessageNoQuotes, DiagnosticIdentifierBeforeMessage,
@@ -252,7 +264,8 @@ using DiagnosticMessageValue = std::variant<
     DiagnosticIdentifierBeforeMessageAndTypeAfter, DiagnosticSymButGotSym,
     DiagnosticComptStackOverflow, DiagnosticIdxOutOfBounds, DiagnosticStructMemberSymBeforeMsg,
     DiagnosticStructDoesNotDefineBlankForContract, DiagnosticContractFnExpectedButGotNumParams,
-    DiagnosticContractFnExpectedRetTyButGot, DiagnosticVariantInitExpectedButGotNumArgs>;
+    DiagnosticContractFnExpectedRetTyButGot, DiagnosticVariantInitExpectedButGotNumArgs,
+    DiagnosticSymbolBeforeAndAfterMessage>;
 
 struct DiagnosticImportStack {
     IdSlice<FileId> files;
