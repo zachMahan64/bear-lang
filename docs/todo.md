@@ -23,9 +23,9 @@ main quest
     - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
         - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] make sure its branches are exhaustive
-            - [ ] for now, just make sure there's an `else` clause or that both `true`/`false` are covered
+            - [ ] at absolute minimum, make sure there's an `else` clause
             - [ ] if feasible, add range checking 
-        - [ ] variant decomp
+        - [ ] variant decomp, allowing partial decomp
     - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 

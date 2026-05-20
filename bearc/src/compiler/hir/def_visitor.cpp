@@ -154,8 +154,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
             // if type is inferable from its compt default value, suggest changing type to said type
             if (maybe_compt_eid.has_value()) {
                 OptId<TypeId> maybe_tid
-                    = ComptExprSolver{context, *this}.infer_type_from_compt_exec(
-                        maybe_compt_eid.as_id());
+                    = ComptExprSolver{context, *this}.infer_type_from_exec(maybe_compt_eid.as_id());
                 if (maybe_tid.has_value()) {
                     auto d1 = context.emplace_diagnostic_with_message_value(
                         type.span, diag_code::replace_with, diag_type::help,

@@ -1182,8 +1182,8 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                 if (d.holds<DefVariable>() && d.as<DefVariable>().compt_value.has_value()) {
                     TopLevelDefVisitor def_vis{*this};
                     ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
-                    const OptId<TypeId> maybe_tid = solver.infer_type_from_compt_exec(
-                        d.as<DefVariable>().compt_value.as_id());
+                    const OptId<TypeId> maybe_tid
+                        = solver.infer_type_from_exec(d.as<DefVariable>().compt_value.as_id());
                     if (maybe_tid.has_value()) {
                         const auto ty = type(maybe_tid.as_id());
                         // this is a compt list literal
@@ -1210,7 +1210,7 @@ bool Context::scope_has_parent(ScopeId local_scope, ScopeId possible_parent) con
                     TopLevelDefVisitor def_vis{*this};
                     ComptExprSolver<TopLevelDefVisitor> solver{*this, def_vis};
                     const OptId<TypeId> maybe_tid
-                        = solver.infer_type_from_compt_exec(var_def.compt_value.as_id());
+                        = solver.infer_type_from_exec(var_def.compt_value.as_id());
                     if (maybe_tid.has_value()
                         && this->type(maybe_tid.as_id()).holds<TypeStruct>()) {
                         curr_did = this->type(maybe_tid.as_id()).as<TypeStruct>().def_id;

@@ -17,6 +17,7 @@
 #include "compiler/hir/diagnostic.hpp"
 #include "compiler/hir/exec.hpp"
 #include "compiler/hir/exec_ops.hpp"
+#include "compiler/hir/expr_solver.hpp"
 #include "compiler/hir/indexing.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/type.hpp"
@@ -36,6 +37,8 @@ template <IsDefVisitor V> class ComptExprSolver {
     static constexpr HirSize MAX_COMPT_CALL_FRAMES = 100; // TODO increase once memoization is added
 
     ComptExprSolver(Context& ctx, V& def_visitor) : context{ctx}, def_visitor{def_visitor} {}
+
+    [[nodiscard]] Context& get_context() { return this->context; }
 
     [[nodiscard]] OptId<ExecId> solve_expr(FileId fid, ScopeId scope, const ast_expr_t* expr) {
         return solve_expr(fid, scope, expr, std::nullopt);
@@ -68,10 +71,10 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         auto eid = maybe_eid.as_id();
 
-        return infer_type_from_compt_exec(eid);
+        return infer_type_from_exec(eid);
     }
 
-    [[nodiscard]] OptId<TypeId> infer_type_from_compt_exec(ExecId eid) {
+    [[nodiscard]] OptId<TypeId> infer_type_from_exec(ExecId eid) {
         const Exec& exec = context.exec(eid);
         if (exec.holds<ExecExprComptConstant>()) {
             auto bin_type = exec.as<ExecExprComptConstant>().type_builtin();
@@ -182,7 +185,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         if (into_type.holds<TypePtr>()) {
             OptId<ExecId> maybe_eid = solve_builtin_compt_expr(fid, scope, expr, {}, {});
             if (maybe_eid.has_value()) {
-                OptId<TypeId> maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+                OptId<TypeId> maybe_tid = infer_type_from_exec(maybe_eid.as_id());
                 if (maybe_tid.has_value()) {
                     const Type& ty = context.type(maybe_tid.as_id());
                     if (ty.holds<TypeBuiltin>()
@@ -209,7 +212,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (maybe_eid.empty()) {
                 return std::nullopt; // poison
             }
-            auto maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            auto maybe_tid = infer_type_from_exec(maybe_eid.as_id());
             if (maybe_tid.empty()) {
                 return std::nullopt; // poison
             }
@@ -232,7 +235,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             }
             auto list_eid = maybe_list.as_id();
 
-            auto maybe_list_type = infer_type_from_compt_exec(list_eid);
+            auto maybe_list_type = infer_type_from_exec(list_eid);
 
             if (maybe_list_type.empty()) {
                 return std::nullopt; // poisoned
@@ -260,7 +263,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             auto fnp_eid = maybe_fnp.as_id();
 
-            auto maybe_tnp_tid = infer_type_from_compt_exec(fnp_eid);
+            auto maybe_tnp_tid = infer_type_from_exec(fnp_eid);
 
             if (maybe_tnp_tid.empty()) {
                 return std::nullopt; // poisoned
@@ -290,7 +293,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (maybe_eid.empty()) {
                 return std::nullopt; // poison
             }
-            auto maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            auto maybe_tid = infer_type_from_exec(maybe_eid.as_id());
             if (maybe_tid.empty()) {
                 return std::nullopt; // poison
             }
@@ -312,7 +315,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (maybe_eid.empty()) {
                 return std::nullopt; // poison
             }
-            auto maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            auto maybe_tid = infer_type_from_exec(maybe_eid.as_id());
             if (maybe_tid.empty()) {
                 return std::nullopt; // poison
             }
@@ -390,7 +393,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const auto eid = maybe_eid.as_id();
 
-            const OptId<TypeId> maybe_inferred = infer_type_from_compt_exec(eid);
+            const OptId<TypeId> maybe_inferred = infer_type_from_exec(eid);
             if (maybe_inferred.empty()) {
                 cannot_conv();
                 return std::nullopt;
@@ -854,7 +857,7 @@ template <IsDefVisitor V> class ComptExprSolver {
                     == into_type.as<TypeStruct>().def_id)) {
                 return eid;
             }
-            OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
+            OptId<TypeId> maybe_inferred_etid = infer_type_from_exec(eid);
             if (maybe_inferred_etid.has_value()) {
                 auto inferred_tid = maybe_inferred_etid.as_id();
                 context.emplace_diagnostic_with_message_value(
@@ -1128,8 +1131,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             auto d0 = context.emplace_diagnostic(context.exec(eid).span,
                                                  diag_code::invalid_operand_for_binary_expression,
                                                  diag_type::error);
-            OptId<TypeId> maybe_lhs_tid = infer_type_from_compt_exec(lhs_eid);
-            OptId<TypeId> maybe_rhs_tid = infer_type_from_compt_exec(rhs_eid);
+            OptId<TypeId> maybe_lhs_tid = infer_type_from_exec(lhs_eid);
+            OptId<TypeId> maybe_rhs_tid = infer_type_from_exec(rhs_eid);
             if (maybe_lhs_tid.has_value() && maybe_rhs_tid.has_value()) {
                 const auto lhs_tid = maybe_lhs_tid.as_id();
                 const auto rhs_tid = maybe_rhs_tid.as_id();
@@ -1552,7 +1555,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             if (maybe_eid.empty()) {
                 return std::nullopt; // poisoned
             }
-            const OptId<TypeId> maybe_tid = infer_type_from_compt_exec(maybe_eid.as_id());
+            const OptId<TypeId> maybe_tid = infer_type_from_exec(maybe_eid.as_id());
             if (maybe_tid.empty()) {
                 return std::nullopt; // poisoned
             }
@@ -1670,8 +1673,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         IdSlice<ExecId> elem_slice = context.freeze_id_vec(elem_execs);
 
-        OptId<TypeId> maybe_first_type
-            = infer_type_from_compt_exec(context.exec_id(elem_slice.begin()));
+        OptId<TypeId> maybe_first_type = infer_type_from_exec(context.exec_id(elem_slice.begin()));
 
         if (maybe_first_type.empty()) {
             return std::nullopt; // poisoned
@@ -1687,7 +1689,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         for (IdIdx<ExecId> eidx = elem_slice.begin(); eidx != elem_slice.end(); eidx++) {
             ExecId eid = context.exec_id(eidx);
-            OptId<TypeId> maybe_curr_type = infer_type_from_compt_exec(eid);
+            OptId<TypeId> maybe_curr_type = infer_type_from_exec(eid);
 
             if (maybe_curr_type.empty()) {
                 return std::nullopt; // poisoned
@@ -2428,7 +2430,7 @@ template <IsDefVisitor V> class ComptExprSolver {
     }
 
     [[nodiscard]] OptId<ExecId> try_convert_to(ExecId eid, TypeId tid) {
-        OptId<TypeId> maybe_inferred_etid = infer_type_from_compt_exec(eid);
+        OptId<TypeId> maybe_inferred_etid = infer_type_from_exec(eid);
         if (maybe_inferred_etid.has_value()
             && context.equivalent_type(maybe_inferred_etid.as_id(), tid)) {
             return eid;
@@ -2527,7 +2529,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             return context.emplace_exec(ExecConst{sv.at(idx)}, Span{context, fid, expr}, true);
         }
 
-        OptId<TypeId> maybe_tid = infer_type_from_compt_exec(lhs_eid);
+        OptId<TypeId> maybe_tid = infer_type_from_exec(lhs_eid);
         if (maybe_tid.empty()) {
             return std::nullopt; // posioned
         }
@@ -2838,5 +2840,6 @@ template <IsDefVisitor V> class ComptExprSolver {
             Span::combine(context.exec(eid).span, Span{context, fid, pattern_expr}));
     }
 };
+static_assert(IsExprSolver<ComptExprSolver<TopLevelDefVisitor>>);
 } // namespace hir
 #endif

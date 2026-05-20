@@ -24,13 +24,13 @@ class Context;
 template <typename T>
 concept IsDefVisitor = requires(T t, DefId def) {
     // do not alter mention state
-    { t.visit_as_independent(def) } -> std::convertible_to<DefId>;
+    { t.visit_as_independent(def) } -> std::same_as<DefId>;
     // alter mention state (mentioned)
-    { t.visit_as_dependent(def) } -> std::convertible_to<DefId>;
+    { t.visit_as_dependent(def) } -> std::same_as<DefId>;
     // alter mention state (mentioned) and never resolve
-    { t.visit_as_transparent(def) } -> std::convertible_to<DefId>;
+    { t.visit_as_transparent(def) } -> std::same_as<DefId>;
     // alter mention state (mutated)
-    { t.visit_as_mutator(def) } -> std::convertible_to<DefId>;
+    { t.visit_as_mutator(def) } -> std::same_as<DefId>;
 };
 
 class TopLevelDefVisitor {
@@ -75,6 +75,7 @@ class TopLevelDefVisitor {
 };
 static_assert(IsDefVisitor<TopLevelDefVisitor>);
 
+// TODO
 class InsideBodyDefVisitor {
     Context& context;
 
@@ -84,7 +85,7 @@ class InsideBodyDefVisitor {
 
     DefId visit_as_transparent(DefId def);
 
-    static DefId visit_as_independent(DefId def);
+    DefId visit_as_independent(DefId def);
 
     DefId visit_as_mutator(DefId def);
 };
