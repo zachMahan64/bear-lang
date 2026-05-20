@@ -1,0 +1,23 @@
+// tests/hir/77.br
+
+variant Foo {
+    A(i32 a),
+    B(i32 b),
+    C,
+    D,
+}
+
+struct Boogie {
+    i32 a;
+}
+
+compt Foo _0 = Foo..C;
+
+compt Foo _1 = Foo..D;
+
+compt Foo _2 = Foo..A(12);
+
+compt Boogie _3 = Boogie(12); // oops
+
+use Foo..A;
+var _4 = A(); // oops

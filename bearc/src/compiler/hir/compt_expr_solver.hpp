@@ -2244,14 +2244,26 @@ template <IsDefVisitor V> class ComptExprSolver {
 
             const Span called_span{context, fid, id_slice};
 
-            maybe_func_did = context.look_up_scoped_variable(scope, context.symbol_slice(id_slice),
-                                                             called_span);
+            const auto sid_slice = context.symbol_slice(id_slice);
+
+            maybe_func_did = context.look_up_scoped_variable(scope, sid_slice, called_span);
             if (maybe_func_did.empty()) {
+
+                // try as variant init, since they take the form of function calls
+                const auto maybe_variant_field_did
+                    = context.look_up_scoped_type(scope, sid_slice, called_span);
+                if (maybe_variant_field_did.has_value()) {
+                    return handle_variant_init(fid, scope, expr, maybe_variant_field_did.as_id());
+                }
+
+                // no corresponding variant either, so this is just the use_of_undeclared_identifier
                 context.emplace_diagnostic(called_span, diag_code::use_of_undeclared_identifier,
                                            diag_type::error);
+
                 return std::nullopt;
             }
 
+            // TODO: doesn't handle generic args
             maybe_func_did = context.try_func_did(maybe_func_did.as_id());
 
             const Def& called_def = context.def(maybe_func_did.as_id());
@@ -2700,6 +2712,38 @@ template <IsDefVisitor V> class ComptExprSolver {
         }
 
         return context.emplace_exec(ExecConst{context.type_has_contract(tid, did)}, span, true);
+    }
+
+    // TODO: doesn't handle generic args
+    [[nodiscard]] OptId<ExecId> handle_variant_init(FileId fid, ScopeId scope,
+                                                    const ast_expr_t* fn_call_expr,
+                                                    DefId variant_field_did) {
+        assert(fn_call_expr->type == AST_EXPR_FN_CALL);
+        const ast_expr_t* called_expr = fn_call_expr->expr.fn_call.left_expr;
+        const Def& def = context.def(variant_field_did);
+        if (!def.holds<DefVariantField>()) {
+            context.emplace_diagnostic(Span{context, fid, called_expr},
+                                       diag_code::value_is_not_callable, diag_type::error,
+                                       DiagnosticSubCode{.sub_code = diag_code::not_a_function});
+            return {};
+        }
+        DefVariantField var_field_def = def.as<DefVariantField>();
+        const ast_slice_of_exprs_t args = fn_call_expr->expr.fn_call.args;
+        if (args.len != var_field_def.members.len()) {
+            context.emplace_diagnostic_with_message_value(
+                Span{context, fid, fn_call_expr}, diag_code::only_message_value_is_meaningful,
+                diag_type::error,
+                DiagnosticVariantInitExpectedButGotNumArgs{
+                    .variant_field_name = def.name,
+                    .expected_sid = context.symbol_id(std::to_string(var_field_def.members.len())),
+                    .got_sid = context.symbol_id(std::to_string(args.len))});
+            return {};
+        }
+        for (size_t i = 0; i < args.len; i++) {
+            const ast_expr_t* arg = args.start[i];
+            // TODO;
+        }
+        return {};
     }
 };
 } // namespace hir
