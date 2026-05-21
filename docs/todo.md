@@ -16,12 +16,15 @@ main quest
         - [x] special-case for variant ctor, `Variant..Field(a, b, c)`
             - this is parsed as a function so just adapt it to a variant init 
     - [x] sort out variant decomps at compt (prevent unexpected decomps), only allow in match at compt
-    - [ ] compt match: impl as chained comparisions ensuring each branch matches the type inside match(x)
-        - [ ] handle the inline case syntax `cond | cond | cond`
-        - [ ] make sure its branches are exhaustive
+    - [ ] compt match: impl as chained comparisions w/ each branch matching the type inside `match(x)`
+        - [ ] make sure its branches are exhaustive for variants
+            - [x] ensure all possible variant fields are considered or there's an `else =>`
+        - [ ] exhaustive scalar matches 
             - [ ] at absolute minimum, make sure there's an `else` clause
             - [ ] if feasible, add range checking 
+        - [ ] handle the inline case syntax `cond | cond | cond`
         - [ ] variant decomp, allowing partial decomp
+
     - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 
