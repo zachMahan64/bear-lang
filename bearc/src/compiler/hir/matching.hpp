@@ -18,7 +18,8 @@ namespace hir {
 /// validates the branches of a match expression
 /// returns true when match is NOT valid
 template <IsExprSolver S>
-bool validate_match_branches(S& solver, ast_expr_t* match_expr, ScopeId scope, FileId fid) {
+bool validate_match_branches_for_variant(S& solver, DefId variant_did, ast_expr_t* match_expr,
+                                         ScopeId scope, FileId fid) {
     assert(match_expr->type == AST_EXPR_MATCH);
     // TODO
     return false;

@@ -2740,15 +2740,23 @@ template <IsDefVisitor V> class ComptExprSolver {
             context.link_diagnostic(d0, d1);
             return {};
         }
+        bool cooked = false;
         llvm::SmallVector<ExecId> member_init_vec;
         for (size_t i = 0; i < args.len; i++) {
             const ast_expr_t* arg = args.start[i];
             TypeId tid = context.def(var_field_def.members.get(i)).as<DefVariable>().type_id;
             OptId<ExecId> maybe_eid = solve_expr(fid, scope, arg, tid);
             if (maybe_eid.empty()) {
+                cooked = true;
                 continue; // poisoned
             }
             member_init_vec.push_back(maybe_eid.as_id());
+        }
+        if (cooked) {
+            const Def& def = context.def(variant_field_did);
+            context.force_link_diagnostic(context.emplace_diagnostic_with_message_value(
+                def.span, diag_code::declared_here, diag_type::note,
+                DiagnosticSymbolBeforeMessage{.sid = def.name}));
         }
         const auto member_inits = context.freeze_id_vec(member_init_vec);
         const Span span{context, fid, fn_call_expr};

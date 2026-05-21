@@ -52,3 +52,5 @@ var _11 = @static_assert f1 is Bar..D; // oops
 var _12 = @static_assert f1 is Foo..A(var a); // oops
 
 compt Foo f2 = Foo..A(123, 321); // oops
+
+var _13 = Foo..A(-123.123); // oops

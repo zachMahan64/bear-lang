@@ -37,6 +37,7 @@ class IdHashMap {
         assert((key.val() != HIR_ID_NONE) && "tried to insert a key with value HIR_ID_NONE");
         mapu32u32_insert(&map, key.val(), value.val());
     }
+    /// returns false if key is not found
     bool remove(K key) { return mapu32u32_remove(&map, key.val()); }
     /// returns an optional id by value
     OptId<V> at(K key) const {

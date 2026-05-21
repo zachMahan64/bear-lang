@@ -12,7 +12,7 @@
 
 namespace hir {
 
-template <typename T> class IdSet {
+template <IsId T> class IdSet {
   public:
     IdSet(DataArena& arena, HirSize capacity) : map{arena, capacity} {}
     [[nodiscard]] HirSize size() { return size_; }
@@ -26,7 +26,14 @@ template <typename T> class IdSet {
         return already_has;
     }
     [[nodiscard]] bool contains(T elt) { return map.contains(elt); }
-    // TODO
+    /// returns false if elt is not found
+    bool remove(T elt) {
+        const bool found = map.remove(elt);
+        if (found) {
+            --size_;
+        }
+        return found;
+    }
 
   private:
     hir::IdHashMap<T, HirSize> map;
