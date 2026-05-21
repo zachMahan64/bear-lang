@@ -233,10 +233,10 @@ class Context {
     DefId register_top_level_def(SymbolId name, bool pub, bool compt, bool statik, bool generic,
                                  Span span, ast_stmt_t* stmt, OptId<DefId> parent = OptId<DefId>{});
 
-    DefId register_compt_param(SymbolId name, Span span, DefId parent,
-                               DefValue value = DefUnevaluated{});
+    DefId register_compt_def(SymbolId name, Span span, DefId parent,
+                             DefValue value = DefUnevaluated{});
 
-    DefId register_param(SymbolId name, Span span, DefId parent, DefValue value = DefUnevaluated{});
+    DefId register_def(SymbolId name, Span span, DefId parent, DefValue value = DefUnevaluated{});
 
     void insert_variable(ScopeId scope_id, SymbolId sid, DefId did);
     void insert_type(ScopeId scope_id, SymbolId sid, DefId did);

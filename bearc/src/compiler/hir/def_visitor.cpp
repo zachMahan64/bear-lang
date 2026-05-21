@@ -558,7 +558,7 @@ DefId TopLevelDefVisitor::resolve_def(DefId did) {
                 continue;
             }
             const auto tid = maybe_tid.as_id();
-            param_vec.push_back(context.register_param(
+            param_vec.push_back(context.register_def(
                 context.symbol_id(param->name), Span{context, fid, param->first, param->last},
                 context.def(did).parent.as_id(), DefVariable{.type_id = tid}));
         }
@@ -659,7 +659,7 @@ OptId<DefId> TopLevelDefVisitor::resolve_param(FileId fid, ScopeId scope, DefId 
 
 OptId<DefId> TopLevelDefVisitor::resolve_param(FileId fid, ScopeId scope, DefId func_def,
                                                TypeId tid, SymbolId name, Span span) {
-    auto param_did = context.register_compt_param(name, span, func_def);
+    auto param_did = context.register_compt_def(name, span, func_def);
 
     context.def(param_did).set_value(DefVariable{.type_id = tid, .compt_value = std::nullopt});
 

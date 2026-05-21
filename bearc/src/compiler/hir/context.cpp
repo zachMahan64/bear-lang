@@ -435,7 +435,7 @@ DefId Context::register_top_level_def(SymbolId name, bool pub, bool compt, bool 
     return def;
 }
 
-DefId Context::register_compt_param(SymbolId name, Span span, DefId parent, DefValue value) {
+DefId Context::register_compt_def(SymbolId name, Span span, DefId parent, DefValue value) {
     DefId def = defs.emplace_and_get_id(value, name, true, true, true, false, span, parent);
     def_resol_states.bump(Def::resol_state::resolved);
     def_ast_nodes.bump();
@@ -443,7 +443,7 @@ DefId Context::register_compt_param(SymbolId name, Span span, DefId parent, DefV
     return def;
 }
 
-DefId Context::register_param(SymbolId name, Span span, DefId parent, DefValue value) {
+DefId Context::register_def(SymbolId name, Span span, DefId parent, DefValue value) {
     DefId def = defs.emplace_and_get_id(value, name, true, false, false, false, span, parent);
     def_resol_states.bump(Def::resol_state::resolved);
     def_ast_nodes.bump();

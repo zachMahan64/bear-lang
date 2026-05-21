@@ -2395,7 +2395,7 @@ template <IsDefVisitor V> class ComptExprSolver {
             assert(param_def.holds<DefVariable>());
             const DefVariable& param_var = param_def.as<DefVariable>();
             ExecId eid = arg_vec[i];
-            const auto param = context.register_compt_param(
+            const auto param = context.register_compt_def(
                 param_def.name, param_def.span, func_did,
                 DefVariable{.type_id = param_var.type_id, .compt_value = eid});
             context.insert_variable(temp_scope, context.def(params.get(i)).name, param);
