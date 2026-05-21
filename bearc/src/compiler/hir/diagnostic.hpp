@@ -155,6 +155,12 @@ enum class diag_code : uint8_t {
     has_no_such_variant_field,
     is_a_field_of_variant,
     variant_decomposition_not_allowed_here,
+    invalid_pattern,
+    else_match_branch_should_come_last,
+    duplicate_else_match_branch,
+    duplicate_match_pattern,
+    match_expression_is_not_exhaustive,
+    does_not_consider,
 
     count, // this must be last,
 

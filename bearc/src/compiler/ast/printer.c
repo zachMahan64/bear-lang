@@ -548,7 +548,7 @@ void pretty_print_expr(const ast_expr_t* expression) {
         print_closing_green_brace();
         break;
     }
-    case AST_EXPR_ELSE_MATCH_BRANCH:
+    case AST_EXPR_ELSE_MATCH_PATTERN:
         printf("%s%s%s", ansi_bold_blue(), token_to_string_map()[TOK_ELSE], ansi_reset());
         break;
     case AST_EXPR_CLOSURE: {

@@ -304,6 +304,18 @@ const char* Diagnostic::message_for_code(enum diag_code c) {
         return "is a field of variant";
     case diag_code::variant_decomposition_not_allowed_here:
         return "variant decomposition not allowed here";
+    case diag_code::invalid_pattern:
+        return "invalid pattern";
+    case diag_code::else_match_branch_should_come_last:
+        return "fallback `else` match branch should come last";
+    case diag_code::duplicate_else_match_branch:
+        return "dupliate `else` match branch";
+    case diag_code::duplicate_match_pattern:
+        return "duplicate match pattern";
+    case diag_code::match_expression_is_not_exhaustive:
+        return "match expression is not exhaustive";
+    case diag_code::does_not_consider:
+        return "does not consider";
     }
 
     std::unreachable();

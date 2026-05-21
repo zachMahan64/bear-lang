@@ -19,6 +19,7 @@
 #include "compiler/hir/exec_ops.hpp"
 #include "compiler/hir/expr_solver.hpp"
 #include "compiler/hir/indexing.hpp"
+#include "compiler/hir/matching.hpp"
 #include "compiler/hir/span.hpp"
 #include "compiler/hir/type.hpp"
 #include "compiler/token.h"
@@ -642,6 +643,21 @@ template <IsDefVisitor V> class ComptExprSolver {
                 return std::nullopt;
             }
             break;
+        case AST_EXPR_MATCH: {
+            const auto maybe_eid = handle_match(fid, scope, expr);
+            if (maybe_eid.empty()) {
+                return {}; // poisoned
+            }
+            if (context.exec(maybe_eid.as_id()).template holds<ExecConst>()) {
+                maybe_value = context.exec(maybe_eid.as_id()).template as<ExecConst>();
+            } else if (into_tid.has_value()) {
+                context.emplace_diagnostic_with_message_value(
+                    Span{context, fid, expr}, diag_code::cannot_convert_expression_to_type,
+                    diag_type::error, DiagnosticTypeAfterMessage{.tid = into_tid.as_id()});
+                return {};
+            }
+            break;
+        }
         case AST_EXPR_TYPE:
         case AST_EXPR_BORROW:
         case AST_EXPR_STRUCT_MEMBER_INIT:
@@ -649,8 +665,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_VARIANT_DECOMP:
         case AST_EXPR_BLOCK:
         case AST_EXPR_MATCH_BRANCH:
-        case AST_EXPR_MATCH:
-        case AST_EXPR_ELSE_MATCH_BRANCH:
+        case AST_EXPR_ELSE_MATCH_PATTERN:
         case AST_EXPR_INVALID:
             // not a valid compile-time expr
             context.emplace_diagnostic(
@@ -824,6 +839,9 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_GROUPING:
             maybe_eid = solve_expr(fid, scope, expr);
             break;
+        case AST_EXPR_MATCH:
+            maybe_eid = handle_match(fid, scope, expr);
+            break;
         case AST_EXPR_SAME_TYPE:
         case AST_EXPR_HAS_CONTRACT:
         case AST_EXPR_DEFINED:
@@ -840,8 +858,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_VARIANT_DECOMP:
         case AST_EXPR_BLOCK:
         case AST_EXPR_MATCH_BRANCH:
-        case AST_EXPR_MATCH:
-        case AST_EXPR_ELSE_MATCH_BRANCH:
+        case AST_EXPR_ELSE_MATCH_PATTERN:
         case AST_EXPR_INVALID:
             break;
         }
@@ -1595,6 +1612,9 @@ template <IsDefVisitor V> class ComptExprSolver {
             return solve_expr(fid, scope, expr->expr.compt_expr.inner, maybe_into_tid);
         case AST_EXPR_SUBSCRIPT:
             return guard_exec_type(solve_expr_subscript(fid, scope, expr));
+        case AST_EXPR_MATCH: {
+            return guard_exec_type(handle_match(fid, scope, expr));
+        }
         case AST_EXPR_BORROW:
         case AST_EXPR_LITERAL:
         case AST_EXPR_BINARY:
@@ -1611,8 +1631,7 @@ template <IsDefVisitor V> class ComptExprSolver {
         case AST_EXPR_VARIANT_DECOMP:
         case AST_EXPR_BLOCK:
         case AST_EXPR_MATCH_BRANCH:
-        case AST_EXPR_MATCH:
-        case AST_EXPR_ELSE_MATCH_BRANCH:
+        case AST_EXPR_ELSE_MATCH_PATTERN:
         case AST_EXPR_INVALID:
         case AST_EXPR_SAME_TYPE:
         case AST_EXPR_TYPE_TO_STR:
@@ -2820,24 +2839,8 @@ template <IsDefVisitor V> class ComptExprSolver {
             // don't return here, since we can safely just move on here
         }
 
-        if (context.def(hopefully_var_field).parent.as_id() != var_init.variant_def_id) {
-            Span span{context, fid, pattern_expr};
-            const auto d0 = context.emplace_diagnostic_with_message_value(
-                span, diag_code::has_no_such_variant_field, diag_type::error,
-                DiagnosticSymbolBeforeMessage{.sid = context.def(var_init.variant_def_id).name});
-            const auto d1 = context.emplace_diagnostic(
-                span, diag_code::is_a_field_of_variant, diag_type::note,
-                DiagnosticSymbolBeforeAndAfterMessage{
-                    .before_sid = context.def(hopefully_var_field).name,
-                    .after_sid = context.def(context.def(hopefully_var_field).parent.as_id()).name},
-                DiagnosticInfoNoPreview{});
-            const auto d2 = context.emplace_diagnostic_with_message_value(
-                context.def(context.def(hopefully_var_field).parent.as_id()).span,
-                diag_code::declared_here, diag_type::note,
-                DiagnosticSymbolBeforeMessage{
-                    .sid = context.def(context.def(hopefully_var_field).parent.as_id()).name});
-            context.link_diagnostic(d0, d1);
-            context.link_diagnostic(d1, d2);
+        if (!context.check_variant_field_has_parent(hopefully_var_field, var_init.variant_def_id,
+                                                    Span{context, fid, pattern_expr})) {
             return {};
         }
         const auto active_member
@@ -2847,7 +2850,38 @@ template <IsDefVisitor V> class ComptExprSolver {
             ExecConst{active_member == hopefully_var_field},
             Span::combine(context.exec(eid).span, Span{context, fid, pattern_expr}));
     }
+    [[nodiscard]] OptId<ExecId> handle_match(FileId fid, ScopeId scope,
+                                             const ast_expr_t* match_expr) {
+        assert(match_expr->type == AST_EXPR_MATCH);
+        const auto maybe_matched_eid = solve_expr(fid, scope, match_expr->expr.match_expr.matched);
+        if (maybe_matched_eid.empty()) {
+            return {}; // poisoned
+        }
+        const auto matched_eid = maybe_matched_eid.as_id();
+
+        const auto maybe_matched_tid = infer_type_from_exec(matched_eid);
+
+        if (maybe_matched_tid.empty()) {
+            return {}; // poisoned
+        }
+
+        const auto matched_tid = maybe_matched_tid.as_id();
+
+        const Type& ty = context.type(matched_tid);
+
+        if (ty.holds<TypeVariant>()) {
+            const auto variant_did = ty.as<TypeVariant>().def_id;
+            const bool okay
+                = valid_exhaustive_match_for_variant(*this, scope, fid, variant_did, match_expr);
+        }
+
+        // TODO finish
+
+        return {};
+    }
 };
+
 static_assert(IsExprSolver<ComptExprSolver<TopLevelDefVisitor>>);
+
 } // namespace hir
 #endif

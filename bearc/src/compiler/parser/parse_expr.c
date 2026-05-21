@@ -646,7 +646,7 @@ ast_expr_t* parse_expr_match_pattern(parser_t* p) {
     if (el) {
         ast_expr_t* default_expr = parser_alloc_expr(p);
         // nothing to set in the expr union here
-        default_expr->type = AST_EXPR_ELSE_MATCH_BRANCH;
+        default_expr->type = AST_EXPR_ELSE_MATCH_PATTERN;
         default_expr->first = el;
         default_expr->last = el;
         return default_expr;

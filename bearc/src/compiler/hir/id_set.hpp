@@ -36,9 +36,9 @@ template <IsId T> class IdSet {
     }
 
   private:
-    hir::IdHashMap<T, HirSize> map;
-    HirSize size_;
-    static constexpr HirSize DUMMY = 0;
+    hir::IdHashMap<T, T> map;
+    HirSize size_ = 0;
+    static constexpr T DUMMY = T{HIR_ID_NONE};
 };
 
 } // namespace hir

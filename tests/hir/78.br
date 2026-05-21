@@ -1,0 +1,49 @@
+// tests/hir/78.br
+
+variant Foo {
+    A,
+    B,
+    C,
+}
+
+variant Bar {
+    A(i32 a),
+    B,
+    C,
+}
+
+compt Foo _0 = Foo..A();
+
+var _1 = match(Foo..A()) {
+    Foo..A => 1,
+    Foo..B => 2,
+    Foo..C => 3,
+};
+
+var _2 = match(Foo..A()) {
+    else => 1,// oops
+    Foo..B => 2,
+};
+
+var _3 = match(Foo..A()) {
+    Foo..B => 2,
+    else => 1,
+    else => 2, // oops
+};
+
+var _4 = match(Foo..A()) {
+    AAAAAAAAAAAA => 123, // oops
+    Bar..A | Foo..A | Bar..B => 1, // oops x2
+    else => 1,
+};
+
+var _5 = match(Foo..A()) { // oops
+    Foo..A => 12,
+};
+
+var _6 = match(Foo..A()) {
+    Foo..A => 12,
+    Foo..B => 12,
+    Foo..C => 12,
+    Foo..C => 12, // oops
+};

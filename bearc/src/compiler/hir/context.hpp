@@ -353,8 +353,16 @@ class Context {
     /// checks if a Def is a variant field without resolving it
     [[nodiscard]] bool is_variant_field(DefId did) const;
 
+    /// try to go from Foo to Bar..Foo
+    [[nodiscard]] IdSlice<SymbolId> try_singly_qualified_name(DefId did);
+
     [[nodiscard]] bool def_id_slice_contains_def_id(IdSlice<DefId> def_id_slice,
                                                     DefId def_id) const;
+
+    /// emplaces diagnostics as appropriate
+    /// - returns false on issue
+    [[nodiscard]] bool check_variant_field_has_parent(DefId variant_field_did, DefId variant_did,
+                                                      Span id_span);
 
     /// checks if a type can be inferred as another
     /// - ordering of the arguments doesn't matter

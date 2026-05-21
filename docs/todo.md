@@ -5,10 +5,6 @@ main quest
 
 #### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
-    
-- [ ] clean up any remaining dangling reference issues (made evident in test cases with very large compt param counts)
-    - should be fixed for now, but this could come up in the future
-    - factor out def visitor logic in seperate functions to help here
 
 - [ ] some more `compt` improvements and general resolution/lowering logic:
     - [x] union def resol
@@ -37,11 +33,11 @@ main quest
         - [ ] per-param disagreements
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
-    - factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
-    - write ExecId hasher akin to the TypeTransformer/TypeHasher construct
+    - [ ] factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
+    - [ ] write ExecId hasher akin to the TypeTransformer/TypeHasher construct
     - all generic params become either deftypes to type args or simply compt variables for expression value args 
-    - see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generic args for a given def needs to either:
-        1. map to an already instatiated specialized, concrete instance of the def, or:
+    - [ ] see and finish impl'ing the canonical generic args slice table outline, basically each canonical set of generic args for a given def needs to either:
+        1.  map to an already instatiated specialized, concrete instance of the def, or:
         2. instatiate a new defintion by lowering the `ast_stmt_t` after inserting the specific defintions for values into a new scope for the concrete type 
 
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
