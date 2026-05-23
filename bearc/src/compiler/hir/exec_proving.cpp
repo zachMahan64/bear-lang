@@ -107,7 +107,7 @@ bool equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2) {
             return res.has_value() && res.value().as<bool>();
         },
         [&other, &ctx](const ExecExprListLiteral& t) -> bool {
-            if (!other.holds_same_variant_type(t)) {
+            if (!other.holds<ExecExprListLiteral>()) {
                 return false;
             }
 
