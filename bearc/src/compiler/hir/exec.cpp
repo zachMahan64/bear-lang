@@ -1006,7 +1006,7 @@ bool Exec::can_be_compt(const Context& ctx) {
         [&](const ExecReturnStmt&) -> bool { return false; },
         [&](const ExecYieldStmt&) -> bool { return false; },
         // exprs
-        [&](const ExecExprIdentifier& t) -> bool { return get_d(t.identifier).compt; },
+        [&](const ExecExprVariable& t) -> bool { return get_d(t.def_id).compt; },
         [&](const ExecConst&) -> bool { return true; },
         [&](const ExecExprListLiteral& t) -> bool {
             // just check each elem

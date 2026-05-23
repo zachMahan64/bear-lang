@@ -54,8 +54,9 @@ struct ExecYieldStmt {
     OptId<ExecId> yield_value;
 };
 
-struct ExecExprIdentifier {
-    DefId identifier;
+struct ExecExprVariable {
+    DefId def_id;
+    TypeId type_id;
 };
 
 // SymbolId corresponds to a builtin type
@@ -340,7 +341,7 @@ using ExecValue = std::variant<
 
     // expressions
     ExecExprUnionInit, ExecExprVariantInit, ExecExprStructInit, ExecExprStructMemberInit,
-    ExecExprIdentifier, ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove,
+    ExecExprVariable, ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove,
     ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
     ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
     ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprClosure, ExecExprVariantDecomp,
