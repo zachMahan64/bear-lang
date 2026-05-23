@@ -25,3 +25,7 @@ vgcore*
 llvm/
 llvm-build/
 llvm-project/
+
+# python 
+.venv/
+venv/

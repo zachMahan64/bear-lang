@@ -1,0 +1,26 @@
+//     /                              /
+//    /                              /
+//   /_____  _____  _____  _____    /  _____   _  _  _____
+//  /     / /____  /____/ /____/   /  /____/  /\  / /  __
+// /_____/ /____  /    / /   \    /  /    /  /  \/ /____/
+// Copyright (C) 2025-2026 Zachary Mahan
+// Licensed under the GNU GPL v3. See LICENSE for details.
+
+#ifndef BEARC_COMPILER_HIR_EXEC_PROVING_HPP
+#define BEARC_COMPILER_HIR_EXEC_PROVING_HPP
+
+#include "compiler/hir/indexing.hpp"
+namespace hir {
+
+/// checks whether two Execs are equivalent
+/// - fully checks compt values
+/// - returns true only if the two Execs are certainly equal (since their values are fully knowable
+/// at compile-time), else false
+bool equivalent_exec(ExecId eid1, ExecId eid2);
+
+/// checks whether two Execs could be equivalent
+bool possibly_equivalent_exec(ExecId eid1, ExecId eid2);
+
+} // namespace hir
+
+#endif // !BEARC_COMPILER_HIR_EXEC_PROVING_HPP

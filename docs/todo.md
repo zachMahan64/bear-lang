@@ -6,36 +6,21 @@ main quest
 #### hir phase 2.a:
 - all while in the process of *resolivng* top-level declarations:
 
-- [ ] some more `compt` improvements and general resolution/lowering logic:
-    - [x] union def resol
-    - [x] union inits
-    - [x] union member accesses (checked)
-    - [x] variant def resol
-    - [x] variant inits 
-        - [x] special-case for plain `Variant..VariantField` (check that it indeed has no members)
-        - [x] special-case for variant ctor, `Variant..Field(a, b, c)`
-            - this is parsed as a function so just adapt it to a variant init 
-    - [x] sort out variant decomps at compt (prevent unexpected decomps), only allow in match at compt
-    - [ ] compt match: impl as chained comparisions w/ each branch matching the type inside `match(x)`
-        - [x] make sure its branches are exhaustive for variants
-            - [x] ensure all possible variant fields are considered or there's an `else =>`
-        - [ ] exhaustive scalar matches 
-            - [ ] at absolute minimum, make sure there's an `else` clause
-            - [ ] if feasible, add range checking 
-        - [ ] handle pattern matching
-        - [ ] handle variant decomp 
-            - [ ] allowing partial decomp & type-check
-            - [ ] ban multiple decomps on the same branch
-
+- [ ] `compt` improvements:
     - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 
-- [x] contract resolution
-    - [ ] issue diagnostics that say exactly what's wrong
-        - [x] param count mismatch
-        - [x] return-type mismatch
-        - [x] `mt` and `Self` related stuff (particularly with mut disagreements)
-        - [ ] per-param disagreements
+- [ ] unified `hir::Exec` equality function (for `compt`)
+
+- [ ] matching
+    - [x] exhaustive for variants
+    - [ ] exhaustive scalar matches 
+        - [ ] at absolute minimum, make sure there's an `else` clause
+        - [ ] if feasible, add range checking 
+    - [ ] compt-based Exec-equality matching
+    - [ ] handle variant decomp 
+        - [ ] allow partial decomp & type-check
+        - [ ] ban multiple (heterogeneous) decomps on the same branch
 
 - [ ] implement generic args canonicalization to allow mapping of canonical lists of generic args to concrete instatiations for generic structs, variants, and functions
     - [ ] factor out `ComptExprSolver`'s equality logic (`ExecConst`, `ExecExprListInit`, and `ExecExprStructInit`) to use for comparing comparing compt execs inside the table
@@ -47,8 +32,9 @@ main quest
 
 - [ ] **use canonical generic args canonicalization to memoize compt function args -> values**
 
-- [ ] `ast_type_t*` lowering to `hir::Type`s 
-    - [x] all non-generic types 
+- [ ] contract diagnostics for per-param disagreements
+
+- [ ] last bit of `hir::Type`s 
     - [ ] generic types (just find/instatiate mentioned generic def and then use that concrete def within the type)
     - [ ] handle all-encompassing type deduction with `var` in decls: a `TypeInferer` allowing `var` to be decorated with `*`, `&`, etc, could be allowable with the `TypeTransformer` construct
     - [ ] A `TypeIsInferable` functor could be useful (this would allow decorated `var`s), just walk and match `TypeVar` with anything 
@@ -57,7 +43,6 @@ main quest
     - [ ] properly impl `sizeof` and `alignof`, make them generalized as a primitive query in `hir::Context` and then plug into `hir::ComptExprSolver` and later the runtime expr solver
 
 - [ ] preliminary full `ast_stmt_t*` (top-level decls) lowering to `hir::Def` (requires both types and exprs)
-    - this should be entirely done after full type lowering
 
 - [ ] some basic [lsp-compat](/docs/lsp-compat.md), mostly thru building span -> scope search trees (only build these when a flag is enabled, tho; this will need to be added)
 

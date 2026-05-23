@@ -1,20 +1,22 @@
 # use to more easily write variant visitors:
 
 types = """
-ExecBlock, ExecExprStmt, ExecBreakStmt, ExecIfStmt, ExecLoopStmt, ExecReturnStmt, ExecYieldStmt,
-ExecExprIdentifier, ExecExprLiteral, ExecExprListLiteral, ExecExprAssignMove,
-ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
-ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
-ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprStructInit, ExecExprStructMemberInit,
-ExecExprClosure, ExecExprVariantDecomp, ExecExprMatch, ExecExprMatchBranch
-"""
+    ExecBlock, ExecExprStmt, ExecBreakStmt, ExecContinueStmt, ExecIfStmt, ExecLoopStmt,
+    ExecReturnStmt, ExecYieldStmt,
+
+    ExecExprUnionInit, ExecExprVariantInit, ExecExprStructInit, ExecExprStructMemberInit,
+    ExecExprIdentifier, ExecExprComptConstant, ExecExprListLiteral, ExecExprAssignMove,
+    ExecExprAssignEqual, ExecExprIs, ExecExprMemberAccess, ExecExprPointerMemberAccess,
+    ExecExprBinary, ExecExprCast, ExecExprPreUnary, ExecExprPostUnary, ExecExprSubscript,
+    ExecExprFnCall, ExecExprBorrow, ExecExprDeref, ExecExprClosure, ExecExprVariantDecomp,
+    ExecExprMatch, ExecExprMatchBranch, ExecFnPtr, ExecVariantFieldInit"""
 
 RETURN_TYPE = "bool"
 
 names = [t.strip() for t in types.replace("\n", "").split(",") if t.strip()]
 
 template = """\
-[&](const {name}& t) -> {ret} {{
+[&other](const {name}& t) -> {ret} {{
     // todo
 }},"""
 

@@ -1000,6 +1000,7 @@ bool Exec::can_be_compt(const Context& ctx) {
         [&](const ExecBlock&) -> bool { return false; },
         [&](const ExecExprStmt&) -> bool { return false; },
         [&](const ExecBreakStmt&) -> bool { return false; },
+        [&](const ExecContinueStmt&) -> bool { return false; },
         [&](const ExecIfStmt&) -> bool { return false; },
         [&](const ExecLoopStmt&) -> bool { return false; },
         [&](const ExecReturnStmt&) -> bool { return false; },

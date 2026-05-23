@@ -17,41 +17,41 @@ namespace hir {
 
 template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, const Type& t2) const {
     auto vs = Ovld{
-        [&](const TypeBuiltin& t) -> bool {
+        [&t2](const TypeBuiltin& t) -> bool {
             if (!t2.holds<TypeBuiltin>()) {
                 return false;
             }
             return t.type == t2.as<TypeBuiltin>().type;
         },
-        [&](const TypeStruct& t) -> bool {
+        [&t2](const TypeStruct& t) -> bool {
             if (!t2.holds<TypeStruct>()) {
                 return false;
             }
             return t.def_id == t2.as<TypeStruct>().def_id;
         },
-        [&](const TypeVariant& t) -> bool {
+        [&t2](const TypeVariant& t) -> bool {
             if (!t2.holds<TypeVariant>()) {
                 return false;
             }
             return t.def_id == t2.as<TypeVariant>().def_id;
         },
-        [&](const TypeUnion& t) -> bool {
+        [&t2](const TypeUnion& t) -> bool {
             if (!t2.holds<TypeUnion>()) {
                 return false;
             }
             return t.def_id == t2.as<TypeUnion>().def_id;
         },
-        [&](const TypeDeftype&) -> bool { return t2.holds<TypeDeftype>(); },
-        [&](const TypeArr& t) -> bool {
+        [&t2](const TypeDeftype&) -> bool { return t2.holds<TypeDeftype>(); },
+        [&t2](const TypeArr& t) -> bool {
             if (!t2.holds<TypeArr>()) {
                 return false;
             }
             return t.canonical_size == t2.as<TypeArr>().canonical_size;
         },
-        [&](const TypeSlice&) -> bool { return t2.holds<TypeSlice>(); },
-        [&](const TypeRef&) -> bool { return t2.holds<TypeRef>(); },
-        [&](const TypePtr&) -> bool { return t2.holds<TypePtr>(); },
-        [&](const TypeFnPtr& t) -> bool {
+        [&t2](const TypeSlice&) -> bool { return t2.holds<TypeSlice>(); },
+        [&t2](const TypeRef&) -> bool { return t2.holds<TypeRef>(); },
+        [&t2](const TypePtr&) -> bool { return t2.holds<TypePtr>(); },
+        [this, &t2](const TypeFnPtr& t) -> bool {
             if (!t2.holds<TypeFnPtr>()) {
                 return false;
             }
@@ -81,8 +81,8 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
             // all matched, so return true
             return true;
         },
-        [&](const TypeVariadic&) -> bool { return t2.holds<TypeVariadic>(); },
-        [&](const TypeVar&) -> bool { return t2.holds<TypeVar>(); },
+        [&t2](const TypeVariadic&) -> bool { return t2.holds<TypeVariadic>(); },
+        [&t2](const TypeVar&) -> bool { return t2.holds<TypeVar>(); },
 
     };
     if constexpr (considers_mut()) {
@@ -95,7 +95,7 @@ template <ConsiderMut C> bool TypeComparator<C>::operator()(const Type& t1, cons
 
 template <ConsiderMut C> size_t TypeHasher<C>::operator()(const Type& t1) const {
     // https://xorshift.di.unimi.it/splitmix64.c
-    auto mix = [](size_t x) {
+    auto mix = +[](size_t x) {
         x += 0x9e3779b97f4a7c15;
         x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
         x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
