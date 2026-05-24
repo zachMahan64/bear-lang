@@ -20,6 +20,7 @@ namespace hir {
 bool equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2);
 
 /// checks whether two Execs could be equivalent
+/// - note: this might be useless (in its current state)
 bool possibly_equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2);
 
 } // namespace hir

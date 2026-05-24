@@ -2871,7 +2871,7 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         if (ty.holds<TypeVariant>()) {
             const auto variant_did = ty.as<TypeVariant>().def_id;
-            const bool valid_branches_andexhaustive
+            const bool valid_branches_and_exhaustive
                 = valid_exhaustive_match_for_variant(*this, scope, fid, variant_did, match_expr);
         }
 

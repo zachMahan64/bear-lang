@@ -14,6 +14,11 @@
 namespace hir {
 
 bool equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2) {
+
+    if (eid1 == eid2) {
+        return true;
+    }
+
     const Exec& other = ctx.exec(eid2);
 
     auto vs = Ovld{
@@ -117,6 +122,7 @@ bool equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2) {
                 return false;
             }
 
+            // make sure both either have an elem type or both don't
             if (o.elem_type_id.has_value() != t.elem_type_id.has_value()) {
                 return false;
             }
@@ -134,69 +140,33 @@ bool equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2) {
             }
             return true;
         },
-        [&other](const ExecExprAssignMove& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprAssignEqual& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprIs& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprMemberAccess& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprPointerMemberAccess& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprBinary& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprCast& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprPreUnary& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprPostUnary& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprSubscript& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprFnCall& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprBorrow& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprDeref& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprClosure& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprVariantDecomp& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprMatch& t) -> bool {
-            // todo
-        },
-        [&other](const ExecExprMatchBranch& t) -> bool {
-            // todo
-        },
-        [&other](const ExecFnPtr& t) -> bool {
-            // todo
-        },
-        [&other](const ExecVariantFieldInit& t) -> bool {
-            // todo
-        },
+        [](const ExecExprAssignMove& t) -> bool { return false; },
+        [](const ExecExprAssignEqual& t) -> bool { return false; },
+        [](const ExecExprIs& t) -> bool { return false; },
+        [](const ExecExprMemberAccess& t) -> bool { return false; },
+        [](const ExecExprPointerMemberAccess& t) -> bool { return false; },
+        [](const ExecExprBinary& t) -> bool { return false; },
+        [](const ExecExprCast& t) -> bool { return false; },
+        [](const ExecExprPreUnary& t) -> bool { return false; },
+        [](const ExecExprPostUnary& t) -> bool { return false; },
+        [](const ExecExprSubscript& t) -> bool { return false; },
+        [](const ExecExprFnCall& t) -> bool { return false; },
+        [](const ExecExprBorrow& t) -> bool { return false; },
+        [](const ExecExprDeref& t) -> bool { return false; },
+        [](const ExecExprClosure& t) -> bool { return false; },
+        [](const ExecExprVariantDecomp& t) -> bool { return false; },
+        [](const ExecExprMatch& t) -> bool { return false; },
+        [](const ExecExprMatchBranch& t) -> bool { return false; },
+        [](const ExecFnPtr& t) -> bool { return false; },
+        [](const ExecVariantFieldInit& t) -> bool { return false; },
     };
+
+    return ctx.exec(eid1).visit(vs);
 }
 
 bool possibly_equivalent_exec(const Context& ctx, ExecId eid1, ExecId eid2) {
-    // TODO
-    return equivalent_exec(ctx, eid1, eid2);
+    return equivalent_exec(ctx, eid1, eid2)
+           || ctx.exec(eid1).holds_same_variant_type(ctx.exec(eid2));
 }
 
 } // namespace hir

@@ -10,7 +10,7 @@ main quest
     - [ ] compt closures (pure-expr only)
         - [ ] allow capturing compt variables 
 
-- [ ] unified `hir::Exec` equality function (for `compt`)
+- [x] unified `hir::Exec` equality function (for `compt` match)
 
 - [ ] matching
     - [x] exhaustive for variants
