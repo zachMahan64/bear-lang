@@ -2869,10 +2869,19 @@ template <IsDefVisitor V> class ComptExprSolver {
 
         const Type& ty = context.type(matched_tid);
 
+        bool valid_branches_and_exhaustive = false;
         if (ty.holds<TypeVariant>()) {
             const auto variant_did = ty.as<TypeVariant>().def_id;
-            const bool valid_branches_and_exhaustive
+            valid_branches_and_exhaustive
                 = valid_exhaustive_match_for_variant(*this, scope, fid, variant_did, match_expr);
+        }
+
+        // TODO handle valid/exhaustive scalar matches here
+
+        // linear branch check
+
+        if (!valid_branches_and_exhaustive) {
+            return {};
         }
 
         // TODO finish
